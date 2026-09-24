@@ -44,6 +44,7 @@ import { createDrive } from "./drive.js";
 import { createBaitBall } from "./baitball.js";
 import { createScent } from "./scent.js";
 import { createRedd } from "./redd.js";
+import { TRAITS, STEP, earned, heritage, inherit, loadHeritage, resetHeritage, traits as heritageTraits } from "./heritage.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -254,6 +255,8 @@ async function start() {
   // The brood this fish is one of (src/brood.js). A life saved from before there were
   // broods: its siblings thinned out to the stage it has reached.
   const brood = createBrood(state && !query.has("new") ? state.brood : null);
+  // What this line of salmon has from its parents (heritage.js).
+  loadHeritage(state && !query.has("new") ? state.heritage : null);
   if (!(state && state.brood)) brood.reached(fish.stage, STAGES);
   function snapshotCheckpoint() {
     return { stage: fish.stage, position: fish.position.toArray(), yaw: fish.yaw, s: fish.river.s, u: fish.river.u, course: COURSE_VERSION };
@@ -348,7 +351,7 @@ async function start() {
   // The logbook: open it and the swim waits.
   let releasing = false;
   function toggleLogbook() {
-    const open = logbook.toggle(fish, save.generation);
+    const open = logbook.toggle(fish, save.generation, heritageTraits());
     if (open) {
       releasing = true;
       document.exitPointerLock?.();
@@ -1968,6 +1971,7 @@ async function start() {
       hour: daylight.state.hour,
       generation: save.generation,
       brood: brood.state(),
+      heritage: { ...heritage },
     });
   }
   function die(cause) {
@@ -2077,6 +2081,8 @@ async function start() {
   function newBrood() {
     brood.renew();
     redd.stop();
+    // Other parents: nothing handed on.
+    resetHeritage();
     events.reset();
     salmon.setStage(0, 0);
     startAt(S.redd, section(S.redd).thalweg, 0.02);
@@ -2141,7 +2147,8 @@ async function start() {
   function spawn() {
     track("spawned", { generation: save.generation + 1 });
     dead = 1e9;
-    spawning = { t: 0, laid: 0 };
+    // What this life was good at goes on to the brood (heritage.js).
+    spawning = { t: 0, laid: 0, traits: earned(brood.life) };
     if (redd.on) redd.spawn(fish);
     sound.hush(false);
   }
@@ -2161,12 +2168,18 @@ async function start() {
     if (t > 9 && !spawning.carded) {
       spawning.carded = true;
       freeThePointer();
-      lifecard.show({ kind: "home", life: { ...brood.life, number: brood.number }, stageName: STAGES[fish.stage].name, stageId: STAGES[fish.stage].id, progress: 1, region: regionName(fish.river.s), month: MONTHS[conditions.month], left: brood.left, size: brood.size });
+      lifecard.show({ kind: "home", life: { ...brood.life, number: brood.number }, stageName: STAGES[fish.stage].name, stageId: STAGES[fish.stage].id, progress: 1, region: regionName(fish.river.s), month: MONTHS[conditions.month], left: brood.left, size: brood.size, handed: (spawning.traits ?? []).map((k) => TRAITS[k]) });
     }
   }
   function nextGeneration() {
+    const handed = spawning?.traits ?? [];
     spawning = null;
     redd.stop();
+    inherit(handed);
+    // Said a little after the hatching: what it has from its parents.
+    handed.forEach((k, i) => setTimeout(() => hud.note(`Erbe: ${TRAITS[k]} (+${Math.round(heritage[k] * STEP * 100)} %)`), 3800 + i * 2600));
+    if (handed.length) setTimeout(() => hud.tip("heritage", "<b>Das Erbe.</b> Was deine Eltern gut konnten, steckt ein wenig in dir: Sprungkraft, Kampfgeist, Wuchs, Wachsamkeit oder Ausdauer – je nachdem, wie sie gelebt haben. Über die Generationen kommt mehr davon zusammen.", 13), 9000);
+    track("generation", { traits: handed.join(",") });
     brood.renew();
     showBrood();
     save.generation++;

@@ -280,11 +280,21 @@ export function createLogbook({ hud, badges = null, places = null }) {
     // For the minimap: the stretches swum and the falls climbed.
     visited: () => data.regions,
     climbed: () => data.falls,
-    toggle(fish, generation = 0) {
+    // traits: what this line has from its parents, [{ name, percent }] (heritage.js).
+    toggle(fish, generation = 0, traits = []) {
       api.open = !api.open;
       box.hidden = !api.open;
       if (api.open) {
-        genBox.textContent = `Generation ${generation + 1}`;
+        genBox.textContent = "";
+        const gen = document.createElement("span");
+        gen.textContent = `Generation ${generation + 1}`;
+        genBox.append(gen);
+        for (const tr of traits) {
+          const item = document.createElement("span");
+          item.className = "trait";
+          item.textContent = `${tr.name} +${tr.percent} %`;
+          genBox.append(" · ", item);
+        }
         renderMap(fish);
         renderSpecies();
         if (badges && badgeBox) badgeBox.innerHTML = badges.render();

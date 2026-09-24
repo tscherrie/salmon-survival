@@ -63,6 +63,11 @@ const PAIRS = [
   ["Caught by goosanders", "Уловена от нирци"],
   ["Driven hunt", "Хайка"],
   ["Escaped the goosanders", "Избяга от нирците"],
+  ["Fighting spirit", "Боен дух"],
+  ["Wariness", "Бдителност"],
+  ["Stamina", "Издръжливост"],
+  ["Handed on", "Предадено"],
+  ["<b>Your heritage.</b> What your parents were good at is in you a little: leap power, fighting spirit, growth, wariness or stamina – depending on how they lived. Over the generations more of it adds up.", "<b>Наследството.</b> В теб има по малко от това, в което родителите ти бяха добри: сила на скока, боен дух, растеж, бдителност или издръжливост – според това как са живели. С поколенията се натрупва още."],
   ["By her side", "До нея"],
   ["Drive off the rival!", "Прогони съперника!"],
   ["stay with her", "остани до нея"],
@@ -479,6 +484,8 @@ export const BG = Object.fromEntries(PAIRS);
 // On the German, like EN_PATTERNS; $1… are translated in turn.
 export const BG_PATTERNS = [
   [/^(.+) jagt dich!$/, "$1 те преследва!"],
+  [/^Erbe: (.+) \(\+(\d+) %\)$/, "Наследство: $1 (+$2 %)"],
+  [/^(.+) \+(\d+) %$/, "$1 +$2 %"],
   [/^Erbeutet: (\d+)$/, "Уловени: $1"],
   [/^(\d+) von (\d+) Smolts sind noch bei dir\.$/, "$1 от $2 смолта са още с теб."],
   [/^(\d+)× gefressen$/, (n) => `изядена ${n}×`],

@@ -63,6 +63,11 @@ const PAIRS = [
   ["Caught by goosanders", "カワアイサの群れに捕まった"],
   ["Driven hunt", "追い込み猟"],
   ["Escaped the goosanders", "カワアイサから逃げ切った"],
+  ["Fighting spirit", "闘争心"],
+  ["Wariness", "用心深さ"],
+  ["Stamina", "持久力"],
+  ["Handed on", "受け継がれる"],
+  ["<b>Your heritage.</b> What your parents were good at is in you a little: leap power, fighting spirit, growth, wariness or stamina – depending on how they lived. Over the generations more of it adds up.", "<b>受け継いだもの。</b>親が得意だったことは、少しだけあなたの中にも受け継がれている：ジャンプ力、闘争心、成長、用心深さ、持久力――親の生き方しだいだ。世代を重ねるごとに、それは積み重なっていく。"],
   ["By her side", "彼女のそばに"],
   ["Drive off the rival!", "ライバルを追い払え！"],
   ["stay with her", "そばにいて"],
@@ -479,6 +484,8 @@ export const JA = Object.fromEntries(PAIRS);
 // On the German, like EN_PATTERNS; $1… are translated in turn.
 export const JA_PATTERNS = [
   [/^(.+) jagt dich!$/, "$1 に狙われている！"],
+  [/^Erbe: (.+) \(\+(\d+) %\)$/, "受け継いだもの：$1（+$2%）"],
+  [/^(.+) \+(\d+) %$/, "$1 +$2%"],
   [/^Erbeutet: (\d+)$/, "捕獲：$1"],
   [/^(\d+) von (\d+) Smolts sind noch bei dir\.$/, "$2 匹のスモルトのうち $1 匹がまだ一緒にいる。"],
   [/^(\d+)× gefressen$/, (n) => `${n}回食べた`],

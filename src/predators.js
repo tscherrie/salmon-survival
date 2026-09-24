@@ -5,6 +5,7 @@ import { creatureMaterial, merganserFeetGeometry, merganserGeometry } from "./cr
 import { conditions } from "./seasons.js";
 import { blow, breathe, contact, freshFighter, takeBlow, winded } from "./fight.js";
 import { odds } from "./brawl.js";
+import { less } from "./heritage.js";
 
 // What hunts the salmon under water, and how. Every hunter senses the fish the same way --
 // by sight, over a distance that shrinks in murky water and in cover and grows when the
@@ -213,7 +214,8 @@ export function createPredators(scene, { random, seize, captive }) {
     // and the cod's lateral lines and barbels do not need the light.
     const light = h.spec.nocturnal ? 1 : 0.25 + 0.75 * conditions.light;
     // In bright, shallow, open water (the rich drift of a riffle) it is seen from further off.
-    if (d > h.spec.sight * ctx.clarity * light * (1 + L * 0.06) * loud * (1 + 0.6 * (ctx.exposed ?? 0))) return 0;
+    // (a wary fish, from wary parents, is seen from less far off)
+    if (d > h.spec.sight * ctx.clarity * light * (1 + L * 0.06) * loud * (1 + 0.6 * (ctx.exposed ?? 0)) * less("stealth")) return 0;
     // Anything but right behind it.
     if (h.heading.dot(toFish) <= -0.25 * d) return 0;
     if (ctx.covered) return -1;

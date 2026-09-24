@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { COATS, MODEL_LENGTH, blendCoat, coatUniforms, createFishMesh } from "./anatomy.js";
 import { FALLS, S, bed, current, frame, level, locate, section } from "./course.js";
+import { bonus, less } from "./heritage.js";
 
 // The salmon you are, from the day it hatches to the day it spawns.
 //
@@ -288,7 +289,8 @@ export function createSalmon(scene, { pace = 1 } = {}) {
     const thermal = world.thermal ?? { pace: 1, heat: 0 };
     const chill = (0.8 + 0.2 * thermal.pace) * (1 - 0.15 * thermal.heat);
     sp.cruise *= chill;
-    sp.burst *= chill;
+    // (a fighter's burst, from its parents)
+    sp.burst *= chill * bonus("strength");
     locate(f.position.x, f.position.z, f.river.s, f.river);
     const s = f.river.s,
       u = f.river.u;
@@ -510,7 +512,7 @@ export function createSalmon(scene, { pace = 1 } = {}) {
       if (q < 0.35 && (f.flow.speed < 1.2 || f.gripping)) spend -= 0.0004 + 0.0011 * f.gripping;
     }
     // In cold water the body idles along on little; in water too warm it suffers.
-    spend = spend * (0.45 + 0.55 * thermal.pace) + 0.004 * thermal.heat;
+    spend = spend * (0.45 + 0.55 * thermal.pace) * less("stamina") + 0.004 * thermal.heat;
     f.energy -= spend * dt;
     // Hunger: how long the stomach has stood empty. Rest brings back breath, not strength the
     // body has not got -- the longer a feeding fish goes without food the less rest gives
@@ -547,7 +549,7 @@ export function createSalmon(scene, { pace = 1 } = {}) {
       const digest = Math.min(f.stomach, (f.stomach / STOMACH_SECONDS) * dt * pace * factor * thermal.pace);
       f.stomach -= digest;
       if (f.energy < 0.3) f.energy = Math.min(1, f.energy + (0.0065 * digest) / rate);
-      else f.progress += digest / st.need;
+      else f.progress += (digest / st.need) * bonus("growth");
       if (st.sea && !inSea) f.progress = Math.min(f.progress, 0.97);
     }
     f.energy = clamp(f.energy, 0, 1);
@@ -605,7 +607,7 @@ export function createSalmon(scene, { pace = 1 } = {}) {
     // The young in the river (up to the smolt) jump twice as high as their size alone
     // would give them, easing off through the first months at sea.
     const young = Math.sqrt(1 + clamp((3.2 - L) / 1.2, 0, 1));
-    const exit = sp.leap * 2.9 * strength * runUp * young * (st.fasting ? 1.05 : 1) * power;
+    const exit = sp.leap * 2.9 * strength * runUp * young * (st.fasting ? 1.05 : 1) * power * bonus("leap");
     let vy = exit * 0.82,
       horizontal = exit * 0.55;
     const s = f.river.s;

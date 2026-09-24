@@ -63,6 +63,11 @@ const PAIRS = [
   ["Caught by goosanders", "被秋沙鸭群捕获"],
   ["Driven hunt", "围猎"],
   ["Escaped the goosanders", "逃过了秋沙鸭的围猎"],
+  ["Fighting spirit", "斗志"],
+  ["Wariness", "警觉"],
+  ["Stamina", "耐力"],
+  ["Handed on", "遗传给后代"],
+  ["<b>Your heritage.</b> What your parents were good at is in you a little: leap power, fighting spirit, growth, wariness or stamina – depending on how they lived. Over the generations more of it adds up.", "<b>遗传。</b>父母擅长的本领，也有一点留在你身上：跳跃力、斗志、成长、警觉或耐力——取决于它们是怎样生活的。一代又一代，这些会越积越多。"],
   ["By her side", "守在她身边"],
   ["Drive off the rival!", "赶走情敌！"],
   ["stay with her", "陪着她"],
@@ -479,6 +484,8 @@ export const ZH = Object.fromEntries(PAIRS);
 // On the German, like EN_PATTERNS; $1… are translated in turn.
 export const ZH_PATTERNS = [
   [/^(.+) jagt dich!$/, "$1 在追你！"],
+  [/^Erbe: (.+) \(\+(\d+) %\)$/, "遗传：$1（+$2%）"],
+  [/^(.+) \+(\d+) %$/, "$1 +$2%"],
   [/^Erbeutet: (\d+)$/, "捕获：$1"],
   [/^(\d+) von (\d+) Smolts sind noch bei dir\.$/, "$2 条银化幼鲑中还有 $1 条和你在一起。"],
   [/^(\d+)× gefressen$/, (n) => `吃过 ${n} 次`],

@@ -61,6 +61,12 @@ const PAIRS = [
   ["Von Gänsesägern erbeutet", "Caught by goosanders"],
   ["Treibjagd", "Driven hunt"],
   ["Den Gänsesägern entkommen", "Escaped the goosanders"],
+  ["Kampfgeist", "Fighting spirit"],
+  ["Wuchs", "Growth"],
+  ["Wachsamkeit", "Wariness"],
+  ["Ausdauer", "Stamina"],
+  ["Vererbt", "Handed on"],
+  ["<b>Das Erbe.</b> Was deine Eltern gut konnten, steckt ein wenig in dir: Sprungkraft, Kampfgeist, Wuchs, Wachsamkeit oder Ausdauer – je nachdem, wie sie gelebt haben. Über die Generationen kommt mehr davon zusammen.", "<b>Your heritage.</b> What your parents were good at is in you a little: leap power, fighting spirit, growth, wariness or stamina – depending on how they lived. Over the generations more of it adds up."],
   ["An ihrer Seite", "By her side"],
   ["Vertreib den Rivalen!", "Drive off the rival!"],
   ["bleib bei ihr", "stay with her"],
@@ -480,6 +486,8 @@ export const EN = Object.fromEntries(PAIRS);
 // [pattern, function].
 export const EN_PATTERNS = [
   [/^(.+) jagt dich!$/, "$1 is hunting you!"],
+  [/^Erbe: (.+) \(\+(\d+) %\)$/, "Heritage: $1 (+$2 %)"],
+  [/^(.+) \+(\d+) %$/, "$1 +$2 %"],
   [/^Erbeutet: (\d+)$/, "Caught: $1"],
   [/^(\d+) von (\d+) Smolts sind noch bei dir\.$/, "$1 of $2 smolts are still with you."],
   [/^(\d+)× gefressen$/, (n) => `eaten ${n}×`],

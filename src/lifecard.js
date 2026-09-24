@@ -196,7 +196,8 @@ export function createLifeCard({ habitat, onGo }) {
     go,
     // kind: "death" (a sibling goes on), "lost" (none left), "home" (spawned).
     // life: the account from the brood; fish: { stage name, stage id, progress }; where.
-    show({ kind, life, stageName, stageId, progress, cause = "", region = "", month = "", next = 0, left = 0, size = 2000 }) {
+    // handed: what a life that spawned hands on to its brood (the traits' German names).
+    show({ kind, life, stageName, stageId, progress, cause = "", region = "", month = "", next = 0, left = 0, size = 2000, handed = [] }) {
       const age = ageText(stageId, progress);
       const dist = distanceText(life.distance);
       const vars = { n: String(life.number), size: formatNumber(size), left: formatNumber(left), next: String(next), age, dist, eaten: formatNumber(life.eaten), cause: t(cause), name: word("salmon", { n: String(life.number) }) };
@@ -217,7 +218,7 @@ export function createLifeCard({ habitat, onGo }) {
           [word("escapes"), formatNumber(life.escapes)],
           [word("leaps"), formatNumber(life.leaps)],
         ],
-        siblings: kind === "lost" ? word("lostLine", vars) : kind === "home" ? word("left", vars) : word("left", vars),
+        siblings: kind === "lost" ? word("lostLine", vars) : kind === "home" && handed.length ? `${word("left", vars)} · ${t("Vererbt")}: ${handed.map((h) => t(h)).join(", ")}` : word("left", vars),
         share: kind === "home" ? word("homeShare", vars) : kind === "lost" ? word("lostShare", vars) : word("deathShare", vars),
       };
       $(".kicker").textContent = current.kicker;
