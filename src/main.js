@@ -41,6 +41,7 @@ import { createBrood, word as broodWord, formatNumber } from "./brood.js";
 import { createLifeCard } from "./lifecard.js";
 import { createSiblings } from "./siblings.js";
 import { createDrive } from "./drive.js";
+import { createBaitBall } from "./baitball.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -293,6 +294,7 @@ async function start() {
     aurora: { group: "Erlebnisse", title: "Nordlicht", line: "Das Nordlicht über dem Wasser gesehen", icon: "feat", tier: "silver" },
     run: { group: "Erlebnisse", title: "Im Laichzug", line: "Mit den anderen Lachsen heimgezogen", icon: "fish", tier: "silver" },
     drive: { group: "Meisterstücke", title: "Treibjagd", line: "Den Gänsesägern entkommen", icon: "hunter", tier: "gold" },
+    ball: { group: "Meisterstücke", title: "Festmahl", line: "Acht Fische aus einem Futterball erbeutet", icon: "fish", tier: "gold" },
   };
   for (const [id, def] of Object.entries(FEATS)) badges.register(`feat:${id}`, def);
   const feat = (id, options) => badges.award(`feat:${id}`, FEATS[id], options);
@@ -633,6 +635,80 @@ async function start() {
       driveNagged = time;
       hud.note("Bleib im Schwarm!");
     }
+  }
+  // The bait ball at sea (baitball.js): a bar at the foot of the screen (how long it lasts,
+  // how many caught) and a green arrow at the edge pointing the way to it.
+  const baitball = createBaitBall(scene);
+  const huntBar = document.createElement("div");
+  huntBar.id = "huntbar";
+  huntBar.hidden = true;
+  huntBar.innerHTML = '<span class="label">Heringsball</span><div class="track"><div class="fill"></div></div><span class="count"><span>Erbeutet</span> <b>0</b></span>';
+  habitat.append(huntBar);
+  const huntLabel = huntBar.querySelector(".label");
+  const huntFill = huntBar.querySelector(".fill");
+  const huntCount = huntBar.querySelector(".count b");
+  let ballShown = false;
+  const ballAt = new THREE.Vector3();
+  function stepBall(dt) {
+    const sea = regionWeights(fish.river.s).sea > 0.8;
+    const happened = baitball.update(dt, fish, { ok: dead <= 0 && phaseOf(fish.stage) === "sea" && sea && !fish.captive && fish.length >= 2.6, light: conditions.light, shoals: life.shoals, hunters: life.hunters });
+    for (const e of happened) {
+      if (e.type === "dive") {
+        // A gannet going in: the splash, and its crack under the water.
+        const near = clamp(1 - Math.hypot(e.x - fish.position.x, e.z - fish.position.z) / 90, 0.12, 0.9);
+        ripples.add(e.x, e.z, 2.4);
+        falls.splash(e.x, e.y, e.z, 5);
+        sound.splash(near);
+      } else if (e.type === "seal") hud.toast("Eine Robbe!", "Sie frisst mit – und hätte auch dich gern.", 5);
+    }
+    if (baitball.on && !ballShown) {
+      ballShown = true;
+      huntLabel.textContent = translate(baitball.ball.title);
+      huntBar.hidden = false;
+      track("ball", { outcome: "start", kind: baitball.ball.kind });
+      hud.toast(`${baitball.ball.title}!`, "Basstölpel stoßen hinein – schnapp dir, so viele du kannst!", 6);
+      hud.tip("ball", "<b>Ein Futterball!</b> Die Fische ballen sich dicht unter der Oberfläche zusammen, und von oben stoßen Basstölpel hinein. Schwimm hin – der grüne Pfeil zeigt die Richtung – und stoß mit <kbd>Leertaste</kbd> in den Ball: jeder Fang lässt dich wachsen. Bald kommt eine Robbe dazu – im Ball bist du für sie schwerer zu fassen.", 14);
+    } else if (!baitball.on && ballShown) endBall(false);
+    if (!baitball.on) return;
+    huntFill.style.transform = `scaleX(${baitball.left.toFixed(3)})`;
+    huntCount.textContent = String(baitball.caught);
+  }
+  // Over: how many it caught (quietly, when it died in it).
+  function endBall(quiet) {
+    if (baitball.on) baitball.stop(life.shoals);
+    if (!ballShown) return;
+    ballShown = false;
+    huntBar.hidden = true;
+    goal.classList.remove("on");
+    if (quiet) return;
+    const n = baitball.caught;
+    track("ball", { outcome: "end", caught: n, kind: baitball.ball.kind });
+    hud.toast(n >= 8 ? "Festmahl!" : "Der Ball zerstiebt", `Erbeutet: ${n}`, 5);
+    if (n >= 8) feat("ball", { delay: 1.5 });
+  }
+  // The green arrow to the ball, when it is off the screen or far.
+  const goal = document.createElement("div");
+  goal.className = "threat goal";
+  goal.innerHTML = '<svg viewBox="0 0 40 26"><path d="M5 22 20 6l15 16" /></svg><span class="name"></span>';
+  function goalArrow() {
+    if (!goal.parentNode) threatBox.append(goal);
+    const b = baitball.ball;
+    const show = baitball.on && dead <= 0 && fish.position.distanceTo(b.centre) > b.radius + 10;
+    goal.classList.toggle("on", show);
+    if (!show) return;
+    const w = habitat.clientWidth,
+      h = habitat.clientHeight;
+    ballAt.copy(b.centre).project(camera);
+    let x = ballAt.x * w * 0.5,
+      y = -ballAt.y * h * 0.5;
+    if (ballAt.z > 1) (x = -x), (y = -y);
+    const a = Math.atan2(y, x);
+    const px = w * 0.5 + Math.cos(a) * w * 0.4,
+      py = h * 0.5 + Math.sin(a) * h * 0.36;
+    goal.style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px)`;
+    goal.firstChild.style.transform = `rotate(${(a + Math.PI / 2).toFixed(3)}rad)`;
+    const name = goal.querySelector(".name");
+    if (name.textContent !== translate(b.title)) name.textContent = translate(b.title);
   }
   function readInput(dt) {
     const turn =(held.has("ArrowLeft") ? -1 : 0) + (held.has("ArrowRight") ? 1 : 0);
@@ -1367,8 +1443,10 @@ async function start() {
     // The rest of the river's life, and what it does to the fish.
     prof.mark("nets+events");
     stepDrive(dt);
-    const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s), drive: drive.on ? drive.lead : null });
+    stepBall(dt);
+    const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s), drive: drive.on ? drive.lead : null, ball: baitball.on ? baitball.ball : null });
     warnings(dt);
+    goalArrow();
     siblings.update(dt, fish, time, { food: life.food?.items, camera, others: (outcome.school ?? 0) + (outcome.run ?? 0), left: brood.left });
     prof.mark("life");
     // Caught: the salmon goes where its captor holds it -- down a fish's throat head first,
@@ -1385,6 +1463,7 @@ async function start() {
     for (const e of fish.events) {
       if (e.type === "eat") {
         brood.ate();
+        baitball.ate(e.kind);
         hud.fed(e.kind);
         // Quiet for a larva, a real gulp for a herring.
         sound.swallow(clamp(Math.log10((e.nutrition ?? 1) + 1) / 3, 0.08, 0.9));
@@ -1463,8 +1542,11 @@ async function start() {
     if (outcome.decoy) {
       shake = Math.max(shake, 0.6);
       sound.thump();
-      hud.note("Ein Schwarmgefährte …");
-      hud.tip("decoy", "Knapp! Der Räuber hat einen anderen Smolt aus dem Schwarm erwischt. Im Schwarm bist du sicherer – bleib bei den anderen.", 8);
+      if (baitball.on) hud.note("Knapp – er hat einen anderen erwischt!");
+      else {
+        hud.note("Ein Schwarmgefährte …");
+        hud.tip("decoy", "Knapp! Der Räuber hat einen anderen Smolt aus dem Schwarm erwischt. Im Schwarm bist du sicherer – bleib bei den anderen.", 8);
+      }
       feat("decoy", { delay: 1 });
     }
     // The drive: a goosander dived into the school and came out with one of the others.
@@ -1675,6 +1757,7 @@ async function start() {
     if (held.active) sound.eaten(held.kind);
     hud.toast(cause, "", 3);
     endDrive("died");
+    endBall(true);
   }
   // After the dark, the nearest of the siblings swims on: the camera swings over to it and
   // it is the fish from then on (a little smaller, at the same stage). With none left, a new
@@ -2229,6 +2312,8 @@ async function start() {
       siblings,
       drive,
       startDrive,
+      baitball,
+      startBall: () => baitball.start(fish, life.shoals),
       leapCharge: () => ({ charge, reach: inLeapReach(), fall: SALMON_FALL?.s, dead, air: fish.airborne, cel: celebration.active }),
       die,
       spawn,

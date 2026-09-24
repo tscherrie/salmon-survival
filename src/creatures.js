@@ -100,6 +100,29 @@ export function merganserGeometry() {
   add(b, part.cone, vec(3.3, 0.26, 0), vec(0.1, 0.9, 0.08), [0.62, 0.12, 0.06], new THREE.Euler(0, 0, -Math.PI / 2));
   return b.geometry();
 }
+// A gannet (Basstölpel) in its plunge: a white dart, beak first along +x, the wings swept
+// back tight along the body with their black tips, the head washed buttery yellow, the
+// bill pale blue-grey. About 90 cm (9 units).
+export function gannetGeometry() {
+  const b = new SolidBatch();
+  const white = [0.93, 0.93, 0.9];
+  add(b, part.sphere, vec(0, 0, 0), vec(3.1, 0.75, 0.8), white);
+  // Neck and head, the yellow wash, the dark bare skin round the eye.
+  add(b, part.sphere, vec(2.7, 0.08, 0), vec(1.1, 0.5, 0.48), white);
+  add(b, part.sphere, vec(3.3, 0.16, 0), vec(0.62, 0.44, 0.42), [0.92, 0.82, 0.5]);
+  for (const z of [-0.3, 0.3]) add(b, part.sphere, vec(3.55, 0.26, z), vec(0.12, 0.07, 0.05), [0.08, 0.08, 0.1]);
+  // The bill: a long, stout wedge.
+  add(b, part.cone, vec(3.8, 0.12, 0), vec(0.2, 1.4, 0.16), [0.62, 0.66, 0.72], new THREE.Euler(0, 0, -Math.PI / 2));
+  // Wings folded back along the flanks, black-tipped, reaching past the tail.
+  for (const z of [-0.55, 0.55]) {
+    add(b, part.sphere, vec(-0.6, 0.25, z), vec(2.8, 0.18, 0.34), white);
+    add(b, part.sphere, vec(-3.2, 0.18, z * 0.8), vec(1.2, 0.12, 0.22), [0.07, 0.07, 0.08]);
+  }
+  // The pointed tail.
+  add(b, part.cone, vec(-2.6, 0.05, 0), vec(0.4, 1.6, 0.18), white, new THREE.Euler(0, 0, Math.PI / 2));
+  return b.geometry();
+}
+
 // Its feet, set far back, webbed and orange; the origin is the hip, the feet trail along -x.
 export function merganserFeetGeometry() {
   const b = new SolidBatch();

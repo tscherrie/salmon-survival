@@ -743,7 +743,57 @@ function createShoals(scene, { detail, brawls }) {
     meshes,
     kinds,
     reset(fish) {
-      for (const kind of Object.values(kinds)) for (const group of kind.groups) settle(group, fish, random() < 0.5 ? 1 : -0.5);
+      for (const kind of Object.values(kinds)) {
+        for (const group of kind.groups) {
+          group.ball = null;
+          settle(group, fish, random() < 0.5 ? 1 : -0.5);
+        }
+      }
+    },
+    // A bait ball (baitball.js): every shoal of a kind balled up tight round `ball.centre`,
+    // milling, a hole opening round whatever comes into it -- or, with null, let go again.
+    // They come in from round about it, out of sight.
+    ball(name, ball) {
+      const kind = kinds[name];
+      if (!kind) return;
+      for (const group of kind.groups) {
+        group.ball = ball;
+        if (!ball) {
+          group.panic = 1;
+          continue;
+        }
+        group.active = true;
+        group.panic = 0;
+        group.centre.copy(ball.centre);
+        group.home.copy(ball.centre);
+        locate(ball.centre.x, ball.centre.z, null, group.river);
+        for (const m of group.members) {
+          m.alive = true;
+          m.swallow = 0;
+          m.kraft = undefined;
+          m.brawl = null;
+          m.tired = 0;
+          m.position.copy(ball.centre).addScaledVector(m.offset, ball.radius * 3.5);
+          m.velocity.set(0, 0, 0);
+        }
+      }
+    },
+    // Something dives into the ball at `at` and takes the one nearest it (within `reach`).
+    take(name, at, reach = 4) {
+      const kind = kinds[name];
+      if (!kind) return false;
+      let best = null,
+        bestD = reach;
+      for (const group of kind.groups)
+        for (const m of group.members) {
+          if (!m.alive) continue;
+          const d = m.position.distanceTo(at);
+          if (d < bestD) (bestD = d), (best = m);
+        }
+      if (!best) return false;
+      best.alive = false;
+      best.swallow = 0;
+      return true;
     },
     // Returns nutrition eaten by the salmon; `hunters` may take fish too. `aim` collects the
     // nearest fish close ahead that the salmon could dart at.
@@ -784,7 +834,11 @@ function createShoals(scene, { detail, brawls }) {
           const threat = spec.flees && L > spec.ref * 1.6 ? 1 : 0;
           const fear = threat * clamp(1 - (d - L * 2) / (6 + L * 4), 0, 1) * clamp(0.4 + fish.relative.length() / 3, 0.4, 1.5);
           group.panic = Math.max(group.panic - dt * 0.4, fear);
-          if (spec.station || group.river.s < S.coast) {
+          if (group.ball) {
+            // Balled up: held where the hunters keep it.
+            group.panic = 0;
+            group.centre.copy(group.ball.centre);
+          } else if (spec.station || group.river.s < S.coast) {
             // Station-keeping: the centre stays where it was put.
             group.centre.lerp(group.home, 1 - Math.exp(-dt * 0.2));
           } else {
@@ -793,8 +847,12 @@ function createShoals(scene, { detail, brawls }) {
             group.wander.clampLength(0, spec.cruise);
             group.centre.addScaledVector(group.wander, dt);
           }
-          if (group.panic > 0.05 && d > 1e-3) group.centre.addScaledVector(toFish, (spec.sprint * 0.6 * group.panic * dt) / d);
+          if (group.panic > 0.05 && d > 1e-3 && !group.ball) group.centre.addScaledVector(toFish, (spec.sprint * 0.6 * group.panic * dt) / d);
           group.centre.y = clamp(group.centre.y, floor + spec.size[1] * 0.8, lv - spec.size[1] * 0.6);
+          // The ball turns slowly on itself.
+          const mill = group.ball ? time * 0.45 : 0;
+          const millC = Math.cos(mill),
+            millS = Math.sin(mill);
           const spread = (spec.spread ?? (spec.station ? 5 : 1 + spec.size[1] * 1.2)) * (1 + group.panic);
           for (const m of group.members) {
             if (!m.alive) {
@@ -824,13 +882,25 @@ function createShoals(scene, { detail, brawls }) {
               continue;
             }
             // Keep to its place in the shoal, hold into the current, scatter from the salmon.
-            desired.copy(group.centre).addScaledVector(m.offset, spread).sub(m.position).multiplyScalar(1.2);
+            if (group.ball) {
+              const R = group.ball.radius;
+              desired.set(group.centre.x + (m.offset.x * millC - m.offset.z * millS) * R, group.centre.y + m.offset.y * R * 1.6, group.centre.z + (m.offset.x * millS + m.offset.z * millC) * R);
+              desired.sub(m.position).multiplyScalar(2.2);
+              // (away from a bird plunging in)
+              for (const p of group.ball.away) {
+                delta.subVectors(m.position, p);
+                const dp = delta.length();
+                if (dp < 5 && dp > 1e-3) desired.addScaledVector(delta, ((5 - dp) / dp) * 6);
+              }
+            } else desired.copy(group.centre).addScaledVector(m.offset, spread).sub(m.position).multiplyScalar(1.2);
             // The siblings keep down in the gravel, wriggling.
             if (spec.home !== undefined) desired.y = (floor + 0.06 + Math.max(0, m.offset.y) * 0.2 - m.position.y) * 2 + Math.sin(m.phase * 0.3) * 0.05;
-            if (!spec.station && group.river.s >= S.coast) desired.addScaledVector(group.wander, 0.6);
+            if (!spec.station && group.river.s >= S.coast && !group.ball) desired.addScaledVector(group.wander, 0.6);
             delta.subVectors(m.position, fish.position);
             const dm = delta.length();
-            const scare = spec.flees ? (threat ? 3 + L * 1.5 : 1.2 + L) : 0.6 + L * 0.8;
+            // (balled up they have nowhere to go: only a hole opens round the salmon, wider
+            // when it dashes)
+            const scare = group.ball ? (2 + L * 0.9) * (fish.lunging > 0 ? 1.5 : 1) : spec.flees ? (threat ? 3 + L * 1.5 : 1.2 + L) : 0.6 + L * 0.8;
             if (dm < scare && dm > 1e-3) {
               desired.addScaledVector(delta, ((scare - dm) / dm) * (3 + (threat ? spec.sprint : spec.cruise)));
               m.tired += dt;
@@ -861,7 +931,10 @@ function createShoals(scene, { detail, brawls }) {
               delta.subVectors(m.position, fish.mouth);
               const dm2 = delta.length();
               const ahead = delta.dot(fish.heading);
-              if (dm2 < reach && ahead > -0.1 * reach) {
+              // Out of a bait ball only in a dash, and one at a time (it must swallow first).
+              const takes = !group.ball || ((fish.lunging > 0 || (fish.striking ?? 0) > 0) && time - (group.ball.bite ?? -9) > 1.4);
+              if (dm2 < reach && ahead > -0.1 * reach && takes) {
+                if (group.ball) group.ball.bite = time;
                 m.alive = false;
                 m.swallow = SWALLOW;
                 eaten += salmon.eat(spec.nutrition * (m.size / spec.ref) ** 3, group.name);
@@ -1732,7 +1805,8 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
       brawls.reset();
     },
     // `drive`: the lead of the smolt school while the goosanders drive it (drive.js), or null.
-    update(dt, { fish, salmon: s, time, world, camera, above, drive = null }) {
+    // `ball`: the bait ball at sea (baitball.js), or null.
+    update(dt, { fish, salmon: s, time, world, camera, above, drive = null, ball = null }) {
       eddies = world?.eddies?.ready ? world.eddies : null;
       prof.mark("life:pre");
       if (camera) motes.update(dt, camera.position, fish.river.s, fish.length, time, above);
@@ -1756,7 +1830,12 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
       // More drifts past a spot the fish holds as its own, and down a rich riffle.
       eaten += food.update(dt, fish, salmon, time, (rivals.territory.inside ? 1 : 0) + 0.9 * (world.rich ?? 0), aim);
       prof.mark("life:food");
-      const outcome = hunters.update(dt, fish, time, travel, world.covered, s?.speeds?.().cruise ?? 1, school.count + run.count > 0 ? (at) => (school.count > 0 && school.decoy(at, fish, drive ? (fish.position.distanceTo(drive.position) < drive.radius ? 1 : 0.6) : 0.75, drive ? 6 : 5)) || (run.count > 0 && run.decoy(at, fish)) : null, world.occluded ?? null, world.rich ?? 0, drive);
+      // A hunter striking into a school, or into a bait ball the fish is in, often takes one
+      // of them instead.
+      const schoolDecoy = school.count + run.count > 0 ? (at) => (school.count > 0 && school.decoy(at, fish, drive ? (fish.position.distanceTo(drive.position) < drive.radius ? 1 : 0.6) : 0.75, drive ? 6 : 5)) || (run.count > 0 && run.decoy(at, fish)) : null;
+      const ballDecoy = ball && fish.position.distanceTo(ball.centre) < ball.radius + 2 + fish.length ? (at) => Math.random() < 0.6 && shoals.take(ball.kind, at, 4 + fish.length) : null;
+      const decoy = schoolDecoy && ballDecoy ? (at) => schoolDecoy(at) || ballDecoy(at) : (schoolDecoy ?? ballDecoy);
+      const outcome = hunters.update(dt, fish, time, travel, world.covered, s?.speeds?.().cruise ?? 1, decoy, world.occluded ?? null, world.rich ?? 0, drive);
       // The fish being fought, for the bar over it: a hunter, or a young salmon holding a spot.
       prof.mark("life:hunters");
       let foe = null;
