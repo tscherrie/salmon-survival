@@ -1151,6 +1151,14 @@
 #scentbar.strange .fill { background: linear-gradient(90deg, #8a7fa6, #b9b0cf); }
 #scentbar.strange .way { color: #c9bde8; }
 #habitat.touch #scentbar { bottom: max(12px, env(safe-area-inset-bottom)); padding: 6px 12px; font-size: 11px; }
+/* The finale: by her side until she is ready. */
+#reddbar { position: fixed; z-index: 3; left: 50%; bottom: 96px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: rgba(0, 14, 18, 0.55); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3); pointer-events: none; font: 800 12px/1 var(--hud-font); color: #f3fbf7; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); white-space: nowrap; }
+#reddbar[hidden] { display: none; }
+#reddbar .track { position: relative; width: min(200px, 26vw); height: 8px; border-radius: 6px; overflow: hidden; background: rgba(255, 255, 255, 0.16); }
+#reddbar .fill { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0); background: linear-gradient(90deg, #ff9a6b, #ffd3b0); }
+#reddbar .way { min-width: 90px; color: #ffe6d6; }
+#reddbar.rival { background: rgba(80, 8, 8, 0.6); box-shadow: 0 0 0 2px rgba(255, 110, 90, 0.7), 0 4px 18px rgba(0, 0, 0, 0.3); }
+#habitat.touch #reddbar { bottom: max(12px, env(safe-area-inset-bottom)); padding: 6px 12px; font-size: 11px; }
 /* The bait ball's bar is the drive's; its arrow is green. */
 #huntbar { position: fixed; z-index: 3; left: 50%; bottom: 96px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: rgba(0, 14, 18, 0.55); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3); pointer-events: none; font: 800 12px/1 var(--hud-font); color: #f3fbf7; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); white-space: nowrap; }
 #huntbar[hidden] { display: none; }

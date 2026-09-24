@@ -43,6 +43,7 @@ import { createSiblings } from "./siblings.js";
 import { createDrive } from "./drive.js";
 import { createBaitBall } from "./baitball.js";
 import { createScent } from "./scent.js";
+import { createRedd } from "./redd.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -776,6 +777,61 @@ async function start() {
       }
     }
   }
+  // The finale (redd.js): home and ripe, a hen cutting the redd on the gravel of the spring;
+  // by her side until she is ready, driving off the other cocks -- then they spawn.
+  const redd = createRedd(scene);
+  const reddBar = document.createElement("div");
+  reddBar.id = "reddbar";
+  reddBar.hidden = true;
+  reddBar.innerHTML = '<span class="label">An ihrer Seite</span><div class="track"><div class="fill"></div></div><span class="way"></span>';
+  habitat.append(reddBar);
+  const reddFill = reddBar.querySelector(".fill");
+  const reddWay = reddBar.querySelector(".way");
+  let reddWord = "";
+  let rivalSaid = null;
+  function stepRedd(dt) {
+    const spawner = phaseOf(fish.stage) === "spawner";
+    if (!redd.on) {
+      if (spawner && !spawning && dead <= 0 && fish.progress >= 0.99 && Math.hypot(fish.position.x - REDD.x, fish.position.z - REDD.z) < 60) {
+        redd.start(fish);
+        track("redd", { outcome: "start" });
+        hud.toast("Daheim.", "Über dem Kies der Quelle schlägt ein Weibchen die Laichgrube.", 6);
+        hud.tip("redd", "<b>Daheim.</b> Ein Weibchen schlägt die Laichgrube: Sie legt sich auf die Seite und schlägt mit dem Schwanz den Kies frei. Bleib an ihrer Seite, bis sie bereit ist. Drängt sich ein anderer Milchner dazu, vertreib ihn mit einem Stoß (<kbd>Leertaste</kbd>) in die Flanke.", 15);
+      }
+      reddBar.hidden = true;
+      return;
+    }
+    if (!spawner || (dead > 0 && !spawning)) {
+      redd.stop();
+      reddBar.hidden = true;
+      return;
+    }
+    const happened = redd.update(dt, fish, time);
+    const st = redd.state;
+    if (happened.driven) {
+      shake = Math.max(shake, 0.6);
+      sound.thump();
+      hud.note("Vertrieben!");
+    }
+    if (st.rival && rivalSaid !== st.rival) {
+      rivalSaid = st.rival;
+      hud.note("Ein Rivale ist bei ihr!");
+    } else if (!st.rival) rivalSaid = null;
+    reddBar.hidden = spawning != null;
+    reddFill.style.transform = `scaleX(${st.courtship.toFixed(3)})`;
+    const near = fish.position.distanceTo(redd.her.position) < redd.her.size * 0.5 + fish.length * 1.5;
+    const word = st.rival ? "Vertreib den Rivalen!" : near ? "bleib bei ihr" : "schwimm zu ihr";
+    reddBar.classList.toggle("rival", !!st.rival);
+    if (word !== reddWord) {
+      reddWord = word;
+      reddWay.textContent = translate(word);
+    }
+    if (st.ready && !spawning && dead <= 0) {
+      hud.toast("Sie ist bereit", "Eier und Milch, über dem Kies.", 4);
+      track("redd", { outcome: "spawn", rivals: st.drivenOff });
+      spawn();
+    }
+  }
   // The way home, for a spawner: long, and between the places that try it much the same.
   // Where nothing is going on it can go on with the run -- the screen goes dark, a word of
   // where it has got to, and it is just below the next of them. Never past one: each place
@@ -1346,6 +1402,7 @@ async function start() {
   const warned = new WeakMap();
   function warnings() {
     const list = dead > 0 || celebration.active || fish.safe ? [] : life.hunters.threats(fish, threatList);
+    if (list === threatList && redd.on) redd.threats(fish, list);
     list.sort((a, b) => b.level - a.level);
     const w = habitat.clientWidth,
       h = habitat.clientHeight;
@@ -1609,6 +1666,7 @@ async function start() {
     stepDrive(dt);
     stepBall(dt);
     stepScent(dt);
+    stepRedd(dt);
     const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s), drive: drive.on ? drive.lead : null, ball: baitball.on ? baitball.ball : null });
     warnings(dt);
     goalArrow();
@@ -1842,8 +1900,7 @@ async function start() {
       hud.tip("hatch", "<b>Abendsprung!</b> In der Dämmerung schlüpfen die Insekten: Larven steigen zur Oberfläche, und oben treiben frisch geschlüpfte Fliegen. Jetzt gibt es reichlich Futter – überall ringt es, wo andere Fische steigen.", 9);
     else if (conditions.night > 0.7 && fish.length < 6)
       hud.tip("night", "<b>Nacht.</b> Forellen, Barsche und Vögel sehen dich jetzt kaum – aber Otter und Groppen jagen im Dunkeln mit Tasthaaren und Seitenlinie.", 9);
-    // Spawning: home, ripe, and in the gravel of the redd.
-    if (STAGES[fish.stage].fasting && fish.progress >= 1 && Math.hypot(fish.position.x - REDD.x, fish.position.z - REDD.z) < 14 && dead <= 0) spawn();
+    // (Spawning: home, ripe, by the hen until she is ready -- see stepRedd.)
 
     falls.update(dt, camera.position, cameraRiver.s, time);
     ripples.update(dt);
@@ -2019,6 +2076,7 @@ async function start() {
   // All the siblings gone: a new brood hatches in the gravel of the spring.
   function newBrood() {
     brood.renew();
+    redd.stop();
     events.reset();
     salmon.setStage(0, 0);
     startAt(S.redd, section(S.redd).thalweg, 0.02);
@@ -2084,6 +2142,7 @@ async function start() {
     track("spawned", { generation: save.generation + 1 });
     dead = 1e9;
     spawning = { t: 0, laid: 0 };
+    if (redd.on) redd.spawn(fish);
     sound.hush(false);
   }
   function stepSpawning(dt) {
@@ -2107,6 +2166,7 @@ async function start() {
   }
   function nextGeneration() {
     spawning = null;
+    redd.stop();
     brood.renew();
     showBrood();
     save.generation++;
@@ -2480,6 +2540,8 @@ async function start() {
       startDrive,
       baitball,
       startBall: () => baitball.start(fish, life.shoals),
+      redd,
+      scent,
       leapCharge: () => ({ charge, reach: inLeapReach(), fall: SALMON_FALL?.s, dead, air: fish.airborne, cel: celebration.active }),
       die,
       spawn,
