@@ -32,6 +32,7 @@ import { createPlaces } from "./places.js";
 import { createEvents } from "./events.js";
 import { lang, startTranslation } from "./i18n.js";
 import { track } from "./track.js";
+import { profile as prof } from "./profile.js";
 import { createCelebration } from "./celebrate.js";
 
 // English over the German, unless the player chose German.
@@ -846,6 +847,7 @@ async function start() {
     hud.note(hit.where === "front" ? "Von vorn – Vorsicht!" : hit.where === "rear" ? (hit.winded ? "Volltreffer!" : "Treffer von hinten!") : hit.winded ? "Volltreffer in die Flanke!" : "Treffer in die Flanke!");
   }
   function step(dt) {
+    prof.begin();
     if (celebration.active) {
       celebration.t += dt / Math.max(celebration.scale, 1e-3);
       if (celebration.t >= celebration.duration) endCelebration();
@@ -859,8 +861,10 @@ async function start() {
     const viewer = { x: camera.position.x, z: camera.position.z, s: cameraRiver.s, u: cameraRiver.u };
     const sea = regionWeights(s).sea;
     terrain.update(viewer, { radius: lerp(clamp(70 + L * 12, 90, 170), 210, sea), near: clamp(0.28 + L * 0.1, 0.35, 1), budget: 5, land: 60 });
+    prof.mark("terrain");
     featureEvents.length = 0;
     features.update(fish.river.s, 3, { dt, time, fish, light: conditions.light, toss: (type, x, z) => life.food.toss(type, x, z, fish), events: featureEvents });
+    prof.mark("features");
     if (featureEvents.includes("bread")) hud.tip("bread", "<b>Brot!</b> Leute auf der Brücke werfen Brotkrumen ins Wasser. Schnell hin – sie treiben an der Oberfläche.", 8);
     // The mill wheel's paddles: a knock, and the water throws the fish on.
     const struck = dead <= 0 && !fish.airborne ? features.hazard(fish, time) : null;
@@ -905,6 +909,7 @@ async function start() {
     terrain.collidersNear(fish.position.x, fish.position.z, Math.max(6, L * 3), stones);
     pebbles.update(fish.position, L, fish.river.s);
     pebbles.near(fish.position, Math.max(0.6, L * 1.5), stones);
+    prof.mark("pebbles+colliders");
     world.covered = terrain.covered(fish.position.x, fish.position.y, fish.position.z);
     // The hour and the time of year, for everything that lives by them; the water's
     // temperature here, and what it does to the fish; ice; how hard the river runs.
@@ -926,6 +931,7 @@ async function start() {
 
     world.netted = nets.stuck.active;
     eddies?.update(dt, fish, gatherStones, gusts(fish.river.s, fish.river.u, time));
+    prof.mark("eddies");
     if (eddyCanvas && (eddyClock += dt) > 0.1) {
       eddyClock = 0;
       eddies.debug(eddyCanvas, fish);
@@ -940,7 +946,9 @@ async function start() {
         wanted.yaw = fish.yaw;
         wanted.pitch = fish.pitch * 0.9;
       }
+      prof.mark("misc");
       salmon.update(dt, wanted, world);
+      prof.mark("salmon");
     }
     else readInput(dt);
     // The gill nets in the estuary.
@@ -1012,7 +1020,9 @@ async function start() {
     if (events.aurora > 0.3 && camera.position.y > level(cameraRiver.s) + 0.05) feat("aurora", { delay: 0.5 });
     if (events.hooked) shake = Math.max(shake, 0.2);
     // The rest of the river's life, and what it does to the fish.
+    prof.mark("nets+events");
     const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s) });
+    prof.mark("life");
     // Caught: the salmon goes where its captor holds it -- down a fish's throat head first,
     // or up out of the water in a bird's bill or under a bear's claws.
     const held = life.hunters.captive;
@@ -1217,6 +1227,7 @@ async function start() {
     falls.update(dt, camera.position, cameraRiver.s, time);
     ripples.update(dt);
     placeCamera(dt);
+    prof.mark("rest");
     saveClock += dt;
     if (saveClock > 8 && dead <= 0 && !fish.airborne) {
       saveClock = 0;
@@ -1496,7 +1507,10 @@ async function start() {
     mateTime += dt;
     minimap.update(dt, { fish, yaw: look.yaw, others: mates ? mates(mateTime) : [] });
 
+    prof.mark("draw-cpu");
     caustics.render();
+    if (prof.on) renderer.getContext().finish();
+    prof.mark("caustics");
     renderer.shadowMap.needsUpdate = true;
     camera.far = above ? 900 : clamp(4.5 / scene.fog.density, 120, 600);
     camera.updateProjectionMatrix();
@@ -1504,8 +1518,18 @@ async function start() {
     post.jitter();
     if (settings.taa) shadowFrame(key, shadowRadius, frames);
     renderer.setRenderTarget(post.main);
+    if (prof.on) renderer.getContext().finish();
+    prof.mark("draw-prep");
     renderer.render(scene, camera);
+    if (prof.on) {
+      renderer.getContext().finish();
+      prof.calls = renderer.info.render.calls;
+      prof.tris = renderer.info.render.triangles;
+    }
+    prof.mark("render");
     post.render({ light: key, sunLight, density: above ? 0.0001 : scene.fog.density });
+    if (prof.on) renderer.getContext().finish();
+    prof.mark("post");
     frames++;
   }
 
@@ -1599,6 +1623,7 @@ async function start() {
   // Development handles: ?capture=1 with tools/capture-server.mjs running.
   if (query.get("capture") || query.get("diagnostics") === "1")
     window.salmon = {
+      profile: prof,
       fish,
       salmon,
       terrain,

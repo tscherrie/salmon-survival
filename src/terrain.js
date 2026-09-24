@@ -3,7 +3,72 @@ import { rockGeometry } from "../../riverscape/src/environment.js";
 import { GeometryBatch, randomGenerator } from "../../riverscape/src/math.js";
 import { foliageDepth, foliageMaterial } from "../../riverscape/src/foliage.js";
 import { FALLS, MILLS, S, TRIBUTARIES, bedDetail, current, frame, level, passSlot, place, section, smooth, tributaryAt } from "./course.js";
-import { SolidBatch, algae, bankGrass, birch, leafSpray, crowfoot, eelgrass, fallenLeaf, kelp, milfoil, mossTuft, pine, pondweed, reeds, sedge, spruce, starwort, sugarKelp, turfTuft } from "./flora.js";
+import { SolidBatch, birch, pine, spruce } from "./flora.js";
+import * as flora from "./flora.js";
+
+// Every plant put into a block's batch is remembered as a piece -- its run of indices -- so
+// that a block far off can draw only some of its plants (plantLod below): the weed thins out
+// with distance, where the haze hides it anyway, and the nearest blocks keep every blade.
+const piece =
+  (fn) =>
+  (batch, ...args) => {
+    const start = batch.indices.length;
+    const result = fn(batch, ...args);
+    (batch.pieces ??= []).push(start, batch.indices.length);
+    return result;
+  };
+const algae = piece(flora.algae),
+  bankGrass = piece(flora.bankGrass),
+  leafSpray = piece(flora.leafSpray),
+  crowfoot = piece(flora.crowfoot),
+  eelgrass = piece(flora.eelgrass),
+  fallenLeaf = piece(flora.fallenLeaf),
+  kelp = piece(flora.kelp),
+  milfoil = piece(flora.milfoil),
+  mossTuft = piece(flora.mossTuft),
+  pondweed = piece(flora.pondweed),
+  reeds = piece(flora.reeds),
+  sedge = piece(flora.sedge),
+  starwort = piece(flora.starwort),
+  sugarKelp = piece(flora.sugarKelp),
+  turfTuft = piece(flora.turfTuft);
+// Reorders a batch's indices so that its plants come in a random order, the big ones early,
+// and returns how many indices hold the first 30 % and the first 60 % of them.
+const PLANT_LOD = [0.3, 0.6];
+function plantLod(batch) {
+  const pieces = batch.pieces ?? [];
+  const src = batch.indices;
+  const n = pieces.length / 2;
+  const order = [];
+  for (let k = 0; k < n; k++) {
+    const length = pieces[2 * k + 1] - pieces[2 * k];
+    const h = Math.abs(Math.sin((k + 1) * 12.9898 + pieces[2 * k] * 0.013) * 43758.5453) % 1;
+    order.push([length > 600 ? h * 0.35 : h, k]);
+  }
+  order.sort((a, b) => a[0] - b[0]);
+  const out = [];
+  const marks = [];
+  const covered = new Uint8Array(src.length);
+  for (let i = 0; i < order.length; i++) {
+    const k = order[i][1];
+    for (let j = pieces[2 * k]; j < pieces[2 * k + 1]; j++) {
+      out.push(src[j]);
+      covered[j] = 1;
+    }
+    while (marks.length < PLANT_LOD.length && (i + 1) / order.length >= PLANT_LOD[marks.length]) marks.push(out.length);
+  }
+  while (marks.length < PLANT_LOD.length) marks.push(out.length);
+  for (let j = 0; j < src.length; j++) if (!covered[j]) out.push(src[j]);
+  batch.indices = out;
+  return marks;
+}
+// How much of a block's weed to draw at a distance (from the block's edge).
+function lodPlants(mesh, d) {
+  const marks = mesh.userData.lod;
+  if (!marks) return;
+  const count = d < 45 ? Infinity : d < 90 ? marks[1] : marks[0];
+  if (mesh.geometry.drawRange.count !== count) mesh.geometry.setDrawRange(0, count);
+}
 
 // The world round the fish, built a block at a time and dropped again once it is far
 // behind. Blocks are laid out in river coordinates -- so many units along the river, so many
@@ -751,7 +816,9 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
       }
       void c;
     }
+    let plantMesh = null;
     if (plants.positions.length) {
+      const lod = plantLod(plants);
       const geometry = plants.geometry();
       // Culled like anything else, with room for the sway: a block's weed behind the
       // camera, or outside the sun's shadow box, is not drawn at all.
@@ -762,6 +829,8 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       mesh.name = "Plants";
+      mesh.userData.lod = lod;
+      plantMesh = mesh;
       group.add(mesh);
     }
     yield "plants";
@@ -793,7 +862,7 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
       o.matrixAutoUpdate = false;
     });
     group.updateMatrixWorld(true);
-    return { group, colliders, cover };
+    return { group, colliders, cover, plants: plantMesh };
   }
 
   // ------------------------------------------------------------------------------------
@@ -898,6 +967,7 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
           blocks.set(key, block);
         }
         block.distance = w.d;
+        if (block.content?.plants) lodPlants(block.content.plants, w.d);
         if (!block.job && block.cell !== w.cell) {
           // Only rebuild for detail when the change is worth it.
           if (!block.ready || w.cell < block.cell || w.cell > block.cell * 1.9) {

@@ -9,6 +9,7 @@ import { conditions } from "./seasons.js";
 import { createRivals } from "./rivals.js";
 import { createSchool } from "./school.js";
 import { createBrawls } from "./brawl.js";
+import { profile as prof } from "./profile.js";
 import { phaseOf } from "./salmon.js";
 
 // Everything else alive in the river and the sea, and what it means to the salmon:
@@ -196,7 +197,7 @@ function mergeSimple(list) {
 function createFood(scene, { count = 240 } = {}) {
   const random = randomGenerator(51377);
   const range = (a, b) => a + (b - a) * random();
-  const glow = { value: 0.5 };
+  const glow = { value: 0.25 };
   const pulseTime = { value: 0 };
   const material = new THREE.MeshStandardMaterial({ roughness: 0.45 });
   material.onBeforeCompile = (shader) => {
@@ -273,7 +274,7 @@ function createFood(scene, { count = 240 } = {}) {
       varying vec3 vColor;
       void main() {
         float r = length(gl_PointCoord - 0.5) * 2.0;
-        float a = exp(-r * r * 3.5) * 0.55;
+        float a = exp(-r * r * 3.5) * 0.275;
         if (a < 0.004) discard;
         // Fogged as a colour first, then weighted, so the haze is not added to the whole square.
         gl_FragColor = vec4(vColor * light, 1.0);
@@ -1768,7 +1769,7 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
       motes.material.uniforms.scale.value = value;
     },
     light(value) {
-      food.glow.value = 0.35 * value + 0.1;
+      food.glow.value = 0.175 * value + 0.05;
       food.haloMaterial.uniforms.light.value = value;
       motes.material.uniforms.light.value = 0.25 + 0.75 * value;
     },
@@ -1783,20 +1784,28 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
     },
     update(dt, { fish, salmon: s, time, world, camera, above }) {
       eddies = world?.eddies?.ready ? world.eddies : null;
+      prof.mark("life:pre");
       if (camera) motes.update(dt, camera.position, fish.river.s, fish.length, time, above);
+      prof.mark("life:motes");
       jellies.update(dt, fish, time);
       debris.update(dt, fish, time);
+      prof.mark("life:jellies+debris");
       frame(fish.river.s, at);
       const along = fish.velocity.x * at.tx + fish.velocity.z * at.tz;
       if (Math.abs(along) > 0.3) travel = Math.sign(along);
       brawls.begin(time);
       const rivalEvents = rivals.update(dt, fish, { travel, food: food.items });
+      prof.mark("life:rivals");
       school.update(dt, fish, time, food.items);
       run.update(dt, fish, time);
+      prof.mark("life:schools");
       let eaten = shoals.update(dt, fish, salmon, time, travel, aim);
+      prof.mark("life:shoals");
       eaten += food.update(dt, fish, salmon, time, rivals.territory.inside ? 1 : 0, aim);
+      prof.mark("life:food");
       const outcome = hunters.update(dt, fish, time, travel, world.covered, s?.speeds?.().cruise ?? 1, school.count + run.count > 0 ? (at) => (school.count > 0 && school.decoy(at, fish)) || (run.count > 0 && run.decoy(at, fish)) : null, world.occluded ?? null);
       // The fish being fought, for the bar over it: a hunter, or a young salmon holding a spot.
+      prof.mark("life:hunters");
       let foe = null;
       for (const f of [hunters.foe(fish), rivals.foe(fish), brawls.foe(fish)]) if (f && (!foe || f.score > foe.score)) foe = f;
       // Blows on the other fish, and their nips back.
