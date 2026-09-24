@@ -5,12 +5,13 @@ import { foliageDepth, foliageMaterial } from "../../riverscape/src/foliage.js";
 import { waterLitShader } from "../../riverscape/src/water.js";
 import { COLD_SPRINGS, CRACKS, FALLS, ISLANDS, KING_POOL, MILLS, S, TRIBUTARIES, UNDERCUTS, bed, frame, level, place, section, smooth } from "./course.js";
 import { MODEL_LENGTH, createFishMesh } from "./anatomy.js";
-import { SolidBatch, bankGrass, fallenLeaf, leafSpray, mossTuft, reeds, sedge, turfTuft } from "./flora.js";
-import { TreeBatch, birch, forestMaterial } from "./forest.js";
+import { SolidBatch, bankGrass, fallenLeaf, hangingMoss, leafSpray, mossTuft, reeds, sedge, turfTuft } from "./flora.js";
+import { TreeBatch, alder, birch, fallenTrunk, fern, forestMaterial, roots, shrub, willow } from "./forest.js";
 import { trunkColliders, trunkGeometry, withMossChannel } from "./terrain.js";
 import { addPlace } from "./places.js";
 import { photo } from "./materials.js";
 import { addClearing } from "./clearings.js";
+import { nettingMaterial } from "./netting.js";
 
 // The special places built into the river -- islands, side brooks, and (added by later
 // parts) caves, a mill, a bridge, a wreck: each dressed with what belongs to it (stones,
@@ -33,8 +34,10 @@ const TAU = Math.PI * 2;
 const at = {};
 
 // ---------------------------------------------------------------------------------------
-// Islands: their shores fringed with sedge and grass, reeds at the tips, a few birches and
-// alders on top, and drift wood piled against the upstream tip.
+// Islands: their shores fringed with sedge and grass and willows leaning out over the water,
+// roots hanging from the cut banks, reeds at the tips, alders or willows and birches on top
+// over bilberry and ferns, a gravel bar at the tail, boulders at the head and drift wood
+// piled against it.
 for (const q of ISLANDS) {
   addPlace({ id: `island-${q.name.toLowerCase()}`, name: q.name, line: "Der Fluss teilt sich um eine Insel", from: q.from + (q.to - q.from) * 0.1, to: q.to - (q.to - q.from) * 0.1, s: (q.from + q.to) / 2, icon: "place", tier: "silver" });
   addFeature({
@@ -50,38 +53,74 @@ for (const q of ISLANDS) {
         for (let e = 0; e < c.islandHalf * 1.8; e += 0.4) if (bed(s, c.islandU + side * e) < lv - 0.05) return c.islandU + side * e;
         return null;
       };
-      const step = 5;
+      // Each island its own: alders on the Erleninsel, willows crowding the Weideninsel's
+      // shores, the Kiesinsel mostly bare gravel and cobbles with a few willow bushes.
+      const kind = /erle/i.test(q.name) ? "alder" : /weide/i.test(q.name) ? "willow" : "gravel";
+      const step = 4;
       for (let s = q.from + 20; s < q.to - 20; s += step) {
         const c = section(s);
         if (c.island < 0.15) continue;
         const lv = level(s);
+        const fs = frame(s, {});
+        const flow = Math.atan2(fs.tz, fs.tx);
+        const along = (s - q.from) / (q.to - q.from);
         for (const side of [-1, 1]) {
           const u = edge(s + range(-1, 1), side);
           if (u === null) continue;
           place(s, u, at);
           const y = bed(s, u);
-          const fs = frame(s, {});
           const out = new THREE.Vector3(side * fs.nx, 0, side * fs.nz);
-          const flow = Math.atan2(fs.tz, fs.tx);
           if (random() < 0.6) bankGrass(ctx.plants, at.x, at.z, y + 0.2, lv, out, flow, random, range(0.8, 1.3));
           else sedge(ctx.plants, at.x, at.z, y, lv, random, range(0.6, 1.1));
           ctx.cover.push({ x: at.x, z: at.z, radius: 2, top: lv });
-        }
-        // Turf and trees on top.
-        if (random() < 0.5) {
-          const u = c.islandU + range(-0.6, 0.6) * c.islandHalf;
-          const y = bed(s, u);
-          if (y > lv + 0.4) {
-            place(s, u, at);
-            for (let k = 0; k < 6; k++) turfTuft(ctx.plants, at.x + range(-1.5, 1.5), at.z + range(-1.5, 1.5), y, flow0(s), random, range(1, 1.6), range(0.18, 0.26));
+          // Willows at the water's edge, leaning out over it.
+          const inland = u - side * range(0.8, 2);
+          const yi = bed(s, inland);
+          if (yi > lv + 0.2 && random() < { willow: 0.2, alder: 0.05, gravel: 0.07 }[kind]) {
+            place(s, inland, at);
+            willow(ctx.trees, at.x, yi, at.z, kind === "gravel" ? range(9, 15) : range(16, 30), random, out);
+            ctx.cover.push({ x: at.x + out.x * 3, z: at.z + out.z * 3, radius: 4, top: lv });
+          }
+          // Where the bank is cut steep, the roots of what grows on it hang in the water.
+          if (kind !== "gravel" && random() < 0.16 && yi - y > 0.8) {
+            place(s, u - side * 0.4, at);
+            roots(ctx.trees, at.x, Math.min(yi, lv + 0.6), at.z, out, Math.min(2.5, lv - y + 0.6), random);
+            ctx.cover.push({ x: at.x + out.x, z: at.z + out.z, radius: 2.2, top: lv });
           }
         }
-        if (random() < 0.12 * c.island) {
-          const u = c.islandU + range(-0.4, 0.4) * c.islandHalf;
+        // On top: turf and what grows in it.
+        for (let k = 0; k < 3; k++) {
+          const u = c.islandU + range(-0.75, 0.75) * c.islandHalf;
           const y = bed(s, u);
-          if (y > lv + 0.8) {
-            place(s, u, at);
-            birch(ctx.trees, at.x, y, at.z, range(35, 70), random);
+          if (y < lv + 0.4) continue;
+          place(s + range(-2, 2), u, at);
+          const x = at.x,
+            z = at.z;
+          if (kind === "gravel") {
+            if (random() < 0.35) turfTuft(ctx.plants, x, z, y, flow0(s), random, range(0.7, 1.2), range(0.14, 0.2));
+            if (random() < 0.3) ctx.stone(s + range(-2, 2), u, range(0.35, 0.9), range(0.25, 0.5));
+            if (random() < 0.04) willow(ctx.trees, x, y, z, range(8, 14), random);
+            continue;
+          }
+          if (random() < 0.6) for (let t = 0; t < 4; t++) turfTuft(ctx.plants, x + range(-1.5, 1.5), z + range(-1.5, 1.5), y, flow0(s), random, range(1, 1.6), range(0.18, 0.26));
+          if (random() < 0.3) shrub(ctx.trees, x + range(-1, 1), y, z + range(-1, 1), range(1.2, 2.2), random);
+          if (kind === "alder" && random() < 0.2) fern(ctx.trees, x + range(-1, 1), y, z + range(-1, 1), range(1.4, 2.4), random);
+          if (y > lv + 0.8 && random() < (kind === "alder" ? 0.13 : 0.07) * c.island) {
+            if (kind === "alder") alder(ctx.trees, x, y, z, range(28, 55), random);
+            else if (random() < 0.7) willow(ctx.trees, x, y, z, range(18, 32), random);
+            else birch(ctx.trees, x, y, z, range(30, 55), random);
+          }
+          if (kind === "alder" && random() < 0.015) fallenTrunk(ctx.trees, x, y, z, range(14, 24), random);
+        }
+        // The tail is a bar of gravel and cobbles the river has dropped; the head a few
+        // boulders that part the water.
+        if (along > 0.82 || along < 0.14) {
+          for (let k = 0; k < (along > 0.82 ? 4 : 1); k++) {
+            const u = c.islandU + range(-1.3, 1.3) * Math.max(3, c.islandHalf);
+            const y = bed(s, u);
+            if (y > lv + 0.6 || y < lv - 3) continue;
+            if (along > 0.82) ctx.stone(s + range(-2, 2), u, range(0.3, 1.1), range(0.2, 0.55));
+            else if (random() < 0.6) ctx.stone(s + range(-2, 2), u, range(1.4, 2.8), range(0.9, 1.8));
           }
         }
         yield "island";
@@ -356,7 +395,43 @@ addFeature({
     ctx.rock(top.x, top.y, top.z, 5.6, H * 0.22, 7.2, Math.atan2(t.tz, t.tx) + Math.PI / 2);
     const top2 = at2(-4.5, 1.5, floor + H * 0.82);
     ctx.rock(top2.x, top2.y, top2.z, 4.2, H * 0.2, 4.8, range(0, TAU));
+    // The tunnel drawn out at both ends: lower blocks framing each mouth, a lintel over
+    // the downstream one, and blocks heaped on the roof.
+    for (const along of [-8, 8])
+      for (const side of [-1, 1]) {
+        const p = at2(along, side * range(4.2, 5), floor + H * 0.35);
+        ctx.rock(p.x, p.y, p.z, range(2.4, 3), H * 0.42, range(2.6, 3.4), range(0, TAU));
+      }
+    const lintel = at2(7.5, -0.5, floor + H * 0.78);
+    ctx.rock(lintel.x, lintel.y, lintel.z, 3.2, H * 0.17, 6.4, Math.atan2(t.tz, t.tx) + Math.PI / 2 + range(-0.15, 0.15));
+    for (let k = 0; k < 3; k++) {
+      const p = at2(range(-5, 5), range(-3, 3), floor + H * range(1.1, 1.3));
+      ctx.rock(p.x, p.y, p.z, range(2, 3.2), range(1.4, 2.2), range(2, 3.2), range(0, TAU));
+    }
     yield "tunnel";
+    // Inside: moss and weed hanging from the roof, the floor strewn with pebbles, leaves
+    // and a sunken branch, where the current hardly reaches.
+    const flow = Math.atan2(t.tz, t.tx);
+    for (let k = 0; k < 16; k++) {
+      const along = range(-7, 7.5);
+      const p = at2(along, range(-2.6, 2.6), floor + H * (Math.abs(along) < 5.5 ? 0.74 : 0.62) - range(0, 0.3));
+      hangingMoss(ctx.plants, new THREE.Vector3(p.x, p.y, p.z), flow, ctx.random, range(0.8, 1.6));
+    }
+    for (let k = 0; k < 14; k++) {
+      const along = range(-6, 6),
+        across = range(-2.8, 2.8);
+      place(3835 + along, u0 + across, at);
+      const ground = bed(3835 + along, u0 + across);
+      if (k < 8) ctx.stone(3835 + along, u0 + across, range(0.25, 0.6), range(0.15, 0.35));
+      fallenLeaf(ctx.plants, at.x, at.z, ground + 0.02, ctx.random, range(0.8, 1.3));
+    }
+    {
+      const a = at2(-5, -1.8, floor + 0.35),
+        b = at2(1, 0.6, floor + 0.25),
+        e = at2(5, 2.2, floor + 0.45);
+      ctx.wood.push(trunkGeometry([new THREE.Vector3(a.x, a.y, a.z), new THREE.Vector3(b.x, b.y, b.z), new THREE.Vector3(e.x, e.y, e.z)], 0.28, 0.1, 3835));
+    }
+    yield "inside";
     // Boulders round it.
     for (let k = 0; k < 7; k++) {
       const a = range(0, TAU),
@@ -371,7 +446,7 @@ addFeature({
       const p = at2(range(-8, 8), range(-8, 8), 0);
       mossTuft(ctx.plants, new THREE.Vector3(p.x, floor + range(0.2, H), p.z), Math.atan2(t.tz, t.tx), ctx.random, range(0.8, 1.4));
     }
-    for (let along = -4; along <= 4; along += 2) {
+    for (let along = -7; along <= 7; along += 2) {
       const p = at2(along, 0, 0);
       ctx.cover.push({ x: p.x, z: p.z, radius: 3.2, top: floor + H * 0.8 });
     }
@@ -1281,7 +1356,8 @@ addFeature({
 // -- and the pens breed sea lice, which a wild fish lingering by them picks up.
 export const FARM = { s: S.coast + 380, u: -720, pens: 3, radius: 22, depth: 26, name: "Lachsfarm" };
 addPlace({ id: "farm", name: FARM.name, line: "Netzgehege voller Zuchtlachse – Futter, aber auch Lachsläuse", s: FARM.s, u: FARM.u, radius: 80, icon: "place", tier: "silver" });
-let farmFish = null;
+let farmFish = null,
+  farmCod = null;
 addFeature({
   id: "farm",
   s: FARM.s,
@@ -1296,41 +1372,207 @@ addFeature({
       place(s, u, at);
       pens.push({ x: at.x, z: at.z });
     }
-    // Floating rings, walkway posts, and the nets.
-    const netCanvas = document.createElement("canvas");
-    netCanvas.width = netCanvas.height = 64;
-    const nc = netCanvas.getContext("2d");
-    nc.strokeStyle = "rgba(40, 50, 45, 0.85)";
-    nc.lineWidth = 3;
-    for (let i = 0; i <= 64; i += 16) {
-      nc.beginPath();
-      nc.moveTo(i, 0);
-      nc.lineTo(i, 64);
-      nc.moveTo(0, i);
-      nc.lineTo(64, i);
-      nc.stroke();
-    }
-    const netTexture = new THREE.CanvasTexture(netCanvas);
-    netTexture.wrapS = netTexture.wrapT = THREE.RepeatWrapping;
-    netTexture.repeat.set(40, 8);
-    const netMaterial = new THREE.MeshStandardMaterial({ map: netTexture, transparent: true, side: THREE.DoubleSide, depthWrite: false, roughness: 1, alphaTest: 0.05 });
-    netMaterial.onBeforeCompile = (shader) => waterLitShader(shader);
-    const ring = new THREE.Color(0.12, 0.12, 0.12);
+    // Each pen as they are built in the fjords: two black floating pipes side by side with
+    // a walkway over them and a handrail on posts; the net hanging from it, a cylinder with
+    // a cone below, square-meshed, dark and fouled, weighted at the bottom by a sinker tube;
+    // over the top a bird net on a pole in the middle; lamps hanging in the water to keep
+    // the fish growing through the winter; mooring lines out to anchors and yellow buoys.
+    const R = FARM.radius,
+      D = FARM.depth,
+      cone = 9;
+    const penNet = nettingMaterial({ color: new THREE.Color(0.16, 0.18, 0.16), mesh: 1.1, twine: 0.12, knot: 1.4, square: true, opacity: 0.95, fouling: 0.9, weed: 0.16, sway: 0.35, key: "pen" });
+    const birdNet = nettingMaterial({ color: new THREE.Color(0.08, 0.08, 0.08), mesh: 1.4, twine: 0.08, knot: 1.2, square: true, opacity: 0.85, fouling: 0, weed: 0, sway: 0.15, key: "birdnet" });
+    const pipe = new THREE.Color(0.07, 0.07, 0.075),
+      rail = new THREE.Color(0.1, 0.1, 0.1),
+      deck = new THREE.Color(0.36, 0.34, 0.3),
+      buoy = new THREE.Color(0.95, 0.72, 0.1),
+      rope = new THREE.Color(0.22, 0.2, 0.16),
+      lampGlow = new THREE.Color(2.4, 2.2, 1.6);
+    const lamps = [];
     for (const p of pens) {
-      const net = new THREE.Mesh(new THREE.CylinderGeometry(FARM.radius, FARM.radius * 0.85, FARM.depth, 40, 1, true), netMaterial);
-      net.position.set(p.x, lv - FARM.depth / 2 + 0.3, p.z);
+      // The net: side and cone, uv in world units (u round it, v down from the top).
+      const seg = 64,
+        rows = 8;
+      const pos = [],
+        uv = [],
+        idx = [];
+      const slant = Math.hypot(cone, R);
+      for (let j = 0; j <= rows + 4; j++) {
+        const side = j <= rows;
+        const t = side ? j / rows : (j - rows) / 4;
+        const y = side ? lv + 0.4 - t * (D + 0.4) : lv - D - t * cone;
+        const r = side ? R * (1 - 0.04 * t) : R * 0.96 * (1 - t) + 0.3 * t;
+        const v = side ? t * (D + 0.4) : D + 0.4 + t * slant;
+        for (let i = 0; i <= seg; i++) {
+          const a = (i / seg) * TAU;
+          // Bellied a little between the weights by the current.
+          const bulge = side ? 0.35 * Math.sin(Math.PI * t) * (0.6 + 0.4 * Math.sin(a * 6)) : 0;
+          pos.push(p.x + Math.cos(a) * (r + bulge), y, p.z + Math.sin(a) * (r + bulge));
+          uv.push(a * R, v);
+          if (i < seg && j < rows + 4) {
+            const k = j * (seg + 1) + i;
+            idx.push(k, k + seg + 1, k + 1, k + 1, k + seg + 1, k + seg + 2);
+          }
+        }
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+      g.setIndex(idx);
+      g.computeVertexNormals();
+      g.computeBoundingSphere();
+      const net = new THREE.Mesh(g, penNet);
       net.name = "Net pen";
       ctx.group.add(net);
-      const torus = new THREE.TorusGeometry(FARM.radius, 0.7, 8, 48).rotateX(Math.PI / 2);
-      const m = new THREE.Matrix4().makeTranslation(p.x, lv + 0.2, p.z);
-      ctx.paint.add(torus, m, ring);
-      const m2 = new THREE.Matrix4().makeTranslation(p.x, lv + 1.8, p.z);
-      ctx.paint.add(new THREE.TorusGeometry(FARM.radius, 0.25, 6, 48).rotateX(Math.PI / 2), m2, ring);
-      for (let k = 0; k < 18; k++) {
-        const a = (k / 18) * TAU;
-        solid(ctx.paint, CYL, p.x + Math.cos(a) * FARM.radius, lv + 1, p.z + Math.sin(a) * FARM.radius, 0.18, 1.8, 0.18, 0, ring);
+      // Two floating pipes, the walkway grating over them, handrail posts and rail.
+      for (const [radius, tube] of [
+        [R, 0.55],
+        [R + 1.5, 0.55],
+      ])
+        ctx.paint.add(new THREE.TorusGeometry(radius, tube, 8, 64).rotateX(Math.PI / 2), new THREE.Matrix4().makeTranslation(p.x, lv + 0.15, p.z), pipe);
+      ctx.paint.add(new THREE.TorusGeometry(R + 0.75, 0.85, 3, 64).rotateX(Math.PI / 2).scale(1, 0.12, 1), new THREE.Matrix4().makeTranslation(p.x, lv + 0.72, p.z), deck);
+      ctx.paint.add(new THREE.TorusGeometry(R - 0.1, 0.12, 5, 64).rotateX(Math.PI / 2), new THREE.Matrix4().makeTranslation(p.x, lv + 2.1, p.z), rail);
+      ctx.paint.add(new THREE.TorusGeometry(R - 0.1, 0.08, 5, 64).rotateX(Math.PI / 2), new THREE.Matrix4().makeTranslation(p.x, lv + 1.45, p.z), rail);
+      for (let k = 0; k < 24; k++) {
+        const a = (k / 24) * TAU;
+        solid(ctx.paint, CYL, p.x + Math.cos(a) * (R - 0.1), lv + 1.4, p.z + Math.sin(a) * (R - 0.1), 0.12, 1.4, 0.12, 0, rail);
+        // The brackets that hold the pipes together.
+        solid(ctx.paint, BOX, p.x + Math.cos(a) * (R + 0.75), lv + 0.35, p.z + Math.sin(a) * (R + 0.75), 0.35, 0.5, 2.3, -a, rail);
+      }
+      // The sinker tube round the foot of the net, and the chains up to the ring.
+      ctx.paint.add(new THREE.TorusGeometry(R * 0.97, 0.35, 6, 48).rotateX(Math.PI / 2), new THREE.Matrix4().makeTranslation(p.x, lv - D - 1.5, p.z), pipe);
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * TAU + 0.2;
+        solid(ctx.paint, CYL, p.x + Math.cos(a) * R * 0.99, lv - (D + 1.5) / 2, p.z + Math.sin(a) * R * 0.99, 0.06, D + 1.5, 0.06, 0, rope);
+      }
+      // The bird net: a pole in the middle, the net draped from its top to the rail.
+      const top = lv + 8;
+      solid(ctx.paint, CYL, p.x, (top + lv) / 2, p.z, 0.2, top - lv + 0.5, 0.2, 0, rail);
+      const bird = new THREE.ConeGeometry(R - 0.1, top - lv - 2.1, 48, 3, true);
+      {
+        const q = bird.attributes.position;
+        const uvs = [];
+        for (let i = 0; i < q.count; i++) {
+          const x = q.getX(i),
+            y = q.getY(i),
+            z = q.getZ(i);
+          const r = Math.hypot(x, z);
+          // Sagging between the pole and the rail.
+          q.setY(i, y - 0.9 * Math.sin((Math.PI * r) / (R - 0.1)));
+          uvs.push(Math.atan2(z, x) * r, r);
+        }
+        bird.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+        bird.computeVertexNormals();
+      }
+      const birdMesh = new THREE.Mesh(bird, birdNet);
+      birdMesh.position.set(p.x, lv + 2.1 + (top - lv - 2.1) / 2, p.z);
+      birdMesh.name = "Bird net";
+      ctx.group.add(birdMesh);
+      // Lamps hanging in the pen, a warm glow in the dark water.
+      for (let k = 0; k < 3; k++) {
+        const a = (k / 3) * TAU + 0.5;
+        lamps.push(new THREE.Vector3(p.x + Math.cos(a) * R * 0.45, lv - range(6, 12), p.z + Math.sin(a) * R * 0.45));
+      }
+      // Mooring lines out to the grid, yellow buoys at its corners, down to anchors.
+      for (let k = 0; k < 4; k++) {
+        const a = (k / 4) * TAU + Math.PI / 4;
+        const bx = p.x + Math.cos(a) * (R + 14),
+          bz = p.z + Math.sin(a) * (R + 14);
+        solid(ctx.paint, BALL, bx, lv + 0.3, bz, 1.3, 1.1, 1.3, 0, buoy);
+        const from = new THREE.Vector3(p.x + Math.cos(a) * (R + 1.5), lv, p.z + Math.sin(a) * (R + 1.5));
+        const to = new THREE.Vector3(bx, lv - 0.4, bz);
+        const mid = from.clone().lerp(to, 0.5);
+        mid.y -= 2.5;
+        ctx.paint.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([from, mid, to]), 8, 0.12, 4, false), new THREE.Matrix4(), rope);
+        const r = {};
+        ctx.locate(bx + Math.cos(a) * 40, bz + Math.sin(a) * 40, FARM.s, r);
+        const floor = bed(r.s, r.u);
+        const anchor = new THREE.Vector3(bx + Math.cos(a) * 40, floor + 0.5, bz + Math.sin(a) * 40);
+        const sag = to.clone().lerp(anchor, 0.5);
+        sag.y -= 4;
+        ctx.paint.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([to.clone().setY(lv - 1), sag, anchor]), 12, 0.14, 4, false), new THREE.Matrix4(), rope);
+        solid(ctx.paint, BOX, anchor.x, anchor.y, anchor.z, 2.2, 1.2, 2.2, a, new THREE.Color(0.3, 0.28, 0.25));
       }
       yield "pen";
+    }
+    // Lamps: bright bulbs, their light carried by the bloom.
+    {
+      const bulb = new THREE.SphereGeometry(0.5, 10, 8).scale(1, 1.7, 1);
+      const glow = new THREE.MeshBasicMaterial({ color: lampGlow });
+      const lampMesh = new THREE.InstancedMesh(bulb, glow, lamps.length);
+      const haloPositions = new Float32Array(lamps.length * 3);
+      lamps.forEach((l, i) => {
+        lampMesh.setMatrixAt(i, new THREE.Matrix4().makeTranslation(l.x, l.y, l.z));
+        solid(ctx.paint, CYL, l.x, l.y + 0.95, l.z, 0.55, 0.35, 0.55, 0, rail);
+        solid(ctx.paint, CYL, l.x, (l.y + lv) / 2, l.z, 0.04, lv - l.y, 0.04, 0, rope);
+        haloPositions.set([l.x, l.y, l.z], i * 3);
+      });
+      lampMesh.name = "Pen lamps";
+      lampMesh.frustumCulled = false;
+      ctx.group.add(lampMesh);
+      // A warm glow round each lamp in the water.
+      const haloGeometry = new THREE.BufferGeometry();
+      haloGeometry.setAttribute("position", new THREE.BufferAttribute(haloPositions, 3));
+      const halo = new THREE.Points(
+        haloGeometry,
+        new THREE.ShaderMaterial({
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          vertexShader: `void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv; gl_PointSize = clamp(9.0 * 620.0 / max(-mv.z, 0.5), 2.0, 900.0); }`,
+          fragmentShader: `void main() { float r = length(gl_PointCoord - 0.5) * 2.0; float a = exp(-r * r * 5.0) * 0.4 + exp(-r * r * 40.0) * 0.5; if (a < 0.003) discard; gl_FragColor = vec4(vec3(1.0, 0.86, 0.6) * a, 1.0); }`,
+        }),
+      );
+      halo.frustumCulled = false;
+      halo.name = "Lamp glow";
+      ctx.group.add(halo);
+    }
+    // The feed barge moored off the pens: a squat hull, the wheelhouse and the silos, a
+    // crane; the feed pipes run from it across the water to each pen.
+    {
+      place(FARM.s, FARM.u - 12 - R - 42, at);
+      const bx = at.x,
+        bz = at.z;
+      frame(FARM.s, ctx.f);
+      const yaw = -Math.atan2(ctx.f.tz, ctx.f.tx);
+      const hull = new THREE.Color(0.18, 0.26, 0.3),
+        white = new THREE.Color(0.86, 0.87, 0.84),
+        silo = new THREE.Color(0.62, 0.64, 0.62);
+      const along = (d, a, y) => new THREE.Vector3(bx + ctx.f.tx * d + ctx.f.nx * a, y, bz + ctx.f.tz * d + ctx.f.nz * a);
+      const c0 = along(0, 0, lv);
+      solid(ctx.paint, BOX, c0.x, lv - 0.5, c0.z, 36, 5, 16, yaw, hull);
+      solid(ctx.paint, BOX, c0.x, lv + 2.2, c0.z, 35, 0.5, 15.5, yaw, new THREE.Color(0.3, 0.3, 0.29));
+      const house = along(-11, 0, 0);
+      hut(ctx, house.x, lv + 2.4, house.z, yaw + Math.PI / 2, { length: 9, width: 10, wall: 6, walls: white, roof: new THREE.Color(0.2, 0.2, 0.22), windows: 2, pitch: 0.2, chimney: false });
+      for (const [d, a] of [
+        [2, -4],
+        [2, 4],
+        [9, -4],
+        [9, 4],
+      ]) {
+        const s0 = along(d, a, 0);
+        solid(ctx.paint, CYL, s0.x, lv + 7, s0.z, 2.8, 9.5, 2.8, 0, silo);
+        solid(ctx.paint, BALL, s0.x, lv + 11.8, s0.z, 2.8, 1.2, 2.8, 0, silo);
+      }
+      const craneFoot = along(15, 5, 0);
+      solid(ctx.paint, CYL, craneFoot.x, lv + 5, craneFoot.z, 0.5, 6, 0.5, 0, new THREE.Color(0.9, 0.62, 0.1));
+      const craneTip = along(8, 9, 0);
+      const boom = new THREE.Vector3(craneTip.x - craneFoot.x, 3, craneTip.z - craneFoot.z);
+      solid(ctx.paint, BOX, (craneFoot.x + craneTip.x) / 2, lv + 9.5, (craneFoot.z + craneTip.z) / 2, boom.length(), 0.5, 0.5, -Math.atan2(boom.z, boom.x), new THREE.Color(0.9, 0.62, 0.1), 0, 0.3);
+      ctx.colliders.push({ x: c0.x, y: lv - 0.5, z: c0.z, r: 18, rx: 18, rz: 8, ry: 2.8, cos: Math.cos(yaw), sin: Math.sin(yaw) });
+      // Feed pipes, floating, from the barge to each pen.
+      for (const p of pens) {
+        const from = along(0, 8, lv + 0.2);
+        const to = new THREE.Vector3(p.x, lv + 0.2, p.z).lerp(from, (R + 1.5) / from.distanceTo(new THREE.Vector3(p.x, lv + 0.2, p.z)));
+        const mid = from.clone().lerp(to, 0.5).add(new THREE.Vector3(range(-6, 6), -0.1, range(-6, 6)));
+        ctx.paint.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([from, mid, to]), 24, 0.35, 6, false), new THREE.Matrix4(), pipe);
+      }
+      // A work boat tied up alongside the middle pen.
+      const bp = pens[1];
+      const boatAt = new THREE.Vector3(bp.x, lv, bp.z).addScaledVector(new THREE.Vector3(ctx.f.nx, 0, ctx.f.nz), -(R + 5));
+      solid(ctx.paint, BOX, boatAt.x, lv + 0.2, boatAt.z, 11, 2.2, 4.2, yaw, new THREE.Color(0.85, 0.35, 0.12));
+      solid(ctx.paint, BOX, boatAt.x + ctx.f.tx * 1.5, lv + 2.4, boatAt.z + ctx.f.tz * 1.5, 3.4, 2.4, 3, yaw, white);
+      yield "barge";
     }
     // The farmed fish, going round.
     if (!farmFish) farmFish = createFishMesh(scene0, "salmon", "sea", 72, { name: "Farm salmon", cacheKey: "farm-salmon", detail: 0.5, castShadow: false });
@@ -1345,6 +1587,61 @@ addFeature({
       basis = new THREE.Matrix4();
     const UP = new THREE.Vector3(0, 1, 0);
     let pelletClock = 3;
+    // Wild cod drawn in by the feed that sinks through the nets, cruising round the pens
+    // and under them.
+    if (!farmCod) farmCod = createFishMesh(scene0, "cod", "cod", 10, { name: "Farm cod", cacheKey: "farm-cod", detail: 0.5, castShadow: false });
+    const cods = Array.from({ length: 10 }, (_, i) => ({ pen: i % pens.length, r: R * range(1.12, 1.5), y: range(D - 6, D + 8), a: range(0, TAU), speed: range(0.025, 0.06) * (random() < 0.5 ? -1 : 1), size: range(4, 6.5), phase: range(0, TAU) }));
+    // Feed sinking through each pen from the spreader at the surface.
+    const FEED = 150;
+    const feed = Array.from({ length: FEED }, (_, i) => ({ pen: i % pens.length, a: range(0, TAU), r: Math.sqrt(random()) * R * 0.75, y: range(0, D) }));
+    const feedPositions = new Float32Array(FEED * 3);
+    const feedGeometry = new THREE.BufferGeometry();
+    feedGeometry.setAttribute("position", new THREE.BufferAttribute(feedPositions, 3));
+    feedGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(pens[1].x, lv - D / 2, pens[1].z), R * 5 + D);
+    const feedPoints = new THREE.Points(feedGeometry, new THREE.PointsMaterial({ color: 0x4a3220, size: 0.22, sizeAttenuation: true }));
+    feedPoints.name = "Sinking feed";
+    ctx.group.add(feedPoints);
+    ctx.animate.push((dt, env) => {
+      for (let i = 0; i < FEED; i++) {
+        const q = feed[i];
+        q.y += dt * 0.7;
+        q.a += dt * 0.05;
+        if (q.y > D) {
+          q.y = 0;
+          q.a = range(0, TAU);
+          q.r = Math.sqrt(random()) * R * 0.75;
+        }
+        const p = pens[q.pen];
+        feedPositions[i * 3] = p.x + Math.cos(q.a) * q.r;
+        feedPositions[i * 3 + 1] = lv - 0.3 - q.y;
+        feedPositions[i * 3 + 2] = p.z + Math.sin(q.a) * q.r;
+      }
+      feedGeometry.attributes.position.needsUpdate = true;
+      farmCod.begin();
+      for (let i = 0; i < cods.length; i++) {
+        const f = cods[i];
+        f.a += (f.speed * dt * 10) / Math.max(4, f.r) * 4;
+        f.phase += dt * 4;
+        const p = pens[f.pen];
+        position.set(p.x + Math.cos(f.a) * f.r, lv - f.y + Math.sin(f.phase * 0.2) * 0.8, p.z + Math.sin(f.a) * f.r);
+        heading.set(-Math.sin(f.a), 0, Math.cos(f.a)).multiplyScalar(Math.sign(f.speed));
+        axisZ.crossVectors(heading, UP).normalize();
+        axisY.crossVectors(axisZ, heading).normalize();
+        basis.makeBasis(heading, axisY, axisZ);
+        quaternion.setFromRotationMatrix(basis);
+        const k = f.size / MODEL_LENGTH;
+        matrix.compose(position, quaternion, scaleV.set(k, k, k));
+        farmCod.body.setMatrixAt(i, matrix);
+        farmCod.swim.setXYZW(i, f.phase, 0.25, 0, 0.15);
+        farmCod.fin.setX(i, f.phase);
+        farmCod.mouth.setX(i, 0.1);
+      }
+      farmCod.finish();
+    });
+    ctx.release.push(() => {
+      farmCod.begin();
+      farmCod.finish();
+    });
     ctx.animate.push((dt, env) => {
       farmFish.begin();
       for (let i = 0; i < fish.length; i++) {

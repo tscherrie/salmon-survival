@@ -15,7 +15,7 @@ const smooth = (a, b, x) => {
   return t * t * (3 - 2 * t);
 };
 
-export function createDaylight({ wallpaper = false, query = new URLSearchParams() } = {}) {
+export function createDaylight({ wallpaper = false, query = new URLSearchParams(), nightPace = null } = {}) {
   const localHour = () => {
     const d = new Date();
     return d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
@@ -36,9 +36,11 @@ export function createDaylight({ wallpaper = false, query = new URLSearchParams(
     clock += dt;
     if (mode === "real") hour = localHour();
     else if (mode === "fast") {
-      // An hour a minute by day; the night goes by three times as fast.
-      const night = hour >= 20.5 || hour < 4.5;
-      hour = (hour + dt * (24 / (dayMinutes * 60)) * (night ? 3 : 1)) % 24;
+      // An hour a minute by day; the night goes by three times as fast. With `nightPace`
+      // the clock speeds up smoothly as the dusk deepens, and runs that much faster the
+      // whole of the dark.
+      const pace = nightPace ? 1 + (nightPace - 1) * (1 - smooth(-0.3, -0.12, Math.sin((Math.PI * (hour - 6)) / 12))) : hour >= 20.5 || hour < 4.5 ? 3 : 1;
+      hour = (hour + dt * (24 / (dayMinutes * 60)) * pace) % 24;
     }
     // How high the sun is: 1 at noon, 0 at six, -1 at midnight.
     const elevation = Math.sin((Math.PI * (hour - 6)) / 12);

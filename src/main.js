@@ -275,6 +275,7 @@ async function start() {
   const places = createPlaces({ badges });
   const logbook = createLogbook({ hud, badges, places });
   const minimap = createMinimap({ logbook, places });
+  let homeShown = false;
   mark("logbook");
   // Development: ?mate shows two made-up companions on the map, the way others would be
   // shown in a game swum together -- one close by, one far up the river.
@@ -293,7 +294,9 @@ async function start() {
   let mateTime = 0;
   const post = createPost(renderer, camera, settings);
   mark("post");
-  const daylight = createDaylight({ wallpaper: false, query });
+  // The night kept short: the clock quickens as the dusk deepens, so the dark lasts a
+  // little over four minutes from dusk to dawn (it was nearly six).
+  const daylight = createDaylight({ wallpaper: false, query, nightPace: 3.05 });
   // Storms, anglers, otters, ice going out, northern lights.
   const events = createEvents(scene, { rocks, sound, daylight, life, query });
   mark("events");
@@ -1327,7 +1330,7 @@ async function start() {
       case "sea":
         return "Ein großer Meerlachs. Noch ein wenig wachsen – dann ruft die Heimat.";
       case "spawner":
-        return "Der Ruf der Heimat. Der Kompass zeigt zur Mündung. Fressen wirst du nicht mehr.";
+        return "Der Ruf der Heimat. Die Karte (M) zeigt dir den Weg zur Mündung. Fressen wirst du nicht mehr.";
       default:
         return "";
     }
@@ -1551,9 +1554,6 @@ async function start() {
       yolk: !!STAGES[fish.stage].yolk,
       stage: fish.stage,
       reserve: !!STAGES[fish.stage].fasting,
-      sea: regionWeights(fish.river.s).sea > 0.5,
-      homing: !!STAGES[fish.stage].fasting,
-      bearing: Math.atan2(MOUTH.z - fish.position.z, MOUTH.x - fish.position.x) - look.yaw,
       leapHint: (world.ice ?? 0) > 0.5 ? null : (life.leapHint?.(fish) ?? null),
     });
     // The bar over the fish being fought, pinned to it on the screen (to the edge when it is
@@ -1589,7 +1589,12 @@ async function start() {
       sea: regionWeights(fish.river.s).sea > 0.5,
     });
     mateTime += dt;
-    minimap.update(dt, { fish, yaw: look.yaw, others: mates ? mates(mateTime) : [] });
+    // At sea and grown, homing: the map shows the way back to the river's mouth -- opened
+    // for it once, if it was closed.
+    const homing = !!STAGES[fish.stage].fasting && fish.river.s > S.coast - 50;
+    if (homing && !homeShown && !minimap.open && dead <= 0) minimap.toggle();
+    if (homing) homeShown = true;
+    minimap.update(dt, { fish, yaw: look.yaw, homing, others: mates ? mates(mateTime) : [] });
 
     prof.mark("draw-cpu");
     caustics.render();
@@ -1630,7 +1635,7 @@ async function start() {
   mark("prime-life");
   pebbles.prime(fish.position, fish.length, fish.river.s);
   resize();
-  hud.update({ energy: fish.energy, progress: fish.progress, ...salmon.appetite(), yolk: !!STAGES[fish.stage].yolk, stage: fish.stage, reserve: !!STAGES[fish.stage].fasting, sea: false, homing: false, bearing: 0 });
+  hud.update({ energy: fish.energy, progress: fish.progress, ...salmon.appetite(), yolk: !!STAGES[fish.stage].yolk, stage: fish.stage, reserve: !!STAGES[fish.stage].fasting });
   mark("primed");
   // Every material the river can show is compiled now, behind the loading card, and not
   // the first time a hunter or a new kind of food turns up mid-swim (a stall of a second).

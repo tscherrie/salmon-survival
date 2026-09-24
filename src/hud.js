@@ -1,10 +1,9 @@
 import { t } from "./i18n.js";
 // What is on screen besides the river: a small card with the fish's life -- the stage it is
 // in among the ten, its strength, its growth toward the next stage and what is in its
-// stomach (for the alevin, its yolk) -- and at sea a small compass that points back to the
-// river's mouth, asleep until the fish is grown and the homing takes hold. Words appear
-// only when something changes: a new stage of life, a fall climbed, a death; and what was
-// just eaten floats up from the stomach bar.
+// stomach (for the alevin, its yolk). (The way home from the sea is on the map.) Words
+// appear only when something changes: a new stage of life, a fall climbed, a death; and
+// what was just eaten floats up from the stomach bar.
 
 const FOOD_NAMES = {
   blackfly: "Kriebelmückenlarve",
@@ -46,8 +45,6 @@ export function createHud({ stages }) {
   const stomachFill = stomach.querySelector(".fill");
   const stomachLabel = stomach.querySelector(".label");
   const pops = document.querySelector("#pops");
-  const compass = document.querySelector("#compass");
-  const needle = compass.querySelector(".needle");
   const toastBox = document.querySelector("#toast");
   const toastTitle = toastBox.querySelector(".title");
   const toastLine = toastBox.querySelector(".line");
@@ -63,7 +60,6 @@ export function createHud({ stages }) {
   let hintShown = false;
   let hintTimer = 0;
   let leapHintShown = 0;
-  let lastBearing = 0;
   let shownStage = -1;
   let shownReserve = null;
   let shownYolk = null;
@@ -98,7 +94,7 @@ export function createHud({ stages }) {
   const bar = (fill, value) => (fill.style.transform = `scaleX(${Math.min(1, Math.max(0, value)).toFixed(3)})`);
 
   return {
-    update({ energy: e, breath: puff = 1, winded = false, progress, pending = 0, stomach: full = null, yolk = false, stage, reserve, sea, homing, bearing, leapHint }) {
+    update({ energy: e, breath: puff = 1, winded = false, progress, pending = 0, stomach: full = null, yolk = false, stage, reserve, leapHint }) {
       energy.classList.toggle("winded", winded);
       windedVeil.classList.toggle("on", winded);
       if (stage !== shownStage) {
@@ -137,10 +133,6 @@ export function createHud({ stages }) {
         bar(stomachFill, full);
         stomach.setAttribute("aria-valuenow", String(Math.round(full * 100)));
       }
-      compass.hidden = !sea;
-      compass.classList.toggle("dormant", !homing);
-      if (homing) lastBearing = bearing;
-      needle.style.transform = `rotate(${((homing ? lastBearing : 0) * 180) / Math.PI}deg)`;
       if (leapHint && leapHintShown < 3 && hintBox.hidden) {
         leapHintShown++;
         showHint(leapHint, 4.5);

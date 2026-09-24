@@ -596,7 +596,10 @@ export function createSalmon(scene, { pace = 1 } = {}) {
     const strength = 0.75 + 0.25 * f.energy;
     // A run at it helps: the speed carried into the leap.
     const runUp = 0.9 + 0.2 * Math.min(1, f.relative.length() / sp.leap);
-    const exit = sp.leap * 2.9 * strength * runUp * (st.fasting ? 1.05 : 1);
+    // The young in the river (up to the smolt) jump twice as high as their size alone
+    // would give them, easing off through the first months at sea.
+    const young = Math.sqrt(1 + clamp((3.2 - L) / 1.2, 0, 1));
+    const exit = sp.leap * 2.9 * strength * runUp * young * (st.fasting ? 1.05 : 1);
     let vy = exit * 0.82,
       horizontal = exit * 0.55;
     const s = f.river.s;

@@ -617,11 +617,25 @@ export function createCurtainMaterial({ under = false } = {}) {
     vertexShader: /* glsl */ `
       #include <common>
       #include <fog_pars_vertex>
+      uniform float waterTime;
+      attribute vec2 flowDir;
       varying vec2 vUv;
       varying vec3 vWorld;
+      float h1(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n1(vec2 p) {
+        vec2 i = floor(p), f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(h1(i), h1(i + vec2(1, 0)), f.x), mix(h1(i + vec2(0, 1)), h1(i + vec2(1, 1)), f.x), f.y);
+      }
       void main() {
         vUv = uv;
         vec4 world = modelMatrix * vec4(position, 1.0);
+        #ifndef UNDER
+          // The sheet is not flat: lumps and ropes of water bulge out of it and fall with it,
+          // more the further it has fallen.
+          float lump = n1(vec2(uv.x * 0.7, uv.y * 3.2 - waterTime * 2.4)) * 0.65 + n1(vec2(uv.x * 1.9 + 4.0, uv.y * 6.0 - waterTime * 3.1)) * 0.35;
+          world.xz += flowDir * (lump - 0.45) * (0.12 + 0.9 * uv.y);
+        #endif
         vWorld = world.xyz;
         vec4 mvPosition = viewMatrix * world;
         gl_Position = projectionMatrix * mvPosition;
@@ -674,14 +688,86 @@ export function createCurtainMaterial({ under = false } = {}) {
         alpha *= smoothstep(0.0, 1.2, edge + (n1(vec2(vUv.y * 6.0 - t * 2.0, vUv.x)) - 0.5) * 0.8);
         alpha *= smoothstep(0.0, 0.12, vUv.y + 0.02);
         vec3 color = mix(vec3(0.5, 0.66, 0.66), vec3(1.5, 1.6, 1.6), smoothstep(0.0, 0.45, vUv.y) * (0.45 + 0.55 * body));
+        // Where it leaves the lip: a glassy tongue, dark and clear, drawn into bright strands,
+        // with a sheen where it curls over the edge -- before it breaks up white.
+        float tongue = 1.0 - smoothstep(0.03, 0.2 + 0.12 * ropes, vUv.y);
+        float strands = pow(n1(vec2(vUv.x * 5.0, vUv.y * 1.2 - t * 1.4)), 3.0);
+        float sheen = exp(-pow((vUv.y - 0.03) / 0.025, 2.0)) * (0.55 + 0.45 * n1(vec2(vUv.x * 2.5, t * 0.4)));
+        color = mix(color, vec3(0.2, 0.33, 0.3) + vec3(0.9, 1.0, 1.0) * strands, tongue * 0.75);
+        color += vec3(1.3, 1.35, 1.3) * sheen;
+        alpha = max(alpha, (0.5 + 0.3 * strands) * tongue * smoothstep(0.0, 1.2, edge)) + sheen * 0.4;
         color *= light;
-        gl_FragColor = vec4(color, alpha);
+        gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.95));
         #endif
         #include <fog_fragment>
       }
     `,
   });
-  material.customProgramCacheKey = () => (under ? "salmon-curtain-under-v1" : "salmon-curtain-v1");
+  material.customProgramCacheKey = () => (under ? "salmon-curtain-under-v2" : "salmon-curtain-v2");
+  return material;
+}
+
+// The foam on the pool below a fall: a white boil where the curtain comes down, torn into
+// lace and streaks that the current carries off downstream and that thin out as they go.
+// uv.x across (units), uv.y downstream from where the water comes down (units).
+export function createFoamMatMaterial() {
+  const material = new THREE.ShaderMaterial({
+    uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), waterTime, light: { value: 1 }, uFrom: { value: 0 }, uTo: { value: 1 }, uLen: { value: 10 }, uSpeed: { value: 1 }, uStrength: { value: 1 } },
+    fog: true,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    vertexShader: /* glsl */ `
+      #include <common>
+      #include <fog_pars_vertex>
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      #include <common>
+      #include <fog_pars_fragment>
+      uniform float waterTime;
+      uniform float light;
+      uniform float uFrom;
+      uniform float uTo;
+      uniform float uLen;
+      uniform float uSpeed;
+      uniform float uStrength;
+      varying vec2 vUv;
+      float h1(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n1(vec2 p) {
+        vec2 i = floor(p), f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(h1(i), h1(i + vec2(1, 0)), f.x), mix(h1(i + vec2(0, 1)), h1(i + vec2(1, 1)), f.x), f.y);
+      }
+      void main() {
+        float t = waterTime;
+        float d = vUv.y;
+        // Carried off downstream, spreading as it goes.
+        vec2 q = vec2(vUv.x * 0.8, (d - t * uSpeed) * 0.5);
+        float n = n1(q) * 0.5 + n1(q * 2.3 + 7.0) * 0.3 + n1(q * 5.9 + 3.0) * 0.2;
+        float lace = smoothstep(0.5, 0.88, 1.0 - abs(n - 0.5) * 2.0);
+        float patches = smoothstep(0.35, 0.7, n1(vec2(vUv.x * 0.35, (d - t * uSpeed * 0.8) * 0.25) + 11.0));
+        float boil = exp(-max(d - 0.5, 0.0) / (uLen * 0.34)) * (0.75 + 0.25 * n1(vec2(vUv.x * 1.3, d * 1.3 - t * 2.0)));
+        float far = 1.0 - smoothstep(uLen * 0.55, uLen, d + (n - 0.5) * uLen * 0.3);
+        float a = max(boil * (0.8 + 0.2 * lace), lace * (0.6 + 0.4 * patches) * far) + patches * far * 0.25;
+        float spread = 1.5 + d * 0.22;
+        float edge = min(vUv.x - (uFrom - spread), (uTo + spread) - vUv.x);
+        a *= smoothstep(0.0, 2.0, edge + (n1(vec2(d * 0.7 - t * uSpeed * 0.35, vUv.x)) - 0.5) * 2.5);
+        a *= smoothstep(-1.2, 0.2, d) * uStrength;
+        if (a < 0.01) discard;
+        vec3 c = mix(vec3(1.0, 1.08, 1.1), vec3(1.6, 1.66, 1.66), clamp(n * 0.5 + boil * 0.7, 0.0, 1.0)) * light;
+        gl_FragColor = vec4(c, clamp(a, 0.0, 0.95));
+        #include <fog_fragment>
+      }
+    `,
+  });
+  material.customProgramCacheKey = () => "salmon-foam-mat-v1";
   return material;
 }
 

@@ -54,6 +54,23 @@ export function mossTuft(batch, at, flow, random, size = 1) {
   }
 }
 
+// Moss and weed hanging from the roof of a cave or an overhang: dark strands down from the
+// rock, their ends drawn a little way downstream.
+export function hangingMoss(batch, at, flow, random, size = 1) {
+  const range = ranger(random);
+  const count = Math.floor(range(8, 15));
+  const hue = range(0.18, 0.25);
+  for (let i = 0; i < count; i++) {
+    const a = flow + range(-0.6, 0.6);
+    const d = vec(Math.cos(a), 0, Math.sin(a));
+    const length = range(0.4, 1.5) * size;
+    const base = at.clone().add(vec(range(-0.35, 0.35) * size, range(-0.05, 0.05), range(-0.35, 0.35) * size));
+    const points = [base, base.clone().addScaledVector(d, length * 0.12).add(vec(0, -length * 0.5, 0)), base.clone().addScaledVector(d, length * 0.4).add(vec(0, -length, 0))];
+    const color = new THREE.Color().setHSL(hue + range(-0.02, 0.02), range(0.4, 0.6), range(0.08, 0.16));
+    blade(batch, points, range(0.04, 0.08) * size, color, at, 1.2, { rows: 4, cols: 1, ribbon: true, thin: 0.9 });
+  }
+}
+
 // Water crowfoot: a clump of long tresses rising at a low angle and streaming out down the
 // current, the longest reaching up under the surface.
 export function crowfoot(batch, x, z, ground, surface, flow, random, scale = 1) {

@@ -24,6 +24,7 @@
     <link rel="modulepreload" href="/src/minimap.js" />
     <link rel="modulepreload" href="/src/logbook.js" />
     <link rel="modulepreload" href="/src/nets.js" />
+    <link rel="modulepreload" href="/src/netting.js" />
     <link rel="modulepreload" href="/src/intro.js" />
     <link rel="modulepreload" href="/src/track.js" />
     <link rel="modulepreload" href="/src/version.js" />
@@ -38,6 +39,7 @@
     <link rel="modulepreload" href="/src/i18n-en.js" />
     <link rel="modulepreload" href="/src/falls.js" />
     <link rel="modulepreload" href="/src/life.js" />
+    <link rel="modulepreload" href="/src/food-shapes.js" />
     <link rel="modulepreload" href="/src/profile.js" />
     <link rel="modulepreload" href="/src/school.js" />
     <link rel="modulepreload" href="/src/rivals.js" />
@@ -137,13 +139,6 @@
         <button id="map-toggle" type="button" aria-pressed="false" aria-label="Karte einblenden" title="Karte (M)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5Z" /><path d="M9 4v13.5M15 6.5V20" /></svg>
         </button>
-        <div id="compass" class="dormant" aria-label="Kompass zur Flussmündung" hidden>
-          <svg viewBox="0 0 40 40" aria-hidden="true">
-            <circle cx="20" cy="20" r="17" />
-            <g class="needle"><path d="M20 5 L24 21 L20 18 L16 21 Z" /></g>
-          </svg>
-          <span>Mündung</span>
-        </div>
       </div>
       <div id="badges" aria-live="polite"></div>
       <div id="toast" aria-live="polite"><p class="title"></p><p class="line"></p></div>

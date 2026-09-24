@@ -4,7 +4,8 @@ import { riverSketch } from "./logbook.js";
 // The minimap (M): a small round map in the corner, turned so that up is where the camera
 // looks, with the river round the fish -- its banks, how fast it runs (pale where it races,
 // deep blue where it stands), the falls, which way is up- and downstream -- and under it the
-// logbook's map of the whole river in small, with a dot where the fish is.
+// logbook's map of the whole river in small, with a dot where the fish is. Out at sea it
+// shows the way back to the river's mouth.
 //
 // Others swimming in the same river (a co-op game later) are passed in each frame as
 // `others`: [{ name, colour, x, z, yaw, s }] -- world position, heading and place along the
@@ -38,6 +39,7 @@ export function createMinimap({ logbook, places = null }) {
   let stripBase = null;
   let stripClock = 0;
   let lastWhere = "";
+  let homing = false; // grown and going home: the way to the mouth in gold
 
   // Canvases at the screen's own pixel density.
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -409,13 +411,74 @@ export function createMinimap({ logbook, places = null }) {
       text(p.name, q.x, q.y - 11, "#ffe9b8");
     }
 
-    // In the river the arrows of the current say which way is which; out at sea, where the
-    // mouth is.
+    // In the river the arrows of the current say which way is which; out at sea, the way
+    // back to the mouth: a pin on it when it is on the map, else an arrow on the rim
+    // pointing to it, with how far. Once the fish is grown and homing, all of it gold, a
+    // dashed trail running out from the fish toward it.
     tagAngles.length = 0;
     if (fs >= S.coast - 50) {
       const m = place(S.coast, 0, {});
       const p = toScreen(m.x, m.z, {});
-      if (Math.hypot(p.x - r, p.y - r) > r - 20) rimTag("Mündung", Math.atan2(p.y - r, p.x - r), r);
+      const dx = p.x - r,
+        dy = p.y - r;
+      const d = Math.hypot(dx, dy) || 1;
+      const a = Math.atan2(dy, dx);
+      const onMap = d < r - 16;
+      const colour = homing ? "#ffd24a" : "#e6f5f0";
+      if (homing && d > 22) {
+        const end = onMap ? d - 9 : r - 14;
+        g.save();
+        g.setLineDash([5, 5]);
+        g.lineDashOffset = -seconds * 14;
+        g.strokeStyle = "rgba(255, 210, 74, 0.9)";
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(r + (dx / d) * 13, r + (dy / d) * 13);
+        g.lineTo(r + (dx / d) * end, r + (dy / d) * end);
+        g.stroke();
+        g.restore();
+      }
+      if (onMap) {
+        g.save();
+        g.translate(p.x, p.y);
+        g.beginPath();
+        g.arc(0, -8, 5.5, Math.PI * 0.8, Math.PI * 2.2);
+        g.lineTo(0, 1);
+        g.closePath();
+        g.fillStyle = colour;
+        g.strokeStyle = "rgba(40, 24, 0, 0.9)";
+        g.lineWidth = 1.5;
+        g.fill();
+        g.stroke();
+        g.restore();
+        g.font = `800 10px ${FONT}`;
+        // The name on the far side of the pin from the fish.
+        text("Mündung", p.x, p.y < r ? p.y - 21 : p.y + 10, homing ? "#ffe9b8" : "#f3fbf7");
+      } else {
+        const pulse = homing ? 1 + 0.2 * (0.5 + 0.5 * Math.sin(seconds * 5)) : 0.85;
+        g.save();
+        g.translate(r + Math.cos(a) * (r - 7), r + Math.sin(a) * (r - 7));
+        g.rotate(a);
+        g.scale(pulse, pulse);
+        g.beginPath();
+        g.moveTo(7, 0);
+        g.lineTo(-5, -6.5);
+        g.lineTo(-2, 0);
+        g.lineTo(-5, 6.5);
+        g.closePath();
+        g.fillStyle = colour;
+        g.strokeStyle = "rgba(40, 24, 0, 0.9)";
+        g.lineWidth = 1.5;
+        g.fill();
+        g.stroke();
+        g.restore();
+        rimTag("Mündung", a, r, homing);
+        const far = Math.hypot(m.x - fx, m.z - fz) / UNITS_PER_METRE;
+        g.font = `700 9px ${FONT}`;
+        const lx = clamp(r + Math.cos(a) * (r - 30), 30, SIZE - 30),
+          ly = clamp(r + Math.sin(a) * (r - 16) + (Math.sin(a) > 0.3 ? -14 : 14), 10, SIZE - 10);
+        text(far >= 1000 ? `${(far / 1000).toFixed(1).replace(".", ",")} km` : `${Math.round(far / 10) * 10} m`, lx, ly, homing ? "#ffe9b8" : "#f3fbf7");
+      }
     }
 
     // The scale bar under the map (a scene unit is ten centimetres).
@@ -491,17 +554,17 @@ export function createMinimap({ logbook, places = null }) {
   }
   // A tag on the rim at screen angle a (0 is to the right, going clockwise).
   const tagAngles = [];
-  function rimTag(label, a, r) {
+  function rimTag(label, a, r, bright = false) {
     tagAngles.push(a);
     g.font = `800 9px ${FONT}`;
     const w = g.measureText(label).width + 10;
-    const x = r + Math.cos(a) * (r - 22),
+    const x = r + Math.cos(a) * (r - 22 - w * 0.25 * Math.abs(Math.cos(a))),
       y = r + Math.sin(a) * (r - 16);
-    g.fillStyle = "rgba(4, 24, 30, 0.72)";
+    g.fillStyle = bright ? "rgba(70, 44, 0, 0.85)" : "rgba(4, 24, 30, 0.72)";
     g.beginPath();
     g.roundRect?.(x - w / 2, y - 7, w, 14, 7);
     g.fill();
-    g.fillStyle = "rgba(243, 251, 247, 0.9)";
+    g.fillStyle = bright ? "#ffe9b8" : "rgba(243, 251, 247, 0.9)";
     g.textAlign = "center";
     g.textBaseline = "middle";
     g.fillText(label, x, y + 0.5);
@@ -583,8 +646,9 @@ export function createMinimap({ logbook, places = null }) {
     },
     // Each frame: dt (0 while the game stands still), the fish, the way the camera looks,
     // and whoever else is in the river.
-    update(dt, { fish, yaw, others = [] }) {
+    update(dt, { fish, yaw, homing: home = false, others = [] }) {
       seconds += dt;
+      homing = home;
       const c = section(Math.min(fish.river.s, S.coast));
       flow += c.speed * dt;
       const want = fish.river.s > S.coast + 100 ? 420 : clamp(c.width * 1.5, 16, 420);

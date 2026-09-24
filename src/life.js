@@ -11,6 +11,7 @@ import { createSchool } from "./school.js";
 import { createBrawls } from "./brawl.js";
 import { profile as prof } from "./profile.js";
 import { phaseOf } from "./salmon.js";
+import { dressFoodShader, foodGeometry } from "./food-shapes.js";
 
 // Everything else alive in the river and the sea, and what it means to the salmon:
 //
@@ -66,7 +67,7 @@ const FOODS = {
   // Only where people throw it in, from the bridge.
   bread: { size: 0.3, nutrition: 9, color: [0.9, 0.78, 0.52], shape: "crumb", mode: "surface" },
   // Only round the salmon farm: feed that drifts out through its nets.
-  pellet: { size: 0.14, nutrition: 5, color: [0.5, 0.32, 0.18], shape: "egg", mode: "drift", sinks: true },
+  pellet: { size: 0.14, nutrition: 5, color: [0.5, 0.32, 0.18], shape: "pellet", mode: "drift", sinks: true },
   // An angler's fly: bright, tempting -- and on a hook (events.js moves it).
   lure: { size: 0.22, nutrition: 0, color: [0.85, 0.35, 0.12], shape: "fly", mode: "surface" },
 };
@@ -83,117 +84,6 @@ const MIX = {
   sea: { krill: 1 },
 };
 
-function foodGeometry(shape) {
-  // Unit length along +x.
-  const parts = [];
-  if (shape === "worm") {
-    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(-0.5, 0, 0), new THREE.Vector3(-0.2, 0.08, 0.02), new THREE.Vector3(0.15, -0.05, -0.02), new THREE.Vector3(0.5, 0.03, 0)]);
-    parts.push(new THREE.TubeGeometry(curve, 16, 0.07, 6, false));
-  } else if (shape === "nymph" || shape === "larva") {
-    const body = new THREE.CapsuleGeometry(shape === "larva" ? 0.12 : 0.1, 0.55, 4, 8).rotateZ(Math.PI / 2).scale(1, 0.75, 1);
-    parts.push(body);
-    const head = new THREE.SphereGeometry(0.1, 8, 6).translate(0.42, 0.02, 0);
-    parts.push(head);
-    if (shape === "nymph")
-      for (const z of [-0.06, 0, 0.06]) parts.push(new THREE.CylinderGeometry(0.008, 0.012, 0.35, 4).rotateZ(Math.PI / 2 + 0.1).translate(-0.55, 0.02, z * 1.5));
-    for (const z of [-1, 1]) for (const x of [-0.05, 0.1, 0.25]) parts.push(new THREE.CylinderGeometry(0.01, 0.01, 0.2, 3).rotateX(z * 1.1).translate(x, -0.04, z * 0.1));
-  } else if (shape === "shrimp") {
-    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(-0.5, 0.05, 0), new THREE.Vector3(-0.2, 0.14, 0), new THREE.Vector3(0.15, 0.12, 0), new THREE.Vector3(0.45, 0.0, 0)]);
-    parts.push(new THREE.TubeGeometry(curve, 14, 0.1, 7, false).scale(1, 1, 0.7));
-    for (const z of [-1, 1]) parts.push(new THREE.CylinderGeometry(0.008, 0.008, 0.45, 3).rotateZ(-0.9).translate(0.6, 0.12, z * 0.04));
-    for (let k = 0; k < 5; k++) parts.push(new THREE.CylinderGeometry(0.01, 0.01, 0.16, 3).translate(-0.2 + k * 0.12, -0.02, 0));
-  } else if (shape === "cased") {
-    // A caddis larva in its case of sand grains and tiny stones, head and legs out in front.
-    const tube = new THREE.CylinderGeometry(0.13, 0.1, 0.8, 9, 6).rotateZ(Math.PI / 2);
-    const p = tube.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      const bump = 1 + 0.18 * Math.sin(p.getX(i) * 31 + Math.atan2(p.getZ(i), p.getY(i)) * 5) * Math.sin(p.getX(i) * 13);
-      p.setY(i, p.getY(i) * bump);
-      p.setZ(i, p.getZ(i) * bump);
-    }
-    tube.computeVertexNormals();
-    parts.push(tube.translate(-0.05, 0, 0));
-    parts.push(new THREE.SphereGeometry(0.075, 8, 6).translate(0.4, 0, 0));
-    for (const z of [-1, 1]) for (const x of [0.3, 0.38]) parts.push(new THREE.CylinderGeometry(0.01, 0.01, 0.16, 3).rotateX(z * 1.1).translate(x, -0.04, z * 0.06));
-  } else if (shape === "snail") {
-    // A pond snail: a coiled, pointed shell, the foot beneath.
-    parts.push(new THREE.SphereGeometry(0.32, 12, 9).scale(1, 0.85, 0.9));
-    parts.push(new THREE.ConeGeometry(0.2, 0.45, 10).rotateZ(Math.PI / 2 + 0.5).translate(-0.3, 0.2, 0));
-    parts.push(new THREE.TorusGeometry(0.2, 0.06, 6, 14).rotateY(Math.PI / 2).translate(0.02, 0.05, 0));
-    parts.push(new THREE.SphereGeometry(0.2, 8, 6).scale(2, 0.35, 0.8).translate(0.12, -0.26, 0));
-  } else if (shape === "leech") {
-    // A leech: flat, long, tapering at both ends, a sucker at each.
-    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(-0.5, 0, 0), new THREE.Vector3(-0.2, 0.04, 0.03), new THREE.Vector3(0.15, -0.03, -0.03), new THREE.Vector3(0.5, 0.02, 0)]);
-    const tube = new THREE.TubeGeometry(curve, 20, 0.09, 7, false);
-    const p = tube.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      const taper = 0.45 + 0.55 * Math.sin(Math.PI * (p.getX(i) + 0.5));
-      p.setY(i, p.getY(i) * 0.45 * taper + p.getY(i) * 0.1);
-      p.setZ(i, p.getZ(i) * taper);
-    }
-    tube.computeVertexNormals();
-    parts.push(tube);
-  } else if (shape === "earthworm") {
-    // An earthworm washed in: long, ringed, writhing.
-    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(-0.5, 0, 0), new THREE.Vector3(-0.3, 0.06, 0.05), new THREE.Vector3(-0.05, -0.04, -0.04), new THREE.Vector3(0.2, 0.05, 0.03), new THREE.Vector3(0.5, 0, 0)]);
-    const tube = new THREE.TubeGeometry(curve, 40, 0.035, 7, false);
-    const p = tube.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      const ring = 1 + 0.12 * Math.sin(i * 0.9);
-      p.setY(i, p.getY(i) * ring);
-    }
-    tube.computeVertexNormals();
-    parts.push(tube);
-    parts.push(new THREE.CylinderGeometry(0.045, 0.045, 0.08, 7).rotateZ(Math.PI / 2).translate(0.12, 0, 0));
-  } else if (shape === "egg") {
-    parts.push(new THREE.SphereGeometry(0.5, 12, 9));
-  } else if (shape === "crumb") {
-    // A crumb of bread: a soft, torn lump.
-    const lump = new THREE.IcosahedronGeometry(0.42, 1);
-    const p = lump.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      const k = 0.8 + 0.3 * Math.sin(p.getX(i) * 9.1 + p.getY(i) * 5.3) * Math.cos(p.getZ(i) * 7.7);
-      p.setXYZ(i, p.getX(i) * k * 1.2, p.getY(i) * k * 0.7, p.getZ(i) * k);
-    }
-    lump.computeVertexNormals();
-    parts.push(lump);
-  } else if (shape === "fly") {
-    // A fly on the water: a body and two wings spread flat.
-    parts.push(new THREE.CapsuleGeometry(0.1, 0.35, 4, 8).rotateZ(Math.PI / 2));
-    parts.push(new THREE.SphereGeometry(0.1, 8, 6).translate(0.3, 0.02, 0));
-    for (const z of [-1, 1]) parts.push(new THREE.SphereGeometry(0.2, 8, 4).scale(1.4, 0.05, 0.5).translate(-0.1, 0.1, z * 0.22));
-    for (const z of [-1, 1]) for (const x of [-0.1, 0.05, 0.2]) parts.push(new THREE.CylinderGeometry(0.008, 0.008, 0.28, 3).rotateX(z * 1.3).translate(x, -0.05, z * 0.12));
-  } else {
-    parts.push(new THREE.SphereGeometry(0.28, 10, 8).scale(1.4, 0.6, 1));
-    parts.push(new THREE.SphereGeometry(0.12, 8, 6).translate(0.42, 0, 0));
-    for (const z of [-1, 1]) for (const x of [-0.15, 0.05, 0.25]) parts.push(new THREE.CylinderGeometry(0.012, 0.012, 0.32, 3).rotateX(z * 1.2).translate(x, -0.05, z * 0.18));
-  }
-  return mergeSimple(parts);
-}
-function mergeSimple(list) {
-  const positions = [],
-    normals = [],
-    indices = [];
-  let offset = 0;
-  for (const g of list) {
-    const geometry = g.index ? g : g;
-    const pos = geometry.attributes.position,
-      nor = geometry.attributes.normal;
-    for (let i = 0; i < pos.count; i++) {
-      positions.push(pos.getX(i), pos.getY(i), pos.getZ(i));
-      normals.push(nor.getX(i), nor.getY(i), nor.getZ(i));
-    }
-    if (geometry.index) for (let i = 0; i < geometry.index.count; i++) indices.push(geometry.index.getX(i) + offset);
-    else for (let i = 0; i < pos.count; i++) indices.push(i + offset);
-    offset += pos.count;
-  }
-  const merged = new THREE.BufferGeometry();
-  merged.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  merged.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
-  merged.setIndex(indices);
-  return merged;
-}
-
 function createFood(scene, { count = 240 } = {}) {
   const random = randomGenerator(51377);
   const range = (a, b) => a + (b - a) * random();
@@ -204,6 +94,7 @@ function createFood(scene, { count = 240 } = {}) {
     waterLitShader(shader);
     shader.uniforms.foodGlow = glow;
     shader.uniforms.foodTime = pulseTime;
+    dressFoodShader(shader);
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float edible;\nvarying float vEdible;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvEdible = edible;");
@@ -221,7 +112,7 @@ function createFood(scene, { count = 240 } = {}) {
         totalEmissiveRadiance += vec3(1.0, 0.78, 0.38) * vEdible * (0.35 + 1.1 * rim) * pulse * foodGlow;`,
       );
   };
-  material.customProgramCacheKey = () => "salmon-food-v2";
+  material.customProgramCacheKey = () => "salmon-food-v3";
   const meshes = {};
   const edibleFlags = {};
   for (const [name, type] of Object.entries(FOODS)) {

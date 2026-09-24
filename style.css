@@ -3,8 +3,8 @@
 #habitat.locked { cursor: none; }
 
 /* What is on screen besides the river: a little card with the fish's life -- which stage
-   of six it is in, its strength, its growth and what is in its stomach -- and at sea a
-   compass. Rounded, bubbly, easy to read at a glance. */
+   of six it is in, its strength, its growth and what is in its stomach. Rounded, bubbly,
+   easy to read at a glance. */
 :root { --hud-font: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", var(--font-body, system-ui), sans-serif; }
 #hud {
   position: fixed;
@@ -449,27 +449,6 @@
 #sound-toggle[aria-pressed="false"] .waves { display: none; }
 #sound-toggle[aria-pressed="false"] .muted { display: inline; }
 .locked #sound-toggle { opacity: 0.55; }
-
-#compass {
-  position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  width: 48px;
-  transition: opacity 800ms ease, filter 800ms ease;
-}
-#compass[hidden] { display: none; }
-#compass svg { width: 42px; height: 42px; overflow: visible; }
-#compass circle { fill: rgba(6, 30, 36, 0.6); stroke: rgba(230, 250, 245, 0.7); stroke-width: 2; }
-#compass path { fill: #ffd66b; }
-#compass span { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; opacity: 0.85; }
-#compass .needle { transform-origin: 20px 20px; transition: transform 250ms linear; }
-/* Before the fish is ready to go home the compass is there but asleep. */
-#compass.dormant { opacity: 0.4; filter: grayscale(1); }
-#compass.dormant path { fill: #b8c4c4; }
 
 #toast {
   position: fixed;

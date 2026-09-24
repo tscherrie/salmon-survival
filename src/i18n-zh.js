@@ -61,7 +61,6 @@ const PAIRS = [
   ["Your salmon", "你的鲑鱼"],
   ["Species found", "已发现的物种"],
   ["Season, time of day and water temperature", "季节、时间和水温"],
-  ["Compass to the river mouth", "指向河口的罗盘"],
   ["You are a salmon. Click the view to steer with the mouse. W swims, S brakes, A and D glide sideways, Space dashes, bites and leaps. M shows the map, L the logbook, T toggles sound, F full screen.", "你是一条鲑鱼。点击画面，用鼠标转向。W 游动，S 减速，A 和 D 侧向滑动，空格冲刺、咬和跳跃。M 显示地图，L 显示日志，T 开关声音，F 全屏。"],
   ["River mouth", "河口"],
 
@@ -84,7 +83,7 @@ const PAIRS = [
   ["Salt water! Your first months at sea: hunt krill and small fish.", "咸水！在海里的最初几个月：捕食磷虾和小鱼。"],
   ["A year at sea, strong and fast. Hunt sand eels and herring.", "在海里一年了，强壮又敏捷。捕食玉筋鱼和鲱鱼。"],
   ["A big sea salmon. Grow a little more – then home will call.", "一条大海鲑。再长大一点——故乡就会召唤你。"],
-  ["Home is calling. The compass points to the river mouth. You will not eat any more.", "故乡在召唤。罗盘指向河口。你不会再进食了。"],
+  ["Home is calling. The map (M) shows you the way to the river mouth. You will not eat any more.", "故乡在召唤。地图（M）为你指出通往河口的路。你不会再进食了。"],
   ["Back to the start of this stage of life.", "回到这一生命阶段的起点。"],
   ["Spawned", "已产卵"],
   ["The next generation lies in the gravel of the source.", "下一代躺在源头的砾石中。"],

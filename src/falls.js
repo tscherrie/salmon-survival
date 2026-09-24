@@ -1,18 +1,22 @@
 import * as THREE from "three";
 import { FALLS, RAPIDS, TRIBUTARIES, bed, current, level, place, section, smooth } from "./course.js";
 import { GRAVITY } from "./salmon.js";
-import { createBubbleMaterial, createCurtainMaterial, createFoamCloudMaterial } from "./materials.js";
+import { createBubbleMaterial, createCurtainMaterial, createFoamCloudMaterial, createFoamMatMaterial } from "./materials.js";
 
 // White water: the curtain of each fall streaming off its lip in the arc the water's speed
-// gives it, the plume of bubbles it drives down into the pool below and that boils back up
-// to the surface, and the splashes of a fish breaking the surface.
+// gives it, lumpy and glassy where it leaves the lip; the plume of bubbles it drives down
+// into the pool below and that boils back up to the surface; the foam it lays on the pool,
+// carried off downstream; the mist that rises off it; and the splashes of a fish breaking
+// the surface.
 
 const PLUME = 2600;
 const SPRAY = 700;
+const MIST = 110;
 
 export function createFalls(scene) {
   const curtainMaterial = createCurtainMaterial();
   const underMaterial = createCurtainMaterial({ under: true });
+  const foamMaterial = createFoamMatMaterial();
   const curtains = new Map();
   const at = {};
   const flow = {};
@@ -43,6 +47,7 @@ export function createFalls(scene) {
       cols = Math.max(2, Math.ceil((to - from) / 0.8));
     const positions = [],
       uvs = [],
+      flows = [],
       indices = [];
     for (let i = 0; i <= rows; i++) {
       const t = i / rows;
@@ -56,6 +61,7 @@ export function createFalls(scene) {
         place(f.s + lip + out + (f.head ? 0.6 : 0), u, at);
         positions.push(at.x, y, at.z);
         uvs.push(u, t);
+        flows.push(at.tx, at.tz);
         if (i < rows && j < cols) {
           const a = i * (cols + 1) + j;
           indices.push(a, a + cols + 1, a + 1, a + 1, a + cols + 1, a + cols + 2);
@@ -65,8 +71,10 @@ export function createFalls(scene) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
     geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setAttribute("flowDir", new THREE.Float32BufferAttribute(flows, 2));
     geometry.setIndex(indices);
     geometry.computeBoundingSphere();
+    geometry.boundingSphere.radius += 1;
     // Each curtain its own copy of the material, for its own edges.
     const material = curtainMaterial.clone();
     material.uniforms.waterTime = curtainMaterial.uniforms.waterTime;
@@ -134,7 +142,59 @@ export function createFalls(scene) {
       spot.floor = bed(f.s + 2, across);
       return spot;
     }
-    return { mesh, under, fall: f, impact: { s: impactS, from, to, y: down }, drop, jets, pick };
+    // The foam on the pool, carried off downstream.
+    const foam = f.head
+      ? null
+      : buildFoam(`Foam ${f.name}`, from, to, 5 + drop * 1.4, Math.max(0.6, Math.min(2.2, v0 * 0.35)), Math.min(1, 0.3 + drop / 9), (along, across, out) => {
+          const s = impactS + along;
+          place(s, across, out);
+          out.y = level(s) + 0.05;
+          return out;
+        });
+    return { mesh, under, foam, fall: f, impact: { s: impactS, from, to, y: down }, drop, jets, pick };
+  }
+  // A sheet of foam lying on the water: `point(along, across)` puts it in the world.
+  function buildFoam(name, from, to, length, speed, strength, point) {
+    const rows = Math.ceil((length + 1.5) / 0.9),
+      spread = 1.5 + length * 0.22;
+    const u0 = from - spread - 1,
+      u1 = to + spread + 1;
+    const cols = Math.max(2, Math.ceil((u1 - u0) / 1.1));
+    const positions = [],
+      uvs = [],
+      indices = [];
+    const p = { x: 0, y: 0, z: 0 };
+    for (let i = 0; i <= rows; i++) {
+      const along = -1.5 + ((length + 1.5) * i) / rows;
+      for (let j = 0; j <= cols; j++) {
+        const across = u0 + ((u1 - u0) * j) / cols;
+        point(along, across, p);
+        positions.push(p.x, p.y, p.z);
+        uvs.push(across, along);
+        if (i < rows && j < cols) {
+          const a = i * (cols + 1) + j;
+          indices.push(a, a + cols + 1, a + 1, a + 1, a + cols + 1, a + cols + 2);
+        }
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setIndex(indices);
+    geometry.computeBoundingSphere();
+    const material = foamMaterial.clone();
+    material.uniforms.waterTime = foamMaterial.uniforms.waterTime;
+    material.uniforms.light = foamMaterial.uniforms.light;
+    material.uniforms.uFrom.value = from;
+    material.uniforms.uTo.value = to;
+    material.uniforms.uLen.value = length;
+    material.uniforms.uSpeed.value = speed;
+    material.uniforms.uStrength.value = strength;
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = name;
+    mesh.renderOrder = 1;
+    scene.add(mesh);
+    return mesh;
   }
   function jetsAlong(seed, from, to) {
     const jets = [];
@@ -165,6 +225,7 @@ export function createFalls(scene) {
       cols = Math.max(2, Math.ceil((to - from) / 0.5));
     const positions = [],
       uvs = [],
+      flows = [],
       indices = [];
     for (let i = 0; i <= rows; i++) {
       const t = i / rows;
@@ -177,6 +238,7 @@ export function createFalls(scene) {
         place(s, lipU - b.side * (out + lip), at);
         positions.push(at.x, y, at.z);
         uvs.push(s, t);
+        flows.push(-b.side * at.nx * 0.5, -b.side * at.nz * 0.5);
         if (i < rows && j < cols) {
           const a = i * (cols + 1) + j;
           indices.push(a, a + cols + 1, a + 1, a + 1, a + cols + 1, a + cols + 2);
@@ -186,8 +248,10 @@ export function createFalls(scene) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
     geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setAttribute("flowDir", new THREE.Float32BufferAttribute(flows, 2));
     geometry.setIndex(indices);
     geometry.computeBoundingSphere();
+    geometry.boundingSphere.radius += 1;
     const material = curtainMaterial.clone();
     material.uniforms.waterTime = curtainMaterial.uniforms.waterTime;
     material.uniforms.light = curtainMaterial.uniforms.light;
@@ -198,6 +262,11 @@ export function createFalls(scene) {
     mesh.renderOrder = 2;
     scene.add(mesh);
     const impactU = lipU - b.side * (v0 * fallTime + 0.3);
+    const foam = buildFoam(`Foam ${b.name}`, from, to, 4 + b.drop * 0.8, 0.5, Math.min(0.9, 0.3 + b.drop / 9), (along, across, out) => {
+      place(across, impactU - b.side * along, out);
+      out.y = down + 0.05;
+      return out;
+    });
     const fall = { s: middle, drop: b.drop, name: b.name, side: true };
     function pick(spot, across = from + Math.random() * (to - from), along = (Math.random() - 0.3) * 1.2) {
       const u = impactU - b.side * along;
@@ -212,7 +281,7 @@ export function createFalls(scene) {
       spot.floor = bed(across, u - b.side * 1.5);
       return spot;
     }
-    return { mesh, under: null, fall, impact: { s: middle, from, to, y: down }, drop, jets: jetsAlong(b.s, from, to), pick };
+    return { mesh, under: null, foam, fall, impact: { s: middle, from, to, y: down }, drop, jets: jetsAlong(b.s, from, to), pick };
   }
   const SIDE_FALLS = TRIBUTARIES.map((b) => ({ ...b, sideFall: true }));
 
@@ -265,6 +334,24 @@ export function createFalls(scene) {
   scene.add(cloud);
   const puffs = Array.from({ length: CLOUDS }, () => ({ x: 0, y: -1e5, z: 0, vx: 0, vy: 0, vz: 0, age: 1, life: 1, size: 1, seed: Math.random() }));
 
+  // ---- Mist: fine spray rising off the pool at the foot of a fall and drifting away with
+  // the air the falling water drags along (seen from above the water).
+  const mistGeometry = new THREE.BufferGeometry();
+  const mistPositions = new Float32Array(MIST * 3);
+  const mistSizes = new Float32Array(MIST);
+  const mistAlpha = new Float32Array(MIST);
+  mistGeometry.setAttribute("position", new THREE.BufferAttribute(mistPositions, 3));
+  mistGeometry.setAttribute("size", new THREE.BufferAttribute(mistSizes, 1));
+  mistGeometry.setAttribute("alpha", new THREE.BufferAttribute(mistAlpha, 1));
+  mistGeometry.setAttribute("seed", new THREE.BufferAttribute(new Float32Array(MIST).map(() => Math.random()), 1));
+  const mistMaterial = createFoamCloudMaterial();
+  const mist = new THREE.Points(mistGeometry, mistMaterial);
+  mist.frustumCulled = false;
+  mist.name = "Mist";
+  mist.renderOrder = 3;
+  scene.add(mist);
+  const wisps = Array.from({ length: MIST }, () => ({ x: 0, y: -1e5, z: 0, vx: 0, vy: 0, vz: 0, age: 1, life: Math.random(), size: 1 }));
+
   let active = null;
   let clock = 0;
 
@@ -311,12 +398,15 @@ export function createFalls(scene) {
     setScale(value) {
       bubbleMaterial.uniforms.scale.value = value;
       cloudMaterial.uniforms.scale.value = value;
+      mistMaterial.uniforms.scale.value = value;
     },
     light(value) {
       curtainMaterial.uniforms.light.value = value;
       underMaterial.uniforms.light.value = value;
       bubbleMaterial.uniforms.light.value = value;
       cloudMaterial.uniforms.light.value = value;
+      foamMaterial.uniforms.light.value = value;
+      mistMaterial.uniforms.light.value = value;
     },
     // A fish broke the surface: droplets up, bubbles down.
     splash(x, y, z, size) {
@@ -375,6 +465,10 @@ export function createFalls(scene) {
             if (c.under) {
               scene.remove(c.under);
               c.under.geometry.dispose();
+            }
+            if (c.foam) {
+              scene.remove(c.foam);
+              c.foam.geometry.dispose();
             }
           }
           curtains.delete(f);
@@ -482,6 +576,41 @@ export function createFalls(scene) {
         cloudGeometry.attributes.position.needsUpdate = true;
         cloudGeometry.attributes.size.needsUpdate = true;
         cloudGeometry.attributes.alpha.needsUpdate = true;
+      }
+      // Mist over the foot of the fall, when the eye is above the water.
+      mist.visible = cloud.visible && cameraPosition.y > level(s) - 0.05;
+      if (mist.visible) {
+        const c = active;
+        const force = Math.min(1.6, 0.35 + c.drop / 12);
+        const strength = Math.min(0.34, 0.1 + c.drop * 0.014) * (c.fall.side ? 0.6 : 1);
+        for (let i = 0; i < MIST; i++) {
+          const w = wisps[i];
+          w.age += dt;
+          if (w.age > w.life) {
+            const spot = c.pick(pickSpot, undefined, Math.random() * 1.8);
+            w.x = spot.x;
+            w.z = spot.z;
+            w.y = c.impact.y + 0.1 + Math.random() * 0.5;
+            w.vx = spot.tx * (0.5 + Math.random() * 1.3) * force + (Math.random() - 0.5) * 0.5;
+            w.vz = spot.tz * (0.5 + Math.random() * 1.3) * force + (Math.random() - 0.5) * 0.5;
+            w.vy = (0.3 + Math.random() * 0.9) * force;
+            w.age = 0;
+            w.life = 2.5 + Math.random() * (2 + c.drop * 0.15);
+            w.size = (0.9 + Math.random() * (0.9 + c.drop * 0.09)) * (c.fall.side ? 0.5 : 1);
+          }
+          w.vy *= Math.exp(-dt * 0.5);
+          w.x += w.vx * dt;
+          w.y += w.vy * dt;
+          w.z += w.vz * dt;
+          mistPositions[i * 3] = w.x;
+          mistPositions[i * 3 + 1] = w.y;
+          mistPositions[i * 3 + 2] = w.z;
+          mistSizes[i] = w.size * (1 + w.age * 0.45);
+          mistAlpha[i] = Math.min(1, w.age * 2) * (1 - smooth(w.life * 0.3, w.life, w.age)) * strength;
+        }
+        mistGeometry.attributes.position.needsUpdate = true;
+        mistGeometry.attributes.size.needsUpdate = true;
+        mistGeometry.attributes.alpha.needsUpdate = true;
       }
       // Spray and splash bubbles.
       for (let i = 0; i < SPRAY; i++) {

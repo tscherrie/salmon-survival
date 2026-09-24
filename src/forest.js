@@ -312,6 +312,106 @@ export function birch(batch, x, y, z, height, random) {
   }
 }
 
+// Grey alder, the tree of river islands and wet banks: a few dark grey stems from one
+// foot, branches going out almost level, a dense rounded crown of dark leaves.
+export function alder(batch, x, y, z, height, random) {
+  const range = ranger(random);
+  const bark = new THREE.Color(0.3, 0.29, 0.27);
+  const leaves = new THREE.Color().setHSL(range(0.24, 0.29), range(0.4, 0.55), range(0.13, 0.18));
+  const c = new THREE.Color();
+  const stems = Math.floor(range(1, 3.6));
+  for (let s = 0; s < stems; s++) {
+    const h = height * (s ? range(0.7, 0.9) : 1);
+    const lean = vec(range(-1, 1), 0, range(-1, 1)).multiplyScalar(h * (s ? 0.14 : 0.05));
+    const foot = vec(x + (s ? range(-0.8, 0.8) : 0), y - 1, z + (s ? range(-0.8, 0.8) : 0));
+    const top = foot.clone().add(vec(lean.x, h + 1, lean.z));
+    const mid = foot.clone().lerp(top, 0.5).add(vec(range(-1, 1) * h * 0.02, 0, range(-1, 1) * h * 0.02));
+    limb(batch, foot, mid, h * 0.02, h * 0.014, bark, { sides: 6, shade: barkShade, sway1: 0.15 });
+    limb(batch, mid, top, h * 0.014, h * 0.004, bark, { sides: 5, shade: barkShade, sway0: 0.15, sway1: 0.5 });
+    const crown = { x: foot.x + lean.x * 0.6, y: y + h * 0.6, z: foot.z + lean.z * 0.6, k: 1.1, lift: h * 0.08 };
+    const branches = Math.floor(range(8, 12));
+    for (let k = 0; k < branches; k++) {
+      const t = range(0.35, 0.95);
+      const from = foot.clone().lerp(top, t);
+      const a = (k / branches) * TAU + range(-0.4, 0.4);
+      const length = h * range(0.18, 0.3) * (1.15 - t * 0.6);
+      const end = from.clone().add(vec(Math.cos(a) * length, length * range(0.1, 0.45), Math.sin(a) * length));
+      limb(batch, from, end, h * 0.006, h * 0.002, bark, { sides: 3, sway0: 0.3, sway1: 0.7 });
+      // Clumps of leaves along it and round its end: a rounded, closed crown.
+      for (let q = 0; q < 4; q++) {
+        const f = 0.35 + 0.65 * (q / 3);
+        const at = from.clone().lerp(end, f);
+        const spin = range(0, TAU);
+        const du = vec(Math.cos(spin), range(-0.3, 0.5), Math.sin(spin)).normalize();
+        const dv = du.clone().cross(UP).normalize();
+        const size = h * range(0.08, 0.12);
+        c.copy(leaves).multiplyScalar(range(0.8, 1.25));
+        pad(batch, at.clone().addScaledVector(du, -size * 0.5), du, dv, size, size * 0.8, c, LEAVES, random(), crown, 0.5 + 0.4 * f);
+        pad(batch, at, dv, vec(0, 1, 0).addScaledVector(du, 0.3).normalize(), size * 0.9, size * 0.8, c, LEAVES, random(), crown, 0.5 + 0.4 * f);
+      }
+    }
+  }
+}
+
+// A willow at the water: several stems from one stool, leaning out over the water (`out`,
+// a horizontal direction toward it), long slender twigs of narrow grey-green leaves hanging
+// from them toward the surface.
+export function willow(batch, x, y, z, height, random, out = null) {
+  const range = ranger(random);
+  const bark = new THREE.Color(0.33, 0.3, 0.24);
+  const leaves = new THREE.Color().setHSL(range(0.2, 0.25), range(0.25, 0.38), range(0.2, 0.27));
+  const c = new THREE.Color();
+  const dir = out ? out.clone().setY(0).normalize() : vec(range(-1, 1), 0, range(-1, 1)).normalize();
+  const stems = Math.floor(range(3, 6));
+  for (let s = 0; s < stems; s++) {
+    const h = height * range(0.65, 1);
+    // Out over the water, fanning.
+    const spread = range(-0.9, 0.9);
+    const lean = dir.clone().applyAxisAngle(UP, spread).multiplyScalar(h * range(0.25, 0.55) * (out ? 1 : 0.5));
+    const foot = vec(x + range(-0.6, 0.6), y - 0.6, z + range(-0.6, 0.6));
+    const mid = foot.clone().add(vec(lean.x * 0.45, h * 0.55, lean.z * 0.45));
+    const top = foot.clone().add(vec(lean.x, h, lean.z));
+    limb(batch, foot, mid, h * 0.022, h * 0.014, bark, { sides: 5, shade: barkShade, sway1: 0.2 });
+    limb(batch, mid, top, h * 0.014, h * 0.004, bark, { sides: 4, shade: barkShade, sway0: 0.2, sway1: 0.6 });
+    const crown = { x: foot.x + lean.x * 0.7, y: y + h * 0.7, z: foot.z + lean.z * 0.7, k: 0.9, lift: h * 0.12 };
+    const twigs = Math.floor(range(8, 12));
+    for (let k = 0; k < twigs; k++) {
+      const from = mid.clone().lerp(top, range(0.1, 1));
+      const a = range(0, TAU);
+      const reach = h * range(0.1, 0.22);
+      const tip = from.clone().add(vec(Math.cos(a) * reach, h * range(0.02, 0.1), Math.sin(a) * reach));
+      limb(batch, from, tip, h * 0.004, h * 0.0015, bark, { sides: 3, sway0: 0.4, sway1: 0.8 });
+      // Hanging sprays of narrow leaves, drooping toward the water.
+      for (let q = 0; q < 3; q++) {
+        const at = from.clone().lerp(tip, 0.4 + 0.3 * q);
+        const length = h * range(0.14, 0.26);
+        const sway = vec(range(-0.2, 0.2), 0, range(-0.2, 0.2));
+        const spine = [0, 0.33, 0.66, 1].map((u) => at.clone().add(vec(sway.x * u * length, -length * u, sway.z * u * length)));
+        c.copy(leaves).multiplyScalar(range(0.85, 1.2));
+        const spin = range(0, TAU);
+        sheet(batch, spine, vec(Math.cos(spin), 0, Math.sin(spin)), length * 0.18, 0, c, LEAVES, random(), crown, 0.6, 0.35, 0.75);
+        sheet(batch, spine, vec(-Math.sin(spin), 0, Math.cos(spin)), length * 0.15, 0, c, LEAVES, random(), crown, 0.6, 0.35, 0.75);
+      }
+    }
+  }
+}
+
+// Roots hanging out of a cut bank into the water: the undercut earth washed out from
+// round them. From (x, y, z) at the top of the bank, down and out along `out`.
+export function roots(batch, x, y, z, out, drop, random) {
+  const range = ranger(random);
+  const wood = new THREE.Color(0.2, 0.15, 0.1);
+  const count = Math.floor(range(4, 8));
+  for (let k = 0; k < count; k++) {
+    const a = vec(x + range(-1, 1), y - range(0, 0.4), z + range(-1, 1));
+    const b = a.clone().addScaledVector(out, range(0.3, 1.2)).add(vec(range(-0.4, 0.4), -drop * range(0.4, 0.7), range(-0.4, 0.4)));
+    const e = b.clone().addScaledVector(out, range(-0.3, 0.5)).add(vec(range(-0.5, 0.5), -drop * range(0.3, 0.6), range(-0.5, 0.5)));
+    const r = range(0.05, 0.14);
+    limb(batch, a, b, r, r * 0.7, wood, { sides: 4 });
+    limb(batch, b, e, r * 0.7, r * 0.2, wood, { sides: 3, cap: true });
+  }
+}
+
 // ---------------------------------------------------------------------------------------
 // Under the trees.
 
