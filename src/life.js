@@ -12,6 +12,7 @@ import { createBrawls } from "./brawl.js";
 import { profile as prof } from "./profile.js";
 import { phaseOf } from "./salmon.js";
 import { dressFoodShader, foodGeometry } from "./food-shapes.js";
+import { mode } from "./vegan.js";
 
 // Everything else alive in the river and the sea, and what it means to the salmon:
 //
@@ -230,7 +231,8 @@ function createFood(scene, { count = 240 } = {}) {
   // Less in the cold months, more in an evening rise, and more past a spot the fish holds
   // as its own.
   let focus = 0;
-  const activeCount = (fish) => Math.min(count, Math.round(count * (fish.length < 1.6 ? 0.5 : 1) * (0.4 + 0.6 * conditions.plenty) * (1 + 0.6 * conditions.hatch) * (1 + 0.55 * focus)));
+  // (vegan mode: nothing drifts to be eaten)
+  const activeCount = (fish) => mode.vegan ? 0 : Math.min(count, Math.round(count * (fish.length < 1.6 ? 0.5 : 1) * (0.4 + 0.6 * conditions.plenty) * (1 + 0.6 * conditions.hatch) * (1 + 0.55 * focus)));
 
   const items = Array.from({ length: count }, () => ({
     type: "midge",
@@ -805,7 +807,8 @@ function createShoals(scene, { detail, brawls }) {
       const L = fish.length;
       const gape = 0.5 * L;
       // A spawner no longer hunts; it only snaps with a lunge, from habit or anger.
-      const feeding = !salmon.stage().fasting;
+      // (vegan mode: it eats nothing, and nothing needs to fear it)
+      const feeding = !salmon.stage().fasting && !mode.vegan;
       const hunting = feeding || fish.lunging > 0 || (fish.striking ?? 0) > 0;
       if (!feeding) aim = null;
       if (aim) {
@@ -834,7 +837,7 @@ function createShoals(scene, { detail, brawls }) {
           // The shoal as a whole: holding in the river, roaming at sea, running from the salmon.
           const toFish = delta.subVectors(group.centre, fish.position);
           const d = toFish.length();
-          const threat = spec.flees && L > spec.ref * 1.6 ? 1 : 0;
+          const threat = spec.flees && L > spec.ref * 1.6 && !mode.vegan ? 1 : 0;
           const fear = threat * clamp(1 - (d - L * 2) / (6 + L * 4), 0, 1) * clamp(0.4 + fish.relative.length() / 3, 0.4, 1.5);
           group.panic = Math.max(group.panic - dt * 0.4, fear);
           if (group.ball) {
@@ -1014,6 +1017,8 @@ function createHunters(scene, { detail }) {
   // until it is swallowed or carried off.
   const captive = { active: false, kind: null, hunter: null, grip: new THREE.Vector3(), heading: new THREE.Vector3(1, 0, 0), t: 0 };
   const forward = new THREE.Vector3();
+  // (vegan mode, when they were all sent away)
+  let peaceful = false;
   function seize(kind, hunter = null) {
     captive.active = true;
     captive.kind = kind;
@@ -1118,6 +1123,22 @@ function createHunters(scene, { detail }) {
     update(dt, fish, time, travel, covered, cruise = 1, decoy = null, occluded = null, exposed = 0, drive = null) {
       const L = fish.length;
       const result = { bitten: false, killed: null, decoy: false, hits: [], watched: false, hidden: false };
+      // Vegan mode: no hunters about at all -- nobody is eaten.
+      if (mode.vegan) {
+        if (!peaceful) {
+          peaceful = true;
+          predators.reset();
+        }
+        bird.mode = "away";
+        kingfisher.visible = false;
+        heron.mode = "away";
+        heronLegs.visible = heronHead.visible = false;
+        bear.active = false;
+        bear.striking = false;
+        bearLegs.visible = bearPaw.visible = false;
+        return result;
+      }
+      peaceful = false;
       const deep = level(fish.river.s) - fish.position.y;
       if (captive.active) captive.t += dt;
       // How far a hunter can see: clear in the brook and the sea, less in the brown lower

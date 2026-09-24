@@ -738,7 +738,8 @@ export function createEvents(scene, { rocks, sound, daylight, life, random = Mat
         storm.t = STORM.length + STORM.recede;
       }
     },
-    update(dt, { fish, time, dead }) {
+    // `peaceful`: vegan mode -- no angler.
+    update(dt, { fish, time, dead, peaceful = false }) {
       clock += dt;
       happened.length = 0;
       regionWeights(fish.river.s, weights);
@@ -755,7 +756,8 @@ export function createEvents(scene, { rocks, sound, daylight, life, random = Mat
       }
       if (storm.active) stormUpdate(dt, fish, time);
       // An angler: by day, from spring to autumn, on the river, for a fish that takes a fly.
-      if (!angler.active && clock > next.angler && dead <= 0 && !storm.active) {
+      if (peaceful && angler.active && !angler.hooked) endAngler();
+      if (!angler.active && clock > next.angler && dead <= 0 && !storm.active && !peaceful) {
         const fits = forced === "angler" || (c.light > 0.55 && c.ice < 0.2 && c.winter < 0.5 && weights.upper + weights.middle + weights.lower > 0.6 && L > 0.7 && L < 9);
         if (!fits || !startAngler(fish)) next.angler = clock + range(60, 120);
       }

@@ -44,6 +44,7 @@ import { createDrive } from "./drive.js";
 import { createBaitBall } from "./baitball.js";
 import { createScent } from "./scent.js";
 import { createRedd } from "./redd.js";
+import { mode } from "./vegan.js";
 import { TRAITS, STEP, earned, heritage, inherit, loadHeritage, resetHeritage, traits as heritageTraits } from "./heritage.js";
 
 // English over the German, unless the player chose German.
@@ -632,7 +633,7 @@ async function start() {
     }
   }
   function stepDrive(dt) {
-    if (dead <= 0 && phaseOf(fish.stage) === "smolt" && conditions.light > 0.35 && drive.ready(fish, life.school.count)) startDrive();
+    if (dead <= 0 && !mode.vegan && phaseOf(fish.stage) === "smolt" && conditions.light > 0.35 && drive.ready(fish, life.school.count)) startDrive();
     const how = drive.update(dt, fish, time, life.hunters.list);
     if (how) endDrive(how);
     if (!drive.on) return;
@@ -661,7 +662,7 @@ async function start() {
   const ballAt = new THREE.Vector3();
   function stepBall(dt) {
     const sea = regionWeights(fish.river.s).sea > 0.8;
-    const happened = baitball.update(dt, fish, { ok: dead <= 0 && phaseOf(fish.stage) === "sea" && sea && !fish.captive && fish.length >= 2.6, light: conditions.light, shoals: life.shoals, hunters: life.hunters });
+    const happened = baitball.update(dt, fish, { ok: dead <= 0 && !mode.vegan && phaseOf(fish.stage) === "sea" && sea && !fish.captive && fish.length >= 2.6, light: conditions.light, shoals: life.shoals, hunters: life.hunters });
     for (const e of happened) {
       if (e.type === "dive") {
         // A gannet going in: the splash, and its crack under the water.
@@ -1545,7 +1546,7 @@ async function start() {
     world.covered = terrain.covered(fish.position.x, fish.position.y, fish.position.z);
     // The rich drift of a riffle: more food, and more eyes on the fish.
     world.rich = (world.rich ?? 0) + (driftRich(fish.river.s, fish.river.u) - (world.rich ?? 0)) * (1 - Math.exp(-dt * 1.5));
-    if (dead <= 0 && world.rich > 0.55 && !richShown) {
+    if (dead <= 0 && world.rich > 0.55 && !richShown && !mode.vegan) {
       richShown = true;
       hud.note("Reiche Drift!");
       hud.tip("rich", "<b>Reiche Drift!</b> Über flachen, schnellen Rinnen treibt das meiste Futter – aber hier, im hellen, offenen Wasser, sehen dich Reiher, Eisvögel und Raubfische schon von weitem. Friss dich satt und such dann wieder Deckung.", 12);
@@ -1591,13 +1592,14 @@ async function start() {
       // The account of this life: the way swum; and the siblings dying unseen as it grows.
       const moved = fish.position.distanceTo(lastPlace);
       if (moved < 5) brood.moved(moved);
-      if (brood.update(fish.stage, fish.progress, STAGES)) showBrood();
+      // (in vegan mode the siblings live too)
+      if (!mode.vegan && brood.update(fish.stage, fish.progress, STAGES)) showBrood();
       if (time > 40) hud.tip("brood", broodWord("firstTip", { size: formatNumber(brood.size) }), 13);
     }
     else readInput(dt);
     lastPlace.copy(fish.position);
-    // The gill nets in the estuary.
-    if (dead <= 0 && !fish.safe) {
+    // The gill nets in the estuary (none of that in vegan mode).
+    if (dead <= 0 && !fish.safe && !mode.vegan) {
       const net = nets.update(dt, fish);
       if (net === "caught") {
         shake = 1;
@@ -1612,7 +1614,7 @@ async function start() {
       if (nets.stuck.active) shake = Math.max(shake, 0.25);
     }
     // What happens now and then: storms, anglers, otters, floes, the northern lights.
-    for (const e of events.update(dt, { fish, time, dead })) {
+    for (const e of events.update(dt, { fish, time, dead, peaceful: mode.vegan })) {
       switch (e.type) {
         case "storm":
           hud.note("Ein Gewitter zieht auf …");
@@ -1696,7 +1698,7 @@ async function start() {
         sound.swallow(clamp(Math.log10((e.nutrition ?? 1) + 1) / 3, 0.08, 0.9));
         ateSomething = true;
       } else if (e.type === "stage") {
-        brood.reached(e.stage, STAGES);
+        if (!mode.vegan) brood.reached(e.stage, STAGES);
         showBrood();
         celebrate(e.stage);
         badges.award(`stage:${STAGES[e.stage].id}`, stageBadge(STAGES[e.stage]), { delay: 6.5 });
@@ -1841,12 +1843,13 @@ async function start() {
     }
     for (const e of outcome.rivals ?? []) if (e.type === "nip" || e.type === "hit" || e.type === "lost") lastCombat = time;
     for (let i = 0; i < (outcome.missed ?? 0); i++) if (dead <= 0) brood.escaped();
-    if (outcome.killed && dead <= 0) die(outcome.killed);
-    else if (fish.energy <= 0 && dead <= 0 && time - lastCombat < 6) die("Im Kampf unterlegen");
+    // (vegan mode: nobody dies of anything)
+    if (outcome.killed && dead <= 0 && !mode.vegan) die(outcome.killed);
+    else if (fish.energy <= 0 && dead <= 0 && time - lastCombat < 6 && !mode.vegan) die("Im Kampf unterlegen");
     // Too long without food: first a warning, then the body wastes, and with no strength
     // left the fish dies.
     if ((fish.hunger ?? 0) > 60 && dead <= 0) hud.tip("hunger", "<b>Du hungerst!</b> Dein Magen ist schon lange leer. Ohne Futter schwinden deine Kräfte, bis du verhungerst.", 9);
-    if (fish.energy <= 0 && dead <= 0) {
+    if (fish.energy <= 0 && dead <= 0 && !mode.vegan) {
       fish.starving = (fish.starving ?? 0) + dt;
       if (fish.starving > ((fish.hunger ?? 0) > 90 ? 20 : 45)) die((fish.hunger ?? 0) > 90 ? "Verhungert" : "Entkräftet");
     } else fish.starving = 0;
@@ -1865,9 +1868,11 @@ async function start() {
     if (eggs.count && !["alevin", "fry"].includes(phaseOf(fish.stage))) eggs.count = 0;
     // Tips, each once, when they matter.
     const st = STAGES[fish.stage];
-    if (windedOnce && fish.winded)
+    if (mode.vegan && time > 6 && !hud.seen("vegan"))
+      hud.tip("vegan", "<b>Vegan-Modus.</b> Niemand wird gefressen – nicht du und nicht von dir. Du wächst mit der Zeit und mit jedem Stück Weg: flussab, solange du jung bist, im Meer überall, und zum Schluss heim zur Quelle.", 12);
+    else if (windedOnce && fish.winded)
       hud.tip("winded", "<b>Außer Atem!</b> Jeder Spurt, jedes Schnappen und jeder Sprung mit <kbd>Leertaste</kbd> kostet <b>Kraft</b>. Lass dich treiben (<kbd>W</kbd> loslassen) oder halte dich am Grund fest – dann füllt sich der helle Teil wieder, bis zur Kraft aus dem Futter (gestreift).", 10);
-    else if (!st.fasting && !st.sea && fish.dart)
+    else if (!st.fasting && !st.sea && fish.dart && !mode.vegan)
       hud.tip(
         "eat",
         "Alles, was <span class=glow>warm leuchtet</span>, ist Futter: Larven und Krebschen, die die Strömung bringt. Schwimm genau darauf zu – auf den letzten Zentimetern stößt dein Fisch von selbst vor und schnappt zu. Zieht sich schon ein feiner Kreis um den Happen zusammen, schießt er mit <kbd>Leertaste</kbd> auch von weiter weg hin.",
@@ -1883,10 +1888,14 @@ async function start() {
       );
     else if (st.phase === "fry" && fish.flow.speed > salmon.speeds().cruise && !fish.gripping)
       hud.tip("grip", "Die Strömung ist stärker als du: tauch zum Grund und halte <kbd>S</kbd>, dann krallst du dich an den Steinen fest.");
+    else if (fish.energy < 0.3 && !st.fasting && !st.yolk && mode.vegan)
+      hud.tip("tiredVegan", "Deine <b>Kraft</b> geht zur Neige. Ruh dich hinter einem Stein oder am Grund (<kbd>S</kbd>) aus – dann kommt sie wieder.");
     else if (fish.energy < 0.3 && !st.fasting && !st.yolk)
       hud.tip("tired", "Deine <b>Kraft</b> geht zur Neige. Friss etwas, oder ruh dich hinter einem Stein oder am Grund (<kbd>S</kbd>) aus.");
     else if (st.id === "smolt" && regionWeights(fish.river.s).sea < 0.5 && fish.progress > 0.1)
       hud.tip("smolt2", "Im Süßwasser wächst ein Smolt nur langsam – je weiter vom Meer, desto langsamer –, und zum Postsmolt wird er erst im Salzwasser. Lass dich flussabwärts treiben, bis ins Meer.");
+    else if (st.phase === "sea" && regionWeights(fish.river.s).sea > 0.5 && mode.vegan)
+      hud.tip("seaVegan", "<b>Das Meer.</b> Hier wächst du, je weiter du schwimmst – hinaus ins offene Wasser und wieder zurück.", 9);
     else if (st.phase === "sea" && regionWeights(fish.river.s).sea > 0.5)
       hud.tip("hunt", "Im Meer jagst du: Sandaale und Heringe fliehen. Schwimm dicht heran – aus der Nähe stößt du von selbst zu, mit <kbd>Leertaste</kbd> schießt du von weiter weg hinein. Teil dir deine Kraft ein.");
     else if (st.fasting && fish.energy < 0.35)
@@ -1899,9 +1908,9 @@ async function start() {
       hud.tip("flood", "<b>Schneeschmelze!</b> Das Frühjahrshochwasser macht den Fluss trüb und reißend. Halt dich hinter Steinen und am Grund – oder lass dich tragen.", 10);
     else if (conditions.leafFall > 0.5 && regionWeights(fish.river.s).sea < 0.5)
       hud.tip("autumn", "<b>Herbst.</b> Die Blätter fallen und treiben auf dem Wasser. Das Wasser wird kühler – es ist Laichzeit für die Lachse.", 9);
-    else if (!st.fasting && !st.yolk && conditions.hatch > 0.45 && regionWeights(fish.river.s).sea < 0.5)
+    else if (!st.fasting && !st.yolk && conditions.hatch > 0.45 && regionWeights(fish.river.s).sea < 0.5 && !mode.vegan)
       hud.tip("hatch", "<b>Abendsprung!</b> In der Dämmerung schlüpfen die Insekten: Larven steigen zur Oberfläche, und oben treiben frisch geschlüpfte Fliegen. Jetzt gibt es reichlich Futter – überall ringt es, wo andere Fische steigen.", 9);
-    else if (conditions.night > 0.7 && fish.length < 6)
+    else if (conditions.night > 0.7 && fish.length < 6 && !mode.vegan)
       hud.tip("night", "<b>Nacht.</b> Forellen, Barsche und Vögel sehen dich jetzt kaum – aber Otter und Groppen jagen im Dunkeln mit Tasthaaren und Seitenlinie.", 9);
     // (Spawning: home, ripe, by the hen until she is ready -- see stepRedd.)
 
@@ -1914,9 +1923,11 @@ async function start() {
       const d = fish.river.s - SALMON_FALL.s;
       if (d > 0 && d < 60 && !fallMet) {
         fallMet = true;
-        hud.toast("Lachsfall", "Oben an der Kante fischt ein Bär.", 5);
+        hud.toast("Lachsfall", mode.vegan ? "Der höchste Sprung deines Lebens." : "Oben an der Kante fischt ein Bär.", 5);
       }
-      if (d > 0 && d < 30)
+      if (d > 0 && d < 30 && mode.vegan)
+        hud.tip("salmonfallVegan", "<b>Der Lachsfall.</b> Halte <kbd>Leertaste</kbd> gedrückt und lass los, wenn die Sprungkraft ganz oben ist – mit Anlauf und genug Kraft trägt dich der Sprung über die Kante.", 12);
+      else if (d > 0 && d < 30)
         hud.tip("salmonfall", "<b>Der Lachsfall.</b> Oben an der Kante fischt ein Bär – immer wieder klatscht seine Pranke ins Wasser. Spring gleich danach: Halte <kbd>Leertaste</kbd> gedrückt und lass los, wenn die Sprungkraft ganz oben ist – dann oben sofort weiter. Wer sich nicht traut, sucht den Spalt im Fels.", 14);
     }
     placeCamera(dt);
@@ -1932,6 +1943,19 @@ async function start() {
   }
 
   function stageLine(st) {
+    // Vegan mode: no eating, no hunting -- the way itself.
+    if (mode.vegan) {
+      const line = {
+        fry: "Der Dotter ist aufgebraucht. Von jetzt an wächst du mit der Zeit – und mit jedem Stück Weg flussab.",
+        fingerling: "Dein erster Sommer: fingerlang, die dunklen Parr-Flecken kommen.",
+        yearling: "Ein Jahr alt. Der Bach wird zum Fluss, je weiter du ziehst.",
+        postsmolt: "Salzwasser! Die ersten Monate im Meer – schwimm hinaus, und du wächst.",
+        grilse: "Ein Jahr im Meer, kräftig und schnell.",
+        sea: "Ein großer Meerlachs. Noch ein wenig wachsen – dann ruft die Heimat.",
+        spawner: "Der Ruf der Heimat. Folge dem Duft deines Flusses bis zur Mündung.",
+      }[st.id];
+      if (line) return line;
+    }
     switch (st.id) {
       case "fry":
         return "Der Dotter ist aufgebraucht. Jetzt heißt es fressen, was die Strömung bringt.";
@@ -2449,7 +2473,8 @@ async function start() {
     touch?.show();
     // The controls first; the tips wait until they have been read.
     hud.hint(touchMode);
-    if ((!state || query.has("new")) && fish.stage === 0) hud.toast(STAGES[0].name, "Du bist geschlüpft! Dein Dottersack nährt dich – bleib nah am Kies, und schnapp dir schon die ersten winzigen Larven.", 7);
+    if ((!state || query.has("new")) && fish.stage === 0) hud.toast(STAGES[0].name, mode.vegan ? "Du bist geschlüpft! Dein Dottersack nährt dich – bleib nah am Kies und wachs heran." : "Du bist geschlüpft! Dein Dottersack nährt dich – bleib nah am Kies, und schnapp dir schon die ersten winzigen Larven.", 7);
+    track("mode", { vegan: mode.vegan });
   };
   mark("ready");
   if (intro) {

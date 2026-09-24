@@ -17,6 +17,7 @@ import { VERSION } from "./version.js";
 import { clearSave } from "./save.js";
 import { LANGS, lang, setLang } from "./i18n.js";
 import { track } from "./track.js";
+import { mode, setVegan } from "./vegan.js";
 
 const box = () => document.querySelector("#intro");
 // The language picker on the card: the one in use marked; another reloads in it.
@@ -84,6 +85,15 @@ export function showIntro({ resume = null } = {}) {
   button.disabled = true;
   button.textContent = "Der Fluss entsteht …";
   if (resume) status.textContent = `Gespeichert: ${resume}`;
+  // Vegan mode (vegan.js): nobody is eaten; kept for next time.
+  const vegan = intro.querySelector("#intro-vegan");
+  if (vegan) {
+    vegan.checked = mode.vegan;
+    vegan.addEventListener("change", () => {
+      setVegan(vegan.checked);
+      track("vegan", { on: vegan.checked });
+    });
+  }
   let release;
   const started = new Promise((resolve) => (release = resolve));
   button.addEventListener("click", () => {

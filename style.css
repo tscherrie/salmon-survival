@@ -700,6 +700,17 @@
 #intro button.quiet[hidden] { display: none; }
 #intro .status { min-height: 1.2em; margin: 12px 0 0; font-size: 13px; font-weight: 700; color: #ffd98a; }
 #intro .note { margin: 10px auto 0; max-width: 28em; font-size: 13px; line-height: 1.5; opacity: 0.7; }
+/* Vegan mode: a switch on the card, above the start button. */
+#intro .vegan { display: flex; align-items: center; gap: 12px; max-width: 30em; margin: 0 auto 18px; padding: 10px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); text-align: left; cursor: pointer; font-size: 13px; line-height: 1.4; }
+#intro .vegan:hover { background: rgba(255, 255, 255, 0.1); }
+#intro .vegan input { position: absolute; opacity: 0; pointer-events: none; }
+#intro .vegan .switch { flex: none; position: relative; width: 40px; height: 22px; border-radius: 999px; background: rgba(255, 255, 255, 0.2); transition: background 200ms ease; }
+#intro .vegan .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #f3fbf7; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); transition: transform 200ms ease; }
+#intro .vegan input:checked + .switch { background: #5fcf8c; }
+#intro .vegan input:checked + .switch::after { transform: translateX(18px); }
+#intro .vegan input:focus-visible + .switch { outline: 2px solid #ffd98a; outline-offset: 2px; }
+#intro .vegan .text span { opacity: 0.75; }
+.touch #intro .vegan { margin-bottom: 12px; padding: 8px 12px; font-size: 12px; }
 #intro .version { margin: 12px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; opacity: 0.45; }
 #intro .for-phone { display: none; }
 #intro.phone .for-desktop { display: none; }

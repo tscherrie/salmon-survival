@@ -2,6 +2,11 @@ import * as THREE from "three";
 import { COATS, MODEL_LENGTH, blendCoat, coatUniforms, createFishMesh } from "./anatomy.js";
 import { FALLS, S, bed, current, frame, level, locate, section } from "./course.js";
 import { bonus, less } from "./heritage.js";
+import { mode } from "./vegan.js";
+
+// Vegan mode (vegan.js): how far a fish of each stage swims -- down the river while young,
+// any way at sea -- to grow into the next (it grows with time as well, half as fast).
+const VEGAN_WAY = { fry: 350, fingerling: 450, yearling: 700, parr: 900, smolt: 5000, postsmolt: 1500, grilse: 2000, sea: 3000 };
 
 // The salmon you are, from the day it hatches to the day it spawns.
 //
@@ -221,6 +226,7 @@ export function createSalmon(scene, { pace = 1 } = {}) {
   // Food: `nutrition` in the game's units. Returns what it was worth to the bar.
   function eat(nutrition, kind = null) {
     const st = stage();
+    if (mode.vegan) return 0;
     if (st.fasting) {
       // A spawner snaps from habit or anger; it hardly feeds.
       f.energy = Math.min(1, f.energy + 0.002);
@@ -270,7 +276,7 @@ export function createSalmon(scene, { pace = 1 } = {}) {
   function appetite() {
     const st = stage();
     if (st.yolk) return { full: 1 - f.progress, pending: 0 };
-    if (st.fasting) return { full: null, pending: 0 };
+    if (st.fasting || mode.vegan) return { full: null, pending: 0 };
     const capacity = (st.need / (st.minutes * 60)) * STOMACH_SECONDS;
     return { full: f.stomach / capacity, pending: f.stomach / st.need };
   }
@@ -517,7 +523,7 @@ export function createSalmon(scene, { pace = 1 } = {}) {
     // Hunger: how long the stomach has stood empty. Rest brings back breath, not strength the
     // body has not got -- the longer a feeding fish goes without food the less rest gives
     // back, and then its body starts to waste; with nothing left it dies (main.js).
-    if (!st.fasting && !st.yolk) {
+    if (!st.fasting && !st.yolk && !mode.vegan) {
       const capacity = (st.need / (st.minutes * 60)) * STOMACH_SECONDS;
       if (f.stomach < capacity * 0.03) f.hunger = (f.hunger ?? 0) + dt;
       else f.hunger = Math.max(0, (f.hunger ?? 0) - dt * 6);
@@ -538,6 +544,16 @@ export function createSalmon(scene, { pace = 1 } = {}) {
       const fresh = s < S.coast ? 1 : 0.35;
       const home = clamp(1 - (s - S.redd - 40) / (S.coast - S.redd - 40), 0, 1);
       f.progress = Math.max(f.progress + ((dt * pace) / (st.minutes * 60)) * fresh, home);
+    } else if (mode.vegan) {
+      // Vegan: nothing eaten. It grows with time, and more with the way it swims -- down the
+      // river while young, any way at sea -- and keeps its strength up by resting.
+      const inSea = s > S.coast - 400;
+      const t = frameAt(s);
+      const way = inSea ? f.relative.length() : Math.max(0, f.velocity.x * t.tx + f.velocity.z * t.tz);
+      f.progress += (((dt * pace) / (st.minutes * 60)) * 0.5 * thermal.pace + (way * dt) / (VEGAN_WAY[st.id] ?? 1500)) * bonus("growth");
+      if (st.sea && !inSea) f.progress = Math.min(f.progress, 0.97);
+      f.stomach = 0;
+      f.energy = Math.min(1, f.energy + (q < 0.4 ? 0.006 : 0.0025) * dt);
     } else {
       const rate = st.need / (st.minutes * 60);
       const inSea = s > S.coast - 400 ? 1 : 0;
