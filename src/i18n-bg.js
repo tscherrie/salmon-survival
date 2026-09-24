@@ -40,7 +40,7 @@ const PAIRS = [
   ["Paused", "Пауза"],
   ["Click the view or press P to swim on", "Щракни в картината или натисни P, за да продължиш"],
   // ---- Phones and tablets
-  ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map: swipe in from the right edge", "Плъзгане: оглеждане и управление · Задръж <kbd>W</kbd>: плуване · <kbd>Интервал</kbd> спринт, захапка, скок – или плъзни палеца натам · Карта: плъзни от десния край"],
+  ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map on/off in the pause menu", "Плъзгане: оглеждане и управление · Задръж <kbd>W</kbd>: плуване · <kbd>Интервал</kbd> спринт, захапка, скок – или плъзни палеца натам · Картата се включва от менюто за пауза"],
   ["Swipe: look round and steer", "Плъзгане: оглеждане и управление"],
   ["hold: swim", "задръж: плуване"],
   ["Swim", "Плуване"],
@@ -50,7 +50,7 @@ const PAIRS = [
   ["Tap the view to swim on", "Докосни картината, за да продължиш"],
   ["Bite, dash, leap", "Захапка, спринт, скок"],
   ["Please turn your phone sideways.", "Моля, обърни телефона хоризонтално."],
-  ["Map: swipe in from the right edge", "Карта: плъзни от десния край"],
+  ["Map on/off in the pause menu", "Карта: вкл./изкл. от менюто за пауза"],
   ["Best held sideways, with sound on.", "Най-добре хоризонтално и със звук."],
   ["Morsel", "Хапка"],
   ["Morning", "Сутрин"],

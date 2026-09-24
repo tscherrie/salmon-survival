@@ -40,7 +40,7 @@ const PAIRS = [
   ["Paused", "已暂停"],
   ["Click the view or press P to swim on", "点击画面或按 P 继续"],
   // ---- Phones and tablets
-  ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map: swipe in from the right edge", "滑动：环顾和转向 · 按住 <kbd>W</kbd>：游动 · <kbd>空格</kbd> 冲刺、咬、跃——或把拇指滑过去 · 地图：从右边缘滑入"],
+  ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map on/off in the pause menu", "滑动：环顾和转向 · 按住 <kbd>W</kbd>：游动 · <kbd>空格</kbd> 冲刺、咬、跃——或把拇指滑过去 · 地图在暂停菜单中开关"],
   ["Swipe: look round and steer", "滑动：环顾和转向"],
   ["hold: swim", "按住：游动"],
   ["Swim", "游动"],
@@ -50,7 +50,7 @@ const PAIRS = [
   ["Tap the view to swim on", "点击画面继续"],
   ["Bite, dash, leap", "咬、冲刺、跃"],
   ["Please turn your phone sideways.", "请把手机横过来。"],
-  ["Map: swipe in from the right edge", "地图：从右边缘滑入"],
+  ["Map on/off in the pause menu", "地图：在暂停菜单中开关"],
   ["Best held sideways, with sound on.", "最好横屏并打开声音。"],
   ["Morsel", "一口食物"],
   ["Morning", "早晨"],

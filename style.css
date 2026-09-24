@@ -885,14 +885,9 @@
 #touch .bite svg .eye { fill: #8a4514; stroke: none; }
 #touch .bite svg .wake { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
 #touch .pause { top: 14px; right: max(14px, env(safe-area-inset-right)); width: 42px; height: 42px; }
-#touch .map-tab { top: 50%; right: 0; width: 34px; height: 64px; margin-top: -32px; border-radius: 16px 0 0 16px; opacity: 0.7; }
-#touch .edge { position: absolute; top: 20%; bottom: 20%; right: 0; width: 22px; pointer-events: auto; touch-action: none; }
 /* Paused: the controls give way to the buttons and a tap anywhere swims on. The map
    stays out of their way (its tab and the swipe are the way to it). */
-.touch.paused #touch,
-.touch.paused #minimap,
-.touch #map-toggle { display: none; }
-.touch #lore-toggle { top: 120px; }
+.touch.paused #touch { display: none; }
 
 /* The corner buttons only in the pause, as on the computer. */
 .touch:not(.paused) #sound-toggle,
@@ -939,19 +934,17 @@
 .touch #hint::after { content: ""; display: block; width: 34px; height: 4px; margin: 5px auto -2px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); }
 .touch #status { touch-action: manipulation; }
 .touch #minimap {
-  top: 64px;
-  bottom: auto;
-  right: max(8px, env(safe-area-inset-right));
-  transform: scale(0.72);
-  transform-origin: top right;
-  opacity: 0.7;
-  pointer-events: auto;
-  animation: map-slide 280ms ease-out;
+  top: auto;
+  right: auto;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  left: max(8px, env(safe-area-inset-left));
+  transform: scale(0.58);
+  transform-origin: bottom left;
+  opacity: 0.55;
+  pointer-events: none;
+  animation: none;
 }
-/* A tap on the map puts it away; its tab only while it is away. */
-#minimap:not([hidden]) ~ #touch .map-tab { opacity: 0; pointer-events: none; }
 .touch #scene:focus, .touch #scene:focus-visible { outline: none; }
-@keyframes map-slide { from { transform: translateX(110%) scale(0.72); opacity: 0; } }
 .touch #toast .title { font-size: clamp(22px, 4vw, 34px); }
 .touch #toast .line { font-size: 13px; }
 
@@ -990,3 +983,91 @@
 #intro .homescreen[hidden] { display: none; }
 #intro .homescreen b { color: #ffd98a; }
 #intro .homescreen svg { width: 16px; height: 16px; vertical-align: -3px; fill: none; stroke: #ffd98a; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The brood: which sibling this is and how many of them live, under the stage's name. */
+#status .brood { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 8px; margin: -3px 2px 1px 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; opacity: 0.85; }
+#status .brood[hidden] { display: none; }
+#status .brood span { white-space: nowrap; }
+#status .brood .left { color: #ffd98a; }
+#status .brood.fell .left { animation: brood-fell 900ms ease-out; }
+@keyframes brood-fell { 0% { color: #ff9a8a; transform: translateY(-2px); } 100% { color: #ffd98a; transform: none; } }
+#milestone .siblings { margin: 8px auto 0; font-size: 14px; font-weight: 700; color: #ffd98a; opacity: 0.9; animation: rise-in 700ms ease-out 1500ms both; }
+#milestone .siblings:empty { display: none; }
+
+/* The card at the end of a life. */
+#lifecard {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: radial-gradient(ellipse at 50% 40%, rgba(6, 30, 36, 0.55), rgba(2, 8, 10, 0.85));
+  color: #eef8f4;
+  font-family: var(--hud-font);
+  animation: card-in 500ms ease-out;
+}
+#lifecard[hidden] { display: none; }
+#lifecard.leaving { opacity: 0; transition: opacity 350ms ease; }
+@keyframes card-in { from { opacity: 0; transform: scale(0.97); } }
+#lifecard .card {
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px 26px 18px;
+  border-radius: 26px;
+  background: linear-gradient(160deg, rgba(17, 63, 74, 0.96), rgba(6, 20, 26, 0.97));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 24px 70px rgba(0, 0, 0, 0.5);
+}
+#lifecard .head { display: flex; gap: 16px; align-items: center; }
+#lifecard .icon { width: 76px; height: 76px; border-radius: 18px; flex: none; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
+#lifecard .kicker { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #8fe3c0; }
+#lifecard .name { margin: 2px 0 4px; font-size: clamp(24px, 4.5vw, 34px); font-weight: 900; line-height: 1.05; }
+#lifecard .cause { margin: 0; font-size: 16px; font-weight: 800; color: #ffb08a; line-height: 1.3; }
+#lifecard .cause.home { color: #ffd98a; }
+#lifecard .where { margin: 3px 0 0; font-size: 13px; font-weight: 700; opacity: 0.65; }
+#lifecard .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 14px; margin: 18px 0 12px; }
+#lifecard .stats div { padding: 8px 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
+#lifecard dt { font-size: 11px; font-weight: 700; opacity: 0.65; }
+#lifecard dd { margin: 2px 0 0; font-size: 18px; font-weight: 900; }
+#lifecard .siblings { margin: 0 0 14px; font-size: 14px; font-weight: 800; color: #ffd98a; line-height: 1.4; }
+#lifecard .go {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 999px;
+  font: 800 17px/1.2 var(--hud-font);
+  color: #06241c;
+  background: linear-gradient(180deg, #b6f5c9, #5fdc9c);
+  box-shadow: 0 6px 18px rgba(60, 200, 140, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+#lifecard .go:focus-visible { outline: 3px solid #ffd98a; outline-offset: 3px; }
+#lifecard .more { display: flex; gap: 8px; margin-top: 10px; }
+#lifecard .more button {
+  flex: 1;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 999px;
+  font: 700 13.5px/1.2 var(--hud-font);
+  color: #eef8f4;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+}
+#lifecard .more button.x { flex: 0 0 48px; font-size: 16px; }
+#lifecard .more button:hover { background: rgba(255, 255, 255, 0.16); }
+#lifecard .status { min-height: 1em; margin: 8px 0 0; font-size: 12px; font-weight: 700; text-align: center; color: #8fe3c0; }
+/* Sideways on a phone: the numbers beside the head, all on one screen. */
+@media (max-height: 520px) {
+  #lifecard .card { width: min(760px, 100%); padding: 14px 18px 12px; display: grid; grid-template-columns: 1.1fr 1fr; column-gap: 18px; align-items: start; }
+  #lifecard .head { grid-column: 1; }
+  #lifecard .icon { width: 56px; height: 56px; border-radius: 14px; }
+  #lifecard .stats { grid-column: 2; grid-row: 1 / 4; grid-template-columns: repeat(2, 1fr); gap: 6px 8px; margin: 0; }
+  #lifecard dd { font-size: 16px; }
+  #lifecard .siblings { grid-column: 1; margin: 10px 0 8px; font-size: 13px; }
+  #lifecard .go, #lifecard .more, #lifecard .status { grid-column: 1 / 3; }
+  #lifecard .go { padding: 10px 16px; margin-top: 8px; }
+}

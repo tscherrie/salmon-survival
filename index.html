@@ -24,6 +24,8 @@
       }
     </script>
     <link rel="modulepreload" href="/src/main.js" />
+    <link rel="modulepreload" href="/src/lifecard.js" />
+    <link rel="modulepreload" href="/src/brood.js" />
     <link rel="modulepreload" href="/src/touch.js" />
     <link rel="modulepreload" href="/src/lore.js" />
     <link rel="modulepreload" href="/src/celebrate.js" />
@@ -116,6 +118,7 @@
             <span class="stage-name">Dottersackbrut</span>
             <ol class="life" aria-hidden="true"></ol>
           </header>
+          <p class="brood" hidden><span class="who"></span><span class="left"></span></p>
           <div id="energy" class="meter" role="meter" aria-label="Kraft" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M13.5 2 5 13.2h5.6L9.4 22 19 10.3h-5.8z" /></svg>
@@ -189,6 +192,7 @@
         <p class="size"></p>
         <ol class="dots" aria-hidden="true"></ol>
         <p class="line"></p>
+        <p class="siblings"></p>
       </div>
       <div id="logbook" role="dialog" aria-modal="true" aria-labelledby="logbook-title" hidden>
         <div class="book">
@@ -227,7 +231,7 @@
               <li><kbd class="touch-key look"></kbd> Wischen: umschauen und lenken</li>
               <li><kbd class="touch-key go"></kbd> halten: schwimmen</li>
               <li><kbd class="touch-key bite"></kbd> Spurt, Biss, Sprung</li>
-              <li><kbd class="touch-key map"></kbd> Karte: vom rechten Rand wischen</li>
+              <li><kbd class="touch-key map"></kbd> Karte ein/aus im Pausemenü</li>
             </ul>
             <button id="intro-start" type="button" disabled>Der Fluss entsteht …</button>
             <p id="intro-status" class="status"></p>

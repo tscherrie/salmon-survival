@@ -9,7 +9,7 @@ import { renderSettings } from "../../riverscape/src/render-policy.js";
 import { createDaylight } from "../../riverscape/src/daylight.js";
 import { framebufferSize, qualityName } from "../../shared/render-policy.js";
 import { reportSceneError } from "../../shared/controls.js";
-import { COURSE_VERSION, FALLS, MOUTH, REDD, S, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionWeights, section, setSeasonFlow } from "./course.js";
+import { COURSE_VERSION, FALLS, MOUTH, REDD, S, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionName, regionWeights, section, setSeasonFlow } from "./course.js";
 import { createFlowField } from "./flowfield.js";
 import { createBedMaterial, createRockMaterials, createSky, photoTextures, photosLoaded, createSurfaceMaterial,skyUniforms, surfaceUniforms } from "./materials.js";
 import { createTerrain } from "./terrain.js";
@@ -37,6 +37,8 @@ import { profile as prof } from "./profile.js";
 import { createCelebration } from "./celebrate.js";
 import { createLore } from "./lore.js";
 import { createTouch } from "./touch.js";
+import { createBrood, word as broodWord, formatNumber } from "./brood.js";
+import { createLifeCard } from "./lifecard.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -77,12 +79,12 @@ async function start() {
   // The game's budget: the full-detail look, but the shafts marched in fewer, jittered
   // steps (the temporal blend smooths them just as well) and at most ~2.4 million pixels
   // drawn -- the rest is filled in by the upscale, and the frame rate is what matters here.
-  // On a phone: sharp on its dense screen (up to twice the page's pixels, about two million
-  // at most -- the resolution steps down by itself when frames run long), a smaller shadow
+  // On a phone: as sharp as its screen (every pixel of it, up to about 3.7 million -- the
+  // resolution steps down by itself when frames run long), a smaller shadow
   // map, fewer steps in the light shafts, plain shadow edges.
   const gameSettings = () => {
     const base = renderSettings({ profile, pixelRatio: devicePixelRatio });
-    if (touchMode) return { ...base, resolution: Math.min(devicePixelRatio || 1, 2), shaftSteps: Math.min(base.shaftSteps, 10), maxPixels: 2.2e6, shadowSize: Math.min(base.shadowSize, 1024) };
+    if (touchMode) return { ...base, resolution: Math.min(devicePixelRatio || 1, 3), shaftSteps: Math.min(base.shaftSteps, 10), maxPixels: 3.7e6, shadowSize: Math.min(base.shadowSize, 1024) };
     return { ...base, shaftSteps: Math.min(base.shaftSteps, 24), maxPixels: Math.min(base.maxPixels, 2.4e6) };
   };
   let settings = gameSettings();
@@ -243,6 +245,10 @@ async function start() {
   const SEASON_YEAR = { spring: 0.37, summer: 0.58, autumn: 0.8, winter: 0.05 };
   if (query.has("season") || query.has("year")) forceYear(SEASON_YEAR[query.get("season")] ?? Number(query.get("year")));
   if (!checkpoint) checkpoint = snapshotCheckpoint();
+  // The brood this fish is one of (src/brood.js). A life saved from before there were
+  // broods: its siblings thinned out to the stage it has reached.
+  const brood = createBrood(state && !query.has("new") ? state.brood : null);
+  if (!(state && state.brood)) brood.reached(fish.stage, STAGES);
   function snapshotCheckpoint() {
     return { stage: fish.stage, position: fish.position.toArray(), yaw: fish.yaw, s: fish.river.s, u: fish.river.u, course: COURSE_VERSION };
   }
@@ -254,6 +260,8 @@ async function start() {
   const falls = createFalls(scene);
   const nets = createNets(scene);
   const hud = createHud({ stages: STAGES });
+  const showBrood = () => hud.brood(broodWord("salmon", { n: String(brood.number) }), broodWord("broodLine", { left: formatNumber(brood.left), size: formatNumber(brood.size) }));
+  showBrood();
   const lore = createLore({ hud });
   const loreRegions = {};
   const sound = createSound();
@@ -286,7 +294,8 @@ async function start() {
   // The places worth finding: found by swimming into them.
   const places = createPlaces({ badges });
   const logbook = createLogbook({ hud, badges, places });
-  const minimap = createMinimap({ logbook, places });
+  // (On a phone the map is shown from the start, small and see-through in a corner.)
+  const minimap = createMinimap({ logbook, places, shownAtFirst: touchMode });
   let homeShown = false;
   mark("logbook");
   // Development: ?mate shows two made-up companions on the map, the way others would be
@@ -411,6 +420,13 @@ async function start() {
   const locked = () => document.pointerLockElement === canvas;
   window.addEventListener("keydown", (event) => {
     sound.start();
+    if (lifecard.open) {
+      if ((event.code === "Enter" || event.code === "Space") && !event.repeat) {
+        event.preventDefault();
+        lifecard.go();
+      }
+      return;
+    }
     if (event.code === "KeyT" && !event.repeat) {
       sound.toggle();
       showSound();
@@ -501,9 +517,6 @@ async function start() {
           look.pitch = clamp(look.pitch - dy * TOUCH_LOOK, -1.2, 1.2);
         },
         onPause: () => setPaused(true),
-        onMap: (openOnly = false) => {
-          if (!openOnly || !minimap.open) minimap.toggle();
-        },
       })
     : null;
   // Turned upright mid-swim: pause behind the note asking for it sideways again.
@@ -603,7 +616,7 @@ async function start() {
     fish.safe = true;
     held.clear();
     glitter.burst(fish.position, fish.length);
-    hud.milestone(stage, stageLine(st), Math.round(fish.length * 10));
+    hud.milestone(stage, stageLine(st), Math.round(fish.length * 10), broodWord("left", { left: formatNumber(brood.left), size: formatNumber(brood.size) }));
     sound.fanfare();
   }
   function endCelebration() {
@@ -957,6 +970,7 @@ async function start() {
   // A death: how long until the next life, and whether the dark has come down yet.
   const DEATH = 4.8;
   let veiled = false;
+  const lastPlace = fish.position.clone();
   const heldPosition = new THREE.Vector3();
   const heldHeading = new THREE.Vector3();
 
@@ -980,6 +994,7 @@ async function start() {
       return;
     }
     if (hit.beaten) {
+      brood.won();
       if (hit.kind !== "rival") {
         hud.toast(`${hit.title} besiegt!`, "Sie flieht – und lässt dich von jetzt an in Ruhe.", 5);
         sound.fanfare();
@@ -1092,8 +1107,14 @@ async function start() {
       prof.mark("misc");
       salmon.update(dt, wanted, world);
       prof.mark("salmon");
+      // The account of this life: the way swum; and the siblings dying unseen as it grows.
+      const moved = fish.position.distanceTo(lastPlace);
+      if (moved < 5) brood.moved(moved);
+      if (brood.update(fish.stage, fish.progress, STAGES)) showBrood();
+      if (time > 40) hud.tip("brood", broodWord("firstTip", { size: formatNumber(brood.size) }), 13);
     }
     else readInput(dt);
+    lastPlace.copy(fish.position);
     // The gill nets in the estuary.
     if (dead <= 0 && !fish.safe) {
       const net = nets.update(dt, fish);
@@ -1179,11 +1200,14 @@ async function start() {
     }
     for (const e of fish.events) {
       if (e.type === "eat") {
+        brood.ate();
         hud.fed(e.kind);
         // Quiet for a larva, a real gulp for a herring.
         sound.swallow(clamp(Math.log10((e.nutrition ?? 1) + 1) / 3, 0.08, 0.9));
         ateSomething = true;
       } else if (e.type === "stage") {
+        brood.reached(e.stage, STAGES);
+        showBrood();
         celebrate(e.stage);
         badges.award(`stage:${STAGES[e.stage].id}`, stageBadge(STAGES[e.stage]), { delay: 6.5 });
         hud.grew();
@@ -1197,6 +1221,7 @@ async function start() {
         falls.splash(e.x, e.y - 0.3, e.z, e.strength * L);
         sound.splash(e.strength * 0.5);
       } else if (e.type === "leap") {
+        brood.leapt();
         sound.leap();
         falls.splash(fish.position.x, level(fish.river.s), fish.position.z, L);
         ripples.add(fish.position.x, fish.position.z, 1.2);
@@ -1317,6 +1342,7 @@ async function start() {
       lastCombat = time;
     }
     for (const e of outcome.rivals ?? []) if (e.type === "nip" || e.type === "hit" || e.type === "lost") lastCombat = time;
+    for (let i = 0; i < (outcome.missed ?? 0); i++) if (dead <= 0) brood.escaped();
     if (outcome.killed && dead <= 0) die(outcome.killed);
     else if (fish.energy <= 0 && dead <= 0 && time - lastCombat < 6) die("Im Kampf unterlegen");
     // Too long without food: first a warning, then the body wastes, and with no strength
@@ -1328,14 +1354,19 @@ async function start() {
     } else fish.starving = 0;
     if (spawning) stepSpawning(dt);
     else if (dead > 0) {
-      dead -= dt;
+      if (!lifecard.open) dead -= dt;
+      // After the dark: the card of the life that ended (and the game waits on it).
+      if (!carded && DEATH - dead > (held.active ? 2.8 : 1.5)) {
+        carded = true;
+        deathCard();
+      }
       // The dark comes down once the catch has been seen.
       if (!veiled && DEATH - dead > (held.active ? 1.9 : 0)) {
         veiled = true;
         hud.veil("dark");
         sound.hush(true);
       }
-      if (dead <= 0) respawn();
+      if (dead <= 0 && !lifecard.open) respawn();
     }
     // The eggs stay in the gravel until the new fry has left the redd.
     if (eggs.count && !["alevin", "fry"].includes(phaseOf(fish.stage))) eggs.count = 0;
@@ -1435,15 +1466,74 @@ async function start() {
       checkpoint,
       hour: daylight.state.hour,
       generation: save.generation,
+      brood: brood.state(),
     });
   }
   function die(cause) {
     track("death", { cause, stage: STAGES[fish.stage].id });
     dead = DEATH;
     veiled = false;
+    carded = false;
+    deathInfo = { cause, stageName: STAGES[fish.stage].name, stageId: STAGES[fish.stage].id, progress: fish.progress, region: regionName(fish.river.s), month: MONTHS[conditions.month] };
     const held = life.hunters.captive;
     if (held.active) sound.eaten(held.kind);
-    hud.toast(cause, "Zurück zum Anfang dieses Lebensabschnitts.");
+    hud.toast(cause, "", 3);
+  }
+  // The card: this sibling's life; the next one swims on from the start of this stage --
+  // or, with none left, a new brood begins in the gravel.
+  let carded = false;
+  let deathInfo = null;
+  function deathCard() {
+    const end = brood.died();
+    if (end.gone) track("brood_lost", { stage: deathInfo.stageId });
+    showBrood();
+    freeThePointer();
+    lifecard.show({ kind: end.gone ? "lost" : "death", life: end.life, ...deathInfo, next: end.next, left: end.left, size: end.size });
+  }
+  function freeThePointer() {
+    held.clear();
+    touch?.release();
+    if (locked()) {
+      releasing = true;
+      document.exitPointerLock?.();
+    }
+  }
+  const lifecard = createLifeCard({
+    habitat,
+    onGo: (kind) => {
+      sound.start();
+      if (kind === "lost") newBrood();
+      else if (kind === "home") nextGeneration();
+      else {
+        dead = 0;
+        respawn();
+      }
+      capture();
+    },
+  });
+  // All the siblings gone: a new brood hatches in the gravel of the spring.
+  function newBrood() {
+    brood.renew();
+    events.reset();
+    salmon.setStage(0, 0);
+    startAt(S.redd, section(S.redd).thalweg, 0.02);
+    checkpoint = snapshotCheckpoint();
+    fish.energy = 1;
+    fish.stomach = 0;
+    fish.hunger = 0;
+    dead = 0;
+    look.yaw = fish.yaw;
+    look.pitch = 0;
+    placeCamera(0, true);
+    post.resetHistory?.();
+    life.reset(fish);
+    nets.reset();
+    pebbles.prime(fish.position, fish.length, fish.river.s);
+    hud.veil(null);
+    sound.hush(false);
+    showBrood();
+    hud.toast(broodWord("newBrood"), broodWord("broodLine", { left: formatNumber(brood.left), size: formatNumber(brood.size) }), 5);
+    persist();
   }
   function respawn() {
     events.reset();
@@ -1504,25 +1594,33 @@ async function start() {
       hud.veil("white");
       hud.toast("Gelaicht", "Im Kies der Quelle liegt die nächste Generation.");
     }
-    if (t > 9) {
-      spawning = null;
-      save.generation++;
-      salmon.setStage(0, 0);
-      startAt(S.redd, section(S.redd).thalweg, 0.02);
-      checkpoint = snapshotCheckpoint();
-      fish.energy = 1;
-      fish.stomach = 0;
-      fish.hunger = 0;
-      dead = 0;
-      look.yaw = fish.yaw;
-      placeCamera(0, true);
-      life.reset(fish);
-      pebbles.prime(fish.position, fish.length, fish.river.s);
-      hud.veil(null);
-      hud.toast(STAGES[0].name, `Generation ${save.generation + 1}`);
-      feat("generation", { delay: 3 });
-      persist();
+    // Home: the card of the life that came back, before the next generation begins.
+    if (t > 9 && !spawning.carded) {
+      spawning.carded = true;
+      freeThePointer();
+      lifecard.show({ kind: "home", life: { ...brood.life, number: brood.number }, stageName: STAGES[fish.stage].name, stageId: STAGES[fish.stage].id, progress: 1, region: regionName(fish.river.s), month: MONTHS[conditions.month], left: brood.left, size: brood.size });
     }
+  }
+  function nextGeneration() {
+    spawning = null;
+    brood.renew();
+    showBrood();
+    save.generation++;
+    salmon.setStage(0, 0);
+    startAt(S.redd, section(S.redd).thalweg, 0.02);
+    checkpoint = snapshotCheckpoint();
+    fish.energy = 1;
+    fish.stomach = 0;
+    fish.hunger = 0;
+    dead = 0;
+    look.yaw = fish.yaw;
+    placeCamera(0, true);
+    life.reset(fish);
+    pebbles.prime(fish.position, fish.length, fish.river.s);
+    hud.veil(null);
+    hud.toast(STAGES[0].name, `Generation ${save.generation + 1}`);
+    feat("generation", { delay: 3 });
+    persist();
   }
 
   function draw(dt) {
@@ -1869,6 +1967,10 @@ async function start() {
       celebration,
       lore,
       startAt,
+      brood,
+      lifecard,
+      die,
+      spawn,
       setZoom: (z) => (zoom = z),
       pebbles,
       // A fish of any kind, posed for a look: returns a function that takes it away.

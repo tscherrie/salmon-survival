@@ -26,9 +26,18 @@ const fill = (s, vars) => s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
 
 export const WORDS = {
   salmon: { de: "Lachs Nr. {n}", en: "Salmon no. {n}", zh: "{n} 号鲑鱼", ja: "サケ {n} 号", bg: "Сьомга № {n}" },
+  kicker: { de: "Ein Lachsleben", en: "A salmon's life", zh: "一条鲑鱼的一生", ja: "サケの一生", bg: "Един живот на сьомга" },
+  broodLine: { de: "{left} von {size} Geschwistern", en: "{left} of {size} siblings", zh: "{size} 个兄弟姐妹还剩 {left}", ja: "きょうだい {size} 匹中 残り {left}", bg: "{left} от {size} братя и сестри" },
+  firstTip: {
+    de: "<b>Du bist einer von {size}.</b> So viele Eier liegen im Kies – nur eine Handvoll kommt je heim. Stirbst du, schwimmt eines deiner Geschwister weiter. Wie viele noch leben, steht oben links bei deinen Werten.",
+    en: "<b>You are one of {size}.</b> That many eggs lie in the gravel – only a handful ever come home. If you die, one of your siblings swims on. How many are still alive is shown with your stats at the top left.",
+    zh: "<b>你是 {size} 个中的一个。</b>砾石里有这么多鱼卵——只有寥寥几条能回到家乡。你死了，就由一个兄弟姐妹接着游。还有多少活着，左上角的状态里有显示。",
+    ja: "<b>きみは {size} 匹のうちの一匹。</b>砂利の中にはそれだけの卵がある――ふるさとに帰れるのはほんのわずか。きみが死んだら、きょうだいの一匹が泳ぎ続ける。あと何匹生きているかは、左上のステータスに出ている。",
+    bg: "<b>Ти си една от {size}.</b> Толкова яйца лежат в чакъла – само шепа се връщат у дома. Ако умреш, някой от братята и сестрите ти плува нататък. Колко още са живи, пише горе вляво при показателите ти.",
+  },
   siblings: { de: "{left} von {size} Geschwistern", en: "{left} of {size} siblings", zh: "{size} 个兄弟姐妹还剩 {left}", ja: "{size} 匹のきょうだいのうち残り {left}", bg: "{left} от {size} братя и сестри" },
   left: { de: "Von {size} Geschwistern leben noch {left}.", en: "Of {size} siblings, {left} are still alive.", zh: "{size} 个兄弟姐妹中，还有 {left} 个活着。", ja: "{size} 匹のきょうだいのうち、まだ {left} 匹が生きている。", bg: "От {size} братя и сестри живи са още {left}." },
-  next: { de: "Weiter als Nr. {n}", en: "Go on as no. {n}", zh: "以 {n} 号继续", ja: "{n} 号として続ける", bg: "Продължи като № {n}" },
+  next: { de: "Weiter als Nr. {next}", en: "Go on as no. {next}", zh: "以 {next} 号继续", ja: "{next} 号として続ける", bg: "Продължи като № {next}" },
   lostTitle: { de: "Die Brut ist erloschen", en: "The brood is gone", zh: "这一窝全军覆没", ja: "きょうだいは全滅した", bg: "Цялото поколение загина" },
   lostLine: { de: "Keiner der {size} Geschwister hat überlebt. Im Kies der Quelle beginnt eine neue Brut.", en: "None of the {size} siblings survived. In the gravel of the spring a new brood begins.", zh: "{size} 个兄弟姐妹无一幸存。在源头的砾石中，新的一窝开始了。", ja: "{size} 匹のきょうだいは一匹も生き残らなかった。源流の砂利で、新しいきょうだいが始まる。", bg: "Никой от {size} братя и сестри не оцеля. В чакъла на извора започва ново поколение." },
   newBrood: { de: "Neue Brut", en: "New brood", zh: "新的一窝", ja: "新しいきょうだい", bg: "Ново поколение" },
@@ -85,8 +94,9 @@ const freshLife = () => ({ distance: 0, eaten: 0, fights: 0, leaps: 0, escapes: 
 export function createBrood(saved = null, random = Math.random) {
   const newNumber = () => 1 + Math.floor(random() * BROOD_SIZE);
   let state = saved && Number.isFinite(saved.left) ? { ...saved, life: { ...freshLife(), ...(saved.life ?? {}) } } : null;
+  if (state && !Number.isFinite(state.base)) state.base = state.left;
   function fresh() {
-    state = { size: BROOD_SIZE, left: BROOD_SIZE, number: newNumber(), lost: 0, stage: 0, life: freshLife() };
+    state = { size: BROOD_SIZE, left: BROOD_SIZE, base: BROOD_SIZE, number: newNumber(), lost: 0, stage: 0, life: freshLife() };
   }
   if (!state) fresh();
 
@@ -104,13 +114,27 @@ export function createBrood(saved = null, random = Math.random) {
       return state.life;
     },
     state: () => state,
+    // While the fish grows through a stage its siblings go on dying, unseen: the count falls
+    // with its growth toward what lives to see the next stage. Returns whether it changed.
+    update(stageIndex, progress, stages) {
+      const next = stages[stageIndex + 1];
+      if (!next || stageIndex < state.stage) return false;
+      const keep = SURVIVE[next.id] ?? 1;
+      const floor = FLOOR[next.id] ?? 1;
+      const p = Math.max(0, Math.min(1, progress));
+      const target = Math.max(floor, Math.round(state.base * (1 - (1 - keep) * p)));
+      if (target >= state.left) return false;
+      state.left = Math.max(1, target);
+      return true;
+    },
     // A new stage reached: the siblings that did not live to see it are gone.
     reached(stageIndex, stages) {
       for (let i = state.stage + 1; i <= stageIndex; i++) {
         const id = stages[i].id;
         const keep = SURVIVE[id] ?? 1;
-        const left = Math.round(state.left * keep * (0.9 + 0.2 * random()));
+        const left = Math.round(state.base * keep);
         state.left = Math.max(1, Math.min(state.left, Math.max(FLOOR[id] ?? 1, left)));
+        state.base = state.left;
       }
       state.stage = Math.max(state.stage, stageIndex);
     },
@@ -135,6 +159,7 @@ export function createBrood(saved = null, random = Math.random) {
     died() {
       const life = { ...state.life, number: state.number };
       state.left = Math.max(0, state.left - 1);
+      state.base = Math.max(0, state.base - 1);
       state.lost++;
       const gone = state.left <= 0;
       if (!gone) {

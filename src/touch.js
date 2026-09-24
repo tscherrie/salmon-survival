@@ -3,8 +3,7 @@
 // down, the arrow swims ahead (W), and the fish dashes, bites and leaps with the other
 // (Space) -- tapped, or with the thumb slid across onto it from the arrow, which keeps
 // swimming. A quick sideways swipe just before it makes the dash a dodge. A pause button
-// in the corner; the map comes in from the right edge, with a swipe or its tab, and a tap
-// on it puts it away.
+// in the corner (the map is switched on and off there, like the sound).
 
 const ICONS = {
   go: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14.5 12 8.5l6 6" /></svg>',
@@ -14,7 +13,7 @@ const ICONS = {
   map: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5Z" /><path d="M9 4v13.5M15 6.5V20" /></svg>',
 };
 
-export function createTouch({ habitat, onTouch, onLunge, onLook, onPause, onMap }) {
+export function createTouch({ habitat, onTouch, onLunge, onLook, onPause }) {
   const root = document.createElement("div");
   root.id = "touch";
   root.hidden = true;
@@ -23,8 +22,7 @@ export function createTouch({ habitat, onTouch, onLunge, onLook, onPause, onMap 
     <button class="go" type="button" aria-label="Schwimmen">${ICONS.go}</button>
     <button class="bite" type="button" aria-label="Spurt, Biss, Sprung">${ICONS.bite}</button>
     <button class="pause" type="button" aria-label="Pause">${ICONS.pause}</button>
-    <button class="map-tab" type="button" aria-label="Karte">${ICONS.map}</button>
-    <div class="edge"></div>`;
+`;
   habitat.append(root);
   // Sideways, please.
   const turn = document.createElement("div");
@@ -119,30 +117,6 @@ export function createTouch({ habitat, onTouch, onLunge, onLook, onPause, onMap 
   root.querySelector(".pause").addEventListener("click", (event) => {
     event.stopPropagation();
     onPause();
-  });
-  root.querySelector(".map-tab").addEventListener("click", (event) => {
-    event.stopPropagation();
-    onMap();
-  });
-  // A swipe in from the right edge brings the map.
-  const edge = root.querySelector(".edge");
-  let edgeX = null;
-  edge.addEventListener("pointerdown", (event) => {
-    edgeX = event.clientX;
-    edge.setPointerCapture(event.pointerId);
-  });
-  edge.addEventListener("pointermove", (event) => {
-    if (edgeX !== null && edgeX - event.clientX > 36) {
-      edgeX = null;
-      onMap(true);
-    }
-  });
-  edge.addEventListener("pointerup", () => (edgeX = null));
-  // A tap on the open map puts it away.
-  habitat.querySelector("#minimap")?.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onMap();
   });
   // No page scrolling or zooming under the fingers (only the logbook and the cards scroll).
   habitat.addEventListener(

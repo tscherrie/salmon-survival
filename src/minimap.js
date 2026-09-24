@@ -18,7 +18,7 @@ const UNITS_PER_METRE = 10; // a scene unit is ten centimetres
 const TAU = Math.PI * 2;
 const REGION_NAME = { brook: "Bach", upper: "Oberlauf", middle: "Mittellauf", lower: "Unterlauf", estuary: "Mündung", sea: "Meer" };
 
-export function createMinimap({ logbook, places = null }) {
+export function createMinimap({ logbook, places = null, shownAtFirst = false }) {
   const box = document.querySelector("#minimap");
   const local = box.querySelector(".local");
   const strip = box.querySelector(".strip");
@@ -31,7 +31,8 @@ export function createMinimap({ logbook, places = null }) {
 
   let open = false;
   try {
-    open = localStorage.getItem(STORAGE) === "1";
+    const kept = localStorage.getItem(STORAGE);
+    open = kept === null ? shownAtFirst : kept === "1";
   } catch {}
   let R = null; // metres from the centre to the rim, eased
   let flow = 0; // how far the current has carried the arrows, metres

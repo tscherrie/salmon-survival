@@ -375,9 +375,24 @@ export function createHud({ stages }) {
       box.querySelector(".text").textContent = state === "seen" ? "Du wirst gesehen" : "Versteckt";
     },
     // A new stage of life: the banner, for a few seconds.
-    milestone(stage, line, lengthCm) {
+    // The brood: which sibling this is, and how many of them are still alive.
+    brood(who, left) {
+      const box = document.querySelector("#status .brood");
+      if (!box) return;
+      box.hidden = false;
+      const whoBox = box.querySelector(".who");
+      const leftBox = box.querySelector(".left");
+      if (whoBox.textContent !== who) whoBox.textContent = who;
+      if (leftBox.textContent !== left) {
+        const fewer = leftBox.textContent !== "";
+        leftBox.textContent = left;
+        if (fewer) bump(box, "fell");
+      }
+    },
+    milestone(stage, line, lengthCm, siblings = "") {
       const box = document.querySelector("#milestone");
       const glow = document.querySelector("#glow");
+      box.querySelector(".siblings").textContent = siblings;
       box.querySelector(".title").textContent = stages[stage].name;
       box.querySelector(".size").textContent = `${lengthCm} cm lang`;
       box.querySelector(".line").textContent = line;
@@ -413,7 +428,7 @@ export function createHud({ stages }) {
       hintBox.classList.remove("lore");
       hintBox.innerHTML = t(
         touch
-          ? "Wischen: umschauen und lenken · <kbd>W</kbd> halten: schwimmen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung – oder den Daumen hinüberrutschen · Karte: vom rechten Rand wischen"
+          ? "Wischen: umschauen und lenken · <kbd>W</kbd> halten: schwimmen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung – oder den Daumen hinüberrutschen · Karte ein/aus im Pausemenü"
           : "Klick ins Bild: Maus lenkt · <kbd>W</kbd> schwimmen · <kbd>S</kbd> bremsen · <kbd>A</kbd>/<kbd>D</kbd> ausweichen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung · <kbd>M</kbd> Karte · <kbd>L</kbd> Logbuch · <kbd>P</kbd> Pause",
       );
       touchKeys(hintBox);

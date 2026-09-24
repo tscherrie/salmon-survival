@@ -38,7 +38,7 @@ const PAIRS = [
   ["Pause", "Paused"],
   ["Klick ins Bild oder P zum Weiterschwimmen", "Click the view or press P to swim on"],
   // ---- Phones and tablets
-  ["Wischen: umschauen und lenken · <kbd>W</kbd> halten: schwimmen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung – oder den Daumen hinüberrutschen · Karte: vom rechten Rand wischen", "Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map: swipe in from the right edge"],
+  ["Wischen: umschauen und lenken · <kbd>W</kbd> halten: schwimmen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung – oder den Daumen hinüberrutschen · Karte ein/aus im Pausemenü", "Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map on/off in the pause menu"],
   ["Wischen: umschauen und lenken", "Swipe: look round and steer"],
   ["halten: schwimmen", "hold: swim"],
   ["Schwimmen", "Swim"],
@@ -48,7 +48,7 @@ const PAIRS = [
   ["Tipp ins Bild zum Weiterschwimmen", "Tap the view to swim on"],
   ["Biss, Spurt, Sprung", "Bite, dash, leap"],
   ["Bitte dreh dein Handy quer.", "Please turn your phone sideways."],
-  ["Karte: vom rechten Rand wischen", "Map: swipe in from the right edge"],
+  ["Karte ein/aus im Pausemenü", "Map on/off in the pause menu"],
   ["Am besten quer halten und mit Ton.", "Best held sideways, with sound on."],
   ["Happen", "Morsel"],
   ["Morgen", "Morning"],

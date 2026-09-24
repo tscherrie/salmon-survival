@@ -40,7 +40,7 @@ const PAIRS = [
   ["Paused", "一時停止中"],
   ["Click the view or press P to swim on", "画面をクリックするか P で再開"],
   // ---- Phones and tablets
-  ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map: swipe in from the right edge", "スワイプ：見回して操縦 · <kbd>W</kbd> 長押し：泳ぐ · <kbd>スペース</kbd> ダッシュ、噛みつき、ジャンプ――親指を滑らせてもOK · マップ：右端からスワイプ"],
+  ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map on/off in the pause menu", "スワイプ：見回して操縦 · <kbd>W</kbd> 長押し：泳ぐ · <kbd>スペース</kbd> ダッシュ、噛みつき、ジャンプ――親指を滑らせてもOK · マップは一時停止メニューでオン／オフ"],
   ["Swipe: look round and steer", "スワイプ：見回して操縦"],
   ["hold: swim", "長押し：泳ぐ"],
   ["Swim", "泳ぐ"],
@@ -50,7 +50,7 @@ const PAIRS = [
   ["Tap the view to swim on", "画面をタップして再開"],
   ["Bite, dash, leap", "噛みつき、ダッシュ、ジャンプ"],
   ["Please turn your phone sideways.", "スマホを横向きにしてください。"],
-  ["Map: swipe in from the right edge", "マップ：右端からスワイプ"],
+  ["Map on/off in the pause menu", "マップ：一時停止メニューでオン／オフ"],
   ["Best held sideways, with sound on.", "横向きで、音ありがおすすめ。"],
   ["Morsel", "ひと口"],
   ["Morning", "朝"],

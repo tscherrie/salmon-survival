@@ -41,6 +41,7 @@ export function createLifeCard({ habitat, onGo }) {
   habitat.append(box);
   const $ = (sel) => box.querySelector(sel);
   let current = null;
+  let shown = false;
 
   // The card as a picture, 1200 × 675 (what X and most chats show whole).
   const icon = new Image();
@@ -175,7 +176,8 @@ export function createLifeCard({ habitat, onGo }) {
   });
 
   function go() {
-    if (box.hidden) return;
+    if (!shown) return;
+    shown = false;
     box.classList.add("leaving");
     setTimeout(() => {
       box.hidden = true;
@@ -188,15 +190,16 @@ export function createLifeCard({ habitat, onGo }) {
 
   return {
     get open() {
-      return !box.hidden;
+      return shown;
     },
+    picture,
     go,
     // kind: "death" (a sibling goes on), "lost" (none left), "home" (spawned).
     // life: the account from the brood; fish: { stage name, stage id, progress }; where.
     show({ kind, life, stageName, stageId, progress, cause = "", region = "", month = "", next = 0, left = 0, size = 2000 }) {
       const age = ageText(stageId, progress);
       const dist = distanceText(life.distance);
-      const vars = { n: formatNumber(life.number), size: formatNumber(size), left: formatNumber(left), next: formatNumber(next), age, dist, eaten: formatNumber(life.eaten), cause: t(cause), name: word("salmon", { n: formatNumber(life.number) }) };
+      const vars = { n: String(life.number), size: formatNumber(size), left: formatNumber(left), next: String(next), age, dist, eaten: formatNumber(life.eaten), cause: t(cause), name: word("salmon", { n: String(life.number) }) };
       const kicker = kind === "home" ? word("homeTitle") : kind === "lost" ? word("lostTitle") : word("kicker");
       const where = [cap(pick(REGION_WORDS[region])), t(month)].filter(Boolean).join(" · ");
       current = {
@@ -236,6 +239,8 @@ export function createLifeCard({ habitat, onGo }) {
       $(".save").textContent = word("save");
       $(".status").textContent = "";
       box.hidden = false;
+      box.classList.remove("leaving");
+      shown = true;
       track("card", { action: "shown", kind, stage: stageId });
       setTimeout(() => $(".go").focus({ preventScroll: true }), 50);
     },
