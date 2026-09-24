@@ -594,6 +594,8 @@ export function createPredators(scene, { random, seize, captive }) {
             } else if (time > h.until) {
               h.mode = "recover";
               h.until = time + (spec.tactic === "ambush" ? 1.5 : 1.1);
+              // A strike that missed: the salmon got away (counted on its life card).
+              if (hunts && !fish.captive) result.missed = (result.missed ?? 0) + 1;
             }
             break;
           }

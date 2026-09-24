@@ -8,7 +8,8 @@
 
 const ICONS = {
   go: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14.5 12 8.5l6 6" /></svg>',
-  bite: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12c2.6-4.2 6.2-6.3 10.2-6.3 2.7 0 4.9 1 6.8 2.8l-3.4 3.5 3.4 3.5c-1.9 1.8-4.1 2.8-6.8 2.8-4 0-7.6-2.1-10.2-6.3Z" /><circle cx="8.6" cy="10.6" r="1.1" /></svg>',
+  // A fish darting ahead, jaws open, with the wake of the dash behind it.
+  bite: '<svg class="dash" viewBox="0 0 28 20" aria-hidden="true"><path class="body" d="M9 10c2.5-3.8 6.5-5.2 10.2-5.1 2.8.1 5 1.4 6.6 3.3L22 10l3.8 1.8c-1.6 1.9-3.8 3.2-6.6 3.3-3.7.1-7.7-1.3-10.2-5.1Z" /><path class="body" d="M9.8 10 5.2 5.8l1.1 4.2-1.1 4.2Z" /><path class="body" d="M15 5.7l2.4-2.9 1.6 2.3Z" /><circle class="eye" cx="20.8" cy="7.9" r="1.1" /><path class="wake" d="M.8 7.6h2.8M.2 10h3.6M.8 12.4h2.8" /></svg>',
   pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 6v12M15.5 6v12" /></svg>',
   map: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5Z" /><path d="M9 4v13.5M15 6.5V20" /></svg>',
 };

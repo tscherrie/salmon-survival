@@ -1797,6 +1797,21 @@ async function start() {
     if (running) requestAnimationFrame(tick);
   });
   window.addEventListener("pagehide", persist);
+  // A newer version out while the game sat in the background (an app on a phone's home
+  // screen is only woken, never loaded again): the fish is saved and the page loads afresh.
+  const bundle = document.querySelector('script[src*="/game."], script[src*="game."]')?.getAttribute("src")?.match(/game\.(\w+)\.js/)?.[1];
+  if (bundle && !dev)
+    document.addEventListener("visibilitychange", async () => {
+      if (document.hidden) return;
+      try {
+        const html = await (await fetch(location.pathname, { cache: "no-store" })).text();
+        const latest = html.match(/game\.(\w+)\.js/)?.[1];
+        if (latest && latest !== bundle) {
+          persist();
+          location.reload();
+        }
+      } catch {}
+    });
   function tick(now) {
     if (!running) return;
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));

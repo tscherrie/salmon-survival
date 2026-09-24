@@ -121,13 +121,51 @@ export function createHud({ stages }) {
   const stageNumber = rings?.querySelector(".stage-number");
   // On a phone only the rings show; a tap on them opens the full card (as on a computer),
   // another tap closes it again.
+  // (On the lifting of the finger, and on click as well -- whichever comes first.)
   const statusBox = document.querySelector("#status");
-  statusBox.addEventListener("click", () => {
+  let toggledAt = 0;
+  const toggleCard = (event) => {
     const habitat = document.querySelector("#habitat");
     if (!habitat?.classList.contains("touch")) return;
+    event.stopPropagation();
+    const now = performance.now();
+    if (now - toggledAt < 450) return;
+    toggledAt = now;
     const open = statusBox.classList.toggle("expanded");
     habitat.classList.toggle("stats-open", open);
+  };
+  statusBox.addEventListener("pointerup", toggleCard);
+  statusBox.addEventListener("click", toggleCard);
+  // On a phone a tip or a story is a banner at the top: swiped up, it goes.
+  let swipe = null;
+  hintBox.addEventListener("pointerdown", (event) => {
+    if (!document.querySelector("#habitat")?.classList.contains("touch")) return;
+    event.stopPropagation();
+    swipe = { id: event.pointerId, y: event.clientY, dy: 0 };
+    hintBox.setPointerCapture(event.pointerId);
+    hintBox.style.transition = "none";
   });
+  hintBox.addEventListener("pointermove", (event) => {
+    if (!swipe || event.pointerId !== swipe.id) return;
+    swipe.dy = Math.min(0, event.clientY - swipe.y);
+    hintBox.style.translate = `0 ${swipe.dy}px`;
+  });
+  const letGo = (event) => {
+    if (!swipe || event.pointerId !== swipe.id) return;
+    const away = swipe.dy < -24;
+    swipe = null;
+    hintBox.style.transition = "";
+    if (away) {
+      clearTimeout(hintTimer);
+      hintBox.style.translate = "0 -140%";
+      setTimeout(() => {
+        hintBox.hidden = true;
+        hintBox.style.translate = "";
+      }, 260);
+    } else hintBox.style.translate = "";
+  };
+  hintBox.addEventListener("pointerup", letGo);
+  hintBox.addEventListener("pointercancel", letGo);
   const arc = (element, value) => {
     if (!element) return;
     const v = Math.min(1, Math.max(0, value));
