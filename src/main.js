@@ -9,7 +9,7 @@ import { renderSettings } from "../../riverscape/src/render-policy.js";
 import { createDaylight } from "../../riverscape/src/daylight.js";
 import { framebufferSize, qualityName } from "../../shared/render-policy.js";
 import { reportSceneError } from "../../shared/controls.js";
-import { COURSE_VERSION, FALLS, MOUTH, REDD, S, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionName, regionWeights, section, setSeasonFlow, driftRich } from "./course.js";
+import { COURSE_VERSION, FALLS, MOUTH, REDD, S, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionName, regionWeights, relaid, section, setSeasonFlow, driftRich } from "./course.js";
 import { createFlowField } from "./flowfield.js";
 import { createBedMaterial, createRockMaterials, createSky, photoTextures, photosLoaded, createSurfaceMaterial,skyUniforms, surfaceUniforms } from "./materials.js";
 import { createTerrain } from "./terrain.js";
@@ -208,7 +208,8 @@ async function start() {
       salmon.place(new THREE.Vector3(...entry.position), entry.yaw);
       return;
     }
-    let s = entry.s,
+    // (A fish saved on the river as it was first laid out: the same place on the new one.)
+    let s = entry.course === 4 && Number.isFinite(entry.s) ? relaid(entry.s) : entry.s,
       u = entry.u;
     if (!Number.isFinite(s)) {
       const found = locate(entry.position[0], entry.position[2], null, {});
@@ -461,13 +462,16 @@ async function start() {
     if (userPaused) return;
     if (event.code === "Space") {
       event.preventDefault();
-      if (!event.repeat) lungeQueued = true;
+      if (!event.repeat && !startCharge()) lungeQueued = true;
     }
     if (event.code.startsWith("Arrow")) event.preventDefault();
     held.add(event.code);
     hud.touched();
   });
-  window.addEventListener("keyup", (event) => held.delete(event.code));
+  window.addEventListener("keyup", (event) => {
+    held.delete(event.code);
+    if (event.code === "Space") releaseCharge();
+  });
   window.addEventListener("blur", () => held.clear());
   canvas.addEventListener("contextmenu", (event) => event.preventDefault());
   canvas.addEventListener("pointerdown", (event) => {
@@ -480,7 +484,10 @@ async function start() {
       capture();
       return;
     }
-    if (event.button === 0) lungeQueued = true;
+    if (event.button === 0 && !startCharge()) lungeQueued = true;
+  });
+  canvas.addEventListener("pointerup", (event) => {
+    if (event.button === 0) releaseCharge();
   });
   document.addEventListener("pointerlockchange", () => {
     habitat.classList.toggle("locked", locked());
@@ -513,8 +520,9 @@ async function start() {
           if (!document.fullscreenElement) capture();
         },
         onLunge: () => {
-          if (!userPaused) lungeQueued = true;
+          if (!userPaused && !startCharge()) lungeQueued = true;
         },
+        onLungeEnd: () => releaseCharge(),
         onLook: (dx, dy) => {
           look.yaw += dx * TOUCH_LOOK;
           look.pitch = clamp(look.pitch - dy * TOUCH_LOOK, -1.2, 1.2);
@@ -527,6 +535,52 @@ async function start() {
     matchMedia("(orientation: portrait)").addEventListener("change", (event) => {
       if (event.matches && !waiting && dead <= 0) setPaused(true);
     });
+  // The salmon fall: the leap is timed. Held, the leap gathers and slackens in a swing (the
+  // bar by the fish); let go at the top and it flies highest. Only in reach of its foot.
+  const SALMON_FALL = FALLS.find((f) => f.name === "Lachsfall");
+  let charge = null;
+  let leapPower = 1;
+  const meter = document.createElement("div");
+  meter.id = "leapmeter";
+  meter.hidden = true;
+  meter.innerHTML = '<div class="track"><div class="sweet"></div><div class="fill"></div></div><span class="label">Sprungkraft</span>';
+  habitat.append(meter);
+  const meterFill = meter.querySelector(".fill");
+  const swing = (t) => 0.5 - 0.5 * Math.cos((t / 1.2) * Math.PI * 2);
+  function inLeapReach() {
+    if (!SALMON_FALL || dead > 0 || fish.airborne || celebration.active) return false;
+    const d = fish.river.s - SALMON_FALL.s;
+    return d > -0.2 && d < 10 + SALMON_FALL.drop * 0.6 + fish.length * 0.8;
+  }
+  function startCharge() {
+    if (charge || !inLeapReach()) return false;
+    charge = { t: 0 };
+    meter.hidden = false;
+    return true;
+  }
+  function releaseCharge() {
+    if (!charge) return;
+    const v = swing(charge.t);
+    charge = null;
+    meter.hidden = true;
+    // Only a leap near the top of the swing clears it (with a run at it and strength left);
+    // "almost" falls back into the pool.
+    leapPower = v > 0.82 ? 1.14 : 0.6 + 0.4 * v;
+    lungeQueued = true;
+    hud.note(v > 0.82 ? "Perfekter Absprung!" : v < 0.45 ? "Zu schwach!" : "Fast!");
+  }
+  function stepCharge(dt) {
+    if (!charge) return;
+    if (!inLeapReach()) {
+      charge = null;
+      meter.hidden = true;
+      return;
+    }
+    charge.t += dt;
+    const v = swing(charge.t);
+    meterFill.style.transform = `scaleY(${v.toFixed(3)})`;
+    meter.classList.toggle("sweet", v > 0.82);
+  }
   function readInput(dt) {
     const turn =(held.has("ArrowLeft") ? -1 : 0) + (held.has("ArrowRight") ? 1 : 0);
     const tilt = (held.has("ArrowUp") ? 1 : 0) - (held.has("ArrowDown") ? 1 : 0);
@@ -549,6 +603,8 @@ async function start() {
       thumb.flick = 0;
     }
     input.lunge = lungeQueued;
+    input.power = lungeQueued ? leapPower : 1;
+    if (lungeQueued) leapPower = 1;
     lungeQueued = false;
     return input;
   }
@@ -972,7 +1028,12 @@ async function start() {
   let windedOnce = false;
   // A death: how long until the next life, and whether the dark has come down yet.
   const DEATH = 4.8;
+  // How far round the fish the river is built (a little further where the water is wide),
+  // and so how far one can see: the haze must close in before its edge.
+  const wideWater = (s) => (s > S.coast ? 1 : smooth(120, 260, section(s).width));
+  const builtRadius = () => lerp(clamp(70 + fish.length * 12, 90, 170), 210, regionWeights(fish.river.s).sea) + 30 * wideWater(fish.river.s) * (1 - regionWeights(fish.river.s).sea);
   let richShown = false;
+  let fallMet = false;
   // Hunters after the fish: an arrow on a ring round the middle of the screen points to each,
   // yellow when it has noticed the fish, red when it hunts it, pulsing when it is about to
   // strike -- with its name, the first time in a while, over the card.
@@ -1078,7 +1139,7 @@ async function start() {
     const L = fish.length;
     const viewer = { x: camera.position.x, z: camera.position.z, s: cameraRiver.s, u: cameraRiver.u };
     const sea = regionWeights(s).sea;
-    terrain.update(viewer, { radius: lerp(clamp(70 + L * 12, 90, 170), 210, sea), near: clamp(0.28 + L * 0.1, 0.35, 1), budget: 5, land: 60 });
+    terrain.update(viewer, { radius: builtRadius(), near: clamp(0.28 + L * 0.1, 0.35, 1), budget: 5, land: 60 });
     prof.mark("terrain");
     featureEvents.length = 0;
     features.update(fish.river.s, 3, { dt, time, fish, light: conditions.light, toss: (type, x, z) => life.food.toss(type, x, z, fish), events: featureEvents });
@@ -1480,6 +1541,17 @@ async function start() {
     falls.update(dt, camera.position, cameraRiver.s, time);
     ripples.update(dt);
     stepPan(dt);
+    stepCharge(dt);
+    // Home at the salmon fall: the bear at the top, and how to get past it.
+    if (SALMON_FALL && phaseOf(fish.stage) === "spawner" && dead <= 0) {
+      const d = fish.river.s - SALMON_FALL.s;
+      if (d > 0 && d < 60 && !fallMet) {
+        fallMet = true;
+        hud.toast("Lachsfall", "Oben an der Kante fischt ein Bär.", 5);
+      }
+      if (d > 0 && d < 30)
+        hud.tip("salmonfall", "<b>Der Lachsfall.</b> Oben an der Kante fischt ein Bär – immer wieder klatscht seine Pranke ins Wasser. Spring gleich danach: Halte <kbd>Leertaste</kbd> gedrückt und lass los, wenn die Sprungkraft ganz oben ist – dann oben sofort weiter. Wer sich nicht traut, sucht den Spalt im Fels.", 14);
+    }
     placeCamera(dt);
     prof.mark("rest");
     // How long people play (counted at a few marks, with the stage they have reached).
@@ -1794,8 +1866,7 @@ async function start() {
     if (above) {
       scene.fog.color.copy(AIR).multiply(skyUniforms.skyLevel.value);
       // The mist over the valley closes in before the edge of what is built round the fish.
-      const built = lerp(clamp(70 + fish.length * 12, 90, 170), 210, regionWeights(fish.river.s).sea);
-      scene.fog.density = 0.9 / built;
+      scene.fog.density = 0.9 / builtRadius();
       skyDome.visible = true;
       // The dome goes with the eye: it is the sky at any distance.
       skyDome.position.copy(camera.position);
@@ -1807,6 +1878,9 @@ async function start() {
       scene.fog.color.lerp(MUD_WATER, 0.85 * events.flood * riverShare);
       scene.fog.color.lerp(NIGHT_WATER, (1 - sunUp) * 0.8);
       scene.fog.density = lookHere.density * (1 + 0.9 * conditions.flood * riverShare) * (1 + 1.4 * events.flood * riverShare) * (1 - 0.18 * conditions.low * riverShare);
+      // Where the water is wide there is no bank to stop the eye: the haze thickens enough to
+      // hide the edge of what is built (else it stands against the haze, square and hard).
+      scene.fog.density = Math.max(scene.fog.density, (3.6 / builtRadius()) * wideWater(cameraRiver.s));
       skyDome.visible = false;
       post.composite.uniforms.shaftStrength.value = 1 - 0.85 * iced;
       // Ice mirrors nothing.
@@ -2052,7 +2126,7 @@ async function start() {
     } else if (waiting) {
       // Behind the title card: go on building what is further off.
       features.update(fish.river.s, 4);
-      terrain.update({ x: camera.position.x, z: camera.position.z, s: cameraRiver.s, u: cameraRiver.u }, { radius: lerp(clamp(70 + fish.length * 12, 90, 170), 210, regionWeights(fish.river.s).sea), near: clamp(0.28 + fish.length * 0.1, 0.35, 1), budget: 4, land: 60 });
+      terrain.update({ x: camera.position.x, z: camera.position.z, s: cameraRiver.s, u: cameraRiver.u }, { radius: builtRadius(), near: clamp(0.28 + fish.length * 0.1, 0.35, 1), budget: 4, land: 60 });
     }
     draw(still ? 0 : dt);
   }
@@ -2093,6 +2167,7 @@ async function start() {
       brood,
       lifecard,
       siblings,
+      leapCharge: () => ({ charge, reach: inLeapReach(), fall: SALMON_FALL?.s, dead, air: fish.airborne, cel: celebration.active }),
       die,
       spawn,
       setZoom: (z) => (zoom = z),

@@ -1021,7 +1021,7 @@ function createHunters(scene, { detail }) {
         const d = Math.hypot(fish.position.x - heron.position.x, fish.position.z - heron.position.z);
         if (d < 14) out.push({ position: heron.position, level: heron.mode === "strike" ? 1 : d < 7 ? 0.8 : 0.5, coiled: heron.mode === "strike", kind: "heron", title: "Graureiher", key: heron });
       }
-      if (bear.active && bear.position.distanceTo(fish.position) < 20) out.push({ position: bear.position, level: bear.swipe > 0 ? 1 : 0.6, coiled: bear.swipe > 0, kind: "bear", title: "Braunbär", key: bear });
+      if (bear.active && bear.position.distanceTo(fish.position) < 26) out.push({ position: bear.paw, level: bear.striking ? 1 : 0.6, coiled: !!bear.striking, kind: "bear", title: "Braunbär", key: bear });
       return out;
     },
     reset(fish) {
@@ -1201,23 +1201,46 @@ function createHunters(scene, { detail }) {
         const dx = fish.position.x - bearLegs.position.x,
           dz = fish.position.z - bearLegs.position.z;
         const near = Math.hypot(dx, dz) < 12 && fish.position.y > lv - 5;
+        // It fishes in a rhythm: the paw goes up (a moment, for all to see), comes down into
+        // the water by the lip with a smack -- at the salmon, if one is near, otherwise at
+        // the white water -- and rests a few seconds. A salmon leaping the fall lands safe
+        // just after a smack.
+        const WIND = 0.7,
+          STRIKE = 0.3;
         if (bear.swipe > 0) bear.swipe += dt;
-        else if (near && bear.rest <= 0 && !fish.safe) {
+        else if (bear.rest <= 0) {
           bear.swipe = dt;
-          bear.target = fish.position.clone();
+          bear.checked = false;
+          bear.target = new THREE.Vector3();
         }
-        const t = bear.swipe > 0 ? Math.min(1, bear.swipe / 0.35) : 0;
+        if (bear.swipe > 0 && bear.swipe < WIND) {
+          // Aiming while the paw is up.
+          if (near && !fish.safe) bear.target.copy(fish.position);
+          else {
+            place(lachsfall.s - 2, bear.u - 2.5, at);
+            bear.target.set(at.x, lv - 0.3, at.z);
+          }
+        }
         const rest = new THREE.Vector3(bearLegs.position.x, lv + 14, bearLegs.position.z);
-        if (bear.swipe > 0.35 && captive.kind === "bear" && captive.active) {
+        const raised = new THREE.Vector3(bearLegs.position.x, lv + 19, bearLegs.position.z);
+        const up = bear.swipe > 0 ? Math.min(1, bear.swipe / WIND) : 0;
+        const t = bear.swipe > WIND ? Math.min(1, (bear.swipe - WIND) / STRIKE) : 0;
+        if (bear.swipe > WIND + STRIKE && captive.kind === "bear" && captive.active) {
           // With a fish under its claws the paw comes back up slowly, holding on.
-          const back = Math.min(1, (bear.swipe - 0.35) / 0.8);
+          const back = Math.min(1, (bear.swipe - WIND - STRIKE) / 0.8);
           bear.paw.lerpVectors(bear.target, rest, back * back * (3 - 2 * back));
-        } else bear.paw.lerpVectors(rest, bear.swipe > 0 ? bear.target : rest, Math.sin(t * Math.PI * 0.5));
+        } else if (bear.swipe > WIND + STRIKE) {
+          const back = Math.min(1, (bear.swipe - WIND - STRIKE) / 0.9);
+          bear.paw.lerpVectors(bear.target, rest, back * back * (3 - 2 * back));
+        } else if (bear.swipe > WIND) bear.paw.lerpVectors(raised, bear.target, Math.sin(t * Math.PI * 0.5));
+        else bear.paw.lerpVectors(rest, raised, Math.sin(up * Math.PI * 0.5)).add(forward.set(Math.sin(bear.swipe * 40) * 0.15 * up, 0, 0));
         bearPaw.position.copy(bear.paw);
-        if (bear.swipe > 0 && t >= 1 && !bear.checked) {
+        bear.striking = bear.swipe > 0 && bear.swipe < WIND + STRIKE;
+        if (bear.swipe > WIND && t >= 1 && !bear.checked) {
           bear.checked = true;
           result.splash = { x: bear.target.x, y: lv, z: bear.target.z, strength: 1.4 };
-          if (bear.target.distanceTo(fish.position) < 3.5 && !captive.active) {
+          result.bearSmack = true;
+          if (bear.target.distanceTo(fish.position) < 3.5 && !captive.active && !fish.safe) {
             result.killed = "Vom Bären gefangen";
             seize("bear");
           }
@@ -1228,10 +1251,10 @@ function createHunters(scene, { detail }) {
           frame(lachsfall.s, at);
           captive.heading.set(at.tx, 0, at.tz).normalize();
         }
-        if (bear.swipe > 1.3) {
+        if (bear.swipe > WIND + STRIKE + 1.0) {
           bear.swipe = 0;
           bear.checked = false;
-          bear.rest = 6;
+          bear.rest = 2.6 + random() * 1.4;
         }
       }
       return result;

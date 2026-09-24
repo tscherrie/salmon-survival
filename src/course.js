@@ -30,7 +30,7 @@
 // by whole steps at the falls; it reaches sea level at the coast.
 
 // Bumped whenever the river is laid out anew, so saved places can be carried over.
-export const COURSE_VERSION = 4;
+export const COURSE_VERSION = 5;
 export const STEP = 1;
 let seasonFlow = 1;
 const TAU = Math.PI * 2;
@@ -52,6 +52,21 @@ export const S = {
   seaReach: 3800,
   seaSide: 3000,
 };
+
+// The river as it was first laid out, and as it runs now: the long, even lower river was
+// halved, and the length went into the upper river -- a new stretch below the salmon fall
+// (a rapid, a still side arm, a step, a rock gorge). `relaid` takes a place on the old river
+// to the same place on the new one (for the tables below, and for fish saved on the old).
+const NEW_FROM = 6000,
+  NEW_LENGTH = 1400,
+  LOW_FROM = 12000,
+  LOW_TO = 14800;
+export function relaid(s) {
+  if (s < NEW_FROM) return s;
+  if (s < LOW_FROM) return s + NEW_LENGTH;
+  if (s < LOW_TO) return LOW_FROM + NEW_LENGTH + ((s - LOW_FROM) * (LOW_TO - LOW_FROM - NEW_LENGTH)) / (LOW_TO - LOW_FROM);
+  return s;
+}
 
 // The river's character at stations along it, eased between. Width at the surface, depth
 // over the deepest line, mean current, water-surface gradient, how much of the sky the
@@ -77,7 +92,7 @@ const STATIONS = [
   [14800,      300,  34,   1.3,  0.0002, 0,     3.2,  0.25, 0.3],
   [15200,      340,  26,   0.9,  0,      0,     3.2,  0.2,  0.3],
   [16000,      900,  28,   0.35, 0,      0,     3.4,  0.12, 0.3],
-];
+].map((row) => [relaid(row[0]), ...row.slice(1)]);
 const FIELDS = ["width", "depth", "speed", "gradient", "canopy", "shape", "bank", "rough"];
 
 // Rapids: steep, shallow, fast white water.
@@ -91,7 +106,11 @@ export const RAPIDS = [
   { from: 12620, to: 12880, strength: 0.85 },
   { from: 13010, to: 13170, strength: 0.6 },
   { from: 14000, to: 14180, strength: 0.5 },
-];
+]
+  .map((r) => ({ ...r, from: relaid(r.from), to: relaid(r.to) }))
+  // The new stretch of the upper river.
+  .concat([{ from: 6120, to: 6330, strength: 0.9 }])
+  .sort((a, b) => a.from - b.from);
 
 // Reaches with a character of their own, so the river never runs the same for long:
 //   calm      a widening where the water spreads out, slows and all but stops -- a
@@ -118,14 +137,20 @@ export const REACHES = [
   { from: 11200, to: 11600, kind: "calm", strength: 0.8 },
   { from: 12280, to: 12600, kind: "narrows", strength: 0.9, name: "Felsenge" },
   { from: 13380, to: 13820, kind: "calm", strength: 0.75 },
-];
+]
+  .map((r) => ({ ...r, from: relaid(r.from), to: relaid(r.to) }))
+  .concat([
+    { from: 6560, to: 6900, kind: "calm", strength: 0.95, name: "Altarm" },
+    { from: 7080, to: 7330, kind: "narrows", strength: 0.9, name: "Felsschlucht" },
+  ])
+  .sort((a, b) => a.from - b.from);
 // Islands: here and there the river parts round a long island and joins again below it --
 // one arm (on `side`) shallow and quick over gravel, the other deep, slow and dark.
 export const ISLANDS = [
   { from: 2530, to: 2870, side: 1, name: "Erleninsel" },
   { from: 7400, to: 7800, side: -1, name: "Weideninsel" },
   { from: 11700, to: 12150, side: 1, name: "Kiesinsel" },
-];
+].map((r) => ({ ...r, from: relaid(r.from), to: relaid(r.to) }));
 // How much s lies in an island's reach (0..1, a lens: nothing at its ends, fullest in the
 // middle), and on which side its quick arm runs.
 function islandAt(s, out) {
@@ -209,7 +234,7 @@ export function millAt(s, u, c = section(s)) {
 }
 // Cold springs: groundwater welling up through the gravel, a patch of cool water all
 // summer. `u` as a share of the half-width.
-export const COLD_SPRINGS = [{ s: 8700, u: -0.55, radius: 16, name: "Kaltwasserquelle" }];
+export const COLD_SPRINGS = [{ s: relaid(8700), u: -0.55, radius: 16, name: "Kaltwasserquelle" }];
 // How much the water at (s, u) is cooled by a cold spring, 0..1.
 export function coolingAt(s, u) {
   for (const q of COLD_SPRINGS) {
@@ -261,12 +286,14 @@ export const FALLS = [
   { s: 6, drop: 3.5, lip: 0, pool: 6, head: true, name: "Quelle" },
   { s: 1480, drop: 5, lip: 3, pool: 11, name: "Bachstufe" },
   { s: 5200, drop: 19, lip: 3.2, pool: 26, name: "Lachsfall" },
-  { s: 9800, drop: 2.6, lip: 0.6, pool: 9, name: "Fischtreppe", pass: true },
-  { s: 9816, drop: 2.6, lip: 0.6, pool: 9, name: "Fischtreppe", pass: true },
-  { s: 9832, drop: 2.6, lip: 0.6, pool: 9, name: "Fischtreppe", pass: true },
-  { s: 9848, drop: 2.6, lip: 0.6, pool: 9, name: "Fischtreppe", pass: true },
+  // In the new stretch below the salmon fall, a step over a ledge of rock.
+  { s: 6470, drop: 5.5, lip: 3, pool: 12, name: "Steinstufe" },
+  { s: relaid(9800), drop: 2.6, lip: 0.6, pool: 9, name: "Fischtreppe", pass: true },
+  { s: relaid(9816), drop: 2.6, lip: 0.6, pool: 9, name: "Fischtreppe", pass: true },
+  { s: relaid(9832), drop: 2.6, lip: 0.6, pool: 9, name: "Fischtreppe", pass: true },
+  { s: relaid(9848), drop: 2.6, lip: 0.6, pool: 9, name: "Fischtreppe", pass: true },
   // In the lower river the water breaks once more over a bar of rock between two rapids.
-  { s: 12950, drop: 4.5, lip: 3.4, pool: 14, name: "Felsschwelle" },
+  { s: relaid(12950), drop: 4.5, lip: 3.4, pool: 14, name: "Felsschwelle" },
 ];
 // Below the chute the little brook comes down a few steps over stones and roots, each with a
 // small basin under it.
@@ -297,7 +324,7 @@ export const POOLS = [];
   let s = 190,
     k = 0;
   const field = {};
-  while (s < 14400) {
+  while (s < relaid(14400)) {
     const h = Math.sin(k * 78.233 + 1.7) * 43758.5453;
     const r = h - Math.floor(h);
     stationFields(s, field);
@@ -377,7 +404,7 @@ function rapidAt(s) {
 // into the estuary. The straightening eases in over a few widths of the river, so a bend
 // never tightens so far that its inside bank folds over itself.
 function straightness(s, width = 20, narrows = 0, calm = 0) {
-  let k = 1 - smooth(13300, 14900, s);
+  let k = 1 - smooth(relaid(13300), 14900, s);
   k *= 1 - (smooth(40, 70, s) * (1 - smooth(110, 150, s)));
   const ease = 60 + Math.max(0, width - 30) * 2.5;
   for (const f of FALLS) if (!f.step) k *= 1 - (1 - smooth(f.poolLength + 20, f.poolLength + 20 + ease, Math.abs(s - f.s - f.poolLength * 0.3))) * 0.85;
@@ -430,7 +457,7 @@ const P = [0.7, 2.3, 4.1];
     const inChute = smooth(60, 80, s) * (1 - smooth(104, 124, s));
     let nearFall = 0;
     for (const f of FALLS) if (!f.step) nearFall = Math.max(nearFall, 1 - smooth(f.poolLength, f.poolLength + 40, Math.abs(s - f.s - f.poolLength * 0.3)));
-    const weight = (1 - 0.6 * smooth(10500, 12500, s)) * (1 - smooth(14000, 14800, s)) * (1 - inChute) * (1 - nearFall) * smooth(50, 70, s) * (1 - pool) * (1 - calm) * (1 - T.island[i]);
+    const weight = (1 - 0.6 * smooth(relaid(10500), relaid(12500), s)) * (1 - smooth(relaid(14000), 14800, s)) * (1 - inChute) * (1 - nearFall) * smooth(50, 70, s) * (1 - pool) * (1 - calm) * (1 - T.island[i]);
     T.riffle[i] = (0.75 * Math.sin(phase) + 0.25 * Math.sin(2.13 * phase + 1.3)) * weight;
     T.rapid[i] = rapidAt(s);
     // The meanders scale with the river: a bend every dozen widths or so -- though the big
@@ -642,11 +669,14 @@ export function section(s) {
 }
 
 // How much of each stretch of river s belongs to, for looks and life.
+// Where the upper river gives way to the middle, and the middle to the lower (see relaid).
+const R_UPPER = relaid(7300),
+  R_MIDDLE = relaid(11900);
 export function regionWeights(s, out = {}) {
   const brook = 1 - smooth(2450, 2850, s);
-  const upper = smooth(2450, 2850, s) * (1 - smooth(7300, 7900, s));
-  const middle = smooth(7300, 7900, s) * (1 - smooth(11900, 12700, s));
-  const lower = smooth(11900, 12700, s) * (1 - smooth(14800, 15400, s));
+  const upper = smooth(2450, 2850, s) * (1 - smooth(R_UPPER, R_UPPER + 600, s));
+  const middle = smooth(R_UPPER, R_UPPER + 600, s) * (1 - smooth(R_MIDDLE, R_MIDDLE + 450, s));
+  const lower = smooth(R_MIDDLE, R_MIDDLE + 450, s) * (1 - smooth(14800, 15400, s));
   const estuary = smooth(14800, 15400, s) * (1 - smooth(15900, 16500, s));
   const sea = smooth(15900, 16500, s);
   out.brook = brook;

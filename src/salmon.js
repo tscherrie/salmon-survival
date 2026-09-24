@@ -488,7 +488,7 @@ export function createSalmon(scene, { pace = 1 } = {}) {
       const nearSurface = f.depthBelowSurface < Math.max(H * 3, 0.6);
       // Under ice there is no leaping.
       if (nearSurface && f.relative.length() > sp.cruise * 1.2 && !((world.ice ?? 0) > 0.5) && !world.netted) {
-        leap(sp, surface);
+        leap(sp, surface, input.power ?? 1);
         pose(dt, sp, input);
         return;
       }
@@ -593,7 +593,8 @@ export function createSalmon(scene, { pace = 1 } = {}) {
   }
 
   // A leap from the surface. Near the foot of a fall it aims for the lip.
-  function leap(sp, surface) {
+  // `power`: how well the leap was timed (the salmon fall's charge, main.js), 1 otherwise.
+  function leap(sp, surface, power = 1) {
     const st = stage();
     const L = f.length;
     const strength = 0.75 + 0.25 * f.energy;
@@ -602,7 +603,7 @@ export function createSalmon(scene, { pace = 1 } = {}) {
     // The young in the river (up to the smolt) jump twice as high as their size alone
     // would give them, easing off through the first months at sea.
     const young = Math.sqrt(1 + clamp((3.2 - L) / 1.2, 0, 1));
-    const exit = sp.leap * 2.9 * strength * runUp * young * (st.fasting ? 1.05 : 1);
+    const exit = sp.leap * 2.9 * strength * runUp * young * (st.fasting ? 1.05 : 1) * power;
     let vy = exit * 0.82,
       horizontal = exit * 0.55;
     const s = f.river.s;

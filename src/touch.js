@@ -13,7 +13,7 @@ const ICONS = {
   map: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5Z" /><path d="M9 4v13.5M15 6.5V20" /></svg>',
 };
 
-export function createTouch({ habitat, onTouch, onLunge, onLook, onPause }) {
+export function createTouch({ habitat, onTouch, onLunge, onLungeEnd = () => {}, onLook, onPause }) {
   const root = document.createElement("div");
   root.id = "touch";
   root.hidden = true;
@@ -101,11 +101,13 @@ export function createTouch({ habitat, onTouch, onLunge, onLook, onPause }) {
       if (!thumb) return;
       const onBite = over(bite, event);
       if (onBite && !thumb.onBite) dash();
+      if (!onBite && thumb.onBite) onLungeEnd();
       thumb.onBite = onBite;
       if (over(go, event)) thumb.forward = true;
       refresh();
     });
     const lift = (event) => {
+      if (thumbs.get(event.pointerId)?.onBite) onLungeEnd();
       thumbs.delete(event.pointerId);
       refresh();
     };

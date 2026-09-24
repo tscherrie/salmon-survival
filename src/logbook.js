@@ -1,4 +1,4 @@
-import { FALLS, S, frame, place, regionWeights } from "./course.js";
+import { relaid, FALLS, S, frame, place, regionWeights } from "./course.js";
 
 // The logbook (L): a map of the whole river from the spring to the sea, with where the
 // fish is now, the stretches it has swum and the falls it has climbed; and everything it
@@ -65,8 +65,9 @@ const STATIONS = [
   { s: 170, name: "Kaskade", fall: "Kaskade" },
   { s: 1480, name: "Bachstufe", fall: "Bachstufe" },
   { s: 5200, name: "Lachsfall", fall: "Lachsfall" },
-  { s: 9800, name: "Fischtreppe", fall: "Fischtreppe" },
-  { s: 12950, name: "Felsschwelle", fall: "Felsschwelle" },
+  { s: 6470, name: "Steinstufe", fall: "Steinstufe" },
+  { s: relaid(9800), name: "Fischtreppe", fall: "Fischtreppe" },
+  { s: relaid(12950), name: "Felsschwelle", fall: "Felsschwelle" },
   { s: S.coast, name: "Mündung" },
   { s: S.coast + 1300, name: "Meer" },
 ];

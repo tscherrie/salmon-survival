@@ -1,4 +1,4 @@
-import { FALLS, MILLS, REACHES, S, TRIBUTARIES, clamp, coastAt, frame, place, regionName, section } from "./course.js";
+import { FALLS, MILLS, REACHES, S, TRIBUTARIES, clamp, coastAt, frame, place, regionName, relaid, section } from "./course.js";
 import { riverSketch } from "./logbook.js";
 
 // The minimap (M): a small round map in the corner, turned so that up is where the camera
@@ -247,7 +247,7 @@ export function createMinimap({ logbook, places = null, shownAtFirst = false }) 
         }
     }
     // The bridge: a grey band across.
-    for (const b of [{ s: 10400 }]) {
+    for (const b of [{ s: relaid(10400) }]) {
       if (Math.abs(b.s - fs) > reach) continue;
       const c = section(b.s);
       const a = place(b.s, c.thalweg - c.half * 1.3, {}),

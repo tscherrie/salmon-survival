@@ -20,6 +20,8 @@ const REACH_LINES = {
   Stromenge: "Wo der große Fluss eng wird",
   Wehrstau: "Der Stau vor dem Wehr",
   Felsenge: "Die Felsenge im Unterlauf",
+  Altarm: "Ein stiller Seitenarm voller Kraut",
+  Felsschlucht: "Wo sich der Fluss durch den Fels zwängt",
 };
 for (const r of REACHES)
   if (r.name)

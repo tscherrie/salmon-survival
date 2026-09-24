@@ -3,7 +3,7 @@ import { rockGeometry } from "../../riverscape/src/environment.js";
 import { GeometryBatch, randomGenerator } from "../../riverscape/src/math.js";
 import { foliageDepth, foliageMaterial } from "../../riverscape/src/foliage.js";
 import { waterLitShader } from "../../riverscape/src/water.js";
-import { COLD_SPRINGS, CRACKS, FALLS, ISLANDS, KING_POOL, MILLS, S, TRIBUTARIES, UNDERCUTS, bed, frame, level, place, section, smooth } from "./course.js";
+import { relaid, COLD_SPRINGS, CRACKS, FALLS, ISLANDS, KING_POOL, MILLS, S, TRIBUTARIES, UNDERCUTS, bed, frame, level, place, section, smooth } from "./course.js";
 import { MODEL_LENGTH, createFishMesh } from "./anatomy.js";
 import { SolidBatch, bankGrass, fallenLeaf, hangingMoss, leafSpray, mossTuft, reeds, sedge, turfTuft } from "./flora.js";
 import { TreeBatch, alder, birch, fallenTrunk, fern, forestMaterial, roots, shrub, willow } from "./forest.js";
@@ -898,7 +898,7 @@ for (const m of MILLS) {
 
 // The stone bridge: three piers in the river, the deck high over the water with its
 // parapets, and people on it -- who now and then throw bread to the fish.
-export const BRIDGES = [{ s: 10400, name: "Steinbrücke" }];
+export const BRIDGES = [{ s: relaid(10400), name: "Steinbrücke" }];
 for (const b of BRIDGES) {
   {
     const c = section(b.s);
