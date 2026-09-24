@@ -45,13 +45,17 @@ export const PREDATORS = {
   merganser: { bird: true, count: 1, size: [5.5, 6.5], regions: { brook: 0.4, upper: 1, middle: 1 }, from: 900, prey: 1.8, maxPrey: 1.8, tactic: "pursuit", floats: true, air: 20, sight: 11, lateral: 2.5, cruise: 3, chase: 11, strike: 15, range: 1.6, turn: 3.5, notice: 0.5, chaseTime: 16, rest: 35, name: "Von einem Gänsesäger erbeutet" },
   cod: { body: "cod", coat: "cod", count: 2, nocturnal: true, size: [6, 9], regions: { sea: 1, estuary: 0.3 }, prey: 3.2, tactic: "ambush", bottom: true, sight: 6, lateral: 3, cruise: 1.5, strike: 16, range: 3, turn: 2.2, notice: 0.3, rest: 30, name: "Von einem Dorsch geschluckt" },
   seal: { body: "seal", coat: "seal", count: 1, size: [14, 17], regions: { sea: 1, estuary: 0.7 }, prey: 10, maxPrey: 10, tactic: "pursuit", air: 45, sight: 40, lateral: 6, cruise: 5, chase: 20, strike: 24, range: 5, turn: 2.4, notice: 0.4, chaseTime: 15, rest: 45, name: "Von einer Robbe gefressen" },
+  // A band of goosanders driving the smolt school in the lower river (the drive, drive.js):
+  // they come only then, all together, circle the school under water and dash in at any
+  // smolt out on its own. Before each dash one draws up for a moment -- the tell to dodge.
+  drive: { bird: true, drive: true, count: 3, size: [5.6, 6.4], regions: {}, prey: 2.6, maxPrey: 2.6, tactic: "pursuit", air: 18, sight: 22, lateral: 3, cruise: 4.5, chase: 11, strike: 15, range: 1.8, turn: 3.2, notice: 0.35, chaseTime: 10, rest: 6, tell: 0.42, name: "Von Gänsesägern erbeutet" },
   // The old king of the trout: huge, slow to tire, and only ever in his own deep pool.
   king: { body: "trout", coat: "trout", count: 1, boss: true, tough: 0.3, size: [10, 11], regions: {}, prey: 5, tactic: "stalk", sight: 12, lateral: 4.5, cruise: 2, stalk: 2.6, chase: 7, strike: 15, range: 3.4, turn: 2.4, notice: 0.7, chaseTime: 7, rest: 20, name: "Vom alten König der Forellen gefressen" },
 };
 
 // What each is called, and which of them the salmon can fight: the fish. (The otter, the
 // goosander and the seal are not to be fought.)
-const TITLES = { trout: "Bachforelle", bullhead: "Groppe", perch: "Flussbarsch", pike: "Hecht", otter: "Otter", merganser: "Gänsesäger", cod: "Dorsch", seal: "Seehund", king: "Der alte König" };
+const TITLES = { trout: "Bachforelle", bullhead: "Groppe", perch: "Flussbarsch", pike: "Hecht", otter: "Otter", merganser: "Gänsesäger", drive: "Gänsesäger", cod: "Dorsch", seal: "Seehund", king: "Der alte König" };
 for (const [kind, spec] of Object.entries(PREDATORS)) {
   spec.title = TITLES[kind];
   spec.fights = ["trout", "bullhead", "perch", "pike", "cod", "king"].includes(kind);
@@ -86,6 +90,8 @@ export function createPredators(scene, { random, seize, captive }) {
   const birdMaterial = creatureMaterial();
   const fishMeshes = [];
   let clock = 0;
+  // When the next goosander of the drive may go in.
+  let driveNext = 0;
 
   for (const [kind, spec] of Object.entries(PREDATORS)) {
     let mesh = null;
@@ -301,6 +307,37 @@ export function createPredators(scene, { random, seize, captive }) {
       }
       return h;
     },
+    // The drive (drive.js): the goosanders come in round the school -- one ahead, two
+    // behind to either side, landing on the water -- or, when it is over, go up and away.
+    drive(fish, on) {
+      driveNext = clock + 3;
+      for (const h of list) {
+        if (!h.spec.drive) continue;
+        if (on) {
+          const s = Math.min(fish.river.s + [24, -16, -12][h.index % 3], S.coast - 1);
+          const c = section(s);
+          const u = c.thalweg + [0, -0.45, 0.45][h.index % 3] * c.half;
+          place(s, u, at);
+          h.position.set(at.x, level(s) - h.size * 0.08, at.z);
+          h.home.copy(h.position);
+          locate(h.position.x, h.position.z, s, h.river);
+          frame(s, at);
+          h.heading.set(at.tx, 0, at.tz).normalize();
+          h.mode = "hold";
+          h.rest = 3 + h.index * 2.5;
+          h.air = 0;
+          h.speed = 0;
+          h.leaveUntil = 0;
+          h.lunge = null;
+          h.coilUntil = 0;
+        } else if (h.mode !== "away" && h.mode !== "swallow") {
+          h.mode = "surface";
+          h.until = clock + 2;
+          h.rest = 999;
+          h.leaveUntil = clock + 5;
+        }
+      }
+    },
     reset() {
       for (const h of list) {
         h.mode = "away";
@@ -321,7 +358,7 @@ export function createPredators(scene, { random, seize, captive }) {
         let level = 0;
         if (h.mode === "strike") level = 1;
         else if (h.mode === "chase" || h.mode === "encircle" || h.mode === "fight") level = 0.8;
-        else if (h.mode === "stalk" || (h.mode === "lurk" && h.perceived > 0)) level = 0.6;
+        else if (h.mode === "stalk" || h.mode === "raid" || (h.mode === "lurk" && h.perceived > 0)) level = 0.6;
         else if (h.mode === "notice") level = 0.4;
         if (!level) continue;
         out.push({ position: h.position, level, coiled: h.mode === "strike" && clock < (h.coilUntil ?? 0), kind: h.kind, title: TITLES[h.kind] ?? h.spec.title, key: h });
@@ -381,13 +418,17 @@ export function createPredators(scene, { random, seize, captive }) {
         // the fish are there whether or not the salmon has outgrown them -- they can still be
         // fought -- while the otter, the goosander and the seal come only for prey.
         const hunts = L < spec.prey;
-        const interested = spec.boss ? Math.abs(fish.river.s - KING_POOL.s) < 170 || held : ((hunts || spec.fights) && suit(spec.regions, fish.river.s) > 0.3 && activity > 0) || held;
+        const interested = spec.boss
+          ? Math.abs(fish.river.s - KING_POOL.s) < 170 || held
+          : spec.drive
+            ? !!ctx.drive || time < (h.leaveUntil ?? 0) || held
+            : ((hunts || spec.fights) && suit(spec.regions, fish.river.s) > 0.3 && activity > 0) || held;
         if (h.mode === "away") {
           hide(h);
           const leader = !h.pack || h.pack.members[0] === h;
           if (spec.boss) {
             if (interested && h.rest <= 0) stationKing(h);
-          } else if (leader && interested && h.rest <= 0 && random() < dt * 0.2 * activity) station(h, fish, ctx.travel);
+          } else if (!spec.drive && leader && interested && h.rest <= 0 && random() < dt * 0.2 * activity) station(h, fish, ctx.travel);
           continue;
         }
         locate(h.position.x, h.position.z, h.river.s, h.river);
@@ -463,9 +504,22 @@ export function createPredators(scene, { random, seize, captive }) {
         }
         // Grown too big for it while it was on the hunt: it gives up (unless it is fighting).
         if (!hunts && ["notice", "stalk", "lurk", "chase", "encircle"].includes(h.mode)) h.mode = spec.tactic === "ambush" ? "hold" : "return";
+        // The goosanders of the drive have no place of their own to go back to: they keep
+        // with the school.
+        if (spec.drive && ctx.drive && h.mode === "return") h.mode = "hold";
         switch (h.mode) {
           case "hold": {
-            if (spec.tactic === "pursuit" && !spec.floats) {
+            if (spec.drive && ctx.drive) {
+              // Circling the school, a little above it, each on its own side -- or, when the
+              // salmon has fallen out of it, round the salmon: a smolt on its own is theirs.
+              const alone = fish.position.distanceTo(ctx.drive.position) > ctx.drive.radius * 1.3;
+              const lead = alone ? fish.position : ctx.drive.position;
+              const a = time * 0.35 + h.index * (TAU / 3);
+              const r = 9 + 3 * Math.sin(time * 0.5 + h.index * 1.3);
+              aim.set(lead.x + Math.cos(a) * r, Math.min(lead.y + 1.5, lv - h.size * 0.4), lead.z + Math.sin(a) * r);
+              dir.subVectors(aim, h.position);
+              speed = Math.min(spec.chase, 2 + dir.length() * 0.8);
+            } else if (spec.tactic === "pursuit" && !spec.floats) {
               // Roaming about its patch.
               const t = time * 0.25 + h.index * 2;
               aim.set(h.home.x + Math.cos(t) * 6, h.home.y + Math.sin(t * 0.7) * 1.5, h.home.z + Math.sin(t) * 6);
@@ -483,7 +537,22 @@ export function createPredators(scene, { random, seize, captive }) {
                 dir.z += Math.cos(time * 0.5 + h.index * 2.3) * 0.5;
               }
             }
-            if (sees && h.rest <= 0 && hunts) {
+            // The goosanders of the drive go in one at a time -- mostly into the thick of the
+            // school, taking whichever smolt they meet; at the salmon when it is out on the
+            // edge or on its own (or, now and then, even in the middle).
+            const turn = !spec.drive || (time > driveNext && !list.some((o) => o !== h && o.spec.drive && ["notice", "chase", "strike", "recover", "raid"].includes(o.mode)));
+            if (spec.drive && ctx.drive && h.rest <= 0 && turn) {
+              const inside = fish.position.distanceTo(ctx.drive.position) < ctx.drive.radius;
+              // (and not one straight after another)
+              if (inside || sees) driveNext = time + 6;
+              if (inside && (!sees || random() < 0.75)) {
+                h.mode = "raid";
+                h.until = time + 4;
+                h.raidAt = new THREE.Vector3(range(-2, 2), range(-1, 1), range(-2, 2));
+                break;
+              }
+            }
+            if (sees && h.rest <= 0 && hunts && turn) {
               h.mode = "notice";
               h.until = time + spec.notice;
               if (h.pack)
@@ -534,11 +603,13 @@ export function createPredators(scene, { random, seize, captive }) {
               h.until = time + 0.45;
             } else if (time - h.seenAt > 3) h.mode = "hold";
             break;
-          case "chase":
+          case "chase": {
             intercept(h, fish, spec.chase, aim);
             dir.subVectors(aim, h.position);
             speed = spec.chase;
-            if (able && d < spec.range * 1.4 && facing > 0.85) {
+            // (a goosander of the drive measures from its bill, well ahead of its body)
+            const near = spec.drive ? mouth.copy(h.position).addScaledVector(h.heading, (3.8 * h.size) / 6).distanceTo(fish.position) : d;
+            if (able && near < spec.range * 1.4 && facing > 0.85) {
               h.mode = "strike";
               h.until = time + 0.5;
             } else if (time - h.chased > spec.chaseTime || time - h.seenAt > 2.5) {
@@ -547,6 +618,29 @@ export function createPredators(scene, { random, seize, captive }) {
               h.rest = spec.rest * 0.5;
             }
             break;
+          }
+          case "raid": {
+            // Into the school, fast, and out again with a smolt.
+            if (!ctx.drive) {
+              h.mode = "hold";
+              break;
+            }
+            aim.copy(ctx.drive.position).add(h.raidAt);
+            dir.subVectors(aim, h.position);
+            speed = spec.strike * 0.85;
+            rate *= 1.4;
+            mouth.copy(h.position).addScaledVector(h.heading, (3.8 * h.size) / 6);
+            if (mouth.distanceTo(aim) < 1.6) {
+              if (ctx.drive.take?.(mouth)) result.raided = (result.raided ?? 0) + 1;
+              h.mode = "leave";
+              h.until = time + 3;
+              h.rest = spec.rest * 1.6;
+            } else if (time > h.until) {
+              h.mode = "hold";
+              h.rest = spec.rest * 0.5;
+            }
+            break;
+          }
           case "encircle": {
             // Spread round the fish and close in; strike from wherever is nearest.
             const pack = h.pack;
@@ -568,7 +662,7 @@ export function createPredators(scene, { random, seize, captive }) {
             break;
           }
           case "strike": {
-            if (spec.fights && time < h.coilUntil) {
+            if ((spec.fights || spec.tell) && time < h.coilUntil) {
               // The tell: drawn up on the line it has chosen, still -- unless the salmon comes
               // right up to its jaws, when it goes at once.
               dir.copy(h.lunge ?? toFish);
@@ -580,7 +674,7 @@ export function createPredators(scene, { random, seize, captive }) {
             intercept(h, fish, spec.strike, aim);
             dir.subVectors(aim, h.position);
             speed = spec.strike;
-            if (spec.fights) {
+            if (spec.fights || spec.tell) {
               // Committed: it goes along the line it chose while it coiled.
               if (!h.lunge) h.lunge = dir.clone().normalize();
               dir.copy(h.lunge);
@@ -680,6 +774,15 @@ export function createPredators(scene, { random, seize, captive }) {
             dir.set(h.heading.x, 0, h.heading.z).normalize().multiplyScalar(0.5);
             dir.y = lv - h.size * 0.08 - h.position.y > 0.3 ? 1 : 0;
             speed = spec.cruise;
+            if (spec.drive && ctx.drive) {
+              // ...pattering along on top, over the school and a little ahead of it.
+              aim.copy(ctx.drive.position).addScaledVector(ctx.drive.heading, 8);
+              dir.set(aim.x - h.position.x, 0, aim.z - h.position.z);
+              const off = dir.length();
+              dir.normalize();
+              dir.y = lv - h.size * 0.08 - h.position.y > 0.3 ? 1.5 : 0;
+              speed = Math.min(spec.chase * 1.2, 2 + off * 0.8);
+            }
             if (time > h.until && h.air < 1) {
               h.mode = "hold";
               h.home.copy(h.position);
@@ -702,6 +805,14 @@ export function createPredators(scene, { random, seize, captive }) {
               h.home.copy(h.position);
             }
             break;
+        }
+        // A goosander of the drive draws up for a moment before it dashes, on the line it
+        // has picked (the salmon's moment to dodge).
+        if (spec.tell && h.mode === "strike" && prevMode !== "strike") {
+          h.coilUntil = time + spec.tell;
+          h.until += spec.tell;
+          intercept(h, fish, spec.strike, aim);
+          h.lunge = aim.sub(h.position).normalize().clone();
         }
         if (spec.fights) {
           // Its breath: spent by the hunt and by every strike, back while it waits.

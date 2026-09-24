@@ -82,33 +82,53 @@ export function createSchool(scene, { random, brawls = null, coat = "smolt", cou
     },
     // A hunter strikes into the school near `at`: does it take a schoolmate instead of the
     // fish? The more of them close by, the likelier.
-    decoy(at, fish) {
+    // (`share`: how much the others count; closed up tight, driven, they count for more)
+    decoy(at, fish, share = 0.75, reach = 5) {
       let near = 0,
         best = null,
         bestD = Infinity;
       for (const m of members) {
         if (!m.active || m.leaving) continue;
-        if (m.position.distanceTo(fish.position) < fish.length * 5) near++;
+        if (m.position.distanceTo(fish.position) < fish.length * reach) near++;
         const d = m.position.distanceTo(at);
         if (d < bestD) {
           bestD = d;
           best = m;
         }
       }
-      if (!best || near === 0 || random() > (near / (near + 1)) * 0.75) return false;
+      if (!best || near === 0 || random() > (near / (near + 1)) * share) return false;
       best.active = false;
       return true;
     },
-    update(dt, fish, time, food = null) {
+    // `lead`: when hunters drive the school (drive.js), it keeps round its own middle going
+    // down the river, not round the fish -- a fish that falls behind is left on its own --
+    // closes up, and scatters from a hunter that comes near ({ position, velocity, heading,
+    // away: [positions] }).
+    // A hunter dives into the school at `at` and takes the one nearest it (the drive).
+    take(at) {
+      let best = null,
+        bestD = Infinity;
+      for (const m of members) {
+        if (!m.active || m.leaving) continue;
+        const d = m.position.distanceTo(at);
+        if (d < bestD) (bestD = d), (best = m);
+      }
+      if (!best) return false;
+      best.active = false;
+      return true;
+    },
+    update(dt, fish, time, food = null, lead = null) {
       regionWeights(fish.river.s, weights);
       const running = when(fish, weights) && !fish.captive;
       const L = fish.length;
+      const anchor = lead ?? fish;
+      const close = lead ? 0.75 : 1;
       mesh.begin();
       count = 0;
       for (const m of members) {
         if (!m.active) {
           // Joining: smolts gather round the fish over the first minute of the run.
-          if (running && random() < dt * 0.4) join(m, fish);
+          if (running && !lead && random() < dt * 0.4) join(m, fish);
           if (!m.active) continue;
         }
         if (!running && !m.leaving) m.leaving = range(0.01, 1);
@@ -120,15 +140,24 @@ export function createSchool(scene, { random, brawls = null, coat = "smolt", cou
           }
         }
         // Station in the school: the offset turned with the fish, plus its own weave.
-        const yaw = Math.atan2(fish.heading.z, fish.heading.x);
+        const yaw = Math.atan2(anchor.heading.z, anchor.heading.x);
         const c = Math.cos(yaw),
           s = Math.sin(yaw);
-        local.set(m.offset.x * c - m.offset.z * s, m.offset.y, m.offset.x * s + m.offset.z * c);
-        want.copy(fish.position).add(local);
+        local.set(m.offset.x * c - m.offset.z * s, m.offset.y, m.offset.x * s + m.offset.z * c).multiplyScalar(close);
+        want.copy(anchor.position).add(local);
         want.x += Math.sin(time * 0.7 + m.slot) * L * 0.4;
         want.z += Math.cos(time * 0.6 + m.slot * 1.7) * L * 0.4;
         if (m.leaving) want.addScaledVector(local, 3 + m.leaving * 2);
-        want.sub(m.position).multiplyScalar(1.6).addScaledVector(fish.velocity, 0.9);
+        want.sub(m.position).multiplyScalar(1.6).addScaledVector(anchor.velocity, 0.9);
+        // Driven: away from any hunter that comes close -- the school flashes open round it
+        // and closes again behind.
+        if (lead?.away)
+          for (const p of lead.away) {
+            away.subVectors(m.position, p);
+            const d = away.length();
+            const reach = 2 + L * 2;
+            if (d < reach && d > 1e-4) want.addScaledVector(away, ((reach - d) / d) * 4);
+          }
         // Feeding: now and then it picks a morsel drifting close by, darts out at it and
         // snaps it up -- one the fish will not get.
         if (food && !m.leaving && !m.brawl) {

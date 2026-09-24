@@ -40,6 +40,7 @@ import { createTouch } from "./touch.js";
 import { createBrood, word as broodWord, formatNumber } from "./brood.js";
 import { createLifeCard } from "./lifecard.js";
 import { createSiblings } from "./siblings.js";
+import { createDrive } from "./drive.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -291,6 +292,7 @@ async function start() {
     floes: { group: "Erlebnisse", title: "Eisgang", line: "Unter treibenden Schollen geschwommen", icon: "feat", tier: "bronze" },
     aurora: { group: "Erlebnisse", title: "Nordlicht", line: "Das Nordlicht über dem Wasser gesehen", icon: "feat", tier: "silver" },
     run: { group: "Erlebnisse", title: "Im Laichzug", line: "Mit den anderen Lachsen heimgezogen", icon: "fish", tier: "silver" },
+    drive: { group: "Meisterstücke", title: "Treibjagd", line: "Den Gänsesägern entkommen", icon: "hunter", tier: "gold" },
   };
   for (const [id, def] of Object.entries(FEATS)) badges.register(`feat:${id}`, def);
   const feat = (id, options) => badges.award(`feat:${id}`, FEATS[id], options);
@@ -580,6 +582,57 @@ async function start() {
     const v = swing(charge.t);
     meterFill.style.transform = `scaleY(${v.toFixed(3)})`;
     meter.classList.toggle("sweet", v > 0.82);
+  }
+  // The drive (drive.js): goosanders after the smolt school in the lower river. A bar at the
+  // foot of the screen: how far to the rapids, and how many are left in the school.
+  const drive = createDrive();
+  const driveBar = document.createElement("div");
+  driveBar.id = "drivebar";
+  driveBar.hidden = true;
+  driveBar.innerHTML = '<span class="label">Zur Stromschnelle</span><div class="track"><div class="fill"></div></div><span class="count"><span>Schwarm</span> <b>0</b></span>';
+  habitat.append(driveBar);
+  const driveFill = driveBar.querySelector(".fill");
+  const driveCount = driveBar.querySelector(".count b");
+  let driveNagged = -1e9;
+  function startDrive() {
+    drive.start(fish, life.school.count);
+    life.hunters.drive(fish, true);
+    driveBar.hidden = false;
+    sound.splash(0.9);
+    track("drive", { outcome: "start", school: drive.size });
+    hud.toast("Treibjagd!", "Gänsesäger jagen den Schwarm. Bleib mittendrin – bis zur Stromschnelle!", 6);
+    hud.tip("drive", "<b>Die Treibjagd.</b> Gänsesäger jagen im Trupp: Unter Wasser kreisen sie um den Schwarm und stoßen auf jeden Smolt, der allein schwimmt. Bleib mitten im Schwarm und halt mit ihm Schritt. Hält ein Vogel kurz inne, stößt er gleich zu – dann zur Seite ausweichen oder Spurt (<kbd>Leertaste</kbd>). An der Stromschnelle geben sie auf.", 14);
+  }
+  // "made": at the rapids; "left": the school went on without the fish; "died".
+  function endDrive(how) {
+    if (!drive.on) return;
+    life.hunters.drive(fish, false);
+    drive.stop();
+    driveBar.hidden = true;
+    track("drive", { outcome: how, left: life.school.count, school: drive.size });
+    if (how === "made") {
+      hud.toast("Durchgekommen!", `${life.school.count} von ${drive.size} Smolts sind noch bei dir.`, 6);
+      feat("drive", { delay: 2 });
+    } else if (how === "left") {
+      // Gone on down the river without it (others of the run may come by later).
+      life.school.reset();
+      hud.toast("Allein", "Der Schwarm ist ohne dich weitergezogen.", 5);
+    }
+  }
+  function stepDrive(dt) {
+    if (dead <= 0 && phaseOf(fish.stage) === "smolt" && conditions.light > 0.35 && drive.ready(fish, life.school.count)) startDrive();
+    const how = drive.update(dt, fish, time, life.hunters.list);
+    if (how) endDrive(how);
+    if (!drive.on) return;
+    driveFill.style.transform = `scaleX(${drive.progress.toFixed(3)})`;
+    driveCount.textContent = String(life.school.count);
+    // Out on its own: the birds' first choice.
+    const alone = drive.apart(fish) > drive.lead.radius;
+    driveBar.classList.toggle("alone", alone);
+    if (alone && time - driveNagged > 6 && dead <= 0) {
+      driveNagged = time;
+      hud.note("Bleib im Schwarm!");
+    }
   }
   function readInput(dt) {
     const turn =(held.has("ArrowLeft") ? -1 : 0) + (held.has("ArrowRight") ? 1 : 0);
@@ -1313,7 +1366,8 @@ async function start() {
     if (events.hooked) shake = Math.max(shake, 0.2);
     // The rest of the river's life, and what it does to the fish.
     prof.mark("nets+events");
-    const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s) });
+    stepDrive(dt);
+    const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s), drive: drive.on ? drive.lead : null });
     warnings(dt);
     siblings.update(dt, fish, time, { food: life.food?.items, camera, others: (outcome.school ?? 0) + (outcome.run ?? 0), left: brood.left });
     prof.mark("life");
@@ -1412,6 +1466,11 @@ async function start() {
       hud.note("Ein Schwarmgefährte …");
       hud.tip("decoy", "Knapp! Der Räuber hat einen anderen Smolt aus dem Schwarm erwischt. Im Schwarm bist du sicherer – bleib bei den anderen.", 8);
       feat("decoy", { delay: 1 });
+    }
+    // The drive: a goosander dived into the school and came out with one of the others.
+    if (outcome.raided) {
+      sound.thump();
+      hud.tip("raid", "Ein Gänsesäger hat sich einen Smolt aus dem Schwarm geholt. Mitten im Schwarm trifft es selten dich – am Rand und allein fast immer.", 9);
     }
     if ((outcome.school ?? 0) >= 6) feat("school");
     // The run home: in the company of the others the fish goes easier.
@@ -1615,6 +1674,7 @@ async function start() {
     const held = life.hunters.captive;
     if (held.active) sound.eaten(held.kind);
     hud.toast(cause, "", 3);
+    endDrive("died");
   }
   // After the dark, the nearest of the siblings swims on: the camera swings over to it and
   // it is the fish from then on (a little smaller, at the same stage). With none left, a new
@@ -2167,6 +2227,8 @@ async function start() {
       brood,
       lifecard,
       siblings,
+      drive,
+      startDrive,
       leapCharge: () => ({ charge, reach: inLeapReach(), fall: SALMON_FALL?.s, dead, air: fish.airborne, cel: celebration.active }),
       die,
       spawn,

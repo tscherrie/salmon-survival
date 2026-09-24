@@ -987,7 +987,8 @@ function createHunters(scene, { detail }) {
     // What hunters are about near the fish, for the logbook.
     present(fish, out = []) {
       out.length = 0;
-      for (const h of predators.list) if (h.mode !== "away" && h.position.distanceTo(fish.position) < 14 + h.size * 1.5) out.push(h.kind);
+      // (the goosanders of the drive are goosanders)
+      for (const h of predators.list) if (h.mode !== "away" && h.position.distanceTo(fish.position) < 14 + h.size * 1.5) out.push(h.kind === "drive" ? "merganser" : h.kind);
       if (bird.mode !== "away") out.push("kingfisher");
       if (heron.mode !== "away" && heron.position.distanceTo(fish.position) < 40) out.push("heron");
       if (bear.active && bear.position.distanceTo(fish.position) < 40) out.push("bear");
@@ -999,12 +1000,16 @@ function createHunters(scene, { detail }) {
       if (kind === "heron") return heron.position;
       if (kind === "bear") return bear.position;
       let best = null;
-      for (const h of predators.list) if (h.kind === kind && h.mode !== "away" && (!best || h.position.distanceTo(fish.position) < best.distanceTo(fish.position))) best = h.position;
+      for (const h of predators.list) if ((h.kind === kind || (kind === "merganser" && h.kind === "drive")) && h.mode !== "away" && (!best || h.position.distanceTo(fish.position) < best.distanceTo(fish.position))) best = h.position;
       return best;
     },
     // Development: put a hunter of a kind at a point, ready to hunt.
     force(kind, x, y, z) {
       return predators.force(kind, x, y, z);
+    },
+    // The goosanders of the drive coming in (or going off again).
+    drive(fish, on) {
+      predators.drive(fish, on);
     },
     foe(fish) {
       return predators.foe(fish);
@@ -1034,7 +1039,7 @@ function createHunters(scene, { detail }) {
       captive.hunter = null;
     },
     // Returns { bitten, killed } for the salmon.
-    update(dt, fish, time, travel, covered, cruise = 1, decoy = null, occluded = null, exposed = 0) {
+    update(dt, fish, time, travel, covered, cruise = 1, decoy = null, occluded = null, exposed = 0, drive = null) {
       const L = fish.length;
       const result = { bitten: false, killed: null, decoy: false, hits: [], watched: false, hidden: false };
       const deep = level(fish.river.s) - fish.position.y;
@@ -1044,7 +1049,7 @@ function createHunters(scene, { detail }) {
       regionWeights(fish.river.s, weights);
       const clarity = 1.1 * weights.brook + 1 * weights.upper + 0.85 * weights.middle + 0.65 * weights.lower + 0.7 * weights.estuary + 1.15 * weights.sea;
       // ---- Fish, otters, goosanders and seals under the water.
-      predators.update(dt, fish, { time, travel, covered, clarity, cruise, decoy, occluded, exposed }, result);
+      predators.update(dt, fish, { time, travel, covered, clarity, cruise, decoy, occluded, exposed, drive }, result);
 
       // ---- The kingfisher: a small fish near the surface of the brook is watched from above.
       // The bird hovers over it for a moment -- its shadow crosses the bed, its whistle
@@ -1726,7 +1731,8 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
       run.reset();
       brawls.reset();
     },
-    update(dt, { fish, salmon: s, time, world, camera, above }) {
+    // `drive`: the lead of the smolt school while the goosanders drive it (drive.js), or null.
+    update(dt, { fish, salmon: s, time, world, camera, above, drive = null }) {
       eddies = world?.eddies?.ready ? world.eddies : null;
       prof.mark("life:pre");
       if (camera) motes.update(dt, camera.position, fish.river.s, fish.length, time, above);
@@ -1740,7 +1746,9 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
       brawls.begin(time);
       const rivalEvents = rivals.update(dt, fish, { travel, food: food.items });
       prof.mark("life:rivals");
-      school.update(dt, fish, time, food.items);
+      school.update(dt, fish, time, drive ? null : food.items, drive);
+      // (a goosander of the drive diving into the school takes one of them)
+      if (drive) drive.take ??= (at) => school.take(at);
       run.update(dt, fish, time);
       prof.mark("life:schools");
       let eaten = shoals.update(dt, fish, salmon, time, travel, aim);
@@ -1748,7 +1756,7 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
       // More drifts past a spot the fish holds as its own, and down a rich riffle.
       eaten += food.update(dt, fish, salmon, time, (rivals.territory.inside ? 1 : 0) + 0.9 * (world.rich ?? 0), aim);
       prof.mark("life:food");
-      const outcome = hunters.update(dt, fish, time, travel, world.covered, s?.speeds?.().cruise ?? 1, school.count + run.count > 0 ? (at) => (school.count > 0 && school.decoy(at, fish)) || (run.count > 0 && run.decoy(at, fish)) : null, world.occluded ?? null, world.rich ?? 0);
+      const outcome = hunters.update(dt, fish, time, travel, world.covered, s?.speeds?.().cruise ?? 1, school.count + run.count > 0 ? (at) => (school.count > 0 && school.decoy(at, fish, drive ? (fish.position.distanceTo(drive.position) < drive.radius ? 1 : 0.6) : 0.75, drive ? 6 : 5)) || (run.count > 0 && run.decoy(at, fish)) : null, world.occluded ?? null, world.rich ?? 0, drive);
       // The fish being fought, for the bar over it: a hunter, or a young salmon holding a spot.
       prof.mark("life:hunters");
       let foe = null;
