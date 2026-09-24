@@ -9,7 +9,7 @@ import { renderSettings } from "../../riverscape/src/render-policy.js";
 import { createDaylight } from "../../riverscape/src/daylight.js";
 import { framebufferSize, qualityName } from "../../shared/render-policy.js";
 import { reportSceneError } from "../../shared/controls.js";
-import { COURSE_VERSION, FALLS, MOUTH, REDD, S, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionName, regionWeights, section, setSeasonFlow } from "./course.js";
+import { COURSE_VERSION, FALLS, MOUTH, REDD, S, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionName, regionWeights, section, setSeasonFlow, driftRich } from "./course.js";
 import { createFlowField } from "./flowfield.js";
 import { createBedMaterial, createRockMaterials, createSky, photoTextures, photosLoaded, createSurfaceMaterial,skyUniforms, surfaceUniforms } from "./materials.js";
 import { createTerrain } from "./terrain.js";
@@ -39,6 +39,7 @@ import { createLore } from "./lore.js";
 import { createTouch } from "./touch.js";
 import { createBrood, word as broodWord, formatNumber } from "./brood.js";
 import { createLifeCard } from "./lifecard.js";
+import { createSiblings } from "./siblings.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -258,9 +259,11 @@ async function start() {
   mirror(life.meshes);
   mark("life");
   const falls = createFalls(scene);
+  // Brothers and sisters of the same brood, each on its own, somewhere near.
+  const siblings = createSiblings(scene);
   const nets = createNets(scene);
   const hud = createHud({ stages: STAGES });
-  const showBrood = () => hud.brood(broodWord("salmon", { n: String(brood.number) }), broodWord("broodLine", { left: formatNumber(brood.left), size: formatNumber(brood.size) }));
+  const showBrood = () => hud.brood("", broodWord("broodLine", { left: formatNumber(brood.left), size: formatNumber(brood.size) }));
   showBrood();
   const lore = createLore({ hud });
   const loreRegions = {};
@@ -969,6 +972,63 @@ async function start() {
   let windedOnce = false;
   // A death: how long until the next life, and whether the dark has come down yet.
   const DEATH = 4.8;
+  let richShown = false;
+  // Hunters after the fish: an arrow on a ring round the middle of the screen points to each,
+  // yellow when it has noticed the fish, red when it hunts it, pulsing when it is about to
+  // strike -- with its name, the first time in a while, over the card.
+  const threatBox = document.createElement("div");
+  threatBox.id = "threats";
+  threatBox.setAttribute("aria-hidden", "true");
+  habitat.append(threatBox);
+  const arrows = Array.from({ length: 4 }, () => {
+    const el = document.createElement("div");
+    el.className = "threat";
+    el.innerHTML = '<svg viewBox="0 0 40 26"><path d="M5 22 20 6l15 16" /></svg><span class="name"></span>';
+    threatBox.append(el);
+    return el;
+  });
+  const threatList = [];
+  const threatAt = new THREE.Vector3();
+  const warned = new WeakMap();
+  function warnings() {
+    const list = dead > 0 || celebration.active || fish.safe ? [] : life.hunters.threats(fish, threatList);
+    list.sort((a, b) => b.level - a.level);
+    const w = habitat.clientWidth,
+      h = habitat.clientHeight;
+    for (let i = 0; i < arrows.length; i++) {
+      const el = arrows[i];
+      const th = list[i];
+      if (!th) {
+        el.classList.remove("on", "hunt", "coil");
+        continue;
+      }
+      threatAt.copy(th.position);
+      if (th.above) threatAt.y += 6;
+      threatAt.project(camera);
+      let x = threatAt.x * w * 0.5,
+        y = -threatAt.y * h * 0.5;
+      // Behind the camera the projection turns over.
+      if (threatAt.z > 1) (x = -x), (y = -y);
+      const a = Math.atan2(y, x);
+      const px = w * 0.5 + Math.cos(a) * w * 0.4,
+        py = h * 0.5 + Math.sin(a) * h * 0.36;
+      el.style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px)`;
+      el.firstChild.style.transform = `rotate(${(a + Math.PI / 2).toFixed(3)}rad)`;
+      el.style.opacity = (0.4 + 0.6 * th.level).toFixed(2);
+      el.classList.add("on");
+      el.classList.toggle("hunt", th.level >= 0.7);
+      el.classList.toggle("coil", !!th.coiled);
+      const name = el.querySelector(".name");
+      if (name.textContent !== translate(th.title)) name.textContent = translate(th.title);
+      // Its name in words when it starts hunting, once in a while.
+      if (th.level >= 0.8 && th.key && time - (warned.get(th.key) ?? -1e9) > 20) {
+        warned.set(th.key, time);
+        hud.note(`${th.title} jagt dich!`);
+      }
+      if (th.level >= 0.6)
+        hud.tip("warn", "<b>Gefahr!</b> Die Pfeile am Bildrand zeigen, wo dich ein Jäger im Blick hat: gelb – er hat dich bemerkt, rot – er jagt dich. Pulsiert der Pfeil, stößt er gleich zu: jetzt zur Seite ausweichen!", 11);
+    }
+  }
   let veiled = false;
   const lastPlace = fish.position.clone();
   const heldPosition = new THREE.Vector3();
@@ -1069,6 +1129,13 @@ async function start() {
     pebbles.near(fish.position, Math.max(0.6, L * 1.5), stones);
     prof.mark("pebbles+colliders");
     world.covered = terrain.covered(fish.position.x, fish.position.y, fish.position.z);
+    // The rich drift of a riffle: more food, and more eyes on the fish.
+    world.rich = (world.rich ?? 0) + (driftRich(fish.river.s, fish.river.u) - (world.rich ?? 0)) * (1 - Math.exp(-dt * 1.5));
+    if (dead <= 0 && world.rich > 0.55 && !richShown) {
+      richShown = true;
+      hud.note("Reiche Drift!");
+      hud.tip("rich", "<b>Reiche Drift!</b> Über flachen, schnellen Rinnen treibt das meiste Futter – aber hier, im hellen, offenen Wasser, sehen dich Reiher, Eisvögel und Raubfische schon von weitem. Friss dich satt und such dann wieder Deckung.", 12);
+    } else if (world.rich < 0.2) richShown = false;
     // The hour and the time of year, for everything that lives by them; the water's
     // temperature here, and what it does to the fish; ice; how hard the river runs.
     updateConditions(daylight.state, fish.stage, fish.progress);
@@ -1186,6 +1253,8 @@ async function start() {
     // The rest of the river's life, and what it does to the fish.
     prof.mark("nets+events");
     const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s) });
+    warnings(dt);
+    siblings.update(dt, fish, time, { food: life.food?.items, camera, others: (outcome.school ?? 0) + (outcome.run ?? 0), left: brood.left });
     prof.mark("life");
     // Caught: the salmon goes where its captor holds it -- down a fish's throat head first,
     // or up out of the water in a bird's bill or under a bear's claws.
@@ -1355,18 +1424,13 @@ async function start() {
     if (spawning) stepSpawning(dt);
     else if (dead > 0) {
       if (!lifecard.open) dead -= dt;
-      // After the dark: the card of the life that ended (and the game waits on it).
-      if (!carded && DEATH - dead > (held.active ? 2.8 : 1.5)) {
-        carded = true;
-        deathCard();
-      }
       // The dark comes down once the catch has been seen.
       if (!veiled && DEATH - dead > (held.active ? 1.9 : 0)) {
         veiled = true;
         hud.veil("dark");
         sound.hush(true);
       }
-      if (dead <= 0 && !lifecard.open) respawn();
+      if (dead <= 0 && !lifecard.open) handover();
     }
     // The eggs stay in the gravel until the new fry has left the redd.
     if (eggs.count && !["alevin", "fry"].includes(phaseOf(fish.stage))) eggs.count = 0;
@@ -1415,6 +1479,7 @@ async function start() {
 
     falls.update(dt, camera.position, cameraRiver.s, time);
     ripples.update(dt);
+    stepPan(dt);
     placeCamera(dt);
     prof.mark("rest");
     // How long people play (counted at a few marks, with the stage they have reached).
@@ -1479,16 +1544,66 @@ async function start() {
     if (held.active) sound.eaten(held.kind);
     hud.toast(cause, "", 3);
   }
-  // The card: this sibling's life; the next one swims on from the start of this stage --
-  // or, with none left, a new brood begins in the gravel.
+  // After the dark, the nearest of the siblings swims on: the camera swings over to it and
+  // it is the fish from then on (a little smaller, at the same stage). With none left, a new
+  // brood hatches in the gravel. The life that ended is kept for its card (pause menu).
   let carded = false;
   let deathInfo = null;
-  function deathCard() {
+  let lastLife = null;
+  let pan = null;
+  function handover() {
     const end = brood.died();
-    if (end.gone) track("brood_lost", { stage: deathInfo.stageId });
+    lastLife = { life: end.life, ...deathInfo, left: end.left, size: end.size };
+    lifeButton.hidden = false;
     showBrood();
-    freeThePointer();
-    lifecard.show({ kind: end.gone ? "lost" : "death", life: end.life, ...deathInfo, next: end.next, left: end.left, size: end.size });
+    if (end.gone) {
+      track("brood_lost", { stage: deathInfo.stageId });
+      newBrood();
+      hud.toast(broodWord("lostTitle"), broodWord("lostLine", { size: formatNumber(brood.size) }), 7);
+      return;
+    }
+    const fromEye = camera.position.clone(),
+      fromAim = aim.clone();
+    const next = siblings.nearest(fish.position, 60 + fish.length * 20) ?? siblings.call(fish);
+    events.reset();
+    salmon.setStage(fish.stage, Math.max(0, fish.progress * 0.7));
+    if (next) {
+      salmon.place(next.position.clone(), Math.atan2(next.heading.z, next.heading.x));
+      siblings.take(next);
+    } else restore(checkpoint);
+    fish.energy = 1;
+    fish.stomach = 0.3;
+    fish.hunger = 0;
+    fish.starving = 0;
+    look.yaw = fish.yaw;
+    look.pitch = 0;
+    life.reset(fish);
+    nets.reset();
+    pebbles.prime(fish.position, fish.length, fish.river.s);
+    checkpoint = snapshotCheckpoint();
+    placeCamera(0, true);
+    pan = { t: 0, duration: 2.2, fromEye, fromAim, toEye: camera.position.clone(), toAim: aim.clone() };
+    camera.position.copy(fromEye);
+    fish.safe = true;
+    dead = 0;
+    hud.veil(null);
+    sound.hush(false);
+    hud.toast("", broodWord("takeover"), 4);
+    persist();
+  }
+  // The swing of the camera over to the sibling.
+  function stepPan(dt) {
+    if (!pan) return;
+    pan.t += dt;
+    const k = smooth(0, 1, pan.t / pan.duration);
+    cameraOverride ??= { eye: new THREE.Vector3(), target: new THREE.Vector3(), pan: true };
+    cameraOverride.eye.lerpVectors(pan.fromEye, pan.toEye, k);
+    cameraOverride.target.lerpVectors(pan.fromAim, pan.toAim, Math.min(1, k * 1.3));
+    if (pan.t >= pan.duration) {
+      pan = null;
+      if (cameraOverride?.pan) cameraOverride = null;
+      fish.safe = false;
+    }
   }
   function freeThePointer() {
     held.clear();
@@ -1498,9 +1613,18 @@ async function start() {
       document.exitPointerLock?.();
     }
   }
+  // The last life's card, from the pause menu (to look back at it, and share it).
+  const lifeButton = document.querySelector("#life-toggle");
+  lifeButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    lifeButton.blur();
+    if (lastLife) lifecard.show({ kind: "past", ...lastLife });
+  });
   const lifecard = createLifeCard({
     habitat,
     onGo: (kind) => {
+      // The card of a past life, opened from the pause: just closed again.
+      if (kind === "past") return;
       sound.start();
       if (kind === "lost") newBrood();
       else if (kind === "home") nextGeneration();
@@ -1532,7 +1656,6 @@ async function start() {
     hud.veil(null);
     sound.hush(false);
     showBrood();
-    hud.toast(broodWord("newBrood"), broodWord("broodLine", { left: formatNumber(brood.left), size: formatNumber(brood.size) }), 5);
     persist();
   }
   function respawn() {
@@ -1969,6 +2092,7 @@ async function start() {
       startAt,
       brood,
       lifecard,
+      siblings,
       die,
       spawn,
       setZoom: (z) => (zoom = z),

@@ -945,6 +945,18 @@ export function depthAt(s, u) {
   return level(s) - bed(s, u);
 }
 
+// How rich the drift is here, 0..1: the shallow, quick water of a riffle, where the current
+// brings the most larvae down over the gravel -- and where a fish feeding in it is in the
+// open, bright and seen from far off. Only in the river (not the sea, not a deep pool).
+export function driftRich(s, u) {
+  if (s >= S.coast - 150) return 0;
+  const c = section(s);
+  const riffle = smooth(0.05, 0.55, c.riffle);
+  if (riffle <= 0) return 0;
+  const shallow = 1 - smooth(6, 16, level(s) - bed(s, u));
+  return riffle * shallow;
+}
+
 // ---------------------------------------------------------------------------------------
 // The current at (s, u) and height y, written into out as vx, vy, vz and speed. Fastest over
 // the deep line and toward the surface, slowed near the bed where the stones break it, and

@@ -14,7 +14,8 @@ const SEEN = "salmon-survival-lore-seen";
 
 export const LORE_KICKERS = {
   life: { de: "Lachsleben", en: "A salmon's life", zh: "鲑鱼的一生", ja: "サケの一生", bg: "Животът на сьомгата" },
-  fact: { de: "Wusstest du?", en: "Did you know?", zh: "你知道吗？", ja: "豆知識", bg: "Знаеше ли?" },
+  // (The facts come without a heading, told like the rest rather than as a quiz.)
+  fact: { de: "", en: "", zh: "", ja: "", bg: "" },
 };
 
 // What each stage of life is, told when it begins, and more about it later on.

@@ -40,6 +40,10 @@ const PAIRS = [
   ["Paused", "Пауза"],
   ["Click the view or press P to swim on", "Щракни в картината или натисни P, за да продължиш"],
   // ---- Phones and tablets
+  ["Last life", "Последният живот"],
+  ["Rich drift!", "Богато течение!"],
+  ["<b>Rich drift!</b> Over shallow, quick runs the most food comes down – but here, in bright open water, herons, kingfishers and hunting fish see you from far off. Eat your fill, then find cover again.", "<b>Богато течение!</b> Над плитките бързеи се носи най-много храна – но тук, в светлата открита вода, чаплите, земеродните рибарчета и хищните риби те виждат отдалеч. Наяж се и пак потърси укритие."],
+  ["<b>Danger!</b> The arrows at the edge of the screen show where a hunter has you in sight: yellow – it has noticed you, red – it is hunting you. When the arrow pulses it is about to strike: dodge to the side now!", "<b>Опасност!</b> Стрелките по ръба на екрана показват откъде те дебне хищник: жълта – забелязал те е, червена – гони те. Когато стрелката пулсира, ще нападне всеки миг: отскочи встрани!"],
   ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map on/off in the pause menu", "Плъзгане: оглеждане и управление · Задръж <kbd>W</kbd>: плуване · <kbd>Интервал</kbd> спринт, захапка, скок – или плъзни палеца натам · Картата се включва от менюто за пауза"],
   ["Swipe: look round and steer", "Плъзгане: оглеждане и управление"],
   ["hold: swim", "задръж: плуване"],
@@ -401,6 +405,7 @@ export const BG = Object.fromEntries(PAIRS);
 
 // On the German, like EN_PATTERNS; $1… are translated in turn.
 export const BG_PATTERNS = [
+  [/^(.+) jagt dich!$/, "$1 те преследва!"],
   [/^(\d+)× gefressen$/, (n) => `изядена ${n}×`],
   [/^(\d+)× begegnet · (\d+)× besiegt$/, (a, b) => `срещната ${a}× · победена ${b}×`],
   [/^(\d+)× begegnet$/, (n) => `срещната ${n}×`],

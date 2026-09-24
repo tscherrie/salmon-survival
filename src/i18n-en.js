@@ -38,6 +38,10 @@ const PAIRS = [
   ["Pause", "Paused"],
   ["Klick ins Bild oder P zum Weiterschwimmen", "Click the view or press P to swim on"],
   // ---- Phones and tablets
+  ["Letztes Leben", "Last life"],
+  ["Reiche Drift!", "Rich drift!"],
+  ["<b>Reiche Drift!</b> Über flachen, schnellen Rinnen treibt das meiste Futter – aber hier, im hellen, offenen Wasser, sehen dich Reiher, Eisvögel und Raubfische schon von weitem. Friss dich satt und such dann wieder Deckung.", "<b>Rich drift!</b> Over shallow, quick runs the most food comes down – but here, in bright open water, herons, kingfishers and hunting fish see you from far off. Eat your fill, then find cover again."],
+  ["<b>Gefahr!</b> Die Pfeile am Bildrand zeigen, wo dich ein Jäger im Blick hat: gelb – er hat dich bemerkt, rot – er jagt dich. Pulsiert der Pfeil, stößt er gleich zu: jetzt zur Seite ausweichen!", "<b>Danger!</b> The arrows at the edge of the screen show where a hunter has you in sight: yellow – it has noticed you, red – it is hunting you. When the arrow pulses it is about to strike: dodge to the side now!"],
   ["Wischen: umschauen und lenken · <kbd>W</kbd> halten: schwimmen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung – oder den Daumen hinüberrutschen · Karte ein/aus im Pausemenü", "Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map on/off in the pause menu"],
   ["Wischen: umschauen und lenken", "Swipe: look round and steer"],
   ["halten: schwimmen", "hold: swim"],
@@ -401,6 +405,7 @@ export const EN = Object.fromEntries(PAIRS);
 // Texts with something put into them: [pattern, English] ($1… are translated in turn), or
 // [pattern, function].
 export const EN_PATTERNS = [
+  [/^(.+) jagt dich!$/, "$1 is hunting you!"],
   [/^(\d+)× gefressen$/, (n) => `eaten ${n}×`],
   [/^(\d+)× begegnet · (\d+)× besiegt$/, (a, b) => `met ${a}× · beaten ${b}×`],
   [/^(\d+)× begegnet$/, (n) => `met ${n}×`],

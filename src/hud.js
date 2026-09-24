@@ -282,7 +282,7 @@ export function createHud({ stages }) {
       }
       if (!hintBox.hidden) return false;
       const escape = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
-      showHint(`<span class="kicker">${escape(kicker)}</span>${text}`, seconds, true);
+      showHint(`${kicker ? `<span class="kicker">${escape(kicker)}</span>` : ""}${text}`, seconds, true);
       return true;
     },
     // Whether the tip line at the foot of the screen is free.

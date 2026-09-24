@@ -40,6 +40,10 @@ const PAIRS = [
   ["Paused", "一時停止中"],
   ["Click the view or press P to swim on", "画面をクリックするか P で再開"],
   // ---- Phones and tablets
+  ["Last life", "前の一生"],
+  ["Rich drift!", "エサが豊富な流れ！"],
+  ["<b>Rich drift!</b> Over shallow, quick runs the most food comes down – but here, in bright open water, herons, kingfishers and hunting fish see you from far off. Eat your fill, then find cover again.", "<b>エサが豊富な流れ！</b>浅くて速い瀬には一番たくさんエサが流れてくる――でも明るく開けたこの水では、サギやカワセミ、肉食魚から遠くまで丸見えだ。たっぷり食べたら、また物陰に隠れよう。"],
+  ["<b>Danger!</b> The arrows at the edge of the screen show where a hunter has you in sight: yellow – it has noticed you, red – it is hunting you. When the arrow pulses it is about to strike: dodge to the side now!", "<b>危険！</b>画面の端の矢印は、どこから天敵に見られているかを示す。黄色――気づかれた、赤――追われている。矢印が脈打ったら今にも襲ってくる：すぐ横へかわせ！"],
   ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map on/off in the pause menu", "スワイプ：見回して操縦 · <kbd>W</kbd> 長押し：泳ぐ · <kbd>スペース</kbd> ダッシュ、噛みつき、ジャンプ――親指を滑らせてもOK · マップは一時停止メニューでオン／オフ"],
   ["Swipe: look round and steer", "スワイプ：見回して操縦"],
   ["hold: swim", "長押し：泳ぐ"],
@@ -401,6 +405,7 @@ export const JA = Object.fromEntries(PAIRS);
 
 // On the German, like EN_PATTERNS; $1… are translated in turn.
 export const JA_PATTERNS = [
+  [/^(.+) jagt dich!$/, "$1 に狙われている！"],
   [/^(\d+)× gefressen$/, (n) => `${n}回食べた`],
   [/^(\d+)× begegnet · (\d+)× besiegt$/, (a, b) => `${a}回遭遇 · ${b}回撃退`],
   [/^(\d+)× begegnet$/, (n) => `${n}回遭遇`],

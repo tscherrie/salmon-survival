@@ -40,6 +40,10 @@ const PAIRS = [
   ["Paused", "已暂停"],
   ["Click the view or press P to swim on", "点击画面或按 P 继续"],
   // ---- Phones and tablets
+  ["Last life", "上一段生命"],
+  ["Rich drift!", "丰富的漂流食物！"],
+  ["<b>Rich drift!</b> Over shallow, quick runs the most food comes down – but here, in bright open water, herons, kingfishers and hunting fish see you from far off. Eat your fill, then find cover again.", "<b>丰富的漂流食物！</b>在又浅又急的水道上漂下来的食物最多——但在这明亮开阔的水里，苍鹭、翠鸟和掠食性鱼类老远就能看见你。吃饱了就赶紧找地方躲起来。"],
+  ["<b>Danger!</b> The arrows at the edge of the screen show where a hunter has you in sight: yellow – it has noticed you, red – it is hunting you. When the arrow pulses it is about to strike: dodge to the side now!", "<b>危险！</b>屏幕边缘的箭头显示有捕食者正盯着你：黄色——它注意到你了，红色——它在追你。箭头闪动时它马上就要出击：立刻向旁边闪避！"],
   ["Swipe: look round and steer · Hold <kbd>W</kbd>: swim · <kbd>Space</kbd> dash, bite, leap – or slide your thumb across · Map on/off in the pause menu", "滑动：环顾和转向 · 按住 <kbd>W</kbd>：游动 · <kbd>空格</kbd> 冲刺、咬、跃——或把拇指滑过去 · 地图在暂停菜单中开关"],
   ["Swipe: look round and steer", "滑动：环顾和转向"],
   ["hold: swim", "按住：游动"],
@@ -401,6 +405,7 @@ export const ZH = Object.fromEntries(PAIRS);
 
 // On the German, like EN_PATTERNS; $1… are translated in turn.
 export const ZH_PATTERNS = [
+  [/^(.+) jagt dich!$/, "$1 在追你！"],
   [/^(\d+)× gefressen$/, (n) => `吃过 ${n} 次`],
   [/^(\d+)× begegnet · (\d+)× besiegt$/, (a, b) => `遇到 ${a} 次 · 击败 ${b} 次`],
   [/^(\d+)× begegnet$/, (n) => `遇到 ${n} 次`],

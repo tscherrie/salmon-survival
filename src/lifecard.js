@@ -206,16 +206,16 @@ export function createLifeCard({ habitat, onGo }) {
         kind,
         number: life.number,
         kicker,
-        name: vars.name,
+        name: t(stageName),
         cause: kind === "home" ? word("homeLine", vars) : t(cause),
         where,
         stats: [
-          [word("stage"), t(stageName)],
           [word("age"), age],
           [word("distance"), dist],
           [word("eaten"), vars.eaten],
           [word("fights"), formatNumber(life.fights)],
           [word("escapes"), formatNumber(life.escapes)],
+          [word("leaps"), formatNumber(life.leaps)],
         ],
         siblings: kind === "lost" ? word("lostLine", vars) : kind === "home" ? word("left", vars) : word("left", vars),
         share: kind === "home" ? word("homeShare", vars) : kind === "lost" ? word("lostShare", vars) : word("deathShare", vars),
@@ -234,7 +234,7 @@ export function createLifeCard({ habitat, onGo }) {
         $(".stats").append(item);
       }
       $(".siblings").textContent = current.siblings;
-      $(".go").textContent = kind === "death" ? word("next", vars) : kind === "lost" ? word("newBrood") : word("goOn");
+      $(".go").textContent = kind === "past" ? word("close") : kind === "death" ? word("next", vars) : kind === "lost" ? word("newBrood") : word("goOn");
       $(".share").textContent = word("share");
       $(".save").textContent = word("save");
       $(".status").textContent = "";

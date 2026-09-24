@@ -206,7 +206,8 @@ export function createPredators(scene, { random, seize, captive }) {
     // Those that hunt by eye see little in the dark; the otter's whiskers, the bullhead's
     // and the cod's lateral lines and barbels do not need the light.
     const light = h.spec.nocturnal ? 1 : 0.25 + 0.75 * conditions.light;
-    if (d > h.spec.sight * ctx.clarity * light * (1 + L * 0.06) * loud) return 0;
+    // In bright, shallow, open water (the rich drift of a riffle) it is seen from further off.
+    if (d > h.spec.sight * ctx.clarity * light * (1 + L * 0.06) * loud * (1 + 0.6 * (ctx.exposed ?? 0))) return 0;
     // Anything but right behind it.
     if (h.heading.dot(toFish) <= -0.25 * d) return 0;
     if (ctx.covered) return -1;
@@ -308,6 +309,24 @@ export function createPredators(scene, { random, seize, captive }) {
         refresh(h);
         hide(h);
       }
+    },
+    // Who is after the salmon now, and how close to striking (for the warnings round the
+    // edge of the screen): 0.4 it has noticed it, 0.6 stalking or lying in wait with it in
+    // view, 0.8 chasing, 1 about to strike (coiled).
+    threats(fish, out) {
+      for (const h of list) {
+        if (h.beaten || h.mode === "away" || fish.captive) continue;
+        const d = h.position.distanceTo(fish.position);
+        if (d > 45) continue;
+        let level = 0;
+        if (h.mode === "strike") level = 1;
+        else if (h.mode === "chase" || h.mode === "encircle" || h.mode === "fight") level = 0.8;
+        else if (h.mode === "stalk" || (h.mode === "lurk" && h.perceived > 0)) level = 0.6;
+        else if (h.mode === "notice") level = 0.4;
+        if (!level) continue;
+        out.push({ position: h.position, level, coiled: h.mode === "strike" && clock < (h.coilUntil ?? 0), kind: h.kind, title: TITLES[h.kind] ?? h.spec.title, key: h });
+      }
+      return out;
     },
     // Whether a fish that could be fought is after the salmon now.
     threat(fish) {

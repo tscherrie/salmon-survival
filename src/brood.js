@@ -26,6 +26,8 @@ const fill = (s, vars) => s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
 
 export const WORDS = {
   salmon: { de: "Lachs Nr. {n}", en: "Salmon no. {n}", zh: "{n} 号鲑鱼", ja: "サケ {n} 号", bg: "Сьомга № {n}" },
+  takeover: { de: "Eines deiner Geschwister schwimmt weiter.", en: "One of your siblings swims on.", zh: "你的一个兄弟姐妹接着游下去。", ja: "きょうだいの一匹が泳ぎ続ける。", bg: "Един от братята и сестрите ти плува нататък." },
+  close: { de: "Schließen", en: "Close", zh: "关闭", ja: "閉じる", bg: "Затвори" },
   kicker: { de: "Ein Lachsleben", en: "A salmon's life", zh: "一条鲑鱼的一生", ja: "サケの一生", bg: "Един живот на сьомга" },
   broodLine: { de: "{left} von {size} Geschwistern", en: "{left} of {size} siblings", zh: "{size} 个兄弟姐妹还剩 {left}", ja: "きょうだい {size} 匹中 残り {left}", bg: "{left} от {size} братя и сестри" },
   firstTip: {
@@ -42,7 +44,7 @@ export const WORDS = {
   lostLine: { de: "Keiner der {size} Geschwister hat überlebt. Im Kies der Quelle beginnt eine neue Brut.", en: "None of the {size} siblings survived. In the gravel of the spring a new brood begins.", zh: "{size} 个兄弟姐妹无一幸存。在源头的砾石中，新的一窝开始了。", ja: "{size} 匹のきょうだいは一匹も生き残らなかった。源流の砂利で、新しいきょうだいが始まる。", bg: "Никой от {size} братя и сестри не оцеля. В чакъла на извора започва ново поколение." },
   newBrood: { de: "Neue Brut", en: "New brood", zh: "新的一窝", ja: "新しいきょうだい", bg: "Ново поколение" },
   homeTitle: { de: "Heimgekehrt!", en: "Home!", zh: "回家了！", ja: "ふるさとへ！", bg: "У дома!" },
-  homeLine: { de: "{name} hat es nach Hause geschafft – einer von {size}.", en: "{name} made it home – one of {size}.", zh: "{name} 回到了家乡——{size} 个中的一个。", ja: "{name} はふるさとにたどり着いた。{size} 匹のうちの一匹だ。", bg: "{name} стигна до дома – една от {size}." },
+  homeLine: { de: "Nach Hause geschafft – einer von {size}.", en: "Made it home – one of {size}.", zh: "回到了家乡——{size} 个中的一个。", ja: "ふるさとにたどり着いた。{size} 匹のうちの一匹だ。", bg: "Стигна до дома – една от {size}." },
   goOn: { de: "Weiter", en: "Go on", zh: "继续", ja: "続ける", bg: "Продължи" },
   share: { de: "Teilen", en: "Share", zh: "分享", ja: "シェア", bg: "Сподели" },
   save: { de: "Bild speichern", en: "Save image", zh: "保存图片", ja: "画像を保存", bg: "Запази картинка" },
@@ -58,18 +60,18 @@ export const WORDS = {
   month1: { de: "1 Monat", en: "1 month", zh: "1 个月", ja: "1 か月", bg: "1 месец" },
   years: { de: "{y} J. {m} Mon.", en: "{y} yr {m} mo", zh: "{y} 年 {m} 个月", ja: "{y} 年 {m} か月", bg: "{y} г. {m} мес." },
   deathShare: {
-    de: "Mein Lachs Nr. {n} lebte {age}, schwamm {dist} und fraß {eaten} Happen – dann: {cause}. Von {size} Geschwistern leben noch {left}.",
-    en: "My salmon no. {n} lived {age}, swam {dist} and ate {eaten} morsels – then: {cause}. Of {size} siblings, {left} are still alive.",
-    zh: "我的 {n} 号鲑鱼活了 {age}，游了 {dist}，吃了 {eaten} 口——然后：{cause}。{size} 个兄弟姐妹中还有 {left} 个活着。",
-    ja: "わたしのサケ {n} 号は {age} 生き、{dist} 泳ぎ、{eaten} 口食べた。そして――{cause}。{size} 匹のきょうだいのうち、残りは {left} 匹。",
-    bg: "Моята сьомга № {n} живя {age}, изплува {dist} и изяде {eaten} хапки – после: {cause}. От {size} братя и сестри живи са още {left}.",
+    de: "Mein Lachs lebte {age}, schwamm {dist} und fraß {eaten} Happen – dann: {cause}. Von {size} Geschwistern leben noch {left}.",
+    en: "My salmon lived {age}, swam {dist} and ate {eaten} morsels – then: {cause}. Of {size} siblings, {left} are still alive.",
+    zh: "我的鲑鱼活了 {age}，游了 {dist}，吃了 {eaten} 口——然后：{cause}。{size} 个兄弟姐妹中还有 {left} 个活着。",
+    ja: "わたしのサケは {age} 生き、{dist} 泳ぎ、{eaten} 口食べた。そして――{cause}。{size} 匹のきょうだいのうち、残りは {left} 匹。",
+    bg: "Моята сьомга живя {age}, изплува {dist} и изяде {eaten} хапки – после: {cause}. От {size} братя и сестри живи са още {left}.",
   },
   homeShare: {
-    de: "Mein Lachs Nr. {n} hat es nach Hause geschafft – einer von {size} Geschwistern. {age} alt, {dist} geschwommen.",
-    en: "My salmon no. {n} made it home – one of {size} siblings. {age} old, {dist} swum.",
-    zh: "我的 {n} 号鲑鱼回到了家乡——{size} 个兄弟姐妹中的一个。活了 {age}，游了 {dist}。",
-    ja: "わたしのサケ {n} 号がふるさとにたどり着いた。{size} 匹のきょうだいのうちの一匹だ。{age}、{dist} 泳いだ。",
-    bg: "Моята сьомга № {n} стигна до дома – една от {size} братя и сестри. На {age}, изплувала {dist}.",
+    de: "Mein Lachs hat es nach Hause geschafft – einer von {size} Geschwistern. {age} alt, {dist} geschwommen.",
+    en: "My salmon made it home – one of {size} siblings. {age} old, {dist} swum.",
+    zh: "我的鲑鱼回到了家乡——{size} 个兄弟姐妹中的一个。活了 {age}，游了 {dist}。",
+    ja: "わたしのサケがふるさとにたどり着いた。{size} 匹のきょうだいのうちの一匹だ。{age}、{dist} 泳いだ。",
+    bg: "Моята сьомга стигна до дома – една от {size} братя и сестри. На {age}, изплувала {dist}.",
   },
   lostShare: {
     de: "In Salmon Survival ist meine ganze Brut erloschen – alle {size} Geschwister. Zuletzt: {cause}.",

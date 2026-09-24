@@ -230,7 +230,7 @@ function createFood(scene, { count = 240 } = {}) {
   // Less in the cold months, more in an evening rise, and more past a spot the fish holds
   // as its own.
   let focus = 0;
-  const activeCount = (fish) => Math.min(count, Math.round(count * (fish.length < 1.6 ? 0.5 : 1) * (0.4 + 0.6 * conditions.plenty) * (1 + 0.6 * conditions.hatch) * (1 + 0.5 * focus)));
+  const activeCount = (fish) => Math.min(count, Math.round(count * (fish.length < 1.6 ? 0.5 : 1) * (0.4 + 0.6 * conditions.plenty) * (1 + 0.6 * conditions.hatch) * (1 + 0.55 * focus)));
 
   const items = Array.from({ length: count }, () => ({
     type: "midge",
@@ -954,9 +954,10 @@ function createHunters(scene, { detail }) {
     return v;
   };
 
-  function placeHeron(fish, travel) {
+  function placeHeron(fish, travel, close = false) {
     for (let tries = 0; tries < 12; tries++) {
-      const s = fish.river.s + (travel || 1) * range(30, 70);
+      // Over a rich riffle it comes to the shallows the fish is feeding in.
+      const s = fish.river.s + (travel || 1) * (close ? range(6, 22) : range(30, 70));
       if (suit({ upper: 1, middle: 1, lower: 0.6 }, s) < 0.5) continue;
       const c = section(s);
       const side = random() < 0.5 ? -1 : 1;
@@ -1011,6 +1012,18 @@ function createHunters(scene, { detail }) {
     threat(fish) {
       return predators.threat(fish);
     },
+    // Everything after the salmon now, with how close it is to striking (see predators.js).
+    threats(fish, out = []) {
+      out.length = 0;
+      predators.threats(fish, out);
+      if (bird.mode === "hover") out.push({ position: kingfisher.position, level: bird.t > 0.8 ? 1 : 0.8, coiled: bird.t > 0.8, kind: "kingfisher", title: "Eisvogel", above: true, key: bird });
+      if (heron.mode === "stand" || heron.mode === "strike") {
+        const d = Math.hypot(fish.position.x - heron.position.x, fish.position.z - heron.position.z);
+        if (d < 14) out.push({ position: heron.position, level: heron.mode === "strike" ? 1 : d < 7 ? 0.8 : 0.5, coiled: heron.mode === "strike", kind: "heron", title: "Graureiher", key: heron });
+      }
+      if (bear.active && bear.position.distanceTo(fish.position) < 20) out.push({ position: bear.position, level: bear.swipe > 0 ? 1 : 0.6, coiled: bear.swipe > 0, kind: "bear", title: "Braunbär", key: bear });
+      return out;
+    },
     reset(fish) {
       predators.reset();
       bird.mode = "away";
@@ -1021,7 +1034,7 @@ function createHunters(scene, { detail }) {
       captive.hunter = null;
     },
     // Returns { bitten, killed } for the salmon.
-    update(dt, fish, time, travel, covered, cruise = 1, decoy = null, occluded = null) {
+    update(dt, fish, time, travel, covered, cruise = 1, decoy = null, occluded = null, exposed = 0) {
       const L = fish.length;
       const result = { bitten: false, killed: null, decoy: false, hits: [], watched: false, hidden: false };
       const deep = level(fish.river.s) - fish.position.y;
@@ -1031,12 +1044,12 @@ function createHunters(scene, { detail }) {
       regionWeights(fish.river.s, weights);
       const clarity = 1.1 * weights.brook + 1 * weights.upper + 0.85 * weights.middle + 0.65 * weights.lower + 0.7 * weights.estuary + 1.15 * weights.sea;
       // ---- Fish, otters, goosanders and seals under the water.
-      predators.update(dt, fish, { time, travel, covered, clarity, cruise, decoy, occluded }, result);
+      predators.update(dt, fish, { time, travel, covered, clarity, cruise, decoy, occluded, exposed }, result);
 
       // ---- The kingfisher: a small fish near the surface of the brook is watched from above.
       // The bird hovers over it for a moment -- its shadow crosses the bed, its whistle
       // carries -- then drops beak first. A fish that dives deep or bolts in that moment lives.
-      bird.next -= dt;
+      bird.next -= dt * (1 + 2 * exposed);
       const brookish = suit({ brook: 1, upper: 0.7 }, fish.river.s);
       // A kingfisher hunts by day, and not over ice.
       const birdLight = conditions.light > 0.45 && conditions.ice < 0.5;
@@ -1104,7 +1117,9 @@ function createHunters(scene, { detail }) {
       const heronCountry = suit({ upper: 1, middle: 1, lower: 0.6 }, fish.river.s);
       // The heron fishes by day and into the dusk; not on a frozen river.
       const heronLight = conditions.light > 0.15 && conditions.ice < 0.5;
-      if (heron.mode === "away" && heron.rest <= 0 && heronLight && L < 3.2 && heronCountry > 0.4 && random() < dt * 0.05) placeHeron(fish, travel);
+      // The evening rise and the rich shallows of a riffle bring it sooner.
+      const heronDraw = 1 + 4 * conditions.hatch + 3 * exposed;
+      if (heron.mode === "away" && heron.rest <= 0 && heronLight && L < 3.2 && heronCountry > 0.4 && random() < dt * 0.05 * heronDraw) placeHeron(fish, travel, exposed > 0.3);
       if (heron.mode !== "away") {
         if (Math.abs(heron.river.s - fish.river.s) > 200) heron.mode = "away";
         const lv = level(heron.river.s);
@@ -1178,6 +1193,7 @@ function createHunters(scene, { detail }) {
         place(s, bear.u, at);
         const floor = bed(s, bear.u);
         bearLegs.position.set(at.x, floor, at.z);
+        bear.position.copy(bearLegs.position);
         frame(s, at);
         bearLegs.rotation.set(0, -Math.atan2(at.nz, at.nx), 0);
         bear.rest = Math.max(0, bear.rest - dt);
@@ -1706,9 +1722,10 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
       prof.mark("life:schools");
       let eaten = shoals.update(dt, fish, salmon, time, travel, aim);
       prof.mark("life:shoals");
-      eaten += food.update(dt, fish, salmon, time, rivals.territory.inside ? 1 : 0, aim);
+      // More drifts past a spot the fish holds as its own, and down a rich riffle.
+      eaten += food.update(dt, fish, salmon, time, (rivals.territory.inside ? 1 : 0) + 0.9 * (world.rich ?? 0), aim);
       prof.mark("life:food");
-      const outcome = hunters.update(dt, fish, time, travel, world.covered, s?.speeds?.().cruise ?? 1, school.count + run.count > 0 ? (at) => (school.count > 0 && school.decoy(at, fish)) || (run.count > 0 && run.decoy(at, fish)) : null, world.occluded ?? null);
+      const outcome = hunters.update(dt, fish, time, travel, world.covered, s?.speeds?.().cruise ?? 1, school.count + run.count > 0 ? (at) => (school.count > 0 && school.decoy(at, fish)) || (run.count > 0 && run.decoy(at, fish)) : null, world.occluded ?? null, world.rich ?? 0);
       // The fish being fought, for the bar over it: a hunter, or a young salmon holding a spot.
       prof.mark("life:hunters");
       let foe = null;
