@@ -342,6 +342,7 @@ async function start() {
     userPaused = value;
     habitat.classList.toggle("paused", value);
     hud.paused(value, touchMode);
+    if (value) touch?.release();
     sound.hush(value || logbook.open);
     held.clear();
     if (!value) last = performance.now();
@@ -481,7 +482,7 @@ async function start() {
     },
     { passive: false },
   );
-  // On a phone: the stick, swiping to look, the bite button, pause, the map from the right.
+  // On a phone: dragging to look and steer, the swim and dash buttons, pause, the map.
   const TOUCH_LOOK = 0.0055;
   const touch = touchMode
     ? createTouch({
@@ -515,22 +516,21 @@ async function start() {
     const sp = salmon.speeds();
     look.yaw += turn * sp.turn * dt;
     if (tilt) look.pitch = clamp(look.pitch + tilt * dt * 1.2, -1.2, 1.2);
-    // The touch stick: up swims, sideways turns, down brakes (tilting is the right thumb's).
-    const stick = touch?.state;
-    const steering = !!stick?.active;
-    const side = steering ? Math.sign(stick.x) * Math.max(0, Math.abs(stick.x) - 0.12) / 0.88 : 0;
-    if (steering) look.yaw += side * Math.abs(side) ** 0.3 * sp.turn * dt;
-    if (!locked() && !turn && !tilt && !steering && !touchMode) {
+    if (!locked() && !turn && !tilt && !touchMode) {
       // Without the mouse the view settles back behind the fish.
       look.yaw += Math.atan2(Math.sin(fish.yaw - look.yaw), Math.cos(fish.yaw - look.yaw)) * (1 - Math.exp(-dt * 0.8));
     }
     input.yaw = look.yaw;
     input.pitch = look.pitch;
-    input.forward = held.has("KeyW") || (steering && stick.y > 0.3);
-    input.brake = held.has("KeyS") || (steering && stick.y < -0.45);
+    // On a phone: the arrow held swims; a dash right after a quick sideways swipe dodges.
+    const thumb = touch?.state;
+    input.forward = held.has("KeyW") || !!thumb?.forward;
+    input.brake = held.has("KeyS");
     input.strafe = (held.has("KeyD") ? 1 : 0) - (held.has("KeyA") ? 1 : 0);
-    // A bite with the stick hard to one side is a dodge that way.
-    if (steering && lungeQueued && Math.abs(stick.x) > 0.7) input.strafe = Math.sign(stick.x);
+    if (thumb && lungeQueued && thumb.flick) {
+      input.strafe = thumb.flick;
+      thumb.flick = 0;
+    }
     input.lunge = lungeQueued;
     lungeQueued = false;
     return input;

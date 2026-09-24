@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- The app icon: a salmon leaping out of dark river water, a few drops round it.
+       Full bleed (the home screen rounds the corners), the fish kept inside the middle
+       four-fifths so a round mask does not cut it. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#113f4a" />
+      <stop offset="0.62" stop-color="#0b2c35" />
+      <stop offset="1" stop-color="#06141a" />
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f7a7c" />
+      <stop offset="1" stop-color="#083039" />
+    </linearGradient>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5d8a8e" />
+      <stop offset="1" stop-color="#c9d6d2" />
+    </linearGradient>
+    <linearGradient id="belly" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb08a" />
+      <stop offset="1" stop-color="#e2566a" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.36" r="0.55">
+      <stop offset="0" stop-color="#8ff0c0" stop-opacity="0.28" />
+      <stop offset="1" stop-color="#8ff0c0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#sky)" />
+  <rect width="512" height="512" fill="url(#glow)" />
+  <!-- The water, with the ring the leap left behind. -->
+  <path d="M0 356c48-14 96-14 144 0s96 14 144 0 96-14 144 0 56 12 80 6V512H0Z" fill="url(#water)" />
+  <ellipse cx="190" cy="360" rx="70" ry="12" fill="none" stroke="#bff3e0" stroke-opacity="0.45" stroke-width="6" />
+  <!-- The salmon, arched in the leap, head up and to the right. -->
+  <g transform="rotate(-28 256 250)">
+    <!-- tail -->
+    <path d="M114 256 62 216c8 16 12 28 12 42 0 14-4 26-14 40Z" fill="#6f9496" />
+    <!-- body: silver back, a rosy band low on the flank -->
+    <path d="M104 258c46-42 124-58 196-56 70 2 120 16 156 44-34 28-88 48-160 48-78 0-146-12-192-36Z" fill="url(#back)" />
+    <path d="M118 264c56 18 118 26 180 24 68-2 118-16 154-40-28 30-82 52-156 54-72 2-134-12-178-38Z" fill="url(#belly)" />
+    <!-- dorsal and adipose fins -->
+    <path d="M258 204c10-24 30-38 58-42-8 16-10 28-8 42Z" fill="#6f9496" />
+    <path d="M168 222c4-10 12-15 24-17-3 6-3 11-1 16Z" fill="#6f9496" />
+    <!-- lateral line and spots -->
+    <path d="M140 256c80-14 190-18 290-10" fill="none" stroke="#f3fbf7" stroke-opacity="0.6" stroke-width="3.5" stroke-linecap="round" />
+    <g fill="#274247" fill-opacity="0.7">
+      <circle cx="214" cy="228" r="4.5" /><circle cx="246" cy="220" r="4" /><circle cx="280" cy="216" r="4.5" />
+      <circle cx="312" cy="216" r="3.5" /><circle cx="344" cy="220" r="4" /><circle cx="262" cy="236" r="3" />
+    </g>
+    <!-- gill, eye, mouth -->
+    <path d="M402 226c-8 14-8 30-2 44" fill="none" stroke="#3a5a5e" stroke-width="4.5" stroke-linecap="round" />
+    <circle cx="428" cy="238" r="8.5" fill="#ffd98a" />
+    <circle cx="429.5" cy="238" r="4.6" fill="#0b1e22" />
+    <path d="M436 256l16-4" stroke="#3a5a5e" stroke-width="3.5" stroke-linecap="round" />
+  </g>
+  <!-- Drops thrown off the leap. -->
+  <g fill="#dff7ee">
+    <circle cx="150" cy="318" r="9" /><circle cx="118" cy="292" r="6" /><circle cx="236" cy="330" r="7" />
+    <circle cx="96" cy="330" r="4.5" /><circle cx="262" cy="308" r="4" />
+  </g>
+</svg>

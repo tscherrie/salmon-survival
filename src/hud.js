@@ -30,8 +30,8 @@ const FOOD_NAMES = {
 // or the stick that does the same (whatever the language the key was written in).
 const TOUCH_KEYS = [
   [/^(Leertaste|Space|空格|スペース|Интервал)$/i, "bite"],
-  [/^S$/i, "stick"],
-  [/^(W|A|D|A\/D)$/i, "stick"],
+  [/^W$/i, "go"],
+  [/^(A|D|A\/D)$/i, "look"],
   [/^M$/i, "map"],
   [/^P$/i, "pause"],
 ];
@@ -114,6 +114,17 @@ export function createHud({ stages }) {
     element.classList.add(name);
   }
   const bar = (fill, value) => (fill.style.transform = `scaleX(${Math.min(1, Math.max(0, value)).toFixed(3)})`);
+  // The same three as rings (shown on phones instead of the bars).
+  const rings = document.querySelector("#status .rings");
+  const ring = (name) => rings?.querySelector(`.${name}`);
+  const ringOf = { energyNow: ring("energy-now"), energyReach: ring("energy-reach"), growthNow: ring("growth-now"), growthPending: ring("growth-pending"), stomachNow: ring("stomach-now"), stomachTrack: ring("stomach-track") };
+  const stageNumber = rings?.querySelector(".stage-number");
+  const arc = (element, value) => {
+    if (!element) return;
+    const v = Math.min(1, Math.max(0, value));
+    element.style.strokeDasharray = `${(v * 100).toFixed(1)} 100`;
+    element.classList.toggle("none", v < 0.005);
+  };
 
   return {
     update({ energy: e, breath: puff = 1, winded = false, progress, pending = 0, stomach: full = null, yolk = false, stage, reserve, leapHint, waitSea = false }) {
@@ -159,6 +170,21 @@ export function createHud({ stages }) {
       if (full != null) {
         bar(stomachFill, full);
         stomach.setAttribute("aria-valuenow", String(Math.round(full * 100)));
+      }
+      if (rings) {
+        arc(ringOf.energyNow, Math.min(puff, e));
+        arc(ringOf.energyReach, e);
+        arc(ringOf.growthNow, progress);
+        arc(ringOf.growthPending, progress + pending);
+        arc(ringOf.stomachNow, full ?? 0);
+        ringOf.stomachTrack.style.display = ringOf.stomachNow.style.display = full == null ? "none" : "";
+        rings.classList.toggle("winded", winded);
+        rings.classList.toggle("low", e < 0.3 && !reserve);
+        rings.classList.toggle("reserve", !!reserve);
+        rings.classList.toggle("yolk", !!yolk);
+        rings.classList.toggle("waiting", waitSea);
+        const number = String(stage + 1);
+        if (stageNumber.textContent !== number) stageNumber.textContent = number;
       }
       if (leapHint && leapHintShown < 3 && hintBox.hidden) {
         leapHintShown++;
@@ -340,9 +366,10 @@ export function createHud({ stages }) {
       hintBox.classList.remove("lore");
       hintBox.innerHTML = t(
         touch
-          ? "Linker Daumen: schwimmen, lenken, bremsen · Rechts wischen: umschauen, auf- und abtauchen · Großer Knopf: Spurt, Biss, Sprung · Karte: vom rechten Rand wischen"
+          ? "Wischen: umschauen und lenken · <kbd>W</kbd> halten: schwimmen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung – oder den Daumen hinüberrutschen · Karte: vom rechten Rand wischen"
           : "Klick ins Bild: Maus lenkt · <kbd>W</kbd> schwimmen · <kbd>S</kbd> bremsen · <kbd>A</kbd>/<kbd>D</kbd> ausweichen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung · <kbd>M</kbd> Karte · <kbd>L</kbd> Logbuch · <kbd>P</kbd> Pause",
       );
+      touchKeys(hintBox);
       hintBox.hidden = false;
       hintTimer = setTimeout(() => this.touched(), 14000);
     },

@@ -826,8 +826,8 @@
 }
 
 /* ---------------------------------------------------------------------------------------
-   Phones and tablets, held sideways (#habitat.touch): the stick and the buttons, the map
-   coming in from the right, the HUD smaller, the tips up top out of the thumbs' way. */
+   Phones and tablets, held sideways (#habitat.touch): the swim and dash buttons, the map
+   coming in from the right, the HUD as three rings, the tips up top out of the way. */
 #intro .touch-keys,
 #intro .touch-note { display: none; }
 .touch #intro .keys:not(.touch-keys),
@@ -852,38 +852,13 @@
 }
 #habitat kbd.touch-key.bite { background-color: rgba(255, 190, 90, 0.5); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M3.5 12c2.6-4.2 6.2-6.3 10.2-6.3 2.7 0 4.9 1 6.8 2.8l-3.4 3.5 3.4 3.5c-1.9 1.8-4.1 2.8-6.8 2.8-4 0-7.6-2.1-10.2-6.3Z'/%3E%3C/svg%3E"); }
 #habitat kbd.touch-key.look { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5v17M8.5 7 12 3.5 15.5 7M8.5 17l3.5 3.5 3.5-3.5'/%3E%3C/svg%3E"); }
-#habitat kbd.touch-key.stick { background-image: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 4px, transparent 5px); }
+#habitat kbd.touch-key.go { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14.5 12 8.5l6 6'/%3E%3C/svg%3E"); }
 #habitat kbd.touch-key.map { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5ZM9 4v13.5M15 6.5V20'/%3E%3C/svg%3E"); }
 #habitat kbd.touch-key.pause { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M8.5 6v12M15.5 6v12'/%3E%3C/svg%3E"); }
 
 #touch { position: fixed; inset: 0; z-index: 3; pointer-events: none; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 #touch[hidden] { display: none; }
-#touch .zone { position: absolute; left: 0; top: 28%; bottom: 0; width: 46%; pointer-events: auto; touch-action: none; }
-#touch .look { position: absolute; top: 0; right: 0; bottom: 0; left: 46%; pointer-events: auto; touch-action: none; }
-#touch .stick {
-  position: absolute;
-  left: max(28px, env(safe-area-inset-left));
-  bottom: 26px;
-  width: 124px;
-  height: 124px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(10, 40, 48, 0.25), rgba(10, 40, 48, 0.4));
-  box-shadow: inset 0 0 0 2px rgba(230, 250, 245, 0.28);
-  opacity: 0.55;
-  transition: opacity 200ms ease;
-}
-#touch .stick.live { opacity: 1; transition: none; }
-#touch .knob {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 54px;
-  height: 54px;
-  margin: -27px 0 0 -27px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.75), rgba(200, 235, 225, 0.45));
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-}
+#touch .look { position: absolute; inset: 0; pointer-events: auto; touch-action: none; }
 #touch button {
   position: absolute;
   display: grid;
@@ -902,7 +877,9 @@
 }
 #touch button svg { width: 55%; height: 55%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 #touch button.pressed { transform: scale(0.92); filter: brightness(1.4); }
-#touch .bite { right: max(26px, env(safe-area-inset-right)); bottom: 26px; width: 88px; height: 88px; background: linear-gradient(160deg, rgba(255, 180, 80, 0.55), rgba(200, 110, 40, 0.45)); }
+#touch .go { right: max(22px, env(safe-area-inset-right)); bottom: 22px; width: 70px; height: 70px; }
+#touch .go svg { stroke-width: 2.6; }
+#touch .bite { right: calc(max(22px, env(safe-area-inset-right)) + 82px); bottom: 30px; width: 56px; height: 56px; background: linear-gradient(160deg, rgba(255, 180, 80, 0.5), rgba(200, 110, 40, 0.4)); }
 #touch .bite svg circle { fill: currentColor; stroke: none; }
 #touch .pause { top: 14px; right: max(14px, env(safe-area-inset-right)); width: 42px; height: 42px; }
 #touch .map-tab { top: 50%; right: 0; width: 34px; height: 64px; margin-top: -32px; border-radius: 16px 0 0 16px; opacity: 0.7; }
@@ -922,7 +899,40 @@
 
 /* The HUD smaller, the tips at the top, the map half see-through coming in from the right. */
 .touch #hud { inset: 10px auto auto max(10px, env(safe-area-inset-left)); }
-.touch #status, .touch #watch { zoom: 0.78; }
+.touch #watch { zoom: 0.78; }
+/* The card as three rings with the stage and the calendar beside them. */
+#status .rings { display: none; }
+.touch #status {
+  grid-template-columns: 54px auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-items: center;
+  width: auto;
+  padding: 5px 14px 5px 5px;
+  border-radius: 34px;
+}
+.touch #status .meter { display: none; }
+.touch #status .rings { display: block; grid-column: 1; grid-row: 1 / 3; width: 54px; height: 54px; overflow: visible; }
+.touch #status .stage { grid-column: 2; padding: 0; }
+.touch #status .stage-name { font-size: 13px; }
+.touch #status .life { display: none; }
+.touch #season { grid-column: 2; margin: 0; padding: 0; border: 0; font-size: 11px; gap: 10px; justify-content: flex-start; }
+.touch #pops { left: calc(100% + 6px); bottom: 4px; }
+.rings .track { fill: none; stroke: rgba(0, 12, 16, 0.55); stroke-width: 5.5; }
+.rings .ring { fill: none; stroke-width: 5.5; stroke-linecap: round; transition: stroke-dasharray 300ms ease-out, stroke 400ms ease; }
+.rings .ring.none { stroke-linecap: butt; }
+.rings .energy-now { stroke: #ffc24d; }
+.rings .energy-reach { stroke: rgba(255, 200, 110, 0.38); }
+.rings .growth-now { stroke: #5fdc9c; }
+.rings .growth-pending { stroke: rgba(160, 240, 190, 0.35); }
+.rings .stomach-now { stroke: #ff8095; }
+.rings.yolk .stomach-now { stroke: #ffab52; }
+.rings.low .energy-now { stroke: #ff7a4a; }
+.rings.reserve .energy-now { stroke: #e2566a; }
+.rings.winded .energy-now { animation: ring-blink 900ms ease-in-out infinite; }
+@keyframes ring-blink { 50% { stroke: #ff5a4a; opacity: 0.45; } }
+.rings.waiting .growth-now { stroke: #ffd98a; animation: wait-glow 1.8s ease-in-out infinite; }
+.rings .stage-number { fill: #f3fbf7; font: 800 10px/1 var(--hud-font); text-anchor: middle; dominant-baseline: central; }
 .touch #badges { top: 82px; zoom: 0.8; }
 .touch #sound-toggle .label kbd, .touch #logbook-toggle .label kbd, .touch #map-toggle .label kbd, .touch #lore-toggle .label kbd { display: none; }
 .touch #hint { bottom: auto; top: 10px; max-width: min(46vw, 440px); padding: 7px 12px; font-size: 12px; line-height: 1.45; }
@@ -963,3 +973,19 @@
   .touch #rotate .phone { width: 46px; height: 80px; border: 3px solid currentColor; border-radius: 10px; animation: turn-phone 2.2s ease-in-out infinite; }
 }
 @keyframes turn-phone { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+
+/* On an iPhone or iPad, until it is opened from the home screen: how to get it there. */
+#intro .homescreen {
+  margin: 0 auto 12px;
+  max-width: 34em;
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: rgba(255, 217, 138, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 217, 138, 0.3);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+#intro .homescreen[hidden] { display: none; }
+#intro .homescreen b { color: #ffd98a; }
+#intro .homescreen svg { width: 16px; height: 16px; vertical-align: -3px; fill: none; stroke: #ffd98a; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

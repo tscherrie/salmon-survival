@@ -38,6 +38,14 @@ function languages(intro) {
     picker.append(button);
   }
 }
+// On an iPhone or iPad the page cannot ask for the whole screen; added to the home screen
+// it gets it. The card says how, until the game is opened from there.
+const apple = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+export const asApp = () => navigator.standalone === true || matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches;
+function homeScreen(intro) {
+  const hint = intro.querySelector(".homescreen");
+  if (hint) hint.hidden = !(apple() && !asApp());
+}
 const showVersion = (intro) => {
   const tag = intro.querySelector(".version");
   if (tag) tag.textContent = VERSION === "dev" ? "Entwicklungsversion" : `Version ${VERSION}`;
@@ -71,6 +79,8 @@ export function showIntro({ resume = null } = {}) {
   intro.hidden = false;
   showVersion(intro);
   languages(intro);
+  homeScreen(intro);
+  if (asApp()) track("app");
   button.disabled = true;
   button.textContent = "Der Fluss entsteht …";
   if (resume) status.textContent = `Gespeichert: ${resume}`;

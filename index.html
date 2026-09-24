@@ -6,7 +6,15 @@
     <meta name="theme-color" content="#06141a" />
     <meta name="description" content="Salmon Survival: das Leben eines Lachses, vom Kies der Quelle bis ins Meer und zurück." />
     <title>Salmon Survival</title>
-    <link rel="icon" href="data:," />
+    <link rel="icon" href="icons/icon-192.png" />
+    <!-- On the home screen it opens like an app, without the browser's bars (on iPhones
+         the only way to fill the whole screen). -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Salmon" />
     <link rel="stylesheet" href="style.css" />
     <script type="importmap">
       {
@@ -90,6 +98,20 @@
       ></canvas>
       <div id="hud">
         <section id="status" aria-label="Dein Lachs">
+          <!-- On a phone the three bars as three rings: strength outside, growth, stomach. -->
+          <svg class="rings" viewBox="0 0 60 60" aria-hidden="true">
+            <g transform="rotate(-90 30 30)">
+              <circle class="track" cx="30" cy="30" r="26" />
+              <circle class="ring energy-reach" cx="30" cy="30" r="26" pathLength="100" />
+              <circle class="ring energy-now" cx="30" cy="30" r="26" pathLength="100" />
+              <circle class="track" cx="30" cy="30" r="18.5" />
+              <circle class="ring growth-pending" cx="30" cy="30" r="18.5" pathLength="100" />
+              <circle class="ring growth-now" cx="30" cy="30" r="18.5" pathLength="100" />
+              <circle class="track stomach-track" cx="30" cy="30" r="11" />
+              <circle class="ring stomach-now" cx="30" cy="30" r="11" pathLength="100" />
+            </g>
+            <text class="stage-number" x="30" y="30"></text>
+          </svg>
           <header class="stage">
             <span class="stage-name">Dottersackbrut</span>
             <ol class="life" aria-hidden="true"></ol>
@@ -192,6 +214,7 @@
         <div class="card">
           <h1 id="intro-title">Salmon Survival</h1>
           <p class="lead">Schlüpf in der Quelle, wachs im Fluss heran, zieh ins Meer – und kehr zum Laichen heim.</p>
+          <p class="homescreen" hidden><b>Vollbild auf iPhone und iPad:</b> <span>Tippe auf Teilen</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M8 7.5l4-4 4 4" /><path d="M8.5 10.5H6.5v10h11v-10h-2" /></svg> <span>(oder erst auf „…“) und dann auf „Zum Home-Bildschirm“ – von dort startet das Spiel ohne Adressleiste, mit eigenem Spielstand.</span></p>
           <div class="for-desktop">
             <ul class="keys">
               <li><span class="mouse" aria-hidden="true"></span> Maus: lenken</li>
@@ -201,8 +224,8 @@
               <li><kbd>M</kbd> Karte · <kbd>L</kbd> Logbuch</li>
             </ul>
             <ul class="keys touch-keys">
-              <li><kbd class="touch-key stick"></kbd> Linker Daumen: schwimmen, lenken, bremsen</li>
-              <li><kbd class="touch-key look"></kbd> Rechts wischen: auf- und abtauchen</li>
+              <li><kbd class="touch-key look"></kbd> Wischen: umschauen und lenken</li>
+              <li><kbd class="touch-key go"></kbd> halten: schwimmen</li>
               <li><kbd class="touch-key bite"></kbd> Spurt, Biss, Sprung</li>
               <li><kbd class="touch-key map"></kbd> Karte: vom rechten Rand wischen</li>
             </ul>
