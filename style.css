@@ -923,7 +923,7 @@
 /* The HUD smaller, the tips at the top, the map half see-through coming in from the right. */
 .touch #hud { inset: 10px auto auto max(10px, env(safe-area-inset-left)); }
 .touch #status, .touch #watch { zoom: 0.78; }
-.touch #badges { top: 64px; zoom: 0.8; }
+.touch #badges { top: 82px; zoom: 0.8; }
 .touch #sound-toggle .label kbd, .touch #logbook-toggle .label kbd, .touch #map-toggle .label kbd, .touch #lore-toggle .label kbd { display: none; }
 .touch #hint { bottom: auto; top: 10px; max-width: min(46vw, 440px); padding: 7px 12px; font-size: 12px; line-height: 1.45; }
 .touch #hint.lore { font-size: 12.5px; }
