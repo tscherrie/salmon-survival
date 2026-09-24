@@ -153,6 +153,11 @@
       </div>
       <div id="error" role="alert" hidden></div>
     </main>
+    <!-- Vercel Web Analytics: page views, and a few events from the game (src/track.js). -->
+    <script>
+      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>

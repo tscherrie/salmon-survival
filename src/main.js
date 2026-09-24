@@ -30,7 +30,8 @@ import { createBadges } from "./badges.js";
 import { COUNTER, FARM, createFeatures } from "./features.js";
 import { createPlaces } from "./places.js";
 import { createEvents } from "./events.js";
-import { startTranslation } from "./i18n.js";
+import { lang, startTranslation } from "./i18n.js";
+import { track } from "./track.js";
 import { createCelebration } from "./celebrate.js";
 
 // English over the German, unless the player chose German.
@@ -454,6 +455,7 @@ async function start() {
   const celebration = { active: false, t: 0, duration: 6.5, yaw: 0, scale: 1, spin: 1 };
   function celebrate(stage) {
     const st = STAGES[stage];
+    track("stage", { stage: st.id });
     celebration.active = true;
     celebration.t = 0;
     celebration.yaw = fish.yaw;
@@ -1264,6 +1266,7 @@ async function start() {
     });
   }
   function die(cause) {
+    track("death", { cause, stage: STAGES[fish.stage].id });
     dead = DEATH;
     veiled = false;
     const held = life.hunters.captive;
@@ -1553,6 +1556,7 @@ async function start() {
   if (intro) {
     intro.ready();
     intro.started.then(() => {
+      track("start", { stage: STAGES[fish.stage].id, lang, resumed: state && !query.has("new") ? "yes" : "no" });
       sound.start();
       look.yaw = fish.yaw;
       look.pitch = fish.pitch;

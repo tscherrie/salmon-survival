@@ -16,10 +16,12 @@ export function isDesktop() {
 import { VERSION } from "./version.js";
 import { clearSave } from "./save.js";
 import { LANGS, lang, setLang } from "./i18n.js";
+import { track } from "./track.js";
 
 const box = () => document.querySelector("#intro");
 // The language picker on the card: the one in use marked; another reloads in it.
 function languages(intro) {
+  intro.querySelector(".links a")?.addEventListener("click", () => track("github"));
   const picker = intro.querySelector(".langs");
   if (!picker || picker.childElementCount) return;
   for (const [code, name] of Object.entries(LANGS)) {
@@ -28,7 +30,11 @@ function languages(intro) {
     button.textContent = name;
     button.lang = code;
     button.setAttribute("aria-pressed", code === lang ? "true" : "false");
-    button.addEventListener("click", () => code !== lang && setLang(code));
+    button.addEventListener("click", () => {
+      if (code === lang) return;
+      track("language", { to: code });
+      setTimeout(() => setLang(code), 150);
+    });
     picker.append(button);
   }
 }
