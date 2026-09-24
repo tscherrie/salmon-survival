@@ -2,7 +2,7 @@
 
 Live one salmon's whole life in a Nordic river. Hatch in the gravel of the source, grow up in the brook, go down to the sea with the smolts, and fight your way home to spawn where you were born. On the way: storms and flash floods, an angler's fly, otters, gill nets, a fish ladder, sea lice at the salmon farm, the northern lights.
 
-**Play it in the browser:** https://salmon-survival.vercel.app — in English, Deutsch and 中文. It needs a computer with a keyboard and a mouse, and it saves as you play.
+**Play it in the browser:** https://salmon-survival.vercel.app — in English, Deutsch, 中文, 日本語 and Български. It needs a computer with a keyboard and a mouse, and it saves as you play.
 
 Written with Claude Opus 5.5.
 
@@ -27,7 +27,7 @@ python3 -m http.server 8000
 # then open http://localhost:8000
 ```
 
-Useful for trying things: `?new&stage=parr&at=4500` starts a new parr at a place along the river (`at` is the distance from the source in tenths of a metre), `?event=storm|angler|otters|floes|aurora` starts one of the events at once, `?lang=en|de|zh` picks the language.
+Useful for trying things: `?new&stage=parr&at=4500` starts a new parr at a place along the river (`at` is the distance from the source in tenths of a metre), `?event=storm|angler|otters|floes|aurora` starts one of the events at once, `?lang=en|de|zh|ja|bg` picks the language.
 
 ## What is where
 

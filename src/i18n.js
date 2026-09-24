@@ -6,9 +6,13 @@
 
 import { EN, EN_PATTERNS } from "./i18n-en.js";
 import { ZH, ZH_PATTERNS } from "./i18n-zh.js";
+import { JA, JA_PATTERNS } from "./i18n-ja.js";
+import { BG, BG_PATTERNS } from "./i18n-bg.js";
 
 const KEY = "salmon-survival-lang";
-export const LANGS = { en: "English", de: "Deutsch", zh: "中文" };
+export const LANGS = { en: "English", de: "Deutsch", zh: "中文", ja: "日本語", bg: "Български" };
+// The languages laid over the English (keyed by it), with their patterns on the German.
+const OVER = { zh: [ZH, ZH_PATTERNS], ja: [JA, JA_PATTERNS], bg: [BG, BG_PATTERNS] };
 
 export const lang = (() => {
   const asked = new URLSearchParams(location.search).get("lang");
@@ -34,12 +38,14 @@ const cache = new Map();
 const missing = new Set();
 const GERMAN = /[äöüÄÖÜß]|\b(der|die|das|und|nicht|dich|du|ein|eine|mit|von|zum|zur|im|am|auf|ist|wird|Kraft|Fluss|Lachs)\b/;
 
-// Chinese is keyed by the English; whatever it lacks stays English rather than German.
+// Chinese, Japanese and Bulgarian are keyed by the English; whatever one lacks stays
+// English rather than German.
 function lookup(text) {
   const english = EN[text];
-  if (lang === "zh") {
-    if (english !== undefined) return ZH[english] ?? english;
-    const done = patterned(text, ZH_PATTERNS);
+  const over = OVER[lang];
+  if (over) {
+    if (english !== undefined) return over[0][english] ?? english;
+    const done = patterned(text, over[1]);
     if (done !== undefined) return done;
   } else if (english !== undefined) return english;
   return patterned(text, EN_PATTERNS);
