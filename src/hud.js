@@ -41,6 +41,7 @@ export function createHud({ stages }) {
   const growthFill = growth.querySelector(".fill");
   const growthPending = growth.querySelector(".pending");
   const growthNext = growth.querySelector(".next");
+  const growthWait = growth.querySelector(".wait");
   const stomach = document.querySelector("#stomach");
   const stomachFill = stomach.querySelector(".fill");
   const stomachLabel = stomach.querySelector(".label");
@@ -76,8 +77,9 @@ export function createHud({ stages }) {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastBox.classList.remove("shown"), seconds * 1000);
   }
-  function showHint(html, seconds) {
-    hintBox.innerHTML = t(html);
+  function showHint(html, seconds, lore = false) {
+    hintBox.innerHTML = lore ? html : t(html);
+    hintBox.classList.toggle("lore", lore);
     hintBox.hidden = false;
     hintBox.classList.remove("fading");
     clearTimeout(hintTimer);
@@ -94,7 +96,12 @@ export function createHud({ stages }) {
   const bar = (fill, value) => (fill.style.transform = `scaleX(${Math.min(1, Math.max(0, value)).toFixed(3)})`);
 
   return {
-    update({ energy: e, breath: puff = 1, winded = false, progress, pending = 0, stomach: full = null, yolk = false, stage, reserve, leapHint }) {
+    update({ energy: e, breath: puff = 1, winded = false, progress, pending = 0, stomach: full = null, yolk = false, stage, reserve, leapHint, waitSea = false }) {
+      // A smolt grown as far as it can in fresh water: the next stage only in the sea.
+      if (growthWait.hidden === waitSea) {
+        growthWait.hidden = !waitSea;
+        growth.classList.toggle("waiting", waitSea);
+      }
       energy.classList.toggle("winded", winded);
       windedVeil.classList.toggle("on", winded);
       if (stage !== shownStage) {
@@ -159,7 +166,8 @@ export function createHud({ stages }) {
     },
     // A tip, once per kind (remembered across visits), shown when the moment comes.
     tip(kind, html, seconds = 8) {
-      if (tipsSeen[kind] || !hintBox.hidden) return false;
+      // (A story or a fact gives way to a tip.)
+      if (tipsSeen[kind] || (!hintBox.hidden && !hintBox.classList.contains("lore"))) return false;
       tipsSeen[kind] = true;
       try {
         localStorage.setItem("salmon-survival-tips", JSON.stringify(tipsSeen));
@@ -168,6 +176,26 @@ export function createHud({ stages }) {
       return true;
     },
     seen: (kind) => !!tipsSeen[kind],
+    // A story or a fact (lore.js), already in the player's language, under a small kicker;
+    // only when nothing else is shown there. `null` takes a shown one away.
+    lore(text, kicker = "", seconds = 10) {
+      if (text === null) {
+        if (!hintBox.hidden && hintBox.classList.contains("lore")) {
+          clearTimeout(hintTimer);
+          hintBox.classList.add("fading");
+          hintTimer = setTimeout(() => (hintBox.hidden = true), 1000);
+        }
+        return true;
+      }
+      if (!hintBox.hidden) return false;
+      const escape = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+      showHint(`<span class="kicker">${escape(kicker)}</span>${text}`, seconds, true);
+      return true;
+    },
+    // Whether the tip line at the foot of the screen is free.
+    get hintFree() {
+      return hintBox.hidden;
+    },
     paused(on) {
       veilBox.classList.toggle("dim", on);
       if (on) toast("Pause", "Klick ins Bild oder P zum Weiterschwimmen", 3600);
@@ -289,6 +317,7 @@ export function createHud({ stages }) {
     hint() {
       if (hintShown) return;
       hintShown = true;
+      hintBox.classList.remove("lore");
       hintBox.innerHTML = t(
         "Klick ins Bild: Maus lenkt · <kbd>W</kbd> schwimmen · <kbd>S</kbd> bremsen · <kbd>A</kbd>/<kbd>D</kbd> ausweichen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung · <kbd>M</kbd> Karte · <kbd>L</kbd> Logbuch · <kbd>P</kbd> Pause",
       );

@@ -35,6 +35,7 @@ import { lang, startTranslation, t as translate } from "./i18n.js";
 import { track } from "./track.js";
 import { profile as prof } from "./profile.js";
 import { createCelebration } from "./celebrate.js";
+import { createLore } from "./lore.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -244,6 +245,8 @@ async function start() {
   const falls = createFalls(scene);
   const nets = createNets(scene);
   const hud = createHud({ stages: STAGES });
+  const lore = createLore({ hud });
+  const loreRegions = {};
   const sound = createSound();
   mark("hud");
   // Badges for everything found and done the first time; the logbook keeps the collection.
@@ -368,6 +371,20 @@ async function start() {
     soundButton.blur();
   });
   showSound();
+  // Stories and facts on or off (the button, or I).
+  const loreButton = document.querySelector("#lore-toggle");
+  const showLore = () => loreButton.setAttribute("aria-pressed", String(lore.on));
+  function toggleLore() {
+    lore.on = !lore.on;
+    showLore();
+    hud.note(lore.on ? "Geschichten und Fakten an" : "Geschichten und Fakten aus");
+  }
+  loreButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleLore();
+    loreButton.blur();
+  });
+  showLore();
 
   const held = new Set();
   const look = { yaw: fish.yaw, pitch: 0 };
@@ -387,6 +404,10 @@ async function start() {
     }
     if (event.code === "KeyM" && !event.repeat) {
       minimap.toggle();
+      return;
+    }
+    if (event.code === "KeyI" && !event.repeat) {
+      toggleLore();
       return;
     }
     if (event.code === "KeyF" && !event.repeat) {
@@ -1168,6 +1189,17 @@ async function start() {
       hud.tip("mussels", "<b>Flussperlmuscheln.</b> Ihre winzigen Larven heften sich ein paar Monate an die Kiemen junger Lachse und reisen mit – ohne Lachse gäbe es sie nicht.", 10);
     else if (here === "king-pool") hud.tip("king", "<b>Die Königsgumpe.</b> In der Tiefe steht der alte König der Forellen – riesig, zäh und hungrig. Nur wer ihn in die Flanke trifft, immer wieder, kann ihn bezwingen.", 11);
     else if (here === "crack-lachsfall") hud.tip("crack", "<b>Der Felsspalt!</b> Ein geheimer Weg nach oben, am Lachsfall vorbei.", 8);
+    // Stories and facts, now and then, when nothing else is being said.
+    lore.update(dt, {
+      stage: STAGES[fish.stage].id,
+      place: here ?? null,
+      regions: regionWeights(fish.river.s, loreRegions),
+      season: conditions.season,
+      night: conditions.night,
+      hatch: conditions.hatch,
+      hunters: logbook.metNow ?? [],
+      quiet: dead <= 0 && !celebration.active && spotlight.t < 0 && hud.hintFree && !fish.captive,
+    });
     // In a school, a hunter often takes another.
     if (outcome.decoy) {
       shake = Math.max(shake, 0.6);
@@ -1554,6 +1586,8 @@ async function start() {
       yolk: !!STAGES[fish.stage].yolk,
       stage: fish.stage,
       reserve: !!STAGES[fish.stage].fasting,
+      // (salmon.js holds a smolt at 97 % until it is within 40 m of the coast.)
+      waitSea: !!STAGES[fish.stage].sea && fish.river.s <= S.coast - 400 && fish.progress > 0.9,
       leapHint: (world.ice ?? 0) > 0.5 ? null : (life.leapHint?.(fish) ?? null),
     });
     // The bar over the fish being fought, pinned to it on the screen (to the edge when it is
@@ -1763,6 +1797,7 @@ async function start() {
       advance,
       celebrate,
       celebration,
+      lore,
       startAt,
       setZoom: (z) => (zoom = z),
       pebbles,

@@ -12,7 +12,7 @@ Written with Claude Opus 5.5.
 - `W` swim · `S` brake and hold on to the bottom
 - `A` / `D` dodge sideways
 - `Space` dash, bite, leap (at the surface: over a waterfall)
-- `M` map · `L` logbook · `T` sound · `P` pause
+- `M` map · `L` logbook · `I` stories and facts · `T` sound · `P` pause (the buttons on the right show while paused)
 
 ## Contribute, give feedback
 
