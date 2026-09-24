@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#06141a" />
+    <meta name="description" content="Salmon Survival: das Leben eines Lachses, vom Kies der Quelle bis ins Meer und zurück." />
+    <title>Salmon Survival</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../../vendor/three.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main id="habitat" aria-label="Salmon Survival">
+      <canvas
+        id="scene"
+        aria-label="Du bist ein Lachs. Klicke ins Bild, um mit der Maus zu lenken. W schwimmt, S bremst, A und D gleiten zur Seite, die Leertaste spurtet, schnappt und springt. M zeigt die Karte, L das Logbuch, T schaltet den Ton, F den Vollbildmodus."
+        tabindex="0"
+      ></canvas>
+      <div id="hud">
+        <section id="status" aria-label="Dein Lachs">
+          <header class="stage">
+            <span class="stage-name">Dottersackbrut</span>
+            <ol class="life" aria-hidden="true"></ol>
+          </header>
+          <div id="energy" class="meter" role="meter" aria-label="Kraft" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M13.5 2 5 13.2h5.6L9.4 22 19 10.3h-5.8z" /></svg>
+            </span>
+            <span class="label"><span class="name">Kraft</span> <em class="winded">außer Atem – treiben lassen!</em></span>
+            <span class="bar"><span class="pending"></span><span class="fill"></span></span>
+          </div>
+          <div id="growth" class="meter" role="meter" aria-label="Wachstum" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 21v-8.2" /><path d="M12 13.4C12 8.6 8.6 5.5 3.6 5.5c0 4.8 3.4 7.9 8.4 7.9Z" /><path d="M12 11.2c0-4.2 3-7 7.5-7 0 4.2-3 7-7.5 7Z" /></svg>
+            </span>
+            <span class="label">Wachstum <em class="next"></em></span>
+            <span class="bar"><span class="pending"></span><span class="fill"></span></span>
+          </div>
+          <div id="stomach" class="meter" role="meter" aria-label="Magen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 15.5c0-3.9 3.1-7 7-7h1.5a5.5 5.5 0 0 1 0 11H9" /><circle cx="8.2" cy="15.5" r="3.2" /><path d="M14 8.5c.4-2.2 1.9-3.7 4-4" /></svg>
+            </span>
+            <span class="label">Magen</span>
+            <span class="bar"><span class="fill"></span></span>
+          </div>
+          <div id="season" aria-label="Jahreszeit, Tageszeit und Wassertemperatur">
+            <span class="when"><span class="glyph" aria-hidden="true"></span><span class="text"></span></span>
+            <span class="temperature"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13.5V5a2 2 0 0 1 4 0v8.5a4 4 0 1 1-4 0Z" /><path d="M12 9v7" /></svg><span class="degrees"></span></span>
+          </div>
+          <div id="pops" aria-live="polite"></div>
+        </section>
+        <div id="watch" hidden aria-live="polite">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <g class="open"><path d="M2.5 12s3.6-6 9.5-6 9.5 6 9.5 6-3.6 6-9.5 6-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="3" /></g>
+            <g class="shut"><path d="M2.5 11s3.6 5 9.5 5 9.5-5 9.5-5" /><path d="M6 14.6 4.6 16.6M12 16v2.4M18 14.6l1.4 2" /></g>
+          </svg>
+          <span class="text"></span>
+        </div>
+        <button id="sound-toggle" type="button" aria-pressed="true" aria-label="Ton ausschalten" title="Ton an/aus (T)">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path class="speaker" d="M4 9.5h3.2L12 5.2v13.6l-4.8-4.3H4z" />
+            <g class="waves"><path d="M15.2 9.2a4 4 0 0 1 0 5.6" /><path d="M17.8 6.6a7.6 7.6 0 0 1 0 10.8" /></g>
+            <g class="muted"><path d="M15.5 9.5l5 5" /><path d="M20.5 9.5l-5 5" /></g>
+          </svg>
+        </button>
+        <button id="logbook-toggle" type="button" aria-label="Logbuch öffnen" title="Logbuch (L)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3Z" /><path d="M5 17a3 3 0 0 1 3-3h9.5" /><path d="M9 8h5M9 10.8h3.5" /></svg>
+        </button>
+        <button id="map-toggle" type="button" aria-pressed="false" aria-label="Karte einblenden" title="Karte (M)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5Z" /><path d="M9 4v13.5M15 6.5V20" /></svg>
+        </button>
+        <div id="compass" class="dormant" aria-label="Kompass zur Flussmündung" hidden>
+          <svg viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" />
+            <g class="needle"><path d="M20 5 L24 21 L20 18 L16 21 Z" /></g>
+          </svg>
+          <span>Mündung</span>
+        </div>
+      </div>
+      <div id="badges" aria-live="polite"></div>
+      <div id="toast" aria-live="polite"><p class="title"></p><p class="line"></p></div>
+      <aside id="minimap" aria-label="Karte" hidden>
+        <canvas class="local" aria-hidden="true"></canvas>
+        <p class="where"><span class="name"></span><span class="scale"><i></i><b></b></span></p>
+        <canvas class="strip" aria-hidden="true"></canvas>
+      </aside>
+      <div id="foe" hidden aria-live="polite">
+        <span class="name"></span><em class="state"></em>
+        <span class="bar"><span class="pending"></span><span class="fill"></span></span>
+      </div>
+      <div id="milestone" aria-live="polite" hidden>
+        <div class="rays" aria-hidden="true"></div>
+        <p class="kicker">Neues Lebensstadium</p>
+        <p class="title"></p>
+        <p class="size"></p>
+        <ol class="dots" aria-hidden="true"></ol>
+        <p class="line"></p>
+      </div>
+      <div id="logbook" role="dialog" aria-modal="true" aria-labelledby="logbook-title" hidden>
+        <div class="book">
+          <header>
+            <h2 id="logbook-title">Logbuch</h2>
+            <span class="gen"></span>
+            <button class="close" type="button" aria-label="Logbuch schließen">×</button>
+          </header>
+          <div class="pages">
+            <section class="map" aria-label="Karte des Flusses"></section>
+            <section class="species" aria-label="Entdeckte Arten"></section>
+          </div>
+          <section class="badges" aria-label="Abzeichen"></section>
+          <p class="keys"><kbd>L</kbd> schließen · das Logbuch bleibt über alle Leben und Generationen erhalten</p>
+        </div>
+      </div>
+      <div id="hint" hidden></div>
+      <div id="winded"></div>
+      <div id="glow"></div>
+      <div id="veil"></div>
+      <div id="loading" role="status"><p>Der Fluss entsteht…</p></div>
+      <div id="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title" hidden>
+        <div class="card">
+          <h1 id="intro-title">Salmon Survival</h1>
+          <p class="lead">Schlüpf in der Quelle, wachs im Fluss heran, zieh ins Meer – und kehr zum Laichen heim.</p>
+          <div class="for-desktop">
+            <ul class="keys">
+              <li><span class="mouse" aria-hidden="true"></span> Maus: lenken</li>
+              <li><kbd>W</kbd> schwimmen · <kbd>S</kbd> bremsen</li>
+              <li><kbd>A</kbd><kbd>D</kbd> ausweichen</li>
+              <li><kbd>Leertaste</kbd> Spurt, Biss, Sprung</li>
+              <li><kbd>M</kbd> Karte · <kbd>L</kbd> Logbuch</li>
+            </ul>
+            <button id="intro-start" type="button" disabled>Der Fluss entsteht …</button>
+            <p id="intro-status" class="status"></p>
+            <button id="intro-new" class="quiet" type="button" hidden>Neues Spiel starten</button>
+            <p class="note">Speichert automatisch. Am besten mit Ton.</p>
+          </div>
+          <div class="for-phone">
+            <p class="phone-note">Salmon Survival läuft vorerst nur auf dem Computer – Mac, Windows oder Linux, mit Tastatur und Maus. Öffne den Link am besten an deinem Rechner.</p>
+            <button id="intro-copy" type="button">Link kopieren</button>
+          </div>
+          <div class="langs" role="group" aria-label="Language / Sprache"></div>
+          <p class="links">
+            <a href="https://github.com/tscherrie/salmon-survival" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span>Mitmachen / Feedback auf GitHub</span></a>
+          </p>
+          <p class="version"></p>
+        </div>
+      </div>
+      <div id="error" role="alert" hidden></div>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

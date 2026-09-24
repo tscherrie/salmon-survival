@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#08131a" />
+    <meta
+      name="description"
+      content="A sunlit, spring-fed freshwater river. A local, interactive 3D underwater scene."
+    />
+    <title>Riverscape • Desktop Habitats</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../../vendor/three.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main id="habitat" aria-label="Interactive freshwater river">
+      <canvas
+        id="scene"
+        aria-label="A sunlit freshwater river. Move the pointer to stir the water; hold it still and curious fish come over. Click to feed. Arrow keys steer a fish, Shift dashes, Escape lets it go. O stops or restarts the slow drift round the river. M mutes the sound. Space pauses. F enters fullscreen. H hides controls."
+        tabindex="0"
+      ></canvas>
+      <footer class="chrome" aria-label="Aquarium controls">
+        <div class="buttons">
+          <button disabled id="pause" aria-pressed="false" title="Space">Pause</button>
+          <a class="icon-button play-link" href="../salmon-survival/" aria-label="Play Salmon Survival" title="Play Salmon Survival"
+            ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12s3-4 7-4 7 4 7 4-3 4-7 4-7-4-7-4Zm14 0 4-3v6Z"/><path d="M7 12h.01"/></svg
+          ></a>
+          <button disabled id="fullscreen" title="F">Fullscreen</button>
+        </div>
+        <div class="preferences">
+          <select disabled id="quality" aria-label="Quality">
+            <option value="eco">Eco</option>
+            <option value="balanced" selected>Balanced</option>
+            <option value="detail">Detail</option>
+          </select>
+          <button disabled id="hide" title="H">Hide controls</button>
+        </div>
+      </footer>
+      <button disabled id="show-controls" title="H">Show controls</button>
+      <div id="loading" role="status"><p>Loading aquarium…</p></div>
+      <div id="error" role="alert" hidden></div>
+    </main>
+    <script type="module" src="../shared/start.js" data-entry="./src/main.js"></script>
+  </body>
+</html>

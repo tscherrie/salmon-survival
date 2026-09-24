@@ -1,0 +1,6 @@
+@import url("../../ui/scene.css");
+#habitat { height: 100dvh; }
+.steer-hint { position: fixed; left: 50%; bottom: calc(var(--space-6) + 64px); transform: translateX(-50%); z-index: 2; padding: var(--space-2) var(--space-4); background: var(--scrim); color: var(--text); font-size: var(--text-small); pointer-events: none; transition: opacity 600ms ease; white-space: nowrap; }
+[data-motion="host"] .steer-hint { display: none; }
+.chrome a.play-link { width: var(--control-height); min-height: var(--control-height); display: inline-grid; place-items: center; }
+.chrome a.play-link:hover { background: var(--surface-hover); }
