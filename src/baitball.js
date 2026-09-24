@@ -161,10 +161,11 @@ export function createBaitBall(scene) {
     },
     start(fish, shoals) {
       // Herring for a fish big enough to swallow one, sand eels before that.
-      const herring = fish.length * 0.5 >= 2.3;
+      // (from the grilse on: its mouth takes most of the young herring)
+      const herring = fish.length * 0.5 >= 1.6;
       ball.kind = herring ? "herring" : "sandeel";
       ball.title = herring ? "Heringsball" : "Sandaalball";
-      ball.radius = herring ? 6 : 4;
+      ball.radius = herring ? 5.5 : 4;
       ball.bite = -9;
       place(fish);
       shoals.ball(ball.kind, ball);

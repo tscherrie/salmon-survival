@@ -142,7 +142,7 @@ const PAIRS = [
   ["Silbern für das Meer. Flussabwärts, bis das Wasser salzig wird.", "Silver for the sea. Downstream, until the water turns salty."],
   ["Salzwasser! Die ersten Monate im Meer: Krill und kleine Fische jagen.", "Salt water! Your first months at sea: hunt krill and small fish."],
   ["Ein Jahr im Meer, kräftig und schnell. Sandaale und Heringe jagen.", "A year at sea, strong and fast. Hunt sand eels and herring."],
-  ["Ein großer Meerlachs. Noch ein wenig wachsen – dann ruft die Heimat.", "A big sea salmon. Grow a little more – then home will call."],
+  ["Ein großer Meerlachs. Heringe und Makrelen jagen, noch ein wenig wachsen – dann ruft die Heimat.", "A big sea salmon. Hunt herring and mackerel, grow a little more – then home will call."],
   ["Der Ruf der Heimat. Die Karte (M) zeigt dir den Weg zur Mündung. Fressen wirst du nicht mehr.", "Home is calling. The map (M) shows you the way to the river mouth. You will not eat any more."],
   ["Zurück zum Anfang dieses Lebensabschnitts.", "Back to the start of this stage of life."],
   ["Gelaicht", "Spawned"],

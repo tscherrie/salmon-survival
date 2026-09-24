@@ -144,7 +144,7 @@ const PAIRS = [
   ["Silver for the sea. Downstream, until the water turns salty.", "海に向けて銀色に。水が塩からくなるまで下流へ。"],
   ["Salt water! Your first months at sea: hunt krill and small fish.", "海水だ！ 海での最初の数か月：オキアミや小魚を狩ろう。"],
   ["A year at sea, strong and fast. Hunt sand eels and herring.", "海で1年、力強く速くなった。イカナゴやニシンを狩ろう。"],
-  ["A big sea salmon. Grow a little more – then home will call.", "大きな海のサケ。もう少し育てば――故郷が呼んでいる。"],
+  ["A big sea salmon. Hunt herring and mackerel, grow a little more – then home will call.", "大きな海のサケ。ニシンやサバを狩り、もう少し育てば――故郷が呼んでいる。"],
   ["Home is calling. The map (M) shows you the way to the river mouth. You will not eat any more.", "故郷が呼んでいる。地図（M）が河口への道を示す。もう何も食べない。"],
   ["Back to the start of this stage of life.", "この成長段階の最初に戻ります。"],
   ["Spawned", "産卵した"],

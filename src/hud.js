@@ -24,6 +24,9 @@ const FOOD_NAMES = {
   stickleback: "Stichling",
   sandeel: "Sandaal",
   herring: "Hering",
+  mackerel: "Makrele",
+  bread: "Brotkrume",
+  pellet: "Futterpellet",
 };
 
 // On a phone the keys the tips name are the touch controls: each key drawn as the button

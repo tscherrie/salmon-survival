@@ -144,7 +144,7 @@ const PAIRS = [
   ["Silver for the sea. Downstream, until the water turns salty.", "Сребриста за морето. Надолу по течението, докато водата стане солена."],
   ["Salt water! Your first months at sea: hunt krill and small fish.", "Солена вода! Първите ти месеци в морето: лови крил и малки риби."],
   ["A year at sea, strong and fast. Hunt sand eels and herring.", "Година в морето, силна и бърза. Лови пясъчни змиорки и херинга."],
-  ["A big sea salmon. Grow a little more – then home will call.", "Голяма морска сьомга. Порасни още малко – и домът ще те повика."],
+  ["A big sea salmon. Hunt herring and mackerel, grow a little more – then home will call.", "Голяма морска сьомга. Ловувай херинга и скумрия, порасни още малко – и домът ще те повика."],
   ["Home is calling. The map (M) shows you the way to the river mouth. You will not eat any more.", "Домът те зове. Картата (M) ти показва пътя до устието. Вече няма да се храниш."],
   ["Back to the start of this stage of life.", "Обратно в началото на този етап от живота."],
   ["Spawned", "Хайверът е хвърлен"],

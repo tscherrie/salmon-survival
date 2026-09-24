@@ -636,8 +636,11 @@ function createFood(scene, { count = 240 } = {}) {
 const SHOALS = {
   minnow: { body: "minnow", coat: "minnow", size: [0.55, 0.85], per: 18, groups: 3, regions: { upper: 0.8, middle: 1, lower: 0.8 }, nutrition: 90, ref: 0.75, cruise: 1.2, sprint: 4.2, bottom: 0.25, flees: true, title: "Elritze", temper: 0.5 },
   stickleback: { body: "minnow", coat: { ...COATS.minnow, back: [0.02, 0.035, 0.018], flank: [0.2, 0.26, 0.14], bars: 0.3, silver: 0.6 }, size: [0.4, 0.6], per: 16, groups: 2, regions: { estuary: 1, lower: 0.4 }, nutrition: 40, ref: 0.5, cruise: 1.0, sprint: 3.5, bottom: 0.3, flees: true, title: "Stichling", temper: 0.9 },
-  sandeel: { body: "sandeel", coat: "sandeel", size: [1.0, 2.0], per: 34, groups: 3, regions: { sea: 1, estuary: 0.3 }, nutrition: 250, ref: 1.6, cruise: 2.2, sprint: 9, bottom: 0.1, flees: true, title: "Sandaal", temper: 0.4 },
-  herring: { body: "herring", coat: "herring", size: [2.0, 3.0], per: 46, groups: 3, regions: { sea: 1 }, nutrition: 600, ref: 2.5, cruise: 3, sprint: 12, bottom: 0.5, flees: true, title: "Hering", temper: 0.5 },
+  // At sea what a salmon mostly hunts are the young of the year and the one-year-olds: sand
+  // eels from 8 cm (the postsmolt's first fish), herring of 12-22 cm (a grilse's staple from
+  // its first months at sea), and for the big salmon mackerel as well.
+  sandeel: { body: "sandeel", coat: "sandeel", size: [0.8, 2.0], per: 34, groups: 3, regions: { sea: 1, estuary: 0.3 }, nutrition: 250, ref: 1.6, cruise: 2.2, sprint: 9, bottom: 0.1, flees: true, title: "Sandaal", temper: 0.4 },
+  herring: { body: "herring", coat: "herring", size: [1.2, 2.2], per: 46, groups: 3, regions: { sea: 1 }, nutrition: 600, ref: 1.7, cruise: 3, sprint: 12, bottom: 0.5, flees: true, title: "Hering", temper: 0.5 },
   mackerel: { body: "mackerel", coat: "mackerel", size: [2.2, 3.4], per: 28, groups: 2, regions: { sea: 1 }, nutrition: 700, ref: 2.8, cruise: 3.4, sprint: 14, bottom: 0.6, flees: true, title: "Makrele", temper: 0.6 },
   // Graylings holding in the current of the middle river in small groups, fins spread.
   grayling: { body: "grayling", coat: "grayling", size: [1.4, 2.6], per: 5, groups: 2, regions: { upper: 0.5, middle: 1, lower: 0.5 }, nutrition: 0, ref: 2, cruise: 1.4, sprint: 6, bottom: 0.2, flees: false, station: true, title: "Äsche", temper: 0.9 },

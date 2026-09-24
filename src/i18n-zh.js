@@ -143,7 +143,7 @@ const PAIRS = [
   ["Silver for the sea. Downstream, until the water turns salty.", "为大海披上银装。顺流而下，直到河水变咸。"],
   ["Salt water! Your first months at sea: hunt krill and small fish.", "咸水！在海里的最初几个月：捕食磷虾和小鱼。"],
   ["A year at sea, strong and fast. Hunt sand eels and herring.", "在海里一年了，强壮又敏捷。捕食玉筋鱼和鲱鱼。"],
-  ["A big sea salmon. Grow a little more – then home will call.", "一条大海鲑。再长大一点——故乡就会召唤你。"],
+  ["A big sea salmon. Hunt herring and mackerel, grow a little more – then home will call.", "一条大海鲑。捕食鲱鱼和鲭鱼，再长大一点——故乡就会召唤你。"],
   ["Home is calling. The map (M) shows you the way to the river mouth. You will not eat any more.", "故乡在召唤。地图（M）为你指出通往河口的路。你不会再进食了。"],
   ["Back to the start of this stage of life.", "回到这一生命阶段的起点。"],
   ["Spawned", "已产卵"],

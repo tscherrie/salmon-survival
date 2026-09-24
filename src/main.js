@@ -1722,7 +1722,7 @@ async function start() {
       case "grilse":
         return "Ein Jahr im Meer, kräftig und schnell. Sandaale und Heringe jagen.";
       case "sea":
-        return "Ein großer Meerlachs. Noch ein wenig wachsen – dann ruft die Heimat.";
+        return "Ein großer Meerlachs. Heringe und Makrelen jagen, noch ein wenig wachsen – dann ruft die Heimat.";
       case "spawner":
         return "Der Ruf der Heimat. Die Karte (M) zeigt dir den Weg zur Mündung. Fressen wirst du nicht mehr.";
       default:
