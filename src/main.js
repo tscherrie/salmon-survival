@@ -9,7 +9,7 @@ import { renderSettings } from "../../riverscape/src/render-policy.js";
 import { createDaylight } from "../../riverscape/src/daylight.js";
 import { framebufferSize, qualityName } from "../../shared/render-policy.js";
 import { reportSceneError } from "../../shared/controls.js";
-import { COURSE_VERSION, FALLS, MOUTH, REDD, S, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionName, regionWeights, relaid, section, setSeasonFlow, driftRich } from "./course.js";
+import { COURSE_VERSION, FALLS, MOUTH, REDD, S, TRIBUTARIES, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionName, regionWeights, relaid, section, setSeasonFlow, driftRich } from "./course.js";
 import { createFlowField } from "./flowfield.js";
 import { createBedMaterial, createRockMaterials, createSky, photoTextures, photosLoaded, createSurfaceMaterial,skyUniforms, surfaceUniforms } from "./materials.js";
 import { createTerrain } from "./terrain.js";
@@ -464,6 +464,10 @@ async function start() {
       return;
     }
     if (userPaused) return;
+    if (event.code === "KeyE" && !event.repeat) {
+      goOn();
+      return;
+    }
     if (event.code === "Space") {
       event.preventDefault();
       if (!event.repeat && !startCharge()) lungeQueued = true;
@@ -709,6 +713,104 @@ async function start() {
     goal.firstChild.style.transform = `rotate(${(a + Math.PI / 2).toFixed(3)}rad)`;
     const name = goal.querySelector(".name");
     if (name.textContent !== translate(b.title)) name.textContent = translate(b.title);
+  }
+  // The way home, for a spawner: long, and between the places that try it much the same.
+  // Where nothing is going on it can go on with the run -- the screen goes dark, a word of
+  // where it has got to, and it is just below the next of them. Never past one: each place
+  // that tries it (a fall, the fish ladder, the fork at the Erlenbach) it swims itself.
+  const GATES = [
+    { s: FALLS.find((f) => f.name === "Felsschwelle")?.s, below: 45, name: "Felsschwelle", label: "Weiter bis unter die Felsschwelle" },
+    { s: Math.max(...FALLS.filter((f) => f.pass).map((f) => f.s)), below: 55, name: "Fischtreppe", label: "Weiter bis zur Fischtreppe" },
+    { s: FALLS.find((f) => f.name === "Steinstufe")?.s, below: 40, name: "Steinstufe", label: "Weiter bis unter die Steinstufe" },
+    { s: SALMON_FALL?.s, below: 55, name: "Lachsfall", label: "Weiter bis zum Lachsfall" },
+    { s: FALLS.find((f) => f.name === "Bachstufe")?.s, below: 28, name: "Bachstufe", label: "Weiter bis unter die Bachstufe" },
+    { s: TRIBUTARIES[0]?.s, below: 90, name: "Erlenbach", label: "Weiter bis zum Erlenbach" },
+    { s: S.redd, below: 330, name: "Brutbecken", label: "Weiter bis kurz vor die Quelle" },
+  ].filter((g) => Number.isFinite(g.s));
+  const journeyBtn = document.createElement("button");
+  journeyBtn.id = "journey";
+  journeyBtn.type = "button";
+  journeyBtn.hidden = true;
+  journeyBtn.innerHTML = '<span class="label"></span> <kbd>E</kbd>';
+  habitat.append(journeyBtn);
+  const journeyLabel = journeyBtn.querySelector(".label");
+  journeyBtn.addEventListener("pointerdown", (event) => event.stopPropagation());
+  journeyBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    journeyBtn.blur();
+    goOn();
+  });
+  let journeying = null;
+  let calmSince = 0;
+  // Where the run would take it now: just below the next place up the river, if that is far.
+  function journeyTarget() {
+    const s = fish.river.s;
+    let gate = null;
+    for (const g of GATES) if (g.s < s - 5 && (!gate || g.s > gate.s)) gate = g;
+    if (!gate) return null;
+    const to = gate.s + gate.below;
+    return s - to > 500 ? { s: to, gate } : null;
+  }
+  function goOn() {
+    const target = journeyShown && journeyTarget();
+    if (!target || journeying) return;
+    journeying = { t: 0, target, moved: false };
+    fish.safe = true;
+    hud.veil("dark");
+    journeyBtn.hidden = true;
+    journeyShown = false;
+    track("journey", { to: target.gate.name });
+  }
+  let journeyShown = false;
+  function stepJourney(dt, threatened) {
+    if (journeying) {
+      journeying.t += dt;
+      if (!journeying.moved && journeying.t > 0.7) {
+        journeying.moved = true;
+        const s = journeying.target.s;
+        const c = section(s);
+        // Just below it, in the deep line, facing up the river.
+        startAt(s, c.thalweg, 0.45);
+        startAt(s, c.thalweg, 0.45, fish.yaw + Math.PI);
+        fish.energy = Math.max(0.35, fish.energy - 0.06);
+        fish.velocity.set(0, 0, 0);
+        fish.relative.set(0, 0, 0);
+        lastPlace.copy(fish.position);
+        look.yaw = fish.yaw;
+        look.pitch = 0;
+        cameraRiver.s = fish.river.s;
+        placeCamera(0, true);
+        post.resetHistory?.();
+        terrain.prime({ x: camera.position.x, z: camera.position.z, s: fish.river.s, u: fish.river.u }, { radius: builtRadius(), near: clamp(0.28 + fish.length * 0.1, 0.35, 1), land: 60 });
+        features.prime(fish.river.s);
+        life.reset(fish);
+        nets.reset();
+        pebbles.prime(fish.position, fish.length, fish.river.s);
+        checkpoint = snapshotCheckpoint();
+        hud.toast(journeying.target.gate.name, "Ein paar Tage später, ein gutes Stück flussauf.", 4);
+        persist();
+      }
+      if (journeying.t > 1.7) {
+        hud.veil(null);
+        fish.safe = false;
+        journeying = null;
+        calmSince = time;
+      }
+      return;
+    }
+    if (threatened) calmSince = time;
+    const ok =
+      phaseOf(fish.stage) === "spawner" && dead <= 0 && !spawning && fish.river.s < S.straight && !fish.airborne && !fish.captive && !charge && !celebration.active && !drive.on && !baitball.on && time - calmSince > 4;
+    const target = ok ? journeyTarget() : null;
+    if (!!target !== journeyShown || (target && journeyLabel.dataset.to !== target.gate.name)) {
+      journeyShown = !!target;
+      journeyBtn.hidden = !target;
+      if (target) {
+        journeyLabel.dataset.to = target.gate.name;
+        journeyLabel.textContent = translate(target.gate.label);
+        hud.tip("journey", "<b>Die Heimkehr.</b> Der Weg flussauf ist weit. Wo nichts los ist, kannst du mit dem Laichzug weiterziehen (<kbd>E</kbd>) – bis kurz vor die nächste Stelle, die es in sich hat. Die schaffst du dann selbst.", 12);
+      }
+    }
   }
   function readInput(dt) {
     const turn =(held.has("ArrowLeft") ? -1 : 0) + (held.has("ArrowRight") ? 1 : 0);
@@ -1447,6 +1549,7 @@ async function start() {
     const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s), drive: drive.on ? drive.lead : null, ball: baitball.on ? baitball.ball : null });
     warnings(dt);
     goalArrow();
+    stepJourney(dt, threatList.some((th) => th.level >= 0.6));
     siblings.update(dt, fish, time, { food: life.food?.items, camera, others: (outcome.school ?? 0) + (outcome.run ?? 0), left: brood.left });
     prof.mark("life");
     // Caught: the salmon goes where its captor holds it -- down a fish's throat head first,

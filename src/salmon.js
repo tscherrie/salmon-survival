@@ -48,7 +48,7 @@ export const STAGES = [
   { id: "postsmolt", phase: "sea", name: "Postsmolt", body: "salmon", coat: "sea", length: [2.0, 3.2], minutes: 4.5, rate: 3.2, sea: true, rich: 1.4 },
   { id: "grilse", phase: "sea", name: "Grilse", body: "salmon", coat: "sea", length: [3.2, 5.5], minutes: 4, rate: 3.5, sea: true, rich: 1.3 },
   { id: "sea", phase: "sea", name: "Meerlachs", body: "salmon", coat: "sea", length: [5.5, 8.5], minutes: 7, rate: 10, sea: true, rich: 1.3 },
-  { id: "spawner", phase: "spawner", name: "Laichlachs", body: "salmon", coat: "spawner", length: [8.5, 9], minutes: 35, fasting: true },
+  { id: "spawner", phase: "spawner", name: "Laichlachs", body: "salmon", coat: "spawner", length: [8.5, 9], minutes: 20, fasting: true },
 ];
 for (const st of STAGES) if (st.rate) st.need = st.rate * st.minutes * 60;
 // The index of the first stage of a phase, and a stage's phase.
@@ -531,9 +531,11 @@ export function createSalmon(scene, { pace = 1 } = {}) {
       const still = 1 - clamp(q - 0.3, 0, 1);
       f.progress += ((dt * pace) / (st.minutes * 60)) * (0.4 + 0.6 * still);
     } else if (st.fasting) {
-      // Ripening: it happens with time, faster in fresh water.
+      // Ripening: it happens with time, faster in fresh water -- and on the way up the river:
+      // by the time it is back on the gravel it came from, it is ripe (no waiting there).
       const fresh = s < S.coast ? 1 : 0.35;
-      f.progress += ((dt * pace) / (st.minutes * 60)) * fresh;
+      const home = clamp(1 - (s - S.redd - 40) / (S.coast - S.redd - 40), 0, 1);
+      f.progress = Math.max(f.progress + ((dt * pace) / (st.minutes * 60)) * fresh, home);
     } else {
       const rate = st.need / (st.minutes * 60);
       const inSea = s > S.coast - 400 ? 1 : 0;
