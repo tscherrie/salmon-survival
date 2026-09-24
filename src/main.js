@@ -36,6 +36,7 @@ import { track } from "./track.js";
 import { profile as prof } from "./profile.js";
 import { createCelebration } from "./celebrate.js";
 import { createLore } from "./lore.js";
+import { createTouch } from "./touch.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -56,6 +57,10 @@ const smooth = (a, b, x) => {
 
 // Development runs (the capture harness, a jump to a stage or place) skip the title card.
 const dev = ["capture", "diagnostics", "stage", "at", "pace", "season", "year"].some((k) => query.has(k));
+// On a phone or a tablet (or with ?touch): the touch controls, a lighter picture, the HUD
+// laid out for a small screen held sideways.
+const touchMode = query.has("touch") || (!dev && !isDesktop());
+if (touchMode) habitat.classList.add("touch");
 function savedStageName() {
   const saved = savedStage();
   if (!saved || !STAGES[saved.stage]) return null;
@@ -68,19 +73,22 @@ async function start() {
   performance.mark("salmon:start");
   // The title card goes up at once and waits for the river to be built.
   const intro = dev ? null : showIntro({ resume: savedStageName() });
-  const profile = qualityName(query.get("quality") || "detail");
+  const profile = qualityName(query.get("quality") || (touchMode ? "balanced" : "detail"));
   // The game's budget: the full-detail look, but the shafts marched in fewer, jittered
   // steps (the temporal blend smooths them just as well) and at most ~2.4 million pixels
   // drawn -- the rest is filled in by the upscale, and the frame rate is what matters here.
+  // On a phone: about a million pixels, a smaller shadow map, fewer steps in the light
+  // shafts, plain shadow edges.
   const gameSettings = () => {
     const base = renderSettings({ profile, pixelRatio: devicePixelRatio });
+    if (touchMode) return { ...base, shaftSteps: Math.min(base.shaftSteps, 10), maxPixels: Math.min(base.maxPixels, 1.0e6), shadowSize: Math.min(base.shadowSize, 1024) };
     return { ...base, shaftSteps: Math.min(base.shaftSteps, 24), maxPixels: Math.min(base.maxPixels, 2.4e6) };
   };
   let settings = gameSettings();
   installUnderwaterFog();
   // (?pcss=blocker,filter overrides the soft shadows' sample counts, for measuring.)
   const pcss = (query.get("pcss") || "").split(",").map(Number);
-  if (settings.taa) installSoftShadows({ blockerSamples: pcss[0] || (settings.detail ? 16 : 6), filterSamples: pcss[1] || (settings.detail ? 24 : 10), frustum: 44 });
+  if (settings.taa && !touchMode) installSoftShadows({ blockerSamples: pcss[0] || (settings.detail ? 16 : 6), filterSamples: pcss[1] || (settings.detail ? 24 : 10), frustum: 44 });
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
   renderer.setPixelRatio(1);
@@ -332,7 +340,8 @@ async function start() {
   function setPaused(value) {
     if (userPaused === value) return;
     userPaused = value;
-    hud.paused(value);
+    habitat.classList.toggle("paused", value);
+    hud.paused(value, touchMode);
     sound.hush(value || logbook.open);
     held.clear();
     if (!value) last = performance.now();
@@ -342,15 +351,18 @@ async function start() {
   let wantFullscreen = true;
   function capture() {
     if (wantFullscreen && !document.fullscreenElement && habitat.requestFullscreen)
-      Promise.resolve(habitat.requestFullscreen({ navigationUI: "hide" })).catch(() => {});
-    Promise.resolve(canvas.requestPointerLock?.()).catch(() => {});
+      Promise.resolve(habitat.requestFullscreen({ navigationUI: "hide" }))
+        // On a phone, held sideways from then on (where the browser lets a page ask).
+        .then(() => touchMode && screen.orientation?.lock?.("landscape"))
+        .catch(() => {});
+    if (!touchMode) Promise.resolve(canvas.requestPointerLock?.()).catch(() => {});
   }
   let wasFullscreen = false;
   document.addEventListener("fullscreenchange", () => {
     const now = !!document.fullscreenElement;
     if (wasFullscreen && !now && !waiting && dead <= 0) setPaused(true);
     // Some browsers let the pointer go on the way into full screen: take it again.
-    if (now && !locked() && !waiting && !userPaused && !logbook.open) Promise.resolve(canvas.requestPointerLock?.()).catch(() => {});
+    if (now && !touchMode && !locked() && !waiting && !userPaused && !logbook.open) Promise.resolve(canvas.requestPointerLock?.()).catch(() => {});
     wasFullscreen = now;
   });
   document.querySelector("#logbook-toggle").addEventListener("click", (event) => {
@@ -469,21 +481,56 @@ async function start() {
     },
     { passive: false },
   );
+  // On a phone: the stick, swiping to look, the bite button, pause, the map from the right.
+  const TOUCH_LOOK = 0.0055;
+  const touch = touchMode
+    ? createTouch({
+        habitat,
+        onTouch: () => {
+          sound.start();
+          hud.touched();
+          if (!document.fullscreenElement) capture();
+        },
+        onLunge: () => {
+          if (!userPaused) lungeQueued = true;
+        },
+        onLook: (dx, dy) => {
+          look.yaw += dx * TOUCH_LOOK;
+          look.pitch = clamp(look.pitch - dy * TOUCH_LOOK, -1.2, 1.2);
+        },
+        onPause: () => setPaused(true),
+        onMap: (openOnly = false) => {
+          if (!openOnly || !minimap.open) minimap.toggle();
+        },
+      })
+    : null;
+  // Turned upright mid-swim: pause behind the note asking for it sideways again.
+  if (touchMode)
+    matchMedia("(orientation: portrait)").addEventListener("change", (event) => {
+      if (event.matches && !waiting && dead <= 0) setPaused(true);
+    });
   function readInput(dt) {
-    const turn = (held.has("ArrowLeft") ? -1 : 0) + (held.has("ArrowRight") ? 1 : 0);
+    const turn =(held.has("ArrowLeft") ? -1 : 0) + (held.has("ArrowRight") ? 1 : 0);
     const tilt = (held.has("ArrowUp") ? 1 : 0) - (held.has("ArrowDown") ? 1 : 0);
     const sp = salmon.speeds();
     look.yaw += turn * sp.turn * dt;
     if (tilt) look.pitch = clamp(look.pitch + tilt * dt * 1.2, -1.2, 1.2);
-    if (!locked() && !turn && !tilt) {
+    // The touch stick: up swims, sideways turns, down brakes (tilting is the right thumb's).
+    const stick = touch?.state;
+    const steering = !!stick?.active;
+    const side = steering ? Math.sign(stick.x) * Math.max(0, Math.abs(stick.x) - 0.12) / 0.88 : 0;
+    if (steering) look.yaw += side * Math.abs(side) ** 0.3 * sp.turn * dt;
+    if (!locked() && !turn && !tilt && !steering && !touchMode) {
       // Without the mouse the view settles back behind the fish.
       look.yaw += Math.atan2(Math.sin(fish.yaw - look.yaw), Math.cos(fish.yaw - look.yaw)) * (1 - Math.exp(-dt * 0.8));
     }
     input.yaw = look.yaw;
     input.pitch = look.pitch;
-    input.forward = held.has("KeyW");
-    input.brake = held.has("KeyS");
+    input.forward = held.has("KeyW") || (steering && stick.y > 0.3);
+    input.brake = held.has("KeyS") || (steering && stick.y < -0.45);
     input.strafe = (held.has("KeyD") ? 1 : 0) - (held.has("KeyA") ? 1 : 0);
+    // A bite with the stick hard to one side is a dodge that way.
+    if (steering && lungeQueued && Math.abs(stick.x) > 0.7) input.strafe = Math.sign(stick.x);
     input.lunge = lungeQueued;
     lungeQueued = false;
     return input;
@@ -834,7 +881,9 @@ async function start() {
     frames = 0,
     dead = 0,
     saveClock = 0,
+    playClock = 0,
     last = performance.now();
+  const playMarks = [2, 5, 10, 20, 30, 45, 60, 90, 120, 180];
   // The eddies round the fish (a worker works them out): what the stones do to the current
   // -- felt by the fish, carrying the specks and the drifting food. ?eddies=0 goes without.
   const eddies = query.get("eddies") === "0" ? null : createFlowField({ query });
@@ -1336,6 +1385,9 @@ async function start() {
     ripples.update(dt);
     placeCamera(dt);
     prof.mark("rest");
+    // How long people play (counted at a few marks, with the stage they have reached).
+    playClock += dt;
+    if (playMarks.length && playClock >= playMarks[0] * 60) track("played", { minutes: playMarks.shift(), stage: STAGES[fish.stage].id });
     saveClock += dt;
     if (saveClock > 8 && dead <= 0 && !fish.airborne) {
       saveClock = 0;
@@ -1434,6 +1486,7 @@ async function start() {
     eggs.instanceMatrix.needsUpdate = true;
   }
   function spawn() {
+    track("spawned", { generation: save.generation + 1 });
     dead = 1e9;
     spawning = { t: 0, laid: 0 };
     sound.hush(false);
@@ -1715,8 +1768,9 @@ async function start() {
   const begin = () => {
     waiting = false;
     last = performance.now();
+    touch?.show();
     // The controls first; the tips wait until they have been read.
-    hud.hint();
+    hud.hint(touchMode);
     if ((!state || query.has("new")) && fish.stage === 0) hud.toast(STAGES[0].name, "Du bist geschlüpft! Dein Dottersack nährt dich – bleib nah am Kies, und schnapp dir schon die ersten winzigen Larven.", 7);
   };
   mark("ready");
@@ -1860,9 +1914,9 @@ async function start() {
     };
 }
 
-// A computer with keyboard and mouse builds the river; a phone or tablet is told the game
-// wants one.
-if (query.has("phone") || (!dev && !isDesktop())) showPhoneNotice();
+// The river, on a computer or a phone (?phone still shows the old note that the game wants
+// a computer).
+if (query.has("phone")) showPhoneNotice();
 else
   start().catch((error) => {
     document.querySelector("#intro").hidden = true;

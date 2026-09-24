@@ -1,7 +1,7 @@
 // The first thing on screen: the title, a line about what the game is, the controls, and
 // the button that starts the swim (which is also the click the browser needs before it
-// plays sound or captures the mouse). The game is made for a computer with a keyboard and a
-// mouse; on a phone or tablet the card says so and the river is never built.
+// plays sound or captures the mouse). With a keyboard and a mouse the card lists the keys;
+// on a phone or a tablet, the touch controls (src/touch.js).
 
 export function isDesktop() {
   const ua = navigator.userAgent;

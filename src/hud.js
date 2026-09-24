@@ -26,6 +26,25 @@ const FOOD_NAMES = {
   herring: "Hering",
 };
 
+// On a phone the keys the tips name are the touch controls: each key drawn as the button
+// or the stick that does the same (whatever the language the key was written in).
+const TOUCH_KEYS = [
+  [/^(Leertaste|Space|空格|スペース|Интервал)$/i, "bite"],
+  [/^S$/i, "stick"],
+  [/^(W|A|D|A\/D)$/i, "stick"],
+  [/^M$/i, "map"],
+  [/^P$/i, "pause"],
+];
+function touchKeys(root) {
+  if (!document.querySelector("#habitat")?.classList.contains("touch")) return;
+  for (const kbd of root.querySelectorAll("kbd")) {
+    const hit = TOUCH_KEYS.find(([re]) => re.test(kbd.textContent.trim()));
+    if (!hit) continue;
+    kbd.textContent = "";
+    kbd.className = `touch-key ${hit[1]}`;
+  }
+}
+
 export function createHud({ stages }) {
   const nameBox = document.querySelector("#status .stage-name");
   // One dot a stage; a little gap where a new phase of life begins.
@@ -79,6 +98,7 @@ export function createHud({ stages }) {
   }
   function showHint(html, seconds, lore = false) {
     hintBox.innerHTML = lore ? html : t(html);
+    touchKeys(hintBox);
     hintBox.classList.toggle("lore", lore);
     hintBox.hidden = false;
     hintBox.classList.remove("fading");
@@ -196,9 +216,9 @@ export function createHud({ stages }) {
     get hintFree() {
       return hintBox.hidden;
     },
-    paused(on) {
+    paused(on, touch = false) {
       veilBox.classList.toggle("dim", on);
-      if (on) toast("Pause", "Klick ins Bild oder P zum Weiterschwimmen", 3600);
+      if (on) toast("Pause", touch ? "Tipp ins Bild zum Weiterschwimmen" : "Klick ins Bild oder P zum Weiterschwimmen", 3600);
       else toastBox.classList.remove("shown");
     },
     // Something eaten: the bars bounce and its name floats up.
@@ -314,12 +334,14 @@ export function createHud({ stages }) {
     },
     toast,
     // The controls, once, until the first key or click.
-    hint() {
+    hint(touch = false) {
       if (hintShown) return;
       hintShown = true;
       hintBox.classList.remove("lore");
       hintBox.innerHTML = t(
-        "Klick ins Bild: Maus lenkt · <kbd>W</kbd> schwimmen · <kbd>S</kbd> bremsen · <kbd>A</kbd>/<kbd>D</kbd> ausweichen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung · <kbd>M</kbd> Karte · <kbd>L</kbd> Logbuch · <kbd>P</kbd> Pause",
+        touch
+          ? "Linker Daumen: schwimmen, lenken, bremsen · Rechts wischen: umschauen, auf- und abtauchen · Großer Knopf: Spurt, Biss, Sprung · Karte: vom rechten Rand wischen"
+          : "Klick ins Bild: Maus lenkt · <kbd>W</kbd> schwimmen · <kbd>S</kbd> bremsen · <kbd>A</kbd>/<kbd>D</kbd> ausweichen · <kbd>Leertaste</kbd> Spurt, Biss, Sprung · <kbd>M</kbd> Karte · <kbd>L</kbd> Logbuch · <kbd>P</kbd> Pause",
       );
       hintBox.hidden = false;
       hintTimer = setTimeout(() => this.touched(), 14000);

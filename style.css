@@ -824,3 +824,142 @@
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.14);
 }
+
+/* ---------------------------------------------------------------------------------------
+   Phones and tablets, held sideways (#habitat.touch): the stick and the buttons, the map
+   coming in from the right, the HUD smaller, the tips up top out of the thumbs' way. */
+#intro .touch-keys,
+#intro .touch-note { display: none; }
+.touch #intro .keys:not(.touch-keys),
+.touch #intro .note:not(.touch-note) { display: none; }
+.touch #intro .touch-keys { display: flex; }
+.touch #intro .touch-note { display: block; }
+.touch #intro .card { max-height: calc(100dvh - 24px); overflow-y: auto; padding-top: 18px; padding-bottom: 18px; }
+.touch #intro h1 { font-size: clamp(26px, 6vw, 40px); margin-bottom: 6px; }
+.touch #intro .lead { margin-bottom: 10px; font-size: 14px; }
+.touch #intro .keys { margin-bottom: 12px; font-size: 12.5px; }
+
+/* The touch keys, drawn as the controls they stand for (in the tips and on the card). */
+#habitat kbd.touch-key {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  padding: 0 !important;
+  vertical-align: -6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16) center / 15px 15px no-repeat;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.5) !important;
+}
+#habitat kbd.touch-key.bite { background-color: rgba(255, 190, 90, 0.5); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M3.5 12c2.6-4.2 6.2-6.3 10.2-6.3 2.7 0 4.9 1 6.8 2.8l-3.4 3.5 3.4 3.5c-1.9 1.8-4.1 2.8-6.8 2.8-4 0-7.6-2.1-10.2-6.3Z'/%3E%3C/svg%3E"); }
+#habitat kbd.touch-key.look { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5v17M8.5 7 12 3.5 15.5 7M8.5 17l3.5 3.5 3.5-3.5'/%3E%3C/svg%3E"); }
+#habitat kbd.touch-key.stick { background-image: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 4px, transparent 5px); }
+#habitat kbd.touch-key.map { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5ZM9 4v13.5M15 6.5V20'/%3E%3C/svg%3E"); }
+#habitat kbd.touch-key.pause { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M8.5 6v12M15.5 6v12'/%3E%3C/svg%3E"); }
+
+#touch { position: fixed; inset: 0; z-index: 3; pointer-events: none; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+#touch[hidden] { display: none; }
+#touch .zone { position: absolute; left: 0; top: 28%; bottom: 0; width: 46%; pointer-events: auto; touch-action: none; }
+#touch .look { position: absolute; top: 0; right: 0; bottom: 0; left: 46%; pointer-events: auto; touch-action: none; }
+#touch .stick {
+  position: absolute;
+  left: max(28px, env(safe-area-inset-left));
+  bottom: 26px;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(10, 40, 48, 0.25), rgba(10, 40, 48, 0.4));
+  box-shadow: inset 0 0 0 2px rgba(230, 250, 245, 0.28);
+  opacity: 0.55;
+  transition: opacity 200ms ease;
+}
+#touch .stick.live { opacity: 1; transition: none; }
+#touch .knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.75), rgba(200, 235, 225, 0.45));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+#touch button {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #f3fbf7;
+  background: linear-gradient(160deg, rgba(10, 40, 48, 0.55), rgba(4, 20, 26, 0.45));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 0 2px rgba(230, 250, 245, 0.22), 0 6px 20px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#touch button svg { width: 55%; height: 55%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#touch button.pressed { transform: scale(0.92); filter: brightness(1.4); }
+#touch .bite { right: max(26px, env(safe-area-inset-right)); bottom: 26px; width: 88px; height: 88px; background: linear-gradient(160deg, rgba(255, 180, 80, 0.55), rgba(200, 110, 40, 0.45)); }
+#touch .bite svg circle { fill: currentColor; stroke: none; }
+#touch .pause { top: 14px; right: max(14px, env(safe-area-inset-right)); width: 42px; height: 42px; }
+#touch .map-tab { top: 50%; right: 0; width: 34px; height: 64px; margin-top: -32px; border-radius: 16px 0 0 16px; opacity: 0.7; }
+#touch .edge { position: absolute; top: 20%; bottom: 20%; right: 0; width: 22px; pointer-events: auto; touch-action: none; }
+/* Paused: the controls give way to the buttons and a tap anywhere swims on. The map
+   stays out of their way (its tab and the swipe are the way to it). */
+.touch.paused #touch,
+.touch.paused #minimap,
+.touch #map-toggle { display: none; }
+.touch #lore-toggle { top: 120px; }
+
+/* The corner buttons only in the pause, as on the computer. */
+.touch:not(.paused) #sound-toggle,
+.touch:not(.paused) #logbook-toggle,
+.touch:not(.paused) #map-toggle,
+.touch:not(.paused) #lore-toggle { opacity: 0 !important; visibility: hidden; pointer-events: none; }
+
+/* The HUD smaller, the tips at the top, the map half see-through coming in from the right. */
+.touch #hud { inset: 10px auto auto max(10px, env(safe-area-inset-left)); }
+.touch #status, .touch #watch { zoom: 0.78; }
+.touch #badges { top: 64px; zoom: 0.8; }
+.touch #sound-toggle .label kbd, .touch #logbook-toggle .label kbd, .touch #map-toggle .label kbd, .touch #lore-toggle .label kbd { display: none; }
+.touch #hint { bottom: auto; top: 10px; max-width: min(46vw, 440px); padding: 7px 12px; font-size: 12px; line-height: 1.45; }
+.touch #hint.lore { font-size: 12.5px; }
+.touch #minimap {
+  top: 64px;
+  bottom: auto;
+  right: max(8px, env(safe-area-inset-right));
+  transform: scale(0.72);
+  transform-origin: top right;
+  opacity: 0.7;
+  pointer-events: auto;
+  animation: map-slide 280ms ease-out;
+}
+/* A tap on the map puts it away; its tab only while it is away. */
+#minimap:not([hidden]) ~ #touch .map-tab { opacity: 0; pointer-events: none; }
+.touch #scene:focus, .touch #scene:focus-visible { outline: none; }
+@keyframes map-slide { from { transform: translateX(110%) scale(0.72); opacity: 0; } }
+.touch #toast .title { font-size: clamp(22px, 4vw, 34px); }
+.touch #toast .line { font-size: 13px; }
+
+/* Held upright: ask for it sideways. */
+#rotate { display: none; }
+@media (orientation: portrait) {
+  .touch #rotate {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 18px;
+    background: #06141a;
+    color: #eef8f4;
+    font: 700 16px/1.4 var(--hud-font);
+    text-align: center;
+  }
+  .touch #rotate .phone { width: 46px; height: 80px; border: 3px solid currentColor; border-radius: 10px; animation: turn-phone 2.2s ease-in-out infinite; }
+}
+@keyframes turn-phone { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }

@@ -2,7 +2,7 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#06141a" />
     <meta name="description" content="Salmon Survival: das Leben eines Lachses, vom Kies der Quelle bis ins Meer und zurück." />
     <title>Salmon Survival</title>
@@ -16,6 +16,7 @@
       }
     </script>
     <link rel="modulepreload" href="/src/main.js" />
+    <link rel="modulepreload" href="/src/touch.js" />
     <link rel="modulepreload" href="/src/lore.js" />
     <link rel="modulepreload" href="/src/celebrate.js" />
     <link rel="modulepreload" href="/src/events.js" />
@@ -199,10 +200,17 @@
               <li><kbd>Leertaste</kbd> Spurt, Biss, Sprung</li>
               <li><kbd>M</kbd> Karte · <kbd>L</kbd> Logbuch</li>
             </ul>
+            <ul class="keys touch-keys">
+              <li><kbd class="touch-key stick"></kbd> Linker Daumen: schwimmen, lenken, bremsen</li>
+              <li><kbd class="touch-key look"></kbd> Rechts wischen: auf- und abtauchen</li>
+              <li><kbd class="touch-key bite"></kbd> Spurt, Biss, Sprung</li>
+              <li><kbd class="touch-key map"></kbd> Karte: vom rechten Rand wischen</li>
+            </ul>
             <button id="intro-start" type="button" disabled>Der Fluss entsteht …</button>
             <p id="intro-status" class="status"></p>
             <button id="intro-new" class="quiet" type="button" hidden>Neues Spiel starten</button>
             <p class="note">Speichert automatisch. Am besten mit Ton.</p>
+            <p class="note touch-note">Am besten quer halten und mit Ton.</p>
           </div>
           <div class="for-phone">
             <p class="phone-note">Salmon Survival läuft vorerst nur auf dem Computer – Mac, Windows oder Linux, mit Tastatur und Maus. Öffne den Link am besten an deinem Rechner.</p>
