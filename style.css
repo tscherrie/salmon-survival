@@ -1140,6 +1140,17 @@
 #habitat.touch #journey { bottom: max(12px, env(safe-area-inset-bottom)); padding: 11px 16px; font-size: 12px; }
 #habitat.touch #journey kbd { display: none; }
 @keyframes journey-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+/* The scent of home: how strong, and whether it grows the way the fish swims. */
+#scentbar { position: fixed; z-index: 3; left: 50%; bottom: 96px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: rgba(0, 14, 18, 0.55); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3); pointer-events: none; font: 800 12px/1 var(--hud-font); color: #f3fbf7; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); white-space: nowrap; }
+#scentbar[hidden] { display: none; }
+#scentbar .track { position: relative; width: min(200px, 26vw); height: 8px; border-radius: 6px; overflow: hidden; background: rgba(255, 255, 255, 0.16); }
+#scentbar .fill { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0); background: linear-gradient(90deg, #d9b56a, #fff0b8); transition: transform 300ms linear; }
+#scentbar .way { min-width: 70px; color: #d8e6e2; }
+#scentbar.warmer .way { color: #ffe29a; }
+#scentbar.warmer { box-shadow: 0 0 0 1.5px rgba(255, 217, 138, 0.55), 0 4px 18px rgba(0, 0, 0, 0.3); }
+#scentbar.strange .fill { background: linear-gradient(90deg, #8a7fa6, #b9b0cf); }
+#scentbar.strange .way { color: #c9bde8; }
+#habitat.touch #scentbar { bottom: max(12px, env(safe-area-inset-bottom)); padding: 6px 12px; font-size: 11px; }
 /* The bait ball's bar is the drive's; its arrow is green. */
 #huntbar { position: fixed; z-index: 3; left: 50%; bottom: 96px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: rgba(0, 14, 18, 0.55); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3); pointer-events: none; font: 800 12px/1 var(--hud-font); color: #f3fbf7; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); white-space: nowrap; }
 #huntbar[hidden] { display: none; }

@@ -42,6 +42,7 @@ import { createLifeCard } from "./lifecard.js";
 import { createSiblings } from "./siblings.js";
 import { createDrive } from "./drive.js";
 import { createBaitBall } from "./baitball.js";
+import { createScent } from "./scent.js";
 
 // English over the German, unless the player chose German.
 startTranslation();
@@ -295,6 +296,7 @@ async function start() {
     run: { group: "Erlebnisse", title: "Im Laichzug", line: "Mit den anderen Lachsen heimgezogen", icon: "fish", tier: "silver" },
     drive: { group: "Meisterstücke", title: "Treibjagd", line: "Den Gänsesägern entkommen", icon: "hunter", tier: "gold" },
     ball: { group: "Meisterstücke", title: "Festmahl", line: "Acht Fische aus einem Futterball erbeutet", icon: "fish", tier: "gold" },
+    nose: { group: "Meisterstücke", title: "Feine Nase", line: "Den Heimatfluss am Duft gefunden", icon: "feat", tier: "gold" },
   };
   for (const [id, def] of Object.entries(FEATS)) badges.register(`feat:${id}`, def);
   const feat = (id, options) => badges.award(`feat:${id}`, FEATS[id], options);
@@ -714,6 +716,66 @@ async function start() {
     const name = goal.querySelector(".name");
     if (name.textContent !== translate(b.title)) name.textContent = translate(b.title);
   }
+  // The scent of home (scent.js): at sea a spawner finds its river by the smell of the brook
+  // it hatched in -- a bar for how strong it is and whether it grows the way it swims; the
+  // map shows the mouth only once it is near. In the river, at the fork of the Alder Brook,
+  // only one arm smells of home.
+  const scent = createScent(scene);
+  const scentBar = document.createElement("div");
+  scentBar.id = "scentbar";
+  scentBar.hidden = true;
+  scentBar.innerHTML = '<span class="label">Duft der Heimat</span><div class="track"><div class="fill"></div></div><span class="way"></span>';
+  habitat.append(scentBar);
+  const scentFill = scentBar.querySelector(".fill");
+  const scentWay = scentBar.querySelector(".way");
+  let scentWord = "";
+  let scentOn = false;
+  let noseTime = 0;
+  let riverFound = false;
+  let strangeSaid = -1e9;
+  function stepScent(dt) {
+    const spawner = phaseOf(fish.stage) === "spawner" && dead <= 0;
+    const atSea = fish.river.s > S.coast - 40;
+    const nearFork = TRIBUTARIES[0] && Math.abs(fish.river.s - TRIBUTARIES[0].s) < 160;
+    scentOn = spawner && (atSea || nearFork) && !spawning;
+    const st = scent.update(dt, fish, time, scentOn && atSea);
+    if (!spawner) {
+      riverFound = false;
+      noseTime = 0;
+    }
+    // In at the mouth from the sea, by the smell of it.
+    if (spawner && !riverFound && fish.river.s < S.coast - 20 && noseTime > 0) {
+      riverFound = true;
+      hud.toast("Der Heimatfluss!", "Das Wasser riecht nach dem Bach, in dem du geschlüpft bist.", 6);
+      if (noseTime > 20) feat("nose", { delay: 2 });
+      track("home_river", { seconds: Math.round(noseTime) });
+    }
+    scentBar.hidden = !scentOn;
+    if (!scentOn) return;
+    if (atSea) noseTime += dt;
+    scentFill.style.transform = `scaleX(${Math.sqrt(clamp(st.home, 0, 1)).toFixed(3)})`;
+    const strange = st.foreign > st.home && st.foreign > 0.12;
+    const word = strange ? "fremd" : st.home < 0.03 ? "keine Spur" : st.home > 0.95 ? "Heimat" : st.trend > 0.00015 ? "stärker" : st.trend < -0.00015 ? "schwächer" : "gleich";
+    scentBar.classList.toggle("strange", strange);
+    scentBar.classList.toggle("warmer", word === "stärker" || word === "Heimat");
+    if (word !== scentWord) {
+      scentWord = word;
+      scentWay.textContent = translate(word);
+    }
+    if (atSea) {
+      hud.tip("scent", "<b>Der Duft der Heimat.</b> Jeder Fluss riecht anders – und du erinnerst dich an den Geruch deines Bachs. Such im Meer die Fahne seines Wassers und schwimm dorthin, wo der Duft stärker wird. Die Mündung zeigt dir die Karte erst, wenn du nah dran bist. Vorsicht: Weiter an der Küste mündet ein fremder Fluss.", 15);
+      if (strange && time - strangeSaid > 14) {
+        strangeSaid = time;
+        hud.note("Fremdes Wasser – das ist nicht dein Fluss.");
+      }
+    } else {
+      hud.tip("fork", "<b>Zwei Bäche.</b> Hier mündet der Erlenbach. Nur einer von beiden riecht nach der Kinderstube – folge dem Duft.", 10);
+      if (strange && time - strangeSaid > 10) {
+        strangeSaid = time;
+        hud.note("Das ist nicht dein Bach.");
+      }
+    }
+  }
   // The way home, for a spawner: long, and between the places that try it much the same.
   // Where nothing is going on it can go on with the run -- the screen goes dark, a word of
   // where it has got to, and it is just below the next of them. Never past one: each place
@@ -800,7 +862,7 @@ async function start() {
     }
     if (threatened) calmSince = time;
     const ok =
-      phaseOf(fish.stage) === "spawner" && dead <= 0 && !spawning && fish.river.s < S.straight && !fish.airborne && !fish.captive && !charge && !celebration.active && !drive.on && !baitball.on && time - calmSince > 4;
+      phaseOf(fish.stage) === "spawner" && dead <= 0 && !spawning && fish.river.s < S.straight && !fish.airborne && !fish.captive && !charge && !celebration.active && !drive.on && !baitball.on && !scentOn && time - calmSince > 4;
     const target = ok ? journeyTarget() : null;
     if (!!target !== journeyShown || (target && journeyLabel.dataset.to !== target.gate.name)) {
       journeyShown = !!target;
@@ -1546,6 +1608,7 @@ async function start() {
     prof.mark("nets+events");
     stepDrive(dt);
     stepBall(dt);
+    stepScent(dt);
     const outcome = life.update(dt, { fish, salmon, camera, time, world, above: camera.position.y > level(cameraRiver.s), drive: drive.on ? drive.lead : null, ball: baitball.on ? baitball.ball : null });
     warnings(dt);
     goalArrow();
@@ -1827,7 +1890,7 @@ async function start() {
       case "sea":
         return "Ein großer Meerlachs. Heringe und Makrelen jagen, noch ein wenig wachsen – dann ruft die Heimat.";
       case "spawner":
-        return "Der Ruf der Heimat. Die Karte (M) zeigt dir den Weg zur Mündung. Fressen wirst du nicht mehr.";
+        return "Der Ruf der Heimat. Folge dem Duft deines Flusses bis zur Mündung. Fressen wirst du nicht mehr.";
       default:
         return "";
     }
@@ -2223,7 +2286,7 @@ async function start() {
     const homing = !!STAGES[fish.stage].fasting && fish.river.s > S.coast - 50;
     if (homing && !homeShown && !minimap.open && dead <= 0) minimap.toggle();
     if (homing) homeShown = true;
-    minimap.update(dt, { fish, yaw: look.yaw, homing, others: mates ? mates(mateTime) : [] });
+    minimap.update(dt, { fish, yaw: look.yaw, homing, others: mates ? mates(mateTime) : [], hideMouth: homing && scentOn && scent.state.home < 0.6 });
 
     prof.mark("draw-cpu");
     caustics.render();

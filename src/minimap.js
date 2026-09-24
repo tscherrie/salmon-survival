@@ -41,6 +41,7 @@ export function createMinimap({ logbook, places = null, shownAtFirst = false }) 
   let stripClock = 0;
   let lastWhere = "";
   let homing = false; // grown and going home: the way to the mouth in gold
+  let noMouth = false; // going home by the scent alone: the mouth not shown until it is near
 
   // Canvases at the screen's own pixel density.
   const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -417,7 +418,7 @@ export function createMinimap({ logbook, places = null, shownAtFirst = false }) 
     // pointing to it, with how far. Once the fish is grown and homing, all of it gold, a
     // dashed trail running out from the fish toward it.
     tagAngles.length = 0;
-    if (fs >= S.coast - 50) {
+    if (fs >= S.coast - 50 && !noMouth) {
       const m = place(S.coast, 0, {});
       const p = toScreen(m.x, m.z, {});
       const dx = p.x - r,
@@ -647,9 +648,10 @@ export function createMinimap({ logbook, places = null, shownAtFirst = false }) 
     },
     // Each frame: dt (0 while the game stands still), the fish, the way the camera looks,
     // and whoever else is in the river.
-    update(dt, { fish, yaw, homing: home = false, others = [] }) {
+    update(dt, { fish, yaw, homing: home = false, others = [], hideMouth = false }) {
       seconds += dt;
       homing = home;
+      noMouth = hideMouth;
       const c = section(Math.min(fish.river.s, S.coast));
       flow += c.speed * dt;
       const want = fish.river.s > S.coast + 100 ? 420 : clamp(c.width * 1.5, 16, 420);
