@@ -119,6 +119,15 @@ export function createHud({ stages }) {
   const ring = (name) => rings?.querySelector(`.${name}`);
   const ringOf = { energyNow: ring("energy-now"), energyReach: ring("energy-reach"), growthNow: ring("growth-now"), growthPending: ring("growth-pending"), stomachNow: ring("stomach-now"), stomachTrack: ring("stomach-track") };
   const stageNumber = rings?.querySelector(".stage-number");
+  // On a phone only the rings show; a tap on them opens the full card (as on a computer),
+  // another tap closes it again.
+  const statusBox = document.querySelector("#status");
+  statusBox.addEventListener("click", () => {
+    const habitat = document.querySelector("#habitat");
+    if (!habitat?.classList.contains("touch")) return;
+    const open = statusBox.classList.toggle("expanded");
+    habitat.classList.toggle("stats-open", open);
+  });
   const arc = (element, value) => {
     if (!element) return;
     const v = Math.min(1, Math.max(0, value));

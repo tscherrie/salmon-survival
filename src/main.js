@@ -77,11 +77,12 @@ async function start() {
   // The game's budget: the full-detail look, but the shafts marched in fewer, jittered
   // steps (the temporal blend smooths them just as well) and at most ~2.4 million pixels
   // drawn -- the rest is filled in by the upscale, and the frame rate is what matters here.
-  // On a phone: about a million pixels, a smaller shadow map, fewer steps in the light
-  // shafts, plain shadow edges.
+  // On a phone: sharp on its dense screen (up to twice the page's pixels, about two million
+  // at most -- the resolution steps down by itself when frames run long), a smaller shadow
+  // map, fewer steps in the light shafts, plain shadow edges.
   const gameSettings = () => {
     const base = renderSettings({ profile, pixelRatio: devicePixelRatio });
-    if (touchMode) return { ...base, shaftSteps: Math.min(base.shaftSteps, 10), maxPixels: Math.min(base.maxPixels, 1.0e6), shadowSize: Math.min(base.shadowSize, 1024) };
+    if (touchMode) return { ...base, resolution: Math.min(devicePixelRatio || 1, 2), shaftSteps: Math.min(base.shaftSteps, 10), maxPixels: 2.2e6, shadowSize: Math.min(base.shadowSize, 1024) };
     return { ...base, shaftSteps: Math.min(base.shaftSteps, 24), maxPixels: Math.min(base.maxPixels, 2.4e6) };
   };
   let settings = gameSettings();
@@ -483,7 +484,7 @@ async function start() {
     { passive: false },
   );
   // On a phone: dragging to look and steer, the swim and dash buttons, pause, the map.
-  const TOUCH_LOOK = 0.0055;
+  const TOUCH_LOOK = 0.007;
   const touch = touchMode
     ? createTouch({
         habitat,
