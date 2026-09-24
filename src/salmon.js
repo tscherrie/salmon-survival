@@ -537,8 +537,11 @@ export function createSalmon(scene, { pace = 1 } = {}) {
     } else {
       const rate = st.need / (st.minutes * 60);
       const inSea = s > S.coast - 400 ? 1 : 0;
-      // A smolt grows on its way down, if slowly; it becomes a postsmolt only in salt water.
-      const factor = st.sea && !inSea ? 0.5 : 1;
+      // A smolt grows on its way down, the slower the farther it still is from the sea (a
+      // fifth of the pace far up the river, full pace in the estuary); it becomes a postsmolt
+      // only in salt water.
+      const closeness = clamp(1 - (S.coast - 400 - s) / 12000, 0, 1);
+      const factor = st.sea && !inSea ? 0.2 + 0.8 * closeness * closeness : 1;
       const digest = Math.min(f.stomach, (f.stomach / STOMACH_SECONDS) * dt * pace * factor * thermal.pace);
       f.stomach -= digest;
       if (f.energy < 0.3) f.energy = Math.min(1, f.energy + (0.0065 * digest) / rate);

@@ -343,7 +343,7 @@ const PAIRS = [
   ["What you eat goes into your <b>stomach</b> and slowly turns into <b>growth</b>. When the growth bar is full, you reach the next stage.", "食べたものは<b>胃</b>に入り、少しずつ<b>成長</b>に変わる。成長バーがいっぱいになると次の段階へ進む。"],
   ["The current is stronger than you: dive to the bottom and hold <kbd>S</kbd> to cling to the stones.", "流れがあなたより強い：底まで潜って<kbd>S</kbd>を押し続け、石にしがみつこう。"],
   ["Your <b>strength</b> is running low. Eat something, or rest behind a stone or on the bottom (<kbd>S</kbd>).", "<b>体力</b>が残り少ない。何か食べるか、石の陰か底で休もう（<kbd>S</kbd>）。"],
-  ["In fresh water a smolt grows only slowly, and it becomes a post-smolt only in salt water. Let yourself drift downstream, all the way to the sea.", "スモルトは淡水ではゆっくりとしか育たず、海水に入って初めて降海スモルトになる。海まで下流へ流されていこう。"],
+  ["In fresh water a smolt grows only slowly – the farther from the sea, the slower – and it becomes a post-smolt only in salt water. Let yourself drift downstream, all the way to the sea.", "スモルトは淡水ではゆっくりとしか育たない。海から遠いほど遅くなる。海水に入って初めて降海スモルトになる。海まで下流へ流されていこう。"],
   ["At sea you hunt: sand eels and herring flee. Swim in close – near enough you strike by yourself, with <kbd>Space</kbd> you dart in from further off. Pace your strength.", "海では狩りをする：イカナゴやニシンは逃げる。近くまで泳ごう――十分近ければ自分で襲いかかり、<kbd>スペース</kbd>で遠くからも突っ込める。体力の配分に気をつけて。"],
   ["Your reserves are running low. Rest on the bottom (<kbd>S</kbd>); in quiet water you recover.", "蓄えが残り少ない。底で休もう（<kbd>S</kbd>）。静かな水の中で回復する。"],
   ["<b>Winter.</b> Ice covers the river and the water is freezing. Everything lives slowly now: you need little strength, but food is scarce. Rest in deep, quiet water.", "<b>冬。</b>川は氷に覆われ、水は凍えるほど冷たい。すべてがゆっくりと生きている：体力はあまり使わないが、エサも少ない。深く静かな水の中で休もう。"],

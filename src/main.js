@@ -1312,7 +1312,7 @@ async function start() {
     else if (fish.energy < 0.3 && !st.fasting && !st.yolk)
       hud.tip("tired", "Deine <b>Kraft</b> geht zur Neige. Friss etwas, oder ruh dich hinter einem Stein oder am Grund (<kbd>S</kbd>) aus.");
     else if (st.id === "smolt" && regionWeights(fish.river.s).sea < 0.5 && fish.progress > 0.1)
-      hud.tip("smolt", "Im Süßwasser wächst ein Smolt nur langsam, und zum Postsmolt wird er erst im Salzwasser. Lass dich flussabwärts treiben, bis ins Meer.");
+      hud.tip("smolt2", "Im Süßwasser wächst ein Smolt nur langsam – je weiter vom Meer, desto langsamer –, und zum Postsmolt wird er erst im Salzwasser. Lass dich flussabwärts treiben, bis ins Meer.");
     else if (st.phase === "sea" && regionWeights(fish.river.s).sea > 0.5)
       hud.tip("hunt", "Im Meer jagst du: Sandaale und Heringe fliehen. Schwimm dicht heran – aus der Nähe stößt du von selbst zu, mit <kbd>Leertaste</kbd> schießt du von weiter weg hinein. Teil dir deine Kraft ein.");
     else if (st.fasting && fish.energy < 0.35)

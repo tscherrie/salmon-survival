@@ -342,7 +342,7 @@ const PAIRS = [
   ["What you eat goes into your <b>stomach</b> and slowly turns into <b>growth</b>. When the growth bar is full, you reach the next stage.", "吃下的东西进入你的<b>胃</b>，并慢慢转化为<b>成长</b>。成长条满了，你就进入下一个阶段。"],
   ["The current is stronger than you: dive to the bottom and hold <kbd>S</kbd> to cling to the stones.", "水流比你强：潜到水底并按住 <kbd>S</kbd>，紧贴石头。"],
   ["Your <b>strength</b> is running low. Eat something, or rest behind a stone or on the bottom (<kbd>S</kbd>).", "你的<b>体力</b>快用完了。吃点东西，或者在石头后面或水底休息（<kbd>S</kbd>）。"],
-  ["In fresh water a smolt grows only slowly, and it becomes a post-smolt only in salt water. Let yourself drift downstream, all the way to the sea.", "银化幼鲑在淡水中长得很慢，只有到了咸水里才会变成入海幼鲑。顺流而下，一直漂到大海。"],
+  ["In fresh water a smolt grows only slowly – the farther from the sea, the slower – and it becomes a post-smolt only in salt water. Let yourself drift downstream, all the way to the sea.", "银化幼鲑在淡水中长得很慢——离大海越远，长得越慢——只有到了咸水里才会变成入海幼鲑。顺流而下，一直漂到大海。"],
   ["At sea you hunt: sand eels and herring flee. Swim in close – near enough you strike by yourself, with <kbd>Space</kbd> you dart in from further off. Pace your strength.", "在海里你要捕猎：玉筋鱼和鲱鱼会逃跑。靠近它们——足够近时你会自动出击，按 <kbd>空格</kbd> 可以从更远处冲过去。注意分配体力。"],
   ["Your reserves are running low. Rest on the bottom (<kbd>S</kbd>); in quiet water you recover.", "你的储备快用完了。在水底休息（<kbd>S</kbd>）；在平静的水中你会恢复。"],
   ["<b>Winter.</b> Ice covers the river and the water is freezing. Everything lives slowly now: you need little strength, but food is scarce. Rest in deep, quiet water.", "<b>冬天。</b>冰封住了河面，河水冰冷刺骨。现在一切都过得很慢：你需要的体力很少，但食物也很稀少。在深而平静的水中休息吧。"],
