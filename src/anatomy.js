@@ -291,56 +291,152 @@ export const BODIES = {
     pectoral: { x: 0.2, y: -0.02, length: 0.08, spread: 0.035 },
     pelvic: { x: 0.24, y: -0.07, length: 0.05 },
   },
-  // An otter, like the seal in the fish's frame: a flat head, a long supple body, short legs
-  // where the paired fins go, and the thick tapering tail it swims with.
+  // The grayling: slim and silver-grey, a small underslung mouth, and the great sail of a
+  // dorsal fin, purple and spotted, that it spreads in the current.
+  grayling: {
+    profile: [
+      [0.35, 0.0, -0.006, 0.003],
+      [0.335, 0.012, -0.018, 0.01],
+      [0.31, 0.026, -0.034, 0.019],
+      [0.27, 0.042, -0.05, 0.027],
+      [0.2, 0.058, -0.064, 0.033],
+      [0.12, 0.066, -0.07, 0.035],
+      [0.04, 0.068, -0.07, 0.035],
+      [-0.05, 0.062, -0.064, 0.032],
+      [-0.13, 0.05, -0.05, 0.026],
+      [-0.21, 0.036, -0.034, 0.018],
+      [-0.26, 0.028, -0.026, 0.011],
+      [-0.3, 0.029, -0.027, 0.007],
+    ],
+    eye: { x: 0.29, y: 0.016, r: 0.017 },
+    mouth: { x: 0.318, y: -0.01 },
+    dorsal: { base: [0.14, -0.1], tip: [[0.14, 0.13], [0.08, 0.2], [0.0, 0.225], [-0.07, 0.2], [-0.1, 0.13]] },
+    adipose: { base: [-0.185, -0.215], tip: [[-0.195, 0.048], [-0.21, 0.05], [-0.222, 0.04]] },
+    anal: { base: [-0.12, -0.19], tip: [[-0.12, -0.12], [-0.14, -0.125], [-0.17, -0.1], [-0.19, -0.07]] },
+    caudal: { upper: [-0.44, 0.095], fork: [-0.39, 0.0], lower: [-0.44, -0.095], depth: 0.028 },
+    pectoral: { x: 0.2, y: -0.05, length: 0.08, spread: 0.03 },
+    pelvic: { x: -0.02, y: -0.066, length: 0.06 },
+  },
+  // The eel: long and round, snake-like, the dorsal and anal fins one low fold running
+  // round the tail; it lies up under stones by day.
+  eel: {
+    profile: [
+      [0.35, 0.002, -0.006, 0.006],
+      [0.33, 0.012, -0.015, 0.012],
+      [0.3, 0.018, -0.02, 0.016],
+      [0.25, 0.022, -0.024, 0.019],
+      [0.15, 0.024, -0.026, 0.02],
+      [0.0, 0.024, -0.026, 0.019],
+      [-0.15, 0.022, -0.022, 0.016],
+      [-0.25, 0.018, -0.018, 0.012],
+      [-0.3, 0.015, -0.015, 0.009],
+    ],
+    eye: { x: 0.315, y: 0.008, r: 0.008 },
+    mouth: { x: 0.34, y: -0.004 },
+    dorsal: { base: [0.08, -0.3], tip: [[0.08, 0.034], [-0.05, 0.045], [-0.2, 0.045], [-0.3, 0.035]] },
+    adipose: null,
+    anal: { base: [-0.02, -0.3], tip: [[-0.02, -0.036], [-0.12, -0.046], [-0.24, -0.045], [-0.3, -0.035]] },
+    caudal: { upper: [-0.41, 0.035], fork: [-0.43, 0.0], lower: [-0.41, -0.035], depth: 0.015 },
+    pectoral: { x: 0.27, y: -0.004, length: 0.035, spread: 0.018 },
+    pelvic: null,
+  },
+  // The mackerel: a sleek spindle, wavy black bars over a blue-green back, two dorsals, a
+  // deeply forked tail; it comes in fast shoals in summer.
+  mackerel: {
+    profile: [
+      [0.35, 0.002, -0.004, 0.003],
+      [0.335, 0.014, -0.02, 0.011],
+      [0.3, 0.03, -0.04, 0.022],
+      [0.25, 0.045, -0.055, 0.03],
+      [0.17, 0.058, -0.066, 0.036],
+      [0.07, 0.062, -0.068, 0.037],
+      [-0.03, 0.056, -0.06, 0.033],
+      [-0.13, 0.042, -0.044, 0.024],
+      [-0.22, 0.024, -0.024, 0.013],
+      [-0.27, 0.014, -0.014, 0.008],
+      [-0.3, 0.014, -0.014, 0.006],
+    ],
+    eye: { x: 0.29, y: 0.012, r: 0.016 },
+    mouth: { x: 0.315, y: -0.006 },
+    dorsal: { base: [0.14, 0.02], tip: [[0.14, 0.1], [0.1, 0.11], [0.05, 0.09], [0.02, 0.07]] },
+    adipose: { base: [-0.05, -0.12], tip: [[-0.05, 0.08], [-0.08, 0.085], [-0.12, 0.06]] },
+    anal: { base: [-0.06, -0.13], tip: [[-0.06, -0.08], [-0.09, -0.085], [-0.13, -0.06]] },
+    caudal: { upper: [-0.45, 0.1], fork: [-0.34, 0.0], lower: [-0.45, -0.1], depth: 0.012 },
+    pectoral: { x: 0.2, y: -0.02, length: 0.06, spread: 0.02 },
+    pelvic: { x: 0.18, y: -0.06, length: 0.035 },
+  },
+  // An otter, in the fish's frame so the same wave swims it: a flat broad head with small
+  // round ears, a neck, a long supple body, short legs with webbed paws tucked back as it
+  // swims, and the thick tapering tail it steers with.
   otter: {
     profile: [
-      [0.35, 0.006, -0.012, 0.014],
-      [0.33, 0.026, -0.03, 0.032],
-      [0.29, 0.04, -0.042, 0.046],
-      [0.24, 0.04, -0.04, 0.042],
-      [0.16, 0.05, -0.052, 0.055],
-      [0.06, 0.056, -0.058, 0.06],
-      [-0.04, 0.052, -0.054, 0.056],
-      [-0.1, 0.04, -0.04, 0.042],
-      [-0.18, 0.025, -0.025, 0.026],
-      [-0.26, 0.014, -0.014, 0.014],
-      [-0.3, 0.008, -0.008, 0.008],
+      [0.35, 0.005, -0.011, 0.011],
+      [0.335, 0.018, -0.024, 0.024],
+      [0.31, 0.031, -0.035, 0.037],
+      [0.28, 0.038, -0.04, 0.044],
+      [0.25, 0.038, -0.042, 0.042],
+      [0.2, 0.048, -0.054, 0.052],
+      [0.12, 0.058, -0.066, 0.062],
+      [0.03, 0.062, -0.07, 0.066],
+      [-0.06, 0.058, -0.064, 0.062],
+      [-0.13, 0.048, -0.052, 0.05],
+      [-0.2, 0.034, -0.036, 0.036],
+      [-0.28, 0.022, -0.024, 0.024],
+      [-0.36, 0.013, -0.014, 0.014],
+      [-0.43, 0.004, -0.005, 0.005],
     ],
-    eye: { x: 0.31, y: 0.024, r: 0.009 },
-    mouth: { x: 0.33, y: -0.012 },
+    eye: { x: 0.305, y: 0.02, r: 0.008 },
+    mouth: { x: 0.335, y: -0.012 },
     dorsal: null,
     adipose: null,
     anal: null,
-    caudal: { upper: [-0.36, 0.012], fork: [-0.38, 0.0], lower: [-0.36, -0.012], depth: 0.008 },
-    pectoral: { x: 0.18, y: -0.05, length: 0.07, spread: 0.03 },
-    pelvic: { x: -0.1, y: -0.04, length: 0.08 },
+    caudal: null,
+    pectoral: null,
+    pelvic: null,
+    extras: [
+      { type: "blob", paired: true, at: [0.262, 0.034, 0.032], r: [0.007, 0.008, 0.005], t: 0.1 },
+      // The dark wet nose.
+      { type: "blob", at: [0.349, 0.0, 0.0], r: [0.004, 0.005, 0.008], t: 0.0 },
+      { type: "leg", paired: true, at: [0.16, -0.035, 0.042], dir: [-0.55, -0.7, 0.35], length: 0.07, r0: 0.016, r1: 0.011, t: 0.3,
+        paw: { along: [-1, -0.25, 0.15], across: [0, 0, 1], length: 0.034, width: 0.03, thick: 0.005, digits: 5 } },
+      { type: "leg", paired: true, at: [-0.1, -0.035, 0.042], dir: [-0.8, -0.45, 0.35], length: 0.08, r0: 0.02, r1: 0.012, t: 0.3,
+        paw: { along: [-1, -0.15, 0.1], across: [0, 0, 1], length: 0.05, width: 0.042, thick: 0.005, digits: 5 } },
+    ],
   },
-  // A harbour seal, in the fish's frame so the same wave swims it: a round head, a thick
-  // body, fore flippers where a fish has pectorals and the paired hind flippers as its tail.
+  // A harbour seal, in the fish's frame so the same wave swims it: a round head on a thick
+  // neck, a heavy spindle of a body, short fore flippers, and the two hind flippers held
+  // together upright, swept from side to side as its tail.
   seal: {
     profile: [
-      [0.35, 0.004, -0.018, 0.012],
-      [0.33, 0.03, -0.042, 0.034],
-      [0.29, 0.058, -0.064, 0.056],
-      [0.24, 0.07, -0.074, 0.066],
-      [0.19, 0.068, -0.074, 0.064],
-      [0.12, 0.082, -0.092, 0.08],
-      [0.03, 0.09, -0.1, 0.088],
+      [0.35, 0.006, -0.014, 0.012],
+      [0.335, 0.022, -0.03, 0.028],
+      [0.31, 0.04, -0.048, 0.044],
+      [0.27, 0.056, -0.062, 0.058],
+      [0.23, 0.06, -0.066, 0.062],
+      [0.19, 0.062, -0.07, 0.064],
+      [0.12, 0.078, -0.088, 0.078],
+      [0.03, 0.088, -0.098, 0.088],
       [-0.06, 0.084, -0.092, 0.082],
       [-0.15, 0.064, -0.07, 0.06],
       [-0.22, 0.042, -0.046, 0.036],
       [-0.27, 0.026, -0.028, 0.02],
-      [-0.3, 0.02, -0.02, 0.014],
+      [-0.3, 0.018, -0.018, 0.014],
     ],
-    eye: { x: 0.3, y: 0.03, r: 0.018 },
+    eye: { x: 0.3, y: 0.032, r: 0.017 },
     mouth: { x: 0.33, y: -0.018 },
     dorsal: null,
     adipose: null,
     anal: null,
-    caudal: { upper: [-0.45, 0.07], fork: [-0.38, 0.0], lower: [-0.45, -0.07], depth: 0.02 },
-    pectoral: { x: 0.17, y: -0.06, length: 0.11, spread: 0.035 },
+    caudal: null,
+    pectoral: null,
     pelvic: null,
+    extras: [
+      { type: "blob", at: [0.349, 0.002, 0.0], r: [0.006, 0.008, 0.012], t: 0.0 },
+      { type: "leg", paired: true, at: [0.14, -0.06, 0.06], dir: [-0.5, -0.5, 0.55], length: 0.03, r0: 0.02, r1: 0.016, t: 0.2,
+        paw: { along: [-0.8, -0.35, 0.5], across: [0.5, 0, 0.8], length: 0.07, width: 0.036, thick: 0.008, digits: 5 } },
+      { type: "paddle", at: [-0.29, 0.004, 0.0], along: [-1, 0.28, 0], across: [0, 1, 0], length: 0.13, width: 0.06, thick: 0.01, t: 0.15, digits: 5 },
+      { type: "paddle", at: [-0.29, -0.004, 0.0], along: [-1, -0.28, 0], across: [0, 1, 0], length: 0.13, width: 0.06, thick: 0.01, t: 0.25, digits: 5 },
+    ],
   },
 };
 
@@ -493,6 +589,96 @@ export function makeFish(kind = "salmon", { detail = 1 } = {}) {
     const index = sphere.index;
     for (let k = 0; k < index.count; k += 3) body.triangle(offset + index.getX(k), offset + index.getX(k + 1), offset + index.getX(k + 2));
   }
+  // The two mammals that swim in the fish's frame (the otter, the seal) are more than a
+  // shell: legs and webbed paws, flippers, ears -- solid and furred like the body (part 0,
+  // so the swimming wave bends them with it; uv says which part of the coat they wear).
+  if (plan.extras) {
+    const V = (x, y, z) => new THREE.Vector3(x, y, z);
+    const coatUv = (x, t) => [Math.min(1, Math.max(0, (SNOUT - x) / SL)), t];
+    // A tapering tube from a to b.
+    const tube = (a, b, r0, r1, t, sides = 8) => {
+      const axis = b.clone().sub(a).normalize();
+      const s1 = V(0, 1, 0).cross(axis);
+      if (s1.lengthSq() < 1e-6) s1.set(1, 0, 0);
+      s1.normalize();
+      const s2 = axis.clone().cross(s1).normalize();
+      const start = body.positions.length / 3;
+      for (let e = 0; e < 2; e++) {
+        const c = e ? b : a,
+          r = e ? r1 : r0;
+        for (let k = 0; k < sides; k++) {
+          const ang = (k / sides) * TAU;
+          const p = c.clone().addScaledVector(s1, Math.cos(ang) * r).addScaledVector(s2, Math.sin(ang) * r);
+          body.vertex([p.x, p.y, p.z], [0, 1, 0], coatUv(p.x, t), 0);
+        }
+      }
+      for (let k = 0; k < sides; k++) {
+        const k1 = (k + 1) % sides;
+        body.triangle(start + k, start + sides + k, start + k1);
+        body.triangle(start + k1, start + sides + k, start + sides + k1);
+      }
+    };
+    // A blob: a squashed sphere (an ear, a knuckle, the end of a limb).
+    const blob = (c, rx, ry, rz, t) => {
+      const sphere = new THREE.SphereGeometry(1, 10, 7);
+      const pos = sphere.attributes.position;
+      const start = body.positions.length / 3;
+      for (let k = 0; k < pos.count; k++) {
+        const p = V(c.x + pos.getX(k) * rx, c.y + pos.getY(k) * ry, c.z + pos.getZ(k) * rz);
+        body.vertex([p.x, p.y, p.z], [0, 1, 0], coatUv(p.x, t), 0);
+      }
+      const index = sphere.index;
+      for (let k = 0; k < index.count; k += 3) body.triangle(start + index.getX(k), start + index.getX(k + 1), start + index.getX(k + 2));
+    };
+    // A paddle: a flat, slightly thick fan from a root along `along`, `across` its width,
+    // its far edge scalloped into `digits` toes (a webbed paw, a flipper).
+    const paddle = (root, along, across, length, width, thick, t, digits = 5) => {
+      along = along.clone().normalize();
+      across = across.clone().sub(along.clone().multiplyScalar(across.dot(along))).normalize();
+      const up = along.clone().cross(across).normalize();
+      const n = 14;
+      const rim = [];
+      for (let k = 0; k <= n; k++) {
+        const f = k / n; // across, 0..1
+        const s = f * 2 - 1;
+        // Narrow at the root, widest near the end; the toes stand out along the far edge.
+        const toe = digits ? 0.12 * Math.pow(Math.abs(Math.cos(Math.PI * f * digits)), 3) : 0;
+        const reach = length * (0.78 + 0.22 * Math.sqrt(1 - s * s) + toe);
+        rim.push(root.clone().addScaledVector(along, reach).addScaledVector(across, s * width * 0.5));
+      }
+      const start = body.positions.length / 3;
+      for (const face of [1, -1]) {
+        const centre = root.clone().addScaledVector(up, face * thick * 0.5);
+        body.vertex([centre.x, centre.y, centre.z], [0, 1, 0], coatUv(centre.x, t), 0);
+        for (const p of rim) {
+          const q = p.clone().addScaledVector(up, face * thick * 0.25);
+          body.vertex([q.x, q.y, q.z], [0, 1, 0], coatUv(q.x, t), 0);
+        }
+      }
+      const second = start + n + 2;
+      for (let k = 0; k < n; k++) {
+        body.triangle(start, start + 1 + k, start + 2 + k);
+        body.triangle(second, second + 2 + k, second + 1 + k);
+        // The rim between the two faces.
+        body.triangle(start + 1 + k, second + 1 + k, start + 2 + k);
+        body.triangle(start + 2 + k, second + 1 + k, second + 2 + k);
+      }
+    };
+    for (const e of plan.extras) {
+      for (const side of e.paired ? [-1, 1] : [1]) {
+        const at = V(e.at[0], e.at[1], e.at[2] * side);
+        if (e.type === "blob") blob(at, e.r[0], e.r[1], e.r[2], e.t ?? 0.3);
+        if (e.type === "leg") {
+          const dir = V(e.dir[0], e.dir[1], e.dir[2] * side).normalize();
+          const end = at.clone().addScaledVector(dir, e.length);
+          tube(at, end, e.r0, e.r1, e.t ?? 0.7);
+          blob(end, e.r1 * 1.1, e.r1 * 1.1, e.r1 * 1.1, e.t ?? 0.7);
+          if (e.paw) paddle(end, V(e.paw.along[0], e.paw.along[1], e.paw.along[2] * side), V(e.paw.across[0], e.paw.across[1], e.paw.across[2] * side), e.paw.length, e.paw.width, e.paw.thick, e.t ?? 0.7, e.paw.digits ?? 5);
+        }
+        if (e.type === "paddle") paddle(at, V(e.along[0], e.along[1], e.along[2] * side), V(e.across[0], e.across[1], e.across[2] * side), e.length, e.width, e.thick, e.t ?? 0.5, e.digits ?? 5);
+      }
+    }
+  }
   const bodyGeometry = body.finish(true);
 
   // Eyes: domes set into the head.
@@ -568,7 +754,7 @@ export function makeFish(kind = "salmon", { detail = 1 } = {}) {
   };
   const tipLine = (points) => points.map(([x, y]) => [x, y, 0]);
   // Caudal: from the hypural plate out to two lobes and the fork between.
-  {
+  if (plan.caudal) {
     const d = plan.caudal.depth;
     const base = [
       [hypural + 0.012, d, 0],
@@ -596,7 +782,7 @@ export function makeFish(kind = "salmon", { detail = 1 } = {}) {
   if (plan.dorsal) fan(2, median(plan.dorsal.base[0], plan.dorsal.base[1], true), tipLine(plan.dorsal.tip));
   if (plan.anal) fan(3, median(plan.anal.base[0], plan.anal.base[1], false), tipLine(plan.anal.tip));
   if (plan.adipose) fan(12, median(plan.adipose.base[0], plan.adipose.base[1], true, 3), tipLine(plan.adipose.tip));
-  for (const side of [-1, 1]) {
+  for (const side of plan.pectoral ? [-1, 1] : []) {
     const { x, y, length, spread } = plan.pectoral;
     const z = (px, py) => side * surface(px, (py - (top(px) + bottom(px)) / 2) / ((top(px) - bottom(px)) / 2), 1)[2];
     const base = [
@@ -739,6 +925,21 @@ export const COATS = {
     silver: 0, parr: 0, redSpots: 0, blackSpots: 0, spotSize: 1, halo: 0, bars: 0, pikeSpots: 0,
     spawn: 0, translucent: 0, fin: [0.07, 0.04, 0.02], finDark: 0, adipose: [0.07, 0.04, 0.02], iris: [0.02, 0.02, 0.02], yolk: 0, fish: 0,
   },
+  grayling: {
+    back: [0.05, 0.06, 0.07], flank: [0.46, 0.48, 0.5], belly: [0.8, 0.79, 0.74],
+    silver: 0.6, parr: 0, redSpots: 0, blackSpots: 0.45, spotSize: 0.7, halo: 0, bars: 0, pikeSpots: 0,
+    spawn: 0, translucent: 0, fin: [0.34, 0.12, 0.24], finDark: 0, adipose: [0.3, 0.3, 0.32], iris: [0.75, 0.7, 0.5], yolk: 0,
+  },
+  eel: {
+    back: [0.035, 0.04, 0.018], flank: [0.16, 0.15, 0.07], belly: [0.55, 0.5, 0.3],
+    silver: 0.12, parr: 0, redSpots: 0, blackSpots: 0, spotSize: 1, halo: 0, bars: 0, pikeSpots: 0,
+    spawn: 0, translucent: 0, fin: [0.1, 0.1, 0.06], finDark: 0, adipose: [0.1, 0.1, 0.06], iris: [0.7, 0.62, 0.3], yolk: 0,
+  },
+  mackerel: {
+    back: [0.02, 0.13, 0.11], flank: [0.62, 0.68, 0.7], belly: [0.93, 0.93, 0.9],
+    silver: 0.9, parr: 0, redSpots: 0, blackSpots: 0, spotSize: 1, halo: 0, bars: 0, pikeSpots: 0, waves: 1,
+    spawn: 0, translucent: 0, fin: [0.2, 0.25, 0.26], finDark: 0.2, adipose: [0.2, 0.25, 0.26], iris: [0.8, 0.8, 0.75], yolk: 0,
+  },
   sandeel: {
     back: [0.04, 0.07, 0.05], flank: [0.62, 0.66, 0.64], belly: [0.88, 0.88, 0.86],
     silver: 0.95, parr: 0, redSpots: 0, blackSpots: 0, spotSize: 1, halo: 0, bars: 0, pikeSpots: 0,
@@ -746,7 +947,10 @@ export const COATS = {
   },
 };
 
-for (const coat of Object.values(COATS)) coat.fish ??= 1;
+for (const coat of Object.values(COATS)) {
+  coat.fish ??= 1;
+  coat.waves ??= 0;
+}
 const COAT_KEYS = Object.keys(COATS.parr);
 export function coatUniforms(coat) {
   const u = {};
@@ -843,6 +1047,7 @@ const SKIN_GLSL = /* glsl */ `
   uniform float coat_spotSize;
   uniform float coat_halo;
   uniform float coat_bars;
+  uniform float coat_waves;
   uniform float coat_pikeSpots;
   uniform float coat_spawn;
   uniform float coat_translucent;
@@ -947,6 +1152,12 @@ const COLOR_GLSL = /* glsl */ `
       float b = sin(x * 110.0 + skinNoise(vec2(x * 30.0, band * 4.0)) * 2.5);
       float bar = smoothstep(0.4, 0.9, b) * smoothstep(0.1, 0.3, band) * (1.0 - smoothstep(0.6, 0.75, band)) * (1.0 - head);
       skin = mix(skin, skin * 0.35, bar * coat_bars);
+    }
+    // Mackerel: wavy black bars over the back, down to the lateral line.
+    if (coat_waves > 0.01) {
+      float w = sin(x * 150.0 + sin(band * 16.0 + x * 24.0) * 1.8);
+      float stripe = smoothstep(0.35, 0.85, w) * (1.0 - smoothstep(0.26, 0.4, band)) * (1.0 - head);
+      skin = mix(skin, vec3(0.01, 0.02, 0.02), stripe * coat_waves);
     }
     // Pike: rows of pale bean-shaped spots on green.
     if (coat_pikeSpots > 0.01) {

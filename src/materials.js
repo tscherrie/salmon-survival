@@ -70,8 +70,10 @@ export const skyGLSL = /* glsl */ `
     }
     // Lightning: the cloud lit from within, for an instant.
     sky += vec3(0.75, 0.8, 1.0) * flash * (0.6 + 1.4 * cover) * smoothstep(-0.05, 0.25, h) * 3.0;
-    // Below the horizon: the far shore, dark and green.
-    sky = mix(sky, vec3(0.05, 0.07, 0.05) * max(skyLevel.g, 0.03), smoothstep(0.0, -0.08, d.y));
+    // Below the horizon: the far side of the valley lost in the haze, a little darker and
+    // greener than the sky over it.
+    // (The same colour as the mist over the water, main.js, so the land fades into it.)
+    sky = mix(sky, vec3(0.62, 0.72, 0.8) * skyLevel, smoothstep(0.0, -0.08, d.y));
     return sky;
   }
 `;
@@ -156,16 +158,35 @@ const bedGLSL = /* glsl */ `
   }
 `;
 
+// The photographed textures, each loaded (and sent to the graphics card) once, however
+// many materials use it: the bed and the boulders share the rock face.
+// A texture is handed out at once and its picture filled in when it has arrived, so the
+// river is built while the pictures load; photosLoaded() waits for them all. (Decoding
+// them off the main thread as image bitmaps was tried: it came out slower, competing
+// with the shaders being compiled.)
+const textures = new Map();
+const arriving = [];
+export const photoTextures = [];
+export const photosLoaded = () => Promise.all(arriving);
+async function fetchPicture(url, texture) {
+  texture.image = await new THREE.ImageLoader().loadAsync(url);
+  texture.needsUpdate = true;
+}
+export const photo = (name, srgb) => load(name, srgb);
+function load(name, srgb) {
+  if (!textures.has(name)) {
+    const texture = new THREE.Texture();
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = 8;
+    if (srgb) texture.colorSpace = THREE.SRGBColorSpace;
+    textures.set(name, texture);
+    photoTextures.push(texture);
+    arriving.push(fetchPicture(`./assets/${name}.jpg`, texture));
+  }
+  return textures.get(name);
+}
+
 export async function createBedMaterial() {
-  const loader = new THREE.TextureLoader();
-  const base = "./assets/";
-  const load = async (name, srgb) => {
-    const t = await loader.loadAsync(`${base}${name}.jpg`);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.anisotropy = 8;
-    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  };
   const maps = await Promise.all([
     load("ganges_river_pebbles_diff", true),
     load("ganges_river_pebbles_nor_gl", false),
@@ -228,7 +249,16 @@ export async function createBedMaterial() {
         {
           vec3 P = vWaterPosition;
           vec3 Nw = normalize(vBedNormal);
+          // Where the drawn surface stands far steeper than its normal says (the skirts that
+          // hide the seams between blocks, a cut bank), trust the surface: it is rock, laid on
+          // from the sides, not gravel smeared down it from above.
+          vec3 Ng = normalize(cross(dFdx(P), dFdy(P)));
+          if (dot(Ng, cameraPosition - P) < 0.0) Ng = -Ng;
           vec4 w = vGround / max(dot(vGround, vec4(1.0)), 1e-4);
+          if (dot(Ng, Nw) < 0.6 && abs(Ng.y) < 0.6) {
+            Nw = Ng;
+            w = mix(w, vec4(0.0, 0.0, 0.0, 1.0), smoothstep(0.6, 0.3, abs(Ng.y)));
+          }
           vec2 q = P.xz;
           vec3 color = vec3(0.0);
           float px = length(fwidth(q));
@@ -707,14 +737,6 @@ export function createBubbleMaterial() {
 // cap of moss and algae on the side that faces the light; how much depends on the river
 // (thick in the shaded brook, a thin film in the big river, kelp-browns in the sea).
 export async function createRockMaterials() {
-  const loader = new THREE.TextureLoader();
-  const load = async (name, srgb) => {
-    const t = await loader.loadAsync(`./assets/${name}.jpg`);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.anisotropy = 8;
-    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  };
   const [mossy, mossyNormal, face, faceNormal, sea, seaNormal, bark, barkNormal] = await Promise.all([
     load("mossy_rock_diff", true),
     load("mossy_rock_nor_gl", false),

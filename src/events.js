@@ -33,6 +33,109 @@ const UP = new THREE.Vector3(0, 1, 0);
 
 const STORM = { length: 150, floodFrom: 35, floodFull: 70, recede: 70 };
 
+// The angler: a fly fisherman in chest waders and a fishing vest, a bucket hat, a landing
+// net slung on his back, the rod in his right hand. In his own frame +x faces the river,
+// +y is up, the right side is -z; units are tenths of a metre, so he stands about 1.8 m.
+// userData.arm turns (about z) to cast; userData.tip is the tip of the rod.
+function buildAngler(figure) {
+  const mat = (r, g, b, rough = 0.85, extra = {}) => new THREE.MeshStandardMaterial({ color: new THREE.Color(r, g, b), roughness: rough, ...extra });
+  const waders = mat(0.2, 0.22, 0.15, 0.7);
+  const boots = mat(0.08, 0.075, 0.07, 0.6);
+  const shirt = mat(0.3, 0.33, 0.36);
+  const vest = mat(0.46, 0.41, 0.28);
+  const skin = mat(0.66, 0.48, 0.38, 0.7);
+  const hair = mat(0.18, 0.13, 0.09);
+  const hat = mat(0.5, 0.45, 0.33);
+  const webbing = mat(0.12, 0.12, 0.11);
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const add = (parent, geometry, material, at, { rotation = null, scale = null } = {}) => {
+    const m = new THREE.Mesh(geometry, material);
+    m.position.copy(at);
+    if (rotation) m.rotation.set(...rotation);
+    if (scale) m.scale.set(...scale);
+    m.castShadow = true;
+    parent.add(m);
+    return m;
+  };
+  // A limb segment from a to b, a capsule of radius r.
+  const segment = (parent, a, b, r, material) => {
+    const d = b.clone().sub(a);
+    const length = d.length();
+    const m = add(parent, new THREE.CapsuleGeometry(r, Math.max(0.01, length - 0.4 * r), 4, 10), material, a.clone().add(b).multiplyScalar(0.5));
+    m.quaternion.setFromUnitVectors(UP, d.normalize());
+    return m;
+  };
+  // Turned shapes (the torso, the hat): a profile of [radius, height], squashed front to back.
+  const lathe = (profile, material, at, depth = 0.72, segments = 18) => {
+    const g = new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), segments);
+    return add(figure, g, material, at, { scale: [depth, 1, 1] });
+  };
+
+  // Legs: a little apart, the knees soft, in the waders; boots on the gravel.
+  for (const side of [-1, 1]) {
+    const hip = V(0, 8.6, side * 1.05),
+      knee = V(0.45, 4.7, side * 1.2),
+      ankle = V(0.05, 0.9, side * 1.25);
+    segment(figure, hip, knee, 0.95, waders);
+    segment(figure, knee, ankle, 0.75, waders);
+    add(figure, new THREE.CapsuleGeometry(0.55, 1.4, 4, 10), boots, V(0.55, 0.55, side * 1.25), { rotation: [0, 0, Math.PI / 2], scale: [1, 1, 1.25] });
+  }
+  // The body: waders up to the chest, the shirt above, the vest over it.
+  lathe([[0.01, 7.9], [1.9, 8.1], [2.15, 9.2], [2.05, 10.6], [2.1, 12.0], [0.01, 12.2]], waders, V(0, 0, 0));
+  lathe([[0.01, 11.6], [2.05, 11.7], [2.25, 13.0], [2.35, 14.1], [1.4, 14.9], [0.6, 15.1], [0.01, 15.1]], shirt, V(0, 0, 0));
+  lathe([[1.9, 10.9], [2.3, 11.2], [2.4, 12.6], [2.5, 13.9], [1.9, 14.5]], vest, V(0, 0, 0), 0.78);
+  // The vest's pockets, and the wader braces.
+  for (const side of [-1, 1]) {
+    add(figure, new THREE.BoxGeometry(0.5, 1.1, 1.2), vest, V(1.75, 12.2, side * 0.95));
+    add(figure, new THREE.BoxGeometry(0.4, 0.8, 0.9), vest, V(1.8, 13.3, side * 1.1));
+    add(figure, new THREE.BoxGeometry(0.2, 3.2, 0.35), webbing, V(1.55, 13.0, side * 1.45), { rotation: [0, 0, -0.1] });
+  }
+  // Neck and head: a face with a nose, ears, the hair under the hat.
+  add(figure, new THREE.CylinderGeometry(0.55, 0.6, 1.1, 10), skin, V(0.1, 15.3, 0));
+  add(figure, new THREE.SphereGeometry(1.1, 18, 14), skin, V(0.15, 16.6, 0), { scale: [1.0, 1.18, 0.9] });
+  add(figure, new THREE.SphereGeometry(1.05, 16, 12, 0, TAU, 0, Math.PI * 0.55), hair, V(0.0, 16.9, 0), { rotation: [0, 0, 0.45], scale: [1.0, 1.1, 0.95] });
+  add(figure, new THREE.ConeGeometry(0.22, 0.55, 8), skin, V(1.2, 16.55, 0), { rotation: [0, 0, -Math.PI / 2] });
+  for (const side of [-1, 1]) {
+    add(figure, new THREE.SphereGeometry(0.25, 8, 6), skin, V(0.1, 16.6, side * 0.98), { scale: [0.6, 1, 0.5] });
+    add(figure, new THREE.SphereGeometry(0.09, 6, 5), mat(0.05, 0.05, 0.05, 0.3), V(1.02, 16.85, side * 0.38));
+  }
+  // A bucket hat.
+  const brim = new THREE.LatheGeometry([new THREE.Vector2(0.9, 0.0), new THREE.Vector2(1.55, -0.35), new THREE.Vector2(1.65, -0.42), new THREE.Vector2(1.5, -0.3), new THREE.Vector2(0.9, 0.05)], 20);
+  add(figure, brim, hat, V(0.15, 17.5, 0));
+  add(figure, new THREE.CylinderGeometry(0.95, 1.12, 1.05, 18), hat, V(0.15, 17.95, 0));
+  add(figure, new THREE.CylinderGeometry(0.97, 0.97, 0.18, 18), mat(0.3, 0.26, 0.18), V(0.15, 17.6, 0));
+  // The left arm forward, the hand holding the line.
+  segment(figure, V(0.2, 14.2, 2.1), V(1.2, 11.9, 2.3), 0.55, shirt);
+  segment(figure, V(1.2, 11.9, 2.3), V(3.2, 11.6, 1.4), 0.45, shirt);
+  add(figure, new THREE.SphereGeometry(0.42, 10, 8), skin, V(3.55, 11.6, 1.2), { scale: [1.2, 0.9, 0.8] });
+  // The landing net slung on his back: a wooden frame, the mesh, the grip.
+  const net = new THREE.Group();
+  net.position.set(-2.1, 12.5, 0.4);
+  net.rotation.set(0.15, 0, -0.35);
+  figure.add(net);
+  add(net, new THREE.TorusGeometry(1.5, 0.12, 6, 22), mat(0.45, 0.3, 0.16, 0.6), V(0, 1.0, 0), { rotation: [0, Math.PI / 2, 0] });
+  add(net, new THREE.CylinderGeometry(0.14, 0.16, 2.8, 6), mat(0.45, 0.3, 0.16, 0.6), V(0, -1.6, 0));
+  add(net, new THREE.SphereGeometry(1.4, 12, 8, 0, TAU, Math.PI * 0.5, Math.PI * 0.5), mat(0.25, 0.25, 0.22, 0.9, { transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }), V(-0.4, 1.0, 0), { rotation: [0, 0, Math.PI / 2], scale: [1, 0.8, 1] });
+
+  // The casting arm and the rod, which turn together about the right shoulder.
+  const arm = new THREE.Group();
+  arm.position.set(0.6, 13.9, -2.0);
+  figure.add(arm);
+  segment(arm, V(0, 0, 0), V(1.9, -0.6, -0.1), 0.55, shirt);
+  segment(arm, V(1.9, -0.6, -0.1), V(3.8, 0.0, 0.1), 0.45, shirt);
+  add(arm, new THREE.SphereGeometry(0.45, 10, 8), skin, V(4.1, 0.0, 0.15), { scale: [1.1, 0.95, 0.9] });
+  // The rod: cork grip, the reel below it, the dark blank tapering to the tip, the rings.
+  const along = (geometry) => geometry.rotateZ(-Math.PI / 2);
+  add(arm, along(new THREE.CylinderGeometry(0.2, 0.22, 2.2, 10)), mat(0.62, 0.48, 0.3, 0.9), V(4.4, 0, 0.15));
+  add(arm, new THREE.CylinderGeometry(0.55, 0.55, 0.35, 16), mat(0.12, 0.12, 0.13, 0.35, { metalness: 0.6 }), V(3.35, -0.55, 0.15), { rotation: [Math.PI / 2, 0, 0] });
+  add(arm, along(new THREE.CylinderGeometry(0.05, 0.13, 25.5, 6).translate(0, 12.75, 0)), mat(0.1, 0.12, 0.08, 0.35), V(5.5, 0, 0.15));
+  for (let k = 1; k <= 7; k++) add(arm, new THREE.TorusGeometry(0.12 - k * 0.008, 0.025, 4, 8), mat(0.7, 0.7, 0.72, 0.3, { metalness: 0.8 }), V(5.5 + k * 3.4, -0.18, 0.15), { rotation: [0, Math.PI / 2, 0] });
+  figure.userData.arm = arm;
+  figure.userData.tip = new THREE.Object3D();
+  figure.userData.tip.position.set(31, 0, 0.15);
+  arm.add(figure.userData.tip);
+}
+
 export function createEvents(scene, { rocks, sound, daylight, life, random = Math.random, query = new URLSearchParams(location.search) }) {
   const range = (a, b) => a + (b - a) * random();
   const forced = query.get("event");
@@ -172,40 +275,7 @@ export function createEvents(scene, { rocks, sound, daylight, life, random = Mat
   const figure = new THREE.Group();
   figure.name = "Angler";
   figure.visible = false;
-  {
-    const mat = (r, g, b, rough = 0.85) => new THREE.MeshStandardMaterial({ color: new THREE.Color(r, g, b), roughness: rough });
-    const waders = mat(0.12, 0.14, 0.1);
-    const jacket = mat(0.22, 0.26, 0.16);
-    const skin = mat(0.62, 0.46, 0.36);
-    const hat = mat(0.3, 0.26, 0.18);
-    const part = (geometry, material, x, y, z) => {
-      const m = new THREE.Mesh(geometry, material);
-      m.position.set(x, y, z);
-      m.castShadow = true;
-      figure.add(m);
-      return m;
-    };
-    part(new THREE.CylinderGeometry(0.75, 0.65, 8.5, 8), waders, 0, 4.25, 1);
-    part(new THREE.CylinderGeometry(0.75, 0.65, 8.5, 8), waders, 0, 4.25, -1);
-    part(new THREE.BoxGeometry(3, 6.5, 4.4), jacket, 0, 11.4, 0);
-    part(new THREE.SphereGeometry(1.2, 12, 10), skin, 0.2, 15.6, 0);
-    part(new THREE.CylinderGeometry(1.5, 1.6, 0.3, 14), hat, 0.2, 16.5, 0);
-    part(new THREE.CylinderGeometry(1.0, 1.15, 1.1, 12), hat, 0.2, 17.1, 0);
-    // The casting arm and the rod, which turn together about the shoulder.
-    const arm = new THREE.Group();
-    arm.position.set(0.6, 13.6, -1.8);
-    figure.add(arm);
-    const forearm = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1, 1), jacket);
-    forearm.position.set(2, 0, 0);
-    arm.add(forearm);
-    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.16, 27, 6).translate(0, 13.5, 0).rotateZ(-Math.PI / 2), mat(0.15, 0.1, 0.08, 0.4));
-    rod.position.set(4, 0, 0);
-    arm.add(rod);
-    figure.userData.arm = arm;
-    figure.userData.tip = new THREE.Object3D();
-    figure.userData.tip.position.set(31, 0, 0);
-    arm.add(figure.userData.tip);
-  }
+  buildAngler(figure);
   scene.add(figure);
   const lineGeometry = new THREE.BufferGeometry();
   const LINE_POINTS = 16;
@@ -525,23 +595,55 @@ export function createEvents(scene, { rocks, sound, daylight, life, random = Mat
   // ---------------------------------------------------------------------------------------
   // The ice going out: floes on the melt.
   const FLOES = 28;
-  const floeShape = new THREE.Shape();
-  for (let i = 0; i < 9; i++) {
-    const a = (i / 9) * TAU;
-    const r = 0.8 + 0.2 * Math.sin(i * 2.7) + 0.12 * Math.cos(i * 5.3);
-    if (i === 0) floeShape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-    else floeShape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+  // A floe: a slab broken off the river's ice, its edge jagged where it cracked, old snow
+  // lying on it, the broken sides glassy blue-green, the underside grey. Four outlines,
+  // one instanced mesh each, so neighbours differ.
+  const floeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.35 });
+  floeMaterial.onBeforeCompile = (shader) => {
+    waterLitShader(shader);
+    // The old snow on top lies in drifts and patches, grey where it has gone slushy.
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <color_fragment>",
+      `#include <color_fragment>
+      {
+        vec2 q = vWaterPosition.xz;
+        float drift = 0.5 + 0.25 * sin(q.x * 0.9 + sin(q.y * 0.7) * 2.0) + 0.25 * sin(q.y * 1.3 + sin(q.x * 0.5) * 1.7);
+        float slush = smoothstep(0.62, 0.9, 0.5 + 0.5 * sin(q.x * 0.31 + q.y * 0.23 + sin(q.x * 0.11) * 3.0));
+        diffuseColor.rgb *= mix(0.86 + 0.14 * drift, 0.72, slush * step(0.8, diffuseColor.b));
+      }`,
+    );
+  };
+  floeMaterial.customProgramCacheKey = () => "salmon-floes-v2";
+  const floeMeshes = [];
+  for (let v = 0; v < 4; v++) {
+    const shape = new THREE.Shape();
+    const n = 22;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU;
+      const r = 0.82 + 0.14 * Math.sin(a * 2 + v * 1.7) + 0.08 * Math.sin(a * 5 + v * 3.1) + (i % 2 ? -0.06 : 0.05) * (0.5 + 0.5 * Math.sin(i * 7.3 + v));
+      if (i === 0) shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      else shape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    const g = new THREE.ExtrudeGeometry(shape, { depth: 1, bevelEnabled: true, bevelThickness: 0.18, bevelSize: 0.07, bevelSegments: 2 }).rotateX(-Math.PI / 2);
+    g.computeVertexNormals();
+    const p = g.attributes.position,
+      nn = g.attributes.normal;
+    const color = new Float32Array(p.count * 3);
+    for (let i = 0; i < p.count; i++) {
+      const ny = nn.getY(i);
+      const grain = 0.94 + 0.06 * Math.sin(p.getX(i) * 9.1 + p.getZ(i) * 7.3 + v);
+      color.set(ny > 0.55 ? [0.9 * grain, 0.93 * grain, 0.96 * grain] : ny < -0.55 ? [0.3, 0.4, 0.45] : [0.42, 0.64, 0.7], i * 3);
+    }
+    g.setAttribute("color", new THREE.BufferAttribute(color, 3));
+    const mesh = new THREE.InstancedMesh(g, floeMaterial, FLOES);
+    mesh.name = "Ice floes";
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.frustumCulled = false;
+    mesh.count = 0;
+    scene.add(mesh);
+    floeMeshes.push(mesh);
   }
-  const floeGeometry = new THREE.ExtrudeGeometry(floeShape, { depth: 1, bevelEnabled: true, bevelThickness: 0.15, bevelSize: 0.06, bevelSegments: 2 }).rotateX(-Math.PI / 2);
-  const floeMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.8, 0.86, 0.9), roughness: 0.5 });
-  floeMaterial.onBeforeCompile = (shader) => waterLitShader(shader);
-  const floeMesh = new THREE.InstancedMesh(floeGeometry, floeMaterial, FLOES);
-  floeMesh.name = "Ice floes";
-  floeMesh.castShadow = true;
-  floeMesh.receiveShadow = true;
-  floeMesh.frustumCulled = false;
-  floeMesh.count = 0;
-  scene.add(floeMesh);
   const floes = Array.from({ length: FLOES }, () => ({ alive: false, river: { s: 0, u: 0 }, position: new THREE.Vector3(), sx: 1, sz: 1, thick: 1, yaw: 0, spin: 0 }));
   let floeCount = 0;
   const floeMatrix = new THREE.Matrix4();
@@ -565,6 +667,7 @@ export function createEvents(scene, { rocks, sound, daylight, life, random = Mat
   function floesUpdate(dt, fish, time, amount) {
     const want = Math.round(FLOES * amount);
     let n = 0;
+    const counts = [0, 0, 0, 0];
     for (let i = 0; i < FLOES; i++) {
       const f = floes[i];
       if (i >= want) {
@@ -583,7 +686,8 @@ export function createEvents(scene, { rocks, sound, daylight, life, random = Mat
       f.position.y = lv - f.thick * 0.88;
       floeQuat.setFromAxisAngle(UP, f.yaw);
       floeMatrix.compose(f.position, floeQuat, tmp.set(f.sx, f.thick, f.sz));
-      floeMesh.setMatrixAt(n++, floeMatrix);
+      floeMeshes[i % 4].setMatrixAt(counts[i % 4]++, floeMatrix);
+      n++;
       // Under it the fish cannot come up.
       const dx = fish.position.x - f.position.x,
         dz = fish.position.z - f.position.z;
@@ -600,8 +704,10 @@ export function createEvents(scene, { rocks, sound, daylight, life, random = Mat
         }
       }
     }
-    floeMesh.count = n;
-    floeMesh.instanceMatrix.needsUpdate = true;
+    floeMeshes.forEach((mesh, v) => {
+      mesh.count = counts[v];
+      mesh.instanceMatrix.needsUpdate = true;
+    });
     floeCount = n;
   }
 

@@ -747,6 +747,11 @@ const SHOALS = {
   stickleback: { body: "minnow", coat: { ...COATS.minnow, back: [0.02, 0.035, 0.018], flank: [0.2, 0.26, 0.14], bars: 0.3, silver: 0.6 }, size: [0.4, 0.6], per: 16, groups: 2, regions: { estuary: 1, lower: 0.4 }, nutrition: 40, ref: 0.5, cruise: 1.0, sprint: 3.5, bottom: 0.3, flees: true, title: "Stichling", temper: 0.9 },
   sandeel: { body: "sandeel", coat: "sandeel", size: [1.0, 2.0], per: 34, groups: 3, regions: { sea: 1, estuary: 0.3 }, nutrition: 250, ref: 1.6, cruise: 2.2, sprint: 9, bottom: 0.1, flees: true, title: "Sandaal", temper: 0.4 },
   herring: { body: "herring", coat: "herring", size: [2.0, 3.0], per: 46, groups: 3, regions: { sea: 1 }, nutrition: 600, ref: 2.5, cruise: 3, sprint: 12, bottom: 0.5, flees: true, title: "Hering", temper: 0.5 },
+  mackerel: { body: "mackerel", coat: "mackerel", size: [2.2, 3.4], per: 28, groups: 2, regions: { sea: 1 }, nutrition: 700, ref: 2.8, cruise: 3.4, sprint: 14, bottom: 0.6, flees: true, title: "Makrele", temper: 0.6 },
+  // Graylings holding in the current of the middle river in small groups, fins spread.
+  grayling: { body: "grayling", coat: "grayling", size: [1.4, 2.6], per: 5, groups: 2, regions: { upper: 0.5, middle: 1, lower: 0.5 }, nutrition: 0, ref: 2, cruise: 1.4, sprint: 6, bottom: 0.2, flees: false, station: true, title: "Äsche", temper: 0.9 },
+  // Eels, lying up on the bed of the slow lower river and the estuary.
+  eel: { body: "eel", coat: "eel", size: [2.5, 5.0], per: 2, groups: 2, regions: { lower: 1, estuary: 0.8, middle: 0.3 }, nutrition: 0, ref: 3.5, cruise: 0.8, sprint: 4, bottom: 0.02, flees: false, station: true, spread: 6, title: "Aal", temper: 1.1 },
   // The alevin's brothers and sisters, wriggling in the gravel of the same redd.
   siblings: { body: "alevin", coat: "alevin", size: [0.2, 0.28], per: 12, groups: 1, regions: { brook: 1 }, nutrition: 0, ref: 0.25, cruise: 0.25, sprint: 0.7, bottom: 0.0, flees: false, station: true, home: S.redd, spread: 2.2, title: "Geschwister", temper: 0.3 },
   troutParr: { body: "parr", coat: { ...COATS.parr, back: [0.04, 0.035, 0.016], redSpots: 1, blackSpots: 0.9, halo: 0.6 }, size: [0.6, 1.2], per: 6, groups: 2, regions: { brook: 1, upper: 0.6 }, nutrition: 0, ref: 1, cruise: 1.2, sprint: 4, bottom: 0.15, flees: false, station: true, title: "Junge Forelle", temper: 1.35 },
@@ -1095,6 +1100,15 @@ function createHunters(scene, { detail }) {
       if (heron.mode !== "away" && heron.position.distanceTo(fish.position) < 40) out.push("heron");
       if (bear.active && bear.position.distanceTo(fish.position) < 40) out.push("bear");
       return out;
+    },
+    // Where a hunter of a kind is (the nearest), for pointing it out.
+    where(kind, fish) {
+      if (kind === "kingfisher") return bird.from.clone().lerp(bird.to, Math.min(1, bird.t));
+      if (kind === "heron") return heron.position;
+      if (kind === "bear") return bear.position;
+      let best = null;
+      for (const h of predators.list) if (h.kind === kind && h.mode !== "away" && (!best || h.position.distanceTo(fish.position) < best.distanceTo(fish.position))) best = h.position;
+      return best;
     },
     // Development: put a hunter of a kind at a point, ready to hunt.
     force(kind, x, y, z) {

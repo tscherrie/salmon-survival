@@ -742,3 +742,10 @@
 #intro .links a { display: inline-flex; align-items: center; gap: 6px; color: inherit; opacity: 0.75; text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, 0.25); padding-bottom: 1px; }
 #intro .links a:hover { opacity: 1; border-bottom-color: rgba(255, 255, 255, 0.7); }
 #intro .links svg { width: 14px; height: 14px; fill: currentColor; }
+
+/* The spotlight on something found for the first time: a pulsing ring round it and its
+   name, following it across the screen (main.js). */
+#spot { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 4; transition: opacity 0.2s; }
+#spot .ring { position: absolute; left: -46px; top: -46px; width: 92px; height: 92px; border-radius: 50%; border: 2px solid rgba(255, 236, 170, 0.95); box-shadow: 0 0 18px rgba(255, 220, 130, 0.7), inset 0 0 14px rgba(255, 220, 130, 0.45); animation: spot-pulse 1.1s ease-in-out infinite; }
+#spot .label { position: absolute; left: 0; top: 52px; transform: translateX(-50%); white-space: nowrap; font: 600 13px/1.2 system-ui, sans-serif; color: #fff4d6; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8); letter-spacing: 0.02em; }
+@keyframes spot-pulse { 0%, 100% { transform: scale(0.85); opacity: 0.85; } 50% { transform: scale(1.08); opacity: 1; } }

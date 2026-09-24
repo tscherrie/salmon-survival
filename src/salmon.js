@@ -60,6 +60,8 @@ export const phaseOf = (index) => STAGES[Math.max(0, Math.min(STAGES.length - 1,
 // A full stomach takes this long to empty at the stage's fastest digestion; digestion runs
 // in proportion to what is in it, so a half-full stomach empties half as fast.
 const STOMACH_SECONDS = 150;
+// How long a feeding fish can go with an empty stomach before its body starts to waste.
+const HUNGER_SECONDS = 90;
 
 export const GRAVITY = 98; // units per second squared: 9.8 m/s² at ten centimetres a unit
 
@@ -510,9 +512,19 @@ export function createSalmon(scene, { pace = 1 } = {}) {
     // In cold water the body idles along on little; in water too warm it suffers.
     spend = spend * (0.45 + 0.55 * thermal.pace) + 0.004 * thermal.heat;
     f.energy -= spend * dt;
+    // Hunger: how long the stomach has stood empty. Rest brings back breath, not strength the
+    // body has not got -- the longer a feeding fish goes without food the less rest gives
+    // back, and then its body starts to waste; with nothing left it dies (main.js).
+    if (!st.fasting && !st.yolk) {
+      const capacity = (st.need / (st.minutes * 60)) * STOMACH_SECONDS;
+      if (f.stomach < capacity * 0.03) f.hunger = (f.hunger ?? 0) + dt;
+      else f.hunger = Math.max(0, (f.hunger ?? 0) - dt * 6);
+    } else f.hunger = 0;
+    const reserve = clamp(1 - f.hunger / HUNGER_SECONDS, 0, 1);
+    if (reserve <= 0) f.energy -= 0.003 * dt;
     // Tiredness passes with rest: a fish idling in easy water gets back some strength, though
     // only food fills it.
-    if (!st.fasting && !st.yolk && q < 0.4 && f.energy < 0.45) f.energy += 0.0016 * (1 - f.energy / 0.45) * dt * (1 + f.gripping + (f.shelter ?? 0));
+    if (!st.fasting && !st.yolk && q < 0.4 && f.energy < 0.45) f.energy += 0.0016 * (1 - f.energy / 0.45) * dt * (1 + f.gripping + (f.shelter ?? 0)) * reserve;
     if (st.yolk) {
       // The yolk feeds it, and it grows while it keeps still in the gravel.
       f.energy = Math.min(1, f.energy + 0.0045 * dt);

@@ -5,9 +5,12 @@ import { foliageDepth, foliageMaterial } from "../../riverscape/src/foliage.js";
 import { waterLitShader } from "../../riverscape/src/water.js";
 import { COLD_SPRINGS, CRACKS, FALLS, ISLANDS, KING_POOL, MILLS, S, TRIBUTARIES, UNDERCUTS, bed, frame, level, place, section, smooth } from "./course.js";
 import { MODEL_LENGTH, createFishMesh } from "./anatomy.js";
-import { SolidBatch, bankGrass, birch, fallenLeaf, leafSpray, mossTuft, reeds, sedge, turfTuft } from "./flora.js";
-import { trunkGeometry, withMossChannel } from "./terrain.js";
+import { SolidBatch, bankGrass, fallenLeaf, leafSpray, mossTuft, reeds, sedge, turfTuft } from "./flora.js";
+import { TreeBatch, birch, forestMaterial } from "./forest.js";
+import { trunkColliders, trunkGeometry, withMossChannel } from "./terrain.js";
 import { addPlace } from "./places.js";
+import { photo } from "./materials.js";
+import { addClearing } from "./clearings.js";
 
 // The special places built into the river -- islands, side brooks, and (added by later
 // parts) caves, a mill, a bridge, a wreck: each dressed with what belongs to it (stones,
@@ -17,7 +20,7 @@ import { addPlace } from "./places.js";
 // asks them: terrain.extras).
 //
 // A feature is { id, s, reach, build(ctx) } -- build a generator that fills ctx.group,
-// ctx.plants (a GeometryBatch of foliage), ctx.trees (a SolidBatch), ctx.stones (a SolidBatch
+// ctx.plants (a GeometryBatch of foliage), ctx.trees (a TreeBatch, forest.js), ctx.stones (a SolidBatch
 // of rock), ctx.wood (trunk geometries) and ctx.colliders / ctx.cover, yielding now and then
 // so a frame never stalls.
 
@@ -127,7 +130,7 @@ for (const q of ISLANDS) {
           p.y = Math.max(bed(r.s, r.u) + radius * 0.7, Math.min(lv - radius * 0.2, bed(r.s, r.u) + radius * 2.5));
         }
         ctx.wood.push(trunkGeometry(points, radius, radius * 0.7, q.from + k * 3.1));
-        for (const p of points) ctx.colliders.push({ x: p.x, y: p.y, z: p.z, r: radius * 1.2, ry: radius * 1.2 });
+        trunkColliders(points, radius, radius * 0.7, ctx.colliders);
         ctx.cover.push({ x: cx, z: cz, radius: length * 0.35, top: lv });
         yield "drift";
       }
@@ -510,7 +513,7 @@ addFeature({
         points.push(new THREE.Vector3(x, Math.min(lv + radius * 0.3, floor + radius + range(0, 4) * (k / 11)), z));
       }
       ctx.wood.push(trunkGeometry(points, radius, radius * 0.6, 4620 + k));
-      for (const p of points) ctx.colliders.push({ x: p.x, y: p.y, z: p.z, r: radius * 1.15, ry: radius * 1.15 });
+      trunkColliders(points, radius, radius * 0.6, ctx.colliders);
       yield "log";
     }
     place(4620, uc, at);
@@ -540,24 +543,40 @@ for (const b of TRIBUTARIES) {
     s: b.s,
     reach: 360,
     *build(ctx) {
-      const { range } = ctx;
+      const { range, random } = ctx;
       const lv = level(dam.s);
       // The dam: sticks laid across, piled from the bed to above the water, leaving a hole
       // low down near one side.
       const hole = { across: 0.35, y: bed(dam.s, dam.u) + 0.9 };
-      for (let k = 0; k < 70; k++) {
+      // Its core: mud and turf packed between the sticks, so it holds the water back.
+      const mud = new THREE.Color(0.2, 0.15, 0.1);
+      for (let across = -1.12; across <= 1.12; across += 0.14) {
+        const p = point(damT, across);
+        place(p.s, p.u, at);
+        const floor = bed(p.s, p.u);
+        for (let y = floor + 0.25; y < lv + 0.05; y += 0.45) {
+          if (Math.abs(across - hole.across) < 0.24 && Math.abs(y - hole.y) < 0.7) continue;
+          ctx.lump(at.x + range(-0.2, 0.2), y, at.z + range(-0.2, 0.2), range(0.55, 0.85), range(0.35, 0.5), range(0.5, 0.8), range(0, TAU), mud.clone().multiplyScalar(range(0.8, 1.2)));
+        }
+      }
+      yield "mud";
+      for (let k = 0; k < 110; k++) {
         const across = range(-1.15, 1.15);
         const p = point(damT + range(-0.012, 0.012), across);
         const floor = bed(p.s, p.u);
         const y = range(floor + 0.1, lv + 0.35);
         if (Math.abs(across - hole.across) < 0.2 && Math.abs(y - hole.y) < 0.6) continue;
         const len = range(1.5, 4);
-        const q1 = point(damT + range(-0.02, 0.02), across - len / (2 * p.w));
-        const q2 = point(damT + range(-0.02, 0.02), across + len / (2 * p.w));
+        // Most laid along the dam, some slanting down its face with the current, a few
+        // driven in upright.
+        const kind = random();
+        const dt = kind < 0.7 ? 0.02 : 0.05;
+        const q1 = point(damT + range(-dt, dt), across - (kind < 0.7 ? len / (2 * p.w) : 0.05));
+        const q2 = point(damT + range(-dt, dt), across + (kind < 0.7 ? len / (2 * p.w) : 0.05));
         place(q1.s, q1.u, at);
-        const a = new THREE.Vector3(at.x, y + range(-0.1, 0.1), at.z);
+        const a = new THREE.Vector3(at.x, y + (kind < 0.9 ? range(-0.1, 0.1) : -len * 0.4), at.z);
         place(q2.s, q2.u, at);
-        const c2 = new THREE.Vector3(at.x, y + range(-0.1, 0.1), at.z);
+        const c2 = new THREE.Vector3(at.x, y + (kind < 0.7 ? range(-0.1, 0.1) : kind < 0.9 ? range(-0.8, 0.8) : len * 0.4), at.z);
         ctx.wood.push(trunkGeometry([a, a.clone().lerp(c2, 0.5).add(new THREE.Vector3(0, range(-0.05, 0.08), 0)), c2], range(0.05, 0.11), 0.04, k));
         if (k % 10 === 9) yield "dam";
       }
@@ -576,6 +595,8 @@ for (const b of TRIBUTARIES) {
       place(lp.s, lp.u, at);
       const base = Math.max(bed(lp.s, lp.u), level(lp.s) - 0.6);
       const R = 3.2;
+      // The lodge's mud-plastered heart.
+      ctx.lump(at.x, base + R * 0.2, at.z, R * 0.82, R * 0.62, R * 0.82, range(0, TAU), mud);
       for (let k = 0; k < 90; k++) {
         const theta = range(0, TAU),
           phi = range(0.1, 1.3);
@@ -621,10 +642,95 @@ function solid(batch, geometry, x, y, z, sx, sy, sz, yaw, color, pitch = 0, roll
   const m = new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, roll, "YXZ")), new THREE.Vector3(sx, sy, sz));
   batch.add(geometry, m, color, (p, n) => 0.8 + 0.25 * Math.max(0, n.y));
 }
+// A gable end: a triangular prism, its ridge along x at the top, 1 long, 1 high, 1 wide.
+const GABLE = (() => {
+  const v = (x, y, z) => [x, y, z];
+  const a = [v(-0.5, 0, -0.5), v(-0.5, 0, 0.5), v(-0.5, 1, 0)],
+    b = [v(0.5, 0, -0.5), v(0.5, 0, 0.5), v(0.5, 1, 0)];
+  const tris = [a[0], a[2], a[1], b[0], b[1], b[2], a[0], b[0], b[2], a[0], b[2], a[2], a[1], a[2], b[2], a[1], b[2], b[1], a[0], a[1], b[1], a[0], b[1], b[0]];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(tris.flat(), 3));
+  g.computeVertexNormals();
+  return g;
+})();
+const BALL = new THREE.SphereGeometry(1, 12, 9);
+
+// A timber house as they build them up here: a stone footing, board walls (in falu red or
+// tarred brown), white-framed windows, a door, a steep roof of two slabs with its eaves and
+// a ridge board, the gables filled in, a stone chimney. In its own frame x runs along it.
+function hut(ctx, x, y, z, yaw, { length = 12, width = 8, wall = 6, walls, roof, trim = new THREE.Color(0.85, 0.84, 0.78), stone = new THREE.Color(0.5, 0.48, 0.44), pitch = 0.75, windows = 2, chimney = true, door = true }) {
+  const c = Math.cos(yaw),
+    s = Math.sin(yaw);
+  const local = (dx, dy, dz) => [x + dx * c + dz * s, y + dy, z - dx * s + dz * c];
+  const put = (batch, geometry, dx, dy, dz, sx, sy, sz, color, tilt = 0) => {
+    const [px, py, pz] = local(dx, dy, dz);
+    solid(batch, geometry, px, py, pz, sx, sy, sz, yaw, color, tilt, 0);
+  };
+  // Footing and walls.
+  put(ctx.masonry, BOX, 0, 0.6, 0, length + 0.8, 1.6, width + 0.8, stone);
+  put(ctx.timber, BOX, 0, 1.4 + wall / 2, 0, length, wall, width, walls);
+  // Corner boards.
+  for (const i of [-1, 1]) for (const k of [-1, 1]) put(ctx.paint, BOX, i * (length / 2 + 0.05), 1.4 + wall / 2, k * (width / 2 + 0.05), 0.45, wall, 0.45, trim);
+  // The gables, the roof slabs with their overhang, the ridge.
+  const rise = (width / 2) * Math.tan(pitch);
+  put(ctx.timber, GABLE, 0, 1.4 + wall, 0, length, rise, width, walls);
+  const slope = Math.hypot(width / 2, rise) + 1.2;
+  for (const k of [-1, 1]) {
+    const dz = k * (width / 4 + 0.35 * Math.sin(pitch)),
+      dy = 1.4 + wall + rise / 2 + 0.35 * Math.cos(pitch);
+    put(ctx.timber, BOX, 0, dy, dz, length + 1.6, 0.45, slope, roof, k * pitch);
+  }
+  put(ctx.timber, BOX, 0, 1.4 + wall + rise + 0.3, 0, length + 1.8, 0.4, 0.6, roof.clone().multiplyScalar(0.8));
+  // Windows on both long sides: a white frame, the dark panes and the glazing bar.
+  const glass = new THREE.Color(0.03, 0.04, 0.05);
+  for (let i = 0; i < windows; i++) {
+    const dx = ((i + 0.5) / windows - 0.5) * length * 0.8;
+    for (const k of [-1, 1]) {
+      const dz = k * (width / 2 + 0.08);
+      put(ctx.paint, BOX, dx, 1.4 + wall * 0.58, dz, 2.4, 2.8, 0.2, trim);
+      put(ctx.paint, BOX, dx, 1.4 + wall * 0.58, dz + k * 0.06, 1.9, 2.3, 0.14, glass);
+      put(ctx.paint, BOX, dx, 1.4 + wall * 0.58, dz + k * 0.12, 0.18, 2.3, 0.08, trim);
+      put(ctx.paint, BOX, dx, 1.4 + wall * 0.58, dz + k * 0.12, 1.9, 0.16, 0.08, trim);
+    }
+  }
+  // The door in a gable end, with its step.
+  if (door) {
+    put(ctx.timber, BOX, length / 2 + 0.1, 1.4 + 2.3, 0, 0.25, 4.4, 2.2, walls.clone().multiplyScalar(0.6));
+    put(ctx.paint, BOX, length / 2 + 0.14, 1.4 + 2.3, 0, 0.2, 4.8, 2.6, trim);
+    put(ctx.masonry, BOX, length / 2 + 0.9, 0.9, 0, 1.4, 0.6, 3, stone);
+  }
+  if (chimney) put(ctx.masonry, BOX, -length * 0.28, 1.4 + wall + rise * 0.7, width * 0.12, 1.4, rise + 3, 1.4, stone.clone().multiplyScalar(0.9));
+}
+
+// A person standing (on the bridge, say): legs, a coat, arms, a head, a cap.
+function person(batch, x, y, z, yaw, coat, random) {
+  const trousers = new THREE.Color(0.12, 0.13, 0.16).multiplyScalar(0.8 + 0.5 * random());
+  const skin = new THREE.Color(0.8, 0.6, 0.48).multiplyScalar(0.85 + 0.2 * random());
+  const hair = [new THREE.Color(0.15, 0.1, 0.06), new THREE.Color(0.5, 0.36, 0.18), new THREE.Color(0.7, 0.66, 0.6)][Math.floor(random() * 3)];
+  const c = Math.cos(yaw),
+    s = Math.sin(yaw);
+  const at = (dx, dy, dz) => [x + dx * c + dz * s, y + dy, z - dx * s + dz * c];
+  const put = (geometry, dx, dy, dz, sx, sy, sz, color, pitch = 0, roll = 0) => {
+    const [px, py, pz] = at(dx, dy, dz);
+    solid(batch, geometry, px, py, pz, sx, sy, sz, yaw, color, pitch, roll);
+  };
+  for (const k of [-1, 1]) put(CYL, 0, 2.3, k * 0.55, 0.45, 4.6, 0.45, trousers);
+  put(CYL, 0, 6.6, 0, 1.05, 4.4, 0.8, coat);
+  put(BALL, 0, 8.7, 0, 1.15, 0.6, 0.9, coat);
+  for (const k of [-1, 1]) put(CYL, 0.35, 6.9, k * 1.25, 0.32, 3.6, 0.32, coat, 0, k * 0.12);
+  put(CYL, 0, 9.3, 0, 0.35, 0.6, 0.35, skin);
+  put(BALL, 0.05, 10.2, 0, 0.72, 0.85, 0.66, skin);
+  put(BALL, -0.08, 10.55, 0, 0.74, 0.55, 0.68, hair);
+}
 
 // The old mill: the race walled in stone, the mill house of timber on a stone footing, and
 // the wheel turning in the race, its paddles dipping deep into the water.
 for (const m of MILLS) {
+  {
+    const c = section(m.wheel);
+    place(m.wheel, c.thalweg + m.side * (c.half + m.offset) + m.side * (m.width + 9), at);
+    addClearing(at.x, at.z, 26);
+  }
   addPlace({ id: "mill", name: m.name, line: "Das Mühlrad dreht sich im Mühlgraben", s: m.wheel, u: m.side * (section(m.wheel).half + m.offset), radius: 16, icon: "place", tier: "silver" });
   addFeature({
     id: "mill",
@@ -656,13 +762,7 @@ for (const m of MILLS) {
       place(m.wheel, centre + m.side * (m.width + 9), at);
       const hx = at.x,
         hz = at.z;
-      solid(ctx.masonry, BOX, hx, lv + 1.5, hz, 22, 3, 14, yaw, stone);
-      solid(ctx.masonry, BOX, hx, lv + 9, hz, 21, 12, 13, yaw, timber);
-      // A pitched roof: two slabs.
-      for (const side of [-1, 1]) {
-        const off = new THREE.Vector3(0, 0, side * 3.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-        solid(ctx.masonry, BOX, hx + off.x, lv + 18.2, hz + off.z, 24, 0.8, 8.6, yaw, roof, side * 0.62, 0);
-      }
+      hut(ctx, hx, lv + 1.2, hz, yaw, { length: 21, width: 13, wall: 11, walls: new THREE.Color(0.46, 0.13, 0.09), roof: new THREE.Color(0.13, 0.12, 0.12), stone, windows: 3, pitch: 0.72 });
       // The wheel: two rims, spokes and paddles, on an axle across the race.
       const wheel = new THREE.Group();
       place(m.wheel, centre, at);
@@ -725,6 +825,13 @@ for (const m of MILLS) {
 // parapets, and people on it -- who now and then throw bread to the fish.
 export const BRIDGES = [{ s: 10400, name: "Steinbrücke" }];
 for (const b of BRIDGES) {
+  {
+    const c = section(b.s);
+    for (const k of [-1, 1]) {
+      place(b.s, c.thalweg + k * c.half * 1.35, at);
+      addClearing(at.x, at.z, 16);
+    }
+  }
   addPlace({ id: "bridge", name: b.name, line: "Leute auf der Brücke – manchmal fällt Brot ins Wasser", s: b.s, u: 0, radius: 26, icon: "place", tier: "bronze" });
   addFeature({
     id: "bridge",
@@ -758,6 +865,10 @@ for (const b of BRIDGES) {
         for (const side of [-1, 1]) {
           place(b.s + side * 4.4, c.thalweg + u + 3, at);
           solid(ctx.masonry, BOX, at.x, deck + 3.4, at.z, 1, 2.8, 6.2, yaw, stone.clone().multiplyScalar(0.92));
+          // The coping on the parapet, and the string course under the deck's edge.
+          solid(ctx.masonry, BOX, at.x, deck + 4.95, at.z, 1.4, 0.35, 6.2, yaw, stone.clone().multiplyScalar(1.05));
+          place(b.s + side * 5.0, c.thalweg + u + 3, at);
+          solid(ctx.masonry, BOX, at.x, deck - 0.3, at.z, 0.7, 0.6, 6.2, yaw, stone.clone().multiplyScalar(0.8));
         }
         yield "deck";
       }
@@ -778,6 +889,10 @@ for (const b of BRIDGES) {
           // Each voussoir turned along the arc.
           const slope = Math.atan2(rise * Math.PI * Math.cos(Math.PI * t), u1 - u0);
           solid(ctx.masonry, BOX, at.x, y, at.z, 9, 1.6, Math.abs(u1 - u0) * 0.045 + 0.4, yaw, stone.clone().multiplyScalar(0.86), -slope, 0);
+          // The spandrel over it, walled up solid to the deck.
+          const top = deck - 0.1,
+            from = y + 0.7;
+          if (top - from > 0.3) solid(ctx.masonry, BOX, at.x, (top + from) / 2, at.z, 8.4, top - from, Math.abs(u1 - u0) * 0.045 + 0.4, yaw, stone.clone().multiplyScalar(0.95));
         }
       }
       // People: a coat, a head, standing at the parapet.
@@ -787,8 +902,8 @@ for (const b of BRIDGES) {
         const u = c.thalweg + range(-0.9, 0.9) * c.half;
         const side = random() < 0.5 ? -1 : 1;
         place(b.s + side * 3.6, u, at);
-        solid(ctx.masonry, CYL, at.x, deck + 2.2 + 4.2, at.z, 1.1, 8.4, 1.1, 0, coats[k]);
-        solid(ctx.masonry, CYL, at.x, deck + 2.2 + 9.4, at.z, 0.8, 1.6, 0.8, 0, new THREE.Color(0.85, 0.66, 0.52));
+        // Facing the parapet, looking down into the water.
+        person(ctx.paint, at.x, deck + 2.2, at.z, yaw + (side > 0 ? Math.PI : 0) + range(-0.4, 0.4), coats[k], random);
         people.push({ x: at.x, z: at.z, side });
       }
       // Bread, now and then, when a fish is near and it is day.
@@ -888,7 +1003,7 @@ addFeature({
       const valve = (geometry, x, y, z, sx, sy, sz, pitch, roll) => {
         const m = new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, roll, "YXZ")), new THREE.Vector3(sx, sy, sz));
         const local = geometry.attributes.position;
-        ctx.masonry.add(geometry, m, shell, (p, n, i) => {
+        ctx.paint.add(geometry, m, shell, (p, n, i) => {
           const d = Math.hypot(local.getX(i) + 0.45, local.getY(i) - 0.55, local.getZ(i) * 0.5);
           return (0.75 + 0.25 * Math.max(0, n.y)) * (0.85 + 0.35 * Math.min(1, d * 0.8)) * (0.9 + 0.12 * Math.sin(d * 22));
         });
@@ -933,7 +1048,7 @@ addFeature({
       pts.push(new THREE.Vector3(at.x, bed(s, u) + 1.2, at.z));
     }
     ctx.wood.push(trunkGeometry(pts, 1.1, 0.7, 7));
-    for (const p of pts) ctx.colliders.push({ x: p.x, y: p.y, z: p.z, r: 1.3, ry: 1.3 });
+    trunkColliders(pts, 1.1, 0.7, ctx.colliders);
   },
 });
 
@@ -981,16 +1096,19 @@ addFeature({
     // Stove in on the side that lies uppermost: the way in.
     const hole = { from: 0.4, to: 0.58, a0: 0.6, a1: 0.86 };
     const inHole = (t, a, pad = 0) => t > hole.from - pad && t < hole.to + pad && a > hole.a0 - pad && a < hole.a1 + pad;
-    function sheet(rows, cols, at, keep, color) {
+    // A sheet of planks: `across` of them side by side, running the length of the boat.
+    function sheet(rows, cols, at, keep, color, across) {
       const pos = [],
         col = [],
+        plank = [],
         idx = [];
       for (let i = 0; i <= rows; i++)
         for (let j = 0; j <= cols; j++) {
           const p = at(i / rows, j / cols);
           pos.push(p.x, p.y, p.z);
-          const k = (0.72 + 0.28 * hash(i, j)) * (j % 2 ? 0.88 : 1);
+          const k = 0.85 + 0.15 * hash(i, j);
           col.push(color.r * k, color.g * k, color.b * k);
+          plank.push((i / rows) * length, (j / cols) * across);
         }
       for (let i = 0; i < rows; i++)
         for (let j = 0; j < cols; j++) {
@@ -1001,32 +1119,33 @@ addFeature({
       const g = new THREE.BufferGeometry();
       g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
       g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+      g.setAttribute("plank", new THREE.Float32BufferAttribute(plank, 2));
       g.setIndex(idx);
       g.computeVertexNormals();
-      const mesh = new THREE.Mesh(g, ctx.earth);
+      const mesh = new THREE.Mesh(g, ctx.planks);
       mesh.castShadow = mesh.receiveShadow = true;
       mesh.name = "Wreck";
       ctx.group.add(mesh);
     }
     // The hull, planked, a few planks rotted away.
-    sheet(34, 16, point, (i, j, t, a) => !inHole(t, a) && hash(i, j) < 0.94, new THREE.Color(0.2, 0.16, 0.11));
+    sheet(34, 16, point, (i, j, t, a) => !inHole(t, a) && hash(i, j) < 0.94, new THREE.Color(0.3, 0.24, 0.17), 22);
     yield "hull";
     // The deck, planks missing here and there, the fish hold's hatch open.
     const deckAt = (t, a) => {
       const tt = 0.02 + t * 0.95;
       return boat((tt - 0.5) * length, (a * 2 - 1) * halfBeam(tt) * 0.97, sheer(tt) - 0.5);
     };
-    sheet(38, 10, deckAt, (i, j, t, a) => !(t > 0.62 && t < 0.74 && a > 0.3 && a < 0.7) && hash(j, Math.floor(i / 5)) < 0.86, new THREE.Color(0.15, 0.15, 0.1));
+    sheet(38, 10, deckAt, (i, j, t, a) => !(t > 0.62 && t < 0.74 && a > 0.3 && a < 0.7) && hash(j, Math.floor(i / 5)) < 0.86, new THREE.Color(0.26, 0.24, 0.17), 20);
     yield "deck";
     // The wheelhouse aft, its windows black; a rudder at the stern.
     const hullColor = new THREE.Color(0.2, 0.19, 0.16);
     const whAt = boat(-length * 0.28, 0, sheer(0.22) + 4.5);
-    solid(ctx.masonry, BOX, whAt.x, whAt.y, whAt.z, 13, 9, 11, -heading, hullColor, -roll);
+    solid(ctx.timber, BOX, whAt.x, whAt.y, whAt.z, 13, 9, 11, -heading, hullColor, -roll);
     const roofAt = boat(-length * 0.28, 0, sheer(0.22) + 9.3);
-    solid(ctx.masonry, BOX, roofAt.x, roofAt.y, roofAt.z, 14.5, 0.8, 12.5, -heading, new THREE.Color(0.12, 0.13, 0.09), -roll);
+    solid(ctx.timber, BOX, roofAt.x, roofAt.y, roofAt.z, 14.5, 0.8, 12.5, -heading, new THREE.Color(0.2, 0.2, 0.16), -roll);
     for (const k of [-1, 1]) {
       const winAt = boat(-length * 0.28 + 6.6, k * 2.8, sheer(0.22) + 6);
-      solid(ctx.masonry, BOX, winAt.x, winAt.y, winAt.z, 0.3, 2.6, 3.6, -heading, new THREE.Color(0.02, 0.03, 0.03), -roll);
+      solid(ctx.paint, BOX, winAt.x, winAt.y, winAt.z, 0.3, 2.6, 3.6, -heading, new THREE.Color(0.02, 0.03, 0.03), -roll);
     }
     for (const [dx, dy] of [
       [-3, 3],
@@ -1037,7 +1156,7 @@ addFeature({
       ctx.colliders.push({ x: p.x, y: p.y, z: p.z, r: 5.5, ry: 5.5 });
     }
     const rudder = boat(-length * 0.5 - 1.2, 0, -D * 0.6);
-    solid(ctx.masonry, BOX, rudder.x, rudder.y, rudder.z, 5, 7, 0.6, -heading, hullColor, -roll);
+    solid(ctx.timber, BOX, rudder.x, rudder.y, rudder.z, 5, 7, 0.6, -heading, hullColor, -roll);
     // Its walls and deck as colliders, all but the hole and the hatch.
     for (let i = 1; i < 34; i += 1)
       for (let j = 0; j <= 16; j += 2) {
@@ -1061,6 +1180,7 @@ addFeature({
     const foot = boat(length * 0.12, 0, sheer(0.62) - 0.5);
     const top = foot.clone().addScaledVector(up, 24);
     ctx.wood.push(trunkGeometry([foot, foot.clone().lerp(top, 0.5), top], 0.9, 0.7, 3));
+    trunkColliders([foot, foot.clone().lerp(top, 0.5), top], 0.9, 0.7, ctx.colliders);
     const lie0 = top.clone().addScaledVector(ax, 3).setY(0);
     const lie1 = lie0.clone().addScaledVector(ax, 20).addScaledVector(side, -6);
     const l0 = ctx.locate(lie0.x, lie0.z),
@@ -1068,6 +1188,80 @@ addFeature({
     lie0.y = bed(l0.s, l0.u) + 0.6;
     lie1.y = bed(l1.s, l1.u) + 0.6;
     ctx.wood.push(trunkGeometry([lie0, lie0.clone().lerp(lie1, 0.5), lie1], 0.7, 0.55, 4));
+    trunkColliders([lie0, lie0.clone().lerp(lie1, 0.5), lie1], 0.7, 0.55, ctx.colliders);
+    // The rails along both gunwales, posts and a top rail, broken away in places; two
+    // bollards on the foredeck.
+    const railColor = new THREE.Color(0.24, 0.2, 0.15);
+    for (const g of [0, 1]) {
+      let last = null;
+      for (let t = 0.1; t < 0.9; t += 0.045) {
+        const across = (g * 2 - 1) * halfBeam(t) * 0.95;
+        const foot = boat((t - 0.5) * length, across, sheer(t) - 0.5);
+        const head = boat((t - 0.5) * length, across, sheer(t) + 1.3);
+        const broken = hash(t * 97, g * 13) > 0.78;
+        if (!broken) {
+          const mid = foot.clone().lerp(head, 0.5);
+          solid(ctx.timber, BOX, mid.x, mid.y, mid.z, 0.3, 1.8, 0.3, -heading, railColor, -roll);
+        }
+        if (last && !broken && !last.broken) {
+          const mid = last.head.clone().lerp(head, 0.5);
+          solid(ctx.timber, BOX, mid.x, mid.y, mid.z, last.head.distanceTo(head) + 0.2, 0.28, 0.38, -heading, railColor, -roll);
+        }
+        last = { head, broken };
+      }
+    }
+    for (const k of [-1, 1]) {
+      const p = boat(length * 0.32, k * halfBeam(0.82) * 0.5, sheer(0.82) - 0.1);
+      solid(ctx.paint, CYL, p.x, p.y, p.z, 0.55, 1.2, 0.55, -heading, new THREE.Color(0.18, 0.1, 0.06), -roll);
+    }
+    // The anchor, dropped off the bow, its chain running down to it over the bed.
+    {
+      const rust = new THREE.Color(0.24, 0.12, 0.06);
+      const hawse = boat(length * 0.46, halfBeam(0.96) * 0.3, sheer(0.96) - 1);
+      const land = hawse.clone().addScaledVector(ax, 16).addScaledVector(side, 5);
+      const l = ctx.locate(land.x, land.z);
+      land.y = bed(l.s, l.u) + 0.3;
+      const links = 40;
+      const link = new THREE.TorusGeometry(0.42, 0.13, 5, 10);
+      for (let k = 0; k <= links; k++) {
+        const f = k / links;
+        const p = hawse.clone().lerp(land, f);
+        // Hanging slack: down steeply off the bow, then lying along the bed.
+        const lc = ctx.locate(p.x, p.z);
+        p.y = Math.max(bed(lc.s, lc.u) + 0.2, hawse.y - (hawse.y - land.y) * Math.min(1, f * 2.2) - Math.sin(Math.PI * f) * 0.5);
+        const dir = land.clone().sub(hawse).normalize();
+        const m = new THREE.Matrix4().compose(p, new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), k % 2 ? Math.PI / 2 : 0)), new THREE.Vector3(1.35, 1, 1));
+        ctx.paint.add(link, m, rust, (q, n) => 0.8 + 0.3 * Math.max(0, n.y));
+      }
+      // The anchor itself, lying on its side: shank, crown, the two arms with their flukes, the stock.
+      const yaw = -heading + 0.9;
+      const at = (dx, dy, dz) => land.clone().add(new THREE.Vector3(Math.cos(-yaw) * dx - Math.sin(-yaw) * dz, dy, Math.sin(-yaw) * dx + Math.cos(-yaw) * dz));
+      const shank = at(3, 0.3, 0);
+      solid(ctx.paint, BOX, shank.x, shank.y, shank.z, 6, 0.55, 0.55, yaw, rust);
+      for (const k of [-1, 1]) {
+        const arm = at(0.4, 0.3, k * 1.3);
+        solid(ctx.paint, BOX, arm.x, arm.y, arm.z, 0.5, 0.5, 2.8, yaw + k * 0.5, rust);
+        const fluke = at(-0.2, 0.3, k * 2.5);
+        solid(ctx.paint, BOX, fluke.x, fluke.y, fluke.z, 1.4, 0.25, 1.1, yaw + k * 0.5, rust);
+      }
+      const stock = at(5.6, 0.9, 0);
+      solid(ctx.paint, BOX, stock.x, stock.y, stock.z, 0.4, 0.4, 5, yaw, rust, 0, 1.1);
+    }
+    // What fell off her when she went down: barrels and fish crates on the bed round her.
+    for (let k = 0; k < 7; k++) {
+      const a = range(0, TAU),
+        r = range(beam * 0.7, beam * 1.4);
+      const x = cx + Math.cos(a) * r + ax.x * range(-length * 0.4, length * 0.4),
+        z = cz + Math.sin(a) * r + ax.z * range(-length * 0.4, length * 0.4);
+      const l = ctx.locate(x, z);
+      const y = bed(l.s, l.u);
+      if (k < 3) {
+        solid(ctx.paint, CYL, x, y + 0.85, z, 0.95, 2.5, 0.95, range(0, TAU), new THREE.Color(0.2, 0.12, 0.07).multiplyScalar(range(0.8, 1.3)), Math.PI / 2, range(-0.2, 0.2));
+        ctx.colliders.push({ x, y: y + 0.85, z, r: 1.4, ry: 1 });
+      } else {
+        solid(ctx.timber, BOX, x, y + 0.6, z, 2.4, 1.2, 1.6, range(0, TAU), new THREE.Color(0.32, 0.27, 0.19).multiplyScalar(range(0.8, 1.2)), range(-0.15, 0.15), range(-0.2, 0.2));
+      }
+    }
     // Kelp and weed on the hull and deck.
     for (let k = 0; k < 26; k++) {
       const p = k % 2 ? point(range(0.1, 0.9), range(0.5, 1)) : deckAt(range(0, 1), range(0, 1));
@@ -1129,12 +1323,12 @@ addFeature({
       ctx.group.add(net);
       const torus = new THREE.TorusGeometry(FARM.radius, 0.7, 8, 48).rotateX(Math.PI / 2);
       const m = new THREE.Matrix4().makeTranslation(p.x, lv + 0.2, p.z);
-      ctx.masonry.add(torus, m, ring);
+      ctx.paint.add(torus, m, ring);
       const m2 = new THREE.Matrix4().makeTranslation(p.x, lv + 1.8, p.z);
-      ctx.masonry.add(new THREE.TorusGeometry(FARM.radius, 0.25, 6, 48).rotateX(Math.PI / 2), m2, ring);
+      ctx.paint.add(new THREE.TorusGeometry(FARM.radius, 0.25, 6, 48).rotateX(Math.PI / 2), m2, ring);
       for (let k = 0; k < 18; k++) {
         const a = (k / 18) * TAU;
-        solid(ctx.masonry, CYL, p.x + Math.cos(a) * FARM.radius, lv + 1, p.z + Math.sin(a) * FARM.radius, 0.18, 1.8, 0.18, 0, ring);
+        solid(ctx.paint, CYL, p.x + Math.cos(a) * FARM.radius, lv + 1, p.z + Math.sin(a) * FARM.radius, 0.18, 1.8, 0.18, 0, ring);
       }
       yield "pen";
     }
@@ -1218,6 +1412,11 @@ addFeature({
 // light and a camera; every fish that swims up through it is counted.
 const PASS_TOP = FALLS.filter((f) => f.pass).reduce((a, b) => (a.s < b.s ? a : b), { s: Infinity });
 export const COUNTER = { s: PASS_TOP.s, name: "Zählstation" };
+{
+  const c = section(PASS_TOP.s);
+  place(PASS_TOP.s - 6, c.thalweg + c.half * 1.12, at);
+  addClearing(at.x, at.z, 14);
+}
 addPlace({ id: "counter", name: "Zählstation", line: "Hier wird jeder Lachs gezählt, der hinaufschwimmt", s: PASS_TOP.s + 1, u: 0, radius: 18, icon: "place", tier: "bronze" });
 addFeature({
   id: "counter",
@@ -1234,33 +1433,126 @@ addFeature({
     for (const side of [-1, 1]) {
       place(PASS_TOP.s - 0.5, slot + side * 2.9, at);
       const floor = bed(PASS_TOP.s - 1, slot);
-      solid(ctx.masonry, BOX, at.x, (floor + lv + 3) / 2, at.z, 0.6, lv + 3 - floor, 0.6, yaw, metal);
-      solid(ctx.masonry, BOX, at.x, (floor + lv) / 2, at.z, 0.3, lv - floor, 2.2, yaw, side < 0 ? new THREE.Color(1.6, 1.6, 1.5) : new THREE.Color(0.08, 0.08, 0.09));
+      solid(ctx.paint, BOX, at.x, (floor + lv + 3) / 2, at.z, 0.6, lv + 3 - floor, 0.6, yaw, metal);
+      solid(ctx.paint, BOX, at.x, (floor + lv) / 2, at.z, 0.3, lv - floor, 2.2, yaw, side < 0 ? new THREE.Color(1.6, 1.6, 1.5) : new THREE.Color(0.08, 0.08, 0.09));
     }
     place(PASS_TOP.s - 0.5, slot, at);
-    solid(ctx.masonry, BOX, at.x, lv + 3, at.z, 0.6, 0.6, 6.4, yaw, metal);
+    solid(ctx.paint, BOX, at.x, lv + 3, at.z, 0.6, 0.6, 6.4, yaw, metal);
     place(PASS_TOP.s - 6, c.thalweg + c.half * 1.12, at);
-    solid(ctx.masonry, BOX, at.x, lv + 5, at.z, 9, 7, 7, yaw, new THREE.Color(0.55, 0.2, 0.15));
-    solid(ctx.masonry, BOX, at.x, lv + 9, at.z, 10, 0.8, 8, yaw, new THREE.Color(0.2, 0.2, 0.22));
+    hut(ctx, at.x, lv + 1.2, at.z, yaw, { length: 10, width: 7.5, wall: 6.5, walls: new THREE.Color(0.5, 0.14, 0.1), roof: new THREE.Color(0.16, 0.16, 0.17), windows: 1, pitch: 0.6, chimney: false });
     yield "counter";
   },
 });
 
 // ---------------------------------------------------------------------------------------
+// The material of what people built (and of the earth): the vertex colour laid over with a
+// photograph projected from all three sides, its relief in the light; weed and a brown film
+// on whatever is under water, a dark tide mark at the surface, moss on the tops above it.
+// With `planks` a mesh's uv marks out planks (u along them, v across, one plank a unit):
+// dark seams between them and butt joints along them.
+function builtMaterial({ map, normal = null, scale = 1 / 6, roughness = 0.9, side = THREE.FrontSide, fouling = 1, planks = false }) {
+  const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness, side });
+  material.onBeforeCompile = (shader) => {
+    waterLitShader(shader);
+    shader.uniforms.detailMap = { value: map };
+    shader.uniforms.detailNormal = { value: normal ?? map };
+    if (planks) {
+      shader.vertexShader = shader.vertexShader
+        .replace("#include <common>", "#include <common>\nattribute vec2 plank;\nvarying vec2 vPlank;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvPlank = plank;");
+    }
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+        uniform sampler2D detailMap;
+        uniform sampler2D detailNormal;
+        ${planks ? "varying vec2 vPlank;" : ""}
+        float builtHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float builtNoise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(builtHash(i), builtHash(i + vec2(1, 0)), f.x), mix(builtHash(i + vec2(0, 1)), builtHash(i + vec2(1, 1)), f.x), f.y);
+        }
+        vec3 gBuiltNormal = vec3(0.0);`,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        {
+          vec3 P = vWaterPosition;
+          // The surface's own facing, from the geometry as drawn (some of these meshes carry
+          // no trustworthy normals), turned toward the eye.
+          vec3 Nw = normalize(cross(dFdx(P), dFdy(P)));
+          if (dot(Nw, cameraPosition - P) < 0.0) Nw = -Nw;
+          vec3 b = pow(abs(Nw), vec3(4.0));
+          b /= dot(b, vec3(1.0));
+          float s = ${scale.toFixed(5)};
+          ${
+            map
+              ? `vec3 tex = texture2D(detailMap, P.zy * s).rgb * b.x + texture2D(detailMap, P.xz * s).rgb * b.y + texture2D(detailMap, P.xy * s).rgb * b.z;
+          diffuseColor.rgb *= 0.5 + 1.25 * dot(tex, vec3(0.3, 0.55, 0.15));`
+              : ""
+          }
+          ${
+            normal
+              ? `vec3 nx = texture2D(detailNormal, P.zy * s).xyz * 2.0 - 1.0;
+          vec3 ny = texture2D(detailNormal, P.xz * s).xyz * 2.0 - 1.0;
+          vec3 nz = texture2D(detailNormal, P.xy * s).xyz * 2.0 - 1.0;
+          gBuiltNormal = vec3(0.0, nx.y, nx.x) * b.x + vec3(ny.x, 0.0, ny.y) * b.y + vec3(nz.x, nz.y, 0.0) * b.z;`
+              : ""
+          }
+          ${
+            planks
+              ? `// Seams between the planks, butt joints along them, each plank its own shade.
+          float row = floor(vPlank.y);
+          float across = fract(vPlank.y);
+          float seam = smoothstep(0.0, 0.07, across) * smoothstep(1.0, 0.93, across);
+          float along = vPlank.x + builtHash(vec2(row, 3.0)) * 13.0;
+          float joint = smoothstep(0.0, 0.008, fract(along / 13.0)) * smoothstep(1.0, 0.992, fract(along / 13.0));
+          diffuseColor.rgb *= (0.8 + 0.3 * builtHash(vec2(row, floor(along / 13.0)))) * mix(0.35, 1.0, seam * joint);`
+              : ""
+          }
+          float below = surfaceLevelAt(P) - P.y;
+          float wet = smoothstep(-0.2, 1.2, below);
+          float patches = builtNoise(P.xz * 0.35 + P.y * 0.3) * 0.65 + builtNoise(P.xz * 1.7 - P.y) * 0.35;
+          // Under water: a brown film and green weed in patches, thickest on what faces up.
+          float weed = wet * ${fouling.toFixed(2)} * smoothstep(0.3, 0.75, patches + 0.25 * Nw.y);
+          diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.72, 0.68, 0.48), wet * 0.55 * ${Math.min(1, fouling).toFixed(2)});
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.07, 0.12, 0.04) + 0.05 * builtNoise(P.xz * 6.0), clamp(weed * 0.7, 0.0, 1.0));
+          // The tide mark: dark just about the surface.
+          diffuseColor.rgb *= 1.0 - 0.35 * exp(-pow(below / 0.6, 2.0));
+          // Moss on the tops, above the water.
+          float moss = (1.0 - wet) * smoothstep(0.55, 0.9, Nw.y) * smoothstep(0.45, 0.8, patches);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.11, 0.15, 0.05), moss * 0.6);
+        }`,
+      )
+      .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+        normal = normalize(normal + (viewMatrix * vec4(gBuiltNormal * 0.55, 0.0)).xyz);`,
+      );
+  };
+  material.customProgramCacheKey = () => `salmon-built-${map?.uuid ?? "plain"}-${normal ? 1 : 0}-${planks ? 1 : 0}-${fouling}`;
+  return material;
+}
+
 let scene0 = null;
 export function createFeatures(scene, { rocks, locate, surfaceMaterial = null }) {
   scene0 = scene;
   const leaves = foliageMaterial();
   const leafShadow = foliageDepth({ animated: true });
-  const treeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, emissive: 0x0b1408, emissiveIntensity: 1 });
+  const treeMaterial = forestMaterial();
   const shapes = Array.from({ length: 5 }, (_, i) => withMossChannel(rockGeometry(i * 4.1 + 2.3, 30, 1)));
-  // Earth and turf, for the overhanging banks; stone and timber for what people built.
-  const earth = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide });
-  const masonry = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
-  const woodSolid = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
-  // Lit like everything else under water: through the surface, with the caustics, dimming
-  // with depth.
-  for (const m of [earth, masonry, woodSolid]) m.onBeforeCompile = (shader) => waterLitShader(shader);
+  // Earth and turf, for the overhanging banks; stone and timber for what people built;
+  // planks for the wreck. Each laid over with a photograph from all three sides (dressed
+  // stone, weathered grain, forest earth), lit like everything else under water, and
+  // fouled with weed and a dark tide mark where the water covers it.
+  const earth = builtMaterial({ map: photo("forest_ground_04_diff", true), scale: 1 / 10, roughness: 1, side: THREE.DoubleSide, fouling: 0.6 });
+  const masonry = builtMaterial({ map: photo("rock_face_03_diff", true), normal: photo("rock_face_03_nor_gl", false), scale: 1 / 7, roughness: 0.95, fouling: 1 });
+  const woodSolid = builtMaterial({ map: photo("pine_bark_diff", true), normal: photo("pine_bark_nor_gl", false), scale: 1 / 3.2, roughness: 0.9, fouling: 1 });
+  const paint = builtMaterial({ map: null, roughness: 0.6, fouling: 0.8 });
+  const planks = builtMaterial({ map: photo("pine_bark_diff", true), normal: photo("pine_bark_nor_gl", false), scale: 1 / 3.2, roughness: 0.9, fouling: 1.3, planks: true, side: THREE.DoubleSide });
   const built = new Map(); // id -> { group, colliders, cover }
   const queue = [];
   // What some places tell the rest of the game (the farm's pens, for the sea lice).
@@ -1278,7 +1570,7 @@ export function createFeatures(scene, { rocks, locate, surfaceMaterial = null })
       group,
       surface: surfaceMaterial,
       plants: new GeometryBatch(),
-      trees: new SolidBatch(),
+      trees: new TreeBatch(),
       stones: new SolidBatch(),
       wood: [],
       colliders: [],
@@ -1287,7 +1579,10 @@ export function createFeatures(scene, { rocks, locate, surfaceMaterial = null })
       earth,
       earthBatch: new SolidBatch(),
       masonry: new SolidBatch(),
+      timber: new SolidBatch(),
+      paint: new SolidBatch(),
       woodSolid,
+      planks,
       animated: [],
       animate: [],
       hazards: [],
@@ -1340,6 +1635,18 @@ export function createFeatures(scene, { rocks, locate, surfaceMaterial = null })
       const mesh = new THREE.Mesh(g, masonry);
       mesh.castShadow = mesh.receiveShadow = true;
       mesh.name = "Masonry";
+      group.add(mesh);
+    }
+    for (const [batch, material, name] of [
+      [ctx.timber, woodSolid, "Timber"],
+      [ctx.paint, paint, "Painted"],
+    ]) {
+      if (batch.empty) continue;
+      const g = batch.geometry();
+      g.computeBoundingSphere();
+      const mesh = new THREE.Mesh(g, material);
+      mesh.castShadow = mesh.receiveShadow = true;
+      mesh.name = name;
       group.add(mesh);
     }
     if (!ctx.earthBatch.empty) {
@@ -1418,9 +1725,11 @@ export function createFeatures(scene, { rocks, locate, surfaceMaterial = null })
       }
       return null;
     },
-    // Everything at once (a start, a jump).
-    prime(s) {
-      this.update(s, Infinity);
+    // At a start or a jump: what is near at once, the rest a little every frame after.
+    prime(s, near = 150) {
+      this.update(s, 0);
+      queue.sort((a, b) => Math.abs(a.feature.s - s) - Math.abs(b.feature.s - s));
+      while (queue.length && Math.abs(queue[0].feature.s - s) < near) if (queue[0].steps.next().done) queue.shift();
     },
     collidersNear(x, z, reach, out) {
       for (const b of built.values()) for (const c of b.colliders) if (Math.abs(c.x - x) < reach + c.r && Math.abs(c.z - z) < reach + c.r) out.push(c);

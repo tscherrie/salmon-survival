@@ -11,8 +11,31 @@ const vec = (x, y, z) => new THREE.Vector3(x, y, z);
 
 export function creatureMaterial() {
   const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75 });
-  material.onBeforeCompile = (shader) => waterLitShader(shader);
-  material.customProgramCacheKey = () => "salmon-creature-v1";
+  material.onBeforeCompile = (shader) => {
+    waterLitShader(shader);
+    // Fur and feathers: fine streaks laid along the body, a little lighter at the tips.
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+        float furHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float furNoise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(furHash(i), furHash(i + vec2(1, 0)), f.x), mix(furHash(i + vec2(0, 1)), furHash(i + vec2(1, 1)), f.x), f.y);
+        }`,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        {
+          vec3 P = vWaterPosition;
+          float streak = furNoise(vec2(P.x * 1.6 + P.z * 0.4, P.y * 9.0 + P.z * 6.0)) * 0.6 + furNoise(P.xz * 7.0 + P.y * 3.0) * 0.4;
+          diffuseColor.rgb *= 0.78 + 0.42 * streak;
+        }`,
+      );
+  };
+  material.customProgramCacheKey = () => "salmon-creature-v2";
   return material;
 }
 
@@ -97,9 +120,17 @@ export function heronLegsGeometry() {
     // Toes spread on the bed.
     for (const a of [-0.7, 0, 0.7, Math.PI]) add(b, part.cylinder, vec(0, 0.1, z), vec(0.12, 2.2, 0.12), [0.4, 0.37, 0.27], new THREE.Euler(0, a, Math.PI / 2));
   }
-  // The body high above, grey, for the leap's glimpse.
+  // The body high above, for the leap's glimpse: grey back and folded wings with their
+  // dark flight feathers, the black shoulder patch, pale breast plumes hanging, the tail.
   add(b, part.sphere, vec(0, 34, 0), vec(7, 5, 4), [0.55, 0.57, 0.58]);
-  add(b, part.sphere, vec(-6, 33, 0), vec(4, 2.2, 3.5), [0.3, 0.32, 0.34]);
+  add(b, part.sphere, vec(3.5, 32.5, 0), vec(3.2, 4.5, 3.2), [0.82, 0.82, 0.8]);
+  for (const z of [-2.6, 2.6]) {
+    add(b, part.sphere, vec(-1.5, 35, z), vec(7.5, 3.2, 1.6), [0.5, 0.52, 0.55], new THREE.Euler(0, 0, 0.12));
+    add(b, part.sphere, vec(-6.5, 34, z * 0.9), vec(4, 1.6, 1.2), [0.12, 0.13, 0.15], new THREE.Euler(0, 0, 0.2));
+    add(b, part.sphere, vec(3.5, 35.5, z * 0.95), vec(1.6, 1.2, 0.8), [0.08, 0.08, 0.09]);
+  }
+  add(b, part.sphere, vec(-8, 33.5, 0), vec(3, 1.4, 2.2), [0.42, 0.44, 0.46]);
+  add(b, part.cone, vec(4.5, 29.5, 0), vec(1.6, 4, 1.2), [0.85, 0.85, 0.82], new THREE.Euler(0, 0, Math.PI));
   return b.geometry();
 }
 export function heronHeadGeometry() {

@@ -11,8 +11,9 @@ import { framebufferSize, qualityName } from "../../shared/render-policy.js";
 import { reportSceneError } from "../../shared/controls.js";
 import { COURSE_VERSION, FALLS, MOUTH, REDD, S, bed, coolingAt, frame, gusts, level, locate, passSlot, place, poolAt, regionWeights, section, setSeasonFlow } from "./course.js";
 import { createFlowField } from "./flowfield.js";
-import { createBedMaterial, createRockMaterials, createSky, createSurfaceMaterial, skyUniforms, surfaceUniforms } from "./materials.js";
+import { createBedMaterial, createRockMaterials, createSky, photoTextures, photosLoaded, createSurfaceMaterial,skyUniforms, surfaceUniforms } from "./materials.js";
 import { createTerrain } from "./terrain.js";
+import { treeUniforms } from "./forest.js";
 import { STAGES, createSalmon, phaseOf, stageOf } from "./salmon.js";
 import { createLife } from "./life.js";
 import { createFalls } from "./falls.js";
@@ -24,13 +25,13 @@ import { COATS, MODEL_LENGTH, createFishMesh } from "./anatomy.js";
 import { isDesktop, showIntro, showPhoneNotice } from "./intro.js";
 import { MONTHS, conditions, forceYear, thermal, updateConditions, waterTemperature } from "./seasons.js";
 import { createNets } from "./nets.js";
-import { createLogbook } from "./logbook.js";
+import { CATALOGUE, createLogbook } from "./logbook.js";
 import { createMinimap } from "./minimap.js";
 import { createBadges } from "./badges.js";
 import { COUNTER, FARM, createFeatures } from "./features.js";
 import { createPlaces } from "./places.js";
 import { createEvents } from "./events.js";
-import { lang, startTranslation } from "./i18n.js";
+import { lang, startTranslation, t as translate } from "./i18n.js";
 import { track } from "./track.js";
 import { profile as prof } from "./profile.js";
 import { createCelebration } from "./celebrate.js";
@@ -61,6 +62,9 @@ function savedStageName() {
 }
 
 async function start() {
+  // How long the way to the title card's button takes, step by step (performance marks,
+  // read back with performance.getEntriesByType("mark")).
+  performance.mark("salmon:start");
   // The title card goes up at once and waits for the river to be built.
   const intro = dev ? null : showIntro({ resume: savedStageName() });
   const profile = qualityName(query.get("quality") || "detail");
@@ -73,7 +77,9 @@ async function start() {
   };
   let settings = gameSettings();
   installUnderwaterFog();
-  if (settings.taa) installSoftShadows({ blockerSamples: settings.detail ? 16 : 6, filterSamples: settings.detail ? 24 : 10, frustum: 44 });
+  // (?pcss=blocker,filter overrides the soft shadows' sample counts, for measuring.)
+  const pcss = (query.get("pcss") || "").split(",").map(Number);
+  if (settings.taa) installSoftShadows({ blockerSamples: pcss[0] || (settings.detail ? 16 : 6), filterSamples: pcss[1] || (settings.detail ? 24 : 10), frustum: 44 });
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
   renderer.setPixelRatio(1);
@@ -81,6 +87,8 @@ async function start() {
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  // A startup mark with what the graphics card holds so far.
+  const mark = (name) => performance.mark(`salmon:${name}`, { detail: { programs: renderer.info.programs?.length ?? 0, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries } });
 
   const scene = new THREE.Scene();
   const fogColor = new THREE.Color(0.05, 0.14, 0.14);
@@ -139,13 +147,16 @@ async function start() {
   const caustics = createCaustics(renderer, { size: settings.detail ? 768 : 512, grid: settings.detail ? 220 : 170 });
   const ripples = createRipples();
   const skyDome = createSky(scene);
+  mark("setup");
   const [bedMaterial, rocks] = await Promise.all([createBedMaterial(), createRockMaterials()]);
+  mark("textures");
   const surfaceMaterial = createSurfaceMaterial();
   const terrain = createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, detail: settings.detail });
   const pebbles = createPebbles(scene);
   // The special places: islands, side brooks, caves ... built as the fish comes near.
   const features = createFeatures(scene, { rocks, locate, surfaceMaterial });
   terrain.extras.push(features);
+  mark("terrain");
   const featureEvents = [];
   let liceExposure = 0,
     liceUntil = -1,
@@ -156,6 +167,7 @@ async function start() {
   const pace = Number(query.get("pace")) || 1;
   const salmon = createSalmon(scene, { pace });
   const fish = salmon.fish;
+  mark("salmon");
   const save = createSave();
   const at = {};
   let cameraReady = false;
@@ -228,10 +240,12 @@ async function start() {
 
   const life = createLife(scene, { detail: settings.detail, terrain, salmon });
   mirror(life.meshes);
+  mark("life");
   const falls = createFalls(scene);
   const nets = createNets(scene);
   const hud = createHud({ stages: STAGES });
   const sound = createSound();
+  mark("hud");
   // Badges for everything found and done the first time; the logbook keeps the collection.
   const badges = createBadges({ sound });
   for (const st of STAGES.slice(1)) badges.register(`stage:${st.id}`, stageBadge(st));
@@ -261,6 +275,7 @@ async function start() {
   const places = createPlaces({ badges });
   const logbook = createLogbook({ hud, badges, places });
   const minimap = createMinimap({ logbook, places });
+  mark("logbook");
   // Development: ?mate shows two made-up companions on the map, the way others would be
   // shown in a game swum together -- one close by, one far up the river.
   const mates = query.has("mate")
@@ -277,9 +292,11 @@ async function start() {
     : null;
   let mateTime = 0;
   const post = createPost(renderer, camera, settings);
+  mark("post");
   const daylight = createDaylight({ wallpaper: false, query });
   // Storms, anglers, otters, ice going out, northern lights.
   const events = createEvents(scene, { rocks, sound, daylight, life, query });
+  mark("events");
 
   // ------------------------------------------------------------------------------------
   // Input. Click the river and the pointer is captured; the mouse turns the fish. W swims,
@@ -314,10 +331,20 @@ async function start() {
     held.clear();
     if (!value) last = performance.now();
   }
+  // Into the game: full screen (unless F has turned it off) and the pointer captured, when
+  // the swim starts and whenever it is taken up again with a click.
+  let wantFullscreen = true;
+  function capture() {
+    if (wantFullscreen && !document.fullscreenElement && habitat.requestFullscreen)
+      Promise.resolve(habitat.requestFullscreen({ navigationUI: "hide" })).catch(() => {});
+    Promise.resolve(canvas.requestPointerLock?.()).catch(() => {});
+  }
   let wasFullscreen = false;
   document.addEventListener("fullscreenchange", () => {
     const now = !!document.fullscreenElement;
     if (wasFullscreen && !now && !waiting && dead <= 0) setPaused(true);
+    // Some browsers let the pointer go on the way into full screen: take it again.
+    if (now && !locked() && !waiting && !userPaused && !logbook.open) Promise.resolve(canvas.requestPointerLock?.()).catch(() => {});
     wasFullscreen = now;
   });
   document.querySelector("#logbook-toggle").addEventListener("click", (event) => {
@@ -360,8 +387,9 @@ async function start() {
       return;
     }
     if (event.code === "KeyF" && !event.repeat) {
-      if (document.fullscreenElement) document.exitFullscreen?.();
-      else habitat.requestFullscreen?.().catch(() => {});
+      wantFullscreen = !document.fullscreenElement;
+      if (!wantFullscreen) document.exitFullscreen?.();
+      else capture();
       return;
     }
     if ((event.code === "KeyL" && !event.repeat) || (event.code === "Escape" && logbook.open)) {
@@ -392,7 +420,7 @@ async function start() {
     if (!locked()) {
       look.yaw = fish.yaw;
       look.pitch = fish.pitch;
-      Promise.resolve(canvas.requestPointerLock?.()).catch(() => {});
+      capture();
       return;
     }
     if (event.button === 0) lungeQueued = true;
@@ -450,6 +478,45 @@ async function start() {
   let shake = 0;
   let airborneCamera = 0;
   let cameraOverride = null;
+  // A spotlight on what the fish has just found for the first time (a new fish, a hunter):
+  // a ring round it on the screen and, for a moment, the camera's eye turned toward it.
+  const spotlight = { target: new THREE.Vector3(), source: null, t: -1, weight: 0, kind: "" };
+  const spotRing = document.createElement("div");
+  spotRing.id = "spot";
+  spotRing.hidden = true;
+  spotRing.innerHTML = '<span class="ring"></span><span class="label"></span>';
+  habitat.append(spotRing);
+  const spotScreen = new THREE.Vector3();
+  function spotUpdate(dt) {
+    const found = logbook.spotted;
+    if (found) {
+      logbook.spotted = null;
+      spotlight.source = found.position;
+      spotlight.target.copy(found.position);
+      spotlight.t = 0;
+      const name = CATALOGUE.fish.kinds[found.kind] ?? CATALOGUE.hunters.kinds[found.kind] ?? "";
+      spotRing.querySelector(".label").textContent = translate(name);
+      spotRing.hidden = false;
+    }
+    if (spotlight.t < 0) {
+      spotlight.weight = 0;
+      return;
+    }
+    spotlight.t += dt;
+    if (spotlight.source) spotlight.target.lerp(spotlight.source, 1 - Math.exp(-dt * 6));
+    const k = spotlight.t;
+    // In over half a second, held, back over a second; only part of the way, so the fish
+    // stays in the picture.
+    spotlight.weight = 0.6 * smooth(0, 0.6, k) * (1 - smooth(2.2, 3.2, k));
+    spotScreen.copy(spotlight.target).project(camera);
+    const visible = spotScreen.z < 1 && Math.abs(spotScreen.x) < 1.1 && Math.abs(spotScreen.y) < 1.1;
+    spotRing.style.opacity = visible ? String(Math.min(1, k * 3) * (1 - smooth(3.4, 4, k))) : "0";
+    spotRing.style.transform = `translate(${((spotScreen.x + 1) / 2) * habitat.clientWidth}px, ${((1 - spotScreen.y) / 2) * habitat.clientHeight}px)`;
+    if (k > 4) {
+      spotlight.t = -1;
+      spotRing.hidden = true;
+    }
+  }
   // A new stage of life: a few seconds in slow motion while the camera takes a turn round
   // the new fish, with light and a fanfare. The fish is safe while it lasts.
   const glitter = createCelebration(scene);
@@ -607,6 +674,8 @@ async function start() {
       camera.position.y += (Math.random() - 0.5) * shake * L * 0.2;
       shake = Math.max(0, shake - dt * 2);
     }
+    // Something new found: the eye turns to it for a moment (spotlight, below).
+    if (spotlight.weight > 0.001) aim.lerp(spotlight.target, spotlight.weight);
     camera.lookAt(aim);
     const near = clamp(L * 0.06, 0.012, 0.25);
     if (Math.abs(camera.near - near) > near * 0.2) {
@@ -1088,6 +1157,7 @@ async function start() {
       hud.tip("seen", "<b>Du wirst gesehen.</b> Ein Jäger hat dich im Blick (das Auge oben links). Versteck dich hinter einem großen Stein oder in Pflanzen – oder bleib ganz still, dann fällst du weniger auf.", 10);
     // The logbook keeps count of what the fish meets and where it has been.
     if (dead <= 0) logbook.update(dt, fish, life);
+    spotUpdate(dt);
     if (dead <= 0) places.update(dt, fish);
     // A word at some of the places, the first time.
     const here = places.here?.id;
@@ -1164,9 +1234,12 @@ async function start() {
     for (const e of outcome.rivals ?? []) if (e.type === "nip" || e.type === "hit" || e.type === "lost") lastCombat = time;
     if (outcome.killed && dead <= 0) die(outcome.killed);
     else if (fish.energy <= 0 && dead <= 0 && time - lastCombat < 6) die("Im Kampf unterlegen");
+    // Too long without food: first a warning, then the body wastes, and with no strength
+    // left the fish dies.
+    if ((fish.hunger ?? 0) > 60 && dead <= 0) hud.tip("hunger", "<b>Du hungerst!</b> Dein Magen ist schon lange leer. Ohne Futter schwinden deine Kräfte, bis du verhungerst.", 9);
     if (fish.energy <= 0 && dead <= 0) {
       fish.starving = (fish.starving ?? 0) + dt;
-      if (fish.starving > 45) die("Entkräftet");
+      if (fish.starving > ((fish.hunger ?? 0) > 90 ? 20 : 45)) die((fish.hunger ?? 0) > 90 ? "Verhungert" : "Entkräftet");
     } else fish.starving = 0;
     if (spawning) stepSpawning(dt);
     else if (dead > 0) {
@@ -1290,6 +1363,7 @@ async function start() {
     restore(checkpoint);
     fish.energy = 1;
     fish.stomach = 0;
+    fish.hunger = 0;
     look.yaw = fish.yaw;
     look.pitch = 0;
     placeCamera(0, true);
@@ -1349,6 +1423,7 @@ async function start() {
       checkpoint = snapshotCheckpoint();
       fish.energy = 1;
       fish.stomach = 0;
+      fish.hunger = 0;
       dead = 0;
       look.yaw = fish.yaw;
       placeCamera(0, true);
@@ -1386,6 +1461,13 @@ async function start() {
     waterUniforms.canopyParams.value.set(40, 0.22, lookHere.canopy * (1 - 0.45 * conditions.leafFall - 0.65 * conditions.winter), 0.06);
     surfaceUniforms.ice.value = iced;
     swayCanopy(time);
+    // The forest: the wind in it (more in rain and storm), the birches turning and bare,
+    // snow on the spruces while the river is frozen.
+    treeUniforms.treeTime.value = time;
+    treeUniforms.treeWind.value = 0.2 + 0.5 * rain + 0.8 * events.flood;
+    treeUniforms.treeAutumn.value = Math.max(conditions.autumn, conditions.leafFall);
+    treeUniforms.treeBare.value = clamp(conditions.leafFall * 0.7 + conditions.winter * 1.2 - conditions.spring * 1.2, 0, 1);
+    treeUniforms.treeSnow.value = clamp(conditions.winter * 1.4 - 0.3, 0, 1) * (0.4 + 0.6 * conditions.ice);
     skyUniforms.sun.value = sunUp * cloud + 0.25 * day.moon;
     skyUniforms.sunColor.value.copy(keyColor);
     skyUniforms.skyLevel.value.setRGB(1, 1, 1).lerp(DUSK_WINDOW, day.golden * 0.8).multiplyScalar(0.02 + 0.98 * sunUp).multiplyScalar(1 - 0.45 * rain);
@@ -1401,7 +1483,9 @@ async function start() {
     const light = (0.06 + 0.94 * sunUp + 0.3 * day.golden) * (0.75 + 0.25 * cloud);
     if (above) {
       scene.fog.color.copy(AIR).multiply(skyUniforms.skyLevel.value);
-      scene.fog.density = 0.0022;
+      // The mist over the valley closes in before the edge of what is built round the fish.
+      const built = lerp(clamp(70 + fish.length * 12, 90, 170), 210, regionWeights(fish.river.s).sea);
+      scene.fog.density = 0.9 / built;
       skyDome.visible = true;
       // The dome goes with the eye: it is the sky at any distance.
       skyDome.position.copy(camera.position);
@@ -1535,14 +1619,19 @@ async function start() {
 
   // ------------------------------------------------------------------------------------
   // First frame: build what is round the fish, then run.
+  mark("built");
   placeCamera(0, true);
   cameraReady = true;
+  mark("camera");
   terrain.prime({ x: camera.position.x, z: camera.position.z, s: fish.river.s, u: fish.river.u }, { radius: 90, near: clamp(0.28 + fish.length * 0.1, 0.35, 1), land: 60 });
   features.prime(fish.river.s);
+  mark("prime-features");
   life.reset(fish);
+  mark("prime-life");
   pebbles.prime(fish.position, fish.length, fish.river.s);
   resize();
   hud.update({ energy: fish.energy, progress: fish.progress, ...salmon.appetite(), yolk: !!STAGES[fish.stage].yolk, stage: fish.stage, reserve: !!STAGES[fish.stage].fasting, sea: false, homing: false, bearing: 0 });
+  mark("primed");
   // Every material the river can show is compiled now, behind the loading card, and not
   // the first time a hunter or a new kind of food turns up mid-swim (a stall of a second).
   {
@@ -1553,12 +1642,24 @@ async function start() {
       object.visible = true;
       object.frustumCulled = false;
     });
+    // Compiled for the target the scene is really drawn into: the programs depend on it
+    // (no tone mapping, linear colour), and compiled for the screen they would all be
+    // compiled a second time at the first frame.
+    // Then the photographs go up to the graphics card. (Uploading them while the shaders
+    // compile gains nothing: the card does one thing after the other either way.)
+    renderer.setRenderTarget(post.main);
     try {
       await renderer.compileAsync(scene, camera);
     } catch {}
+    mark("compiled");
+    await photosLoaded();
+    mark("photos");
+    for (const texture of photoTextures) renderer.initTexture(texture);
+    mark("uploaded");
     renderer.shadowMap.needsUpdate = true;
     renderer.setRenderTarget(post.main);
     renderer.render(scene, camera);
+    mark("first-render");
     for (const [object, visible, culled] of hidden) {
       object.visible = visible;
       object.frustumCulled = culled;
@@ -1567,7 +1668,9 @@ async function start() {
   // Nothing moves until the swim is started from the title card.
   waiting = !!intro;
   step(1 / 60);
+  mark("first-step");
   draw(1 / 60);
+  mark("first-draw");
   loading.style.opacity = 0;
   setTimeout(() => (loading.hidden = true), 900);
   const begin = () => {
@@ -1577,6 +1680,7 @@ async function start() {
     hud.hint();
     if ((!state || query.has("new")) && fish.stage === 0) hud.toast(STAGES[0].name, "Du bist geschlüpft! Dein Dottersack nährt dich – bleib nah am Kies, und schnapp dir schon die ersten winzigen Larven.", 7);
   };
+  mark("ready");
   if (intro) {
     intro.ready();
     intro.started.then(() => {
@@ -1584,7 +1688,7 @@ async function start() {
       sound.start();
       look.yaw = fish.yaw;
       look.pitch = fish.pitch;
-      Promise.resolve(canvas.requestPointerLock?.()).catch(() => {});
+      capture();
       canvas.focus({ preventScroll: true });
       begin();
     });
@@ -1615,6 +1719,10 @@ async function start() {
       celebration.scale = celebrationScale();
       step(dt * celebration.scale);
       glitter.update(dt, camera, fish.position);
+    } else if (waiting) {
+      // Behind the title card: go on building what is further off.
+      features.update(fish.river.s, 4);
+      terrain.update({ x: camera.position.x, z: camera.position.z, s: cameraRiver.s, u: cameraRiver.u }, { radius: lerp(clamp(70 + fish.length * 12, 90, 170), 210, regionWeights(fish.river.s).sea), near: clamp(0.28 + fish.length * 0.1, 0.35, 1), budget: 4, land: 60 });
     }
     draw(still ? 0 : dt);
   }

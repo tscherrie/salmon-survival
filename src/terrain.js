@@ -3,8 +3,10 @@ import { rockGeometry } from "../../riverscape/src/environment.js";
 import { GeometryBatch, randomGenerator } from "../../riverscape/src/math.js";
 import { foliageDepth, foliageMaterial } from "../../riverscape/src/foliage.js";
 import { FALLS, MILLS, S, TRIBUTARIES, bedDetail, current, frame, level, passSlot, place, section, smooth, tributaryAt } from "./course.js";
-import { SolidBatch, birch, pine, spruce } from "./flora.js";
+import { SolidBatch } from "./flora.js";
+import { TreeBatch, birch, fallenTrunk, fern, forestMaterial, juniper, pine, shrub, spruce, stump } from "./forest.js";
 import * as flora from "./flora.js";
+import { inClearing } from "./clearings.js";
 
 // Every plant put into a block's batch is remembered as a piece -- its run of indices -- so
 // that a block far off can draw only some of its plants (plantLod below): the weed thins out
@@ -31,7 +33,12 @@ const algae = piece(flora.algae),
   sedge = piece(flora.sedge),
   starwort = piece(flora.starwort),
   sugarKelp = piece(flora.sugarKelp),
-  turfTuft = piece(flora.turfTuft);
+  turfTuft = piece(flora.turfTuft),
+  waterLily = piece(flora.waterLily),
+  bladderwrack = piece(flora.bladderwrack),
+  redWeed = piece(flora.redWeed),
+  horsetail = piece(flora.horsetail),
+  burReed = piece(flora.burReed);
 // Reorders a batch's indices so that its plants come in a random order, the big ones early,
 // and returns how many indices hold the first 30 % and the first 60 % of them.
 const PLANT_LOD = [0.3, 0.6];
@@ -101,9 +108,8 @@ function blockIndex(s) {
 export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, detail = true } = {}) {
   const leaves = foliageMaterial();
   const leafShadow = foliageDepth({ animated: true });
-  // The forest is seen from the water in a leap: lit from above and from the bright sky all
-  // round, so its shade sides stay green rather than going brown.
-  const treeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, emissive: 0x0b1408, emissiveIntensity: 1 });
+  // The forest (forest.js): needles and leaves cut out of cards, swaying, with the seasons.
+  const treeMaterial = forestMaterial();
 
   // Shared stone shapes.
   const shapes = {
@@ -532,7 +538,7 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
         mesh.castShadow = mesh.receiveShadow = true;
         mesh.name = "Drowned trunk";
         group.add(mesh);
-        for (const q of points) colliders.push({ x: q.x, y: q.y, z: q.z, r: radius * 1.2, ry: radius * 1.2, s: p.s, u: p.u });
+        trunkColliders(points, radius, radius * 0.6, colliders, { s: p.s, u: p.u });
         cover.push({ x: p.x, z: p.z, radius: length * 0.45, top: p.y + 4 });
       }
     }
@@ -573,9 +579,15 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
       const roll = random();
       const sea = r.sea + r.estuary * 0.5;
       if (sea > 0.5) {
-        if (p.ground.rock > 0.35 && p.depth < 90) {
+        if (p.ground.rock > 0.35 && p.depth < 22 && roll < 0.55) {
+          // The shallow rocks: bladderwrack, and red weed under it.
+          bladderwrack(plants, p.x, p.z, p.y, p.level, flow, random, 1 + random());
+          if (random() < 0.5) redWeed(plants, p.x + range(-2, 2), p.z + range(-2, 2), p.y, p.level, flow, random, 1);
+          cover.push({ x: p.x, z: p.z, radius: 4, top: p.y + 5 });
+        } else if (p.ground.rock > 0.35 && p.depth < 90) {
           if (roll < 0.7) kelp(plants, p.x, p.z, p.y, p.level, flow, random, 1);
           else sugarKelp(plants, p.x, p.z, p.y, p.level, flow, random, 1);
+          if (random() < 0.6) redWeed(plants, p.x + range(-3, 3), p.z + range(-3, 3), p.y, p.level, flow, random, 1.2);
           cover.push({ x: p.x, z: p.z, radius: 6, top: p.y + 14 });
         } else if (p.depth < 40 && p.ground.sand > 0.4) {
           for (let e = 0; e < 8; e++) eelgrass(plants, p.x + range(-5, 5), p.z + range(-5, 5), p.y, p.level, flow, random, 1);
@@ -583,6 +595,7 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
         }
       } else if (r.estuary > 0.4) {
         if (margin > 0.8 && p.depth < 8) reeds(plants, p.x, p.z, p.y, p.level, random, 1.2);
+        else if (margin > 0.5 && p.depth < 20 && p.ground.rock > 0.3) bladderwrack(plants, p.x, p.z, p.y, p.level, flow, random, 1.2);
         else if (p.depth < 30) for (let e = 0; e < 6; e++) eelgrass(plants, p.x + range(-4, 4), p.z + range(-4, 4), p.y, p.level, flow, random, 0.9);
         cover.push({ x: p.x, z: p.z, radius: 5, top: p.y + 6 });
       } else {
@@ -592,6 +605,7 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
         const big = r.middle + r.lower;
         if (margin > 0.78 && p.depth < 3) {
           if (big > 0.5 && roll < 0.6) reeds(plants, p.x, p.z, p.y, p.level, random, 1);
+          else if (r.brook + r.upper > 0.4 && roll < 0.35) horsetail(plants, p.x, p.z, p.y, p.level, random, 0.8 + 0.4 * r.upper);
           else sedge(plants, p.x, p.z, p.y, p.level, random, 0.6 + 0.6 * (r.upper + r.middle));
           cover.push({ x: p.x, z: p.z, radius: 3, top: p.level });
         } else if (fast && p.depth > 2.5 && r.brook < 0.6 && roll < 0.8) {
@@ -605,6 +619,13 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
             if (random() < 0.55) algae(plants, q, flow, random, size);
             else mossTuft(plants, q, flow, random, size * 1.1);
           }
+        } else if (!fast && p.depth > 1.5 && p.depth < 14 && big + r.upper * 0.4 > 0.3 && roll < 0.14) {
+          // Water-lilies on the slack water.
+          waterLily(plants, p.x, p.z, p.y, p.level, flow, random, 0.9 + 0.4 * big);
+          cover.push({ x: p.x, z: p.z, radius: 3, top: p.level });
+        } else if (!fast && p.depth > 1.5 && big > 0.4 && roll < 0.24) {
+          burReed(plants, p.x, p.z, p.y, p.level, flow, random, 0.8 + 0.4 * big);
+          cover.push({ x: p.x, z: p.z, radius: 2.5, top: p.level });
         } else if (p.depth > 2 && big > 0.3 && roll < 0.4) {
           pondweed(plants, p.x, p.z, p.y, p.level, flow, random, 0.6 + 0.6 * (r.upper + big));
           cover.push({ x: p.x, z: p.z, radius: 3, top: p.y + Math.min(p.depth, 10) });
@@ -835,22 +856,39 @@ export function createTerrain(scene, { bedMaterial, surfaceMaterial, rocks, deta
     }
     yield "plants";
 
-    // The forest on the land either side.
+    // The forest on the land either side: spruce in the shade of the brook, more pine and
+    // birch lower down; under it juniper, bilberry, ferns, stumps and fallen trunks.
     if (r.sea < 0.5) {
-      const trees = new SolidBatch();
+      const trees = new TreeBatch();
       const want = Math.floor((area / 1000) * (r.brook * 5 + r.upper * 3.5 + r.middle * 2.2 + r.lower * 1.5 + r.estuary * 0.6));
+      const spruceShare = 0.3 + 0.45 * (r.brook + r.upper);
       for (let k = 0; k < want; k++) {
         const p = pick();
-        if (p.y < p.level + 1.5) continue;
+        if (p.y < p.level + 1.5 || inClearing(p.x, p.z)) continue;
         const h = range(60, 150) * (0.8 + 0.3 * r.brook);
         const which = random();
-        if (which < 0.55) spruce(trees, p.x, p.y, p.z, h, random);
-        else if (which < 0.8) pine(trees, p.x, p.y, p.z, h, random);
+        if (which < spruceShare) spruce(trees, p.x, p.y, p.z, h, random);
+        else if (which < spruceShare + (1 - spruceShare) * 0.55) pine(trees, p.x, p.y, p.z, h, random);
         else birch(trees, p.x, p.y, p.z, h * 0.7, random);
-        if (k % 4 === 3) yield "forest";
+        if (k % 3 === 2) yield "forest";
+      }
+      const under = Math.floor((area / 1000) * (r.brook * 10 + r.upper * 9 + r.middle * 7 + r.lower * 5 + r.estuary * 2));
+      for (let k = 0; k < under; k++) {
+        const p = pick();
+        if (p.y < p.level + 0.6 || inClearing(p.x, p.z)) continue;
+        const which = random();
+        if (which < 0.34) fern(trees, p.x, p.y, p.z, range(2.5, 5), random);
+        else if (which < 0.7) shrub(trees, p.x, p.y, p.z, range(1.5, 3.5), random);
+        else if (which < 0.82) juniper(trees, p.x, p.y, p.z, range(8, 20), random);
+        else if (which < 0.92) stump(trees, p.x, p.y, p.z, range(1.2, 2.6), random);
+        else fallenTrunk(trees, p.x, p.y, p.z, range(25, 60), random);
+        if (k % 8 === 7) yield "forest";
       }
       if (!trees.empty) {
-        const mesh = new THREE.Mesh(trees.geometry(), treeMaterial);
+        const geometry = trees.geometry();
+        geometry.computeBoundingSphere();
+        geometry.boundingSphere.radius += 2;
+        const mesh = new THREE.Mesh(geometry, treeMaterial);
         mesh.name = "Forest";
         group.add(mesh);
       }
@@ -1110,9 +1148,59 @@ export function trunkGeometry(points, r0, r1, seed) {
       }
     }
   }
+  // The two ends sawn or broken off, not open: a rim, the heartwood a little sunk in.
+  const t0 = new THREE.Vector3();
+  for (const end of [0, 1]) {
+    const i = end * rows;
+    curve.getPointAt(end, p);
+    curve.getTangentAt(end, t0);
+    const outward = end ? 1 : -1;
+    const radius = r0 + (r1 - r0) * end;
+    const rim = positions.length / 3;
+    for (let j = 0; j < cols; j++) {
+      const k = (i * (cols + 1) + j) * 3;
+      positions.push(positions[k], positions[k + 1], positions[k + 2]);
+      normals.push(t0.x * outward, t0.y * outward, t0.z * outward);
+    }
+    const inner = positions.length / 3;
+    for (let j = 0; j < cols; j++) {
+      const a = (j / cols) * Math.PI * 2;
+      n.copy(frames.normals[i]).multiplyScalar(Math.cos(a)).addScaledVector(frames.binormals[i], Math.sin(a));
+      const r = radius * (0.72 + 0.06 * Math.sin(a * 3 + seed));
+      const sink = -outward * radius * 0.08;
+      positions.push(p.x + n.x * r + t0.x * sink, p.y + n.y * r + t0.y * sink, p.z + n.z * r + t0.z * sink);
+      normals.push(t0.x * outward, t0.y * outward, t0.z * outward);
+    }
+    const centre = positions.length / 3;
+    const sink = -outward * radius * 0.16;
+    positions.push(p.x + t0.x * sink, p.y + t0.y * sink, p.z + t0.z * sink);
+    normals.push(t0.x * outward, t0.y * outward, t0.z * outward);
+    for (let j = 0; j < cols; j++) {
+      const j1 = (j + 1) % cols;
+      // Seen from outside the end the ring runs anticlockwise at the far end, clockwise at the near.
+      if (end) indices.push(rim + j, rim + j1, inner + j1, rim + j, inner + j1, inner + j, centre, inner + j, inner + j1);
+      else indices.push(rim + j1, rim + j, inner + j, rim + j1, inner + j, inner + j1, centre, inner + j1, inner + j);
+    }
+  }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
   geometry.setIndex(indices);
   return geometry;
+}
+
+// What a trunk is to a fish swimming into it: spheres all along it, close enough that
+// nothing slips between them (not just one at each of the points it was drawn through).
+export function trunkColliders(points, r0, r1, out, extra = {}) {
+  const curve = new THREE.CatmullRomCurve3(points);
+  const length = curve.getLength();
+  const step = Math.max(0.3, Math.min(r0, r1) * 0.9);
+  const count = Math.max(2, Math.ceil(length / step));
+  const p = new THREE.Vector3();
+  for (let i = 0; i <= count; i++) {
+    const t = i / count;
+    curve.getPointAt(t, p);
+    const r = (r0 + (r1 - r0) * t) * 1.1;
+    out.push({ x: p.x, y: p.y, z: p.z, r, ry: r, ...extra });
+  }
 }

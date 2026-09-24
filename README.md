@@ -35,11 +35,12 @@ Useful for trying things: `?new&stage=parr&at=4500` starts a new parr at a place
 - `src/main.js` – the game loop: the fish, the camera, what happens
 - `src/course.js` – the river from source to sea: its bed, its level, its current
 - `src/terrain.js`, `src/features.js` – the ground, the plants, and the special places (caves, the mill, the bridge, the wreck …)
+- `src/forest.js` – the forest on the banks: spruce, pine, birch, juniper, bilberry, ferns (needles and leaves cut out of cards in the shader, with the seasons)
 - `src/salmon.js` – the salmon: stages of life, growth, swimming, leaping
 - `src/life.js`, `src/predators.js`, `src/rivals.js`, `src/school.js`, `src/brawl.js` – food, shoals, hunters, fights
 - `src/events.js` – storms, anglers, otters, ice floes, northern lights
 - `src/eddies*.js`, `src/flowfield.js` – the water flowing round stones
-- `src/i18n*.js` – the translations (the game is written in German; English and Chinese are laid over it)
+- `src/i18n*.js` – the translations (the game is written in German; English, Chinese, Japanese and Bulgarian are laid over it)
 - `riverscape/`, `shared/`, `ui/`, `vendor/` – the rendering it builds on, from Desktop Habitats, and three.js
 
 ## Credits and license

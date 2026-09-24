@@ -31,7 +31,7 @@ export const CATALOGUE = {
   },
   fish: {
     title: "Fische",
-    kinds: { minnow: "Elritze", stickleback: "Stichling", sandeel: "Sandaal", herring: "Hering", rival: "Junger Lachs" },
+    kinds: { minnow: "Elritze", stickleback: "Stichling", grayling: "Äsche", eel: "Aal", sandeel: "Sandaal", herring: "Hering", mackerel: "Makrele", rival: "Junger Lachs" },
   },
   hunters: {
     title: "Jäger",
@@ -202,7 +202,12 @@ export function createLogbook({ hud, badges = null, places = null }) {
         feats();
       } else hud.note(`Neu im Logbuch: ${CATALOGUE[group].kinds[kind]}`);
     }
+    return first && !!CATALOGUE[group].kinds[kind];
   }
+  // Something found for the first time and where it is, for the game to point it out.
+  const spot = (kind, position) => {
+    if (position) api.spotted = { kind, position };
+  };
   function persist() {
     if (!dirty) return;
     dirty = false;
@@ -306,14 +311,17 @@ export function createLogbook({ hud, badges = null, places = null }) {
       for (const kind of now)
         if (!api.metNow.has(kind)) {
           api.metNow.add(kind);
-          remember("hunters", kind);
+          if (remember("hunters", kind)) spot(kind, life.hunters.where?.(kind, fish));
         }
       for (const kind of [...api.metNow]) if (!now.includes(kind)) api.metNow.delete(kind);
       // Shoal fish and young salmon in sight.
       for (const [name, kind] of Object.entries(life.shoals.kinds))
         if (CATALOGUE.fish.kinds[name] && !data.seen.fish[name])
-          for (const g of kind.groups) if (g.active && g.centre.distanceTo(fish.position) < 18 + fish.length * 4) remember("fish", name, 0.0001);
-      if (!data.seen.fish.rival && life.rivals.list.some((r) => r.active && r.position.distanceTo(fish.position) < 10)) remember("fish", "rival", 0.0001);
+          for (const g of kind.groups) if (g.active && g.centre.distanceTo(fish.position) < 18 + fish.length * 4 && remember("fish", name, 0.0001)) spot(name, g.centre);
+      if (!data.seen.fish.rival) {
+        const r = life.rivals.list.find((r) => r.active && r.position.distanceTo(fish.position) < 10);
+        if (r && remember("fish", "rival", 0.0001)) spot("rival", r.position);
+      }
       // The stretch of river it is in.
       regionWeights(fish.river.s, weights);
       for (const [r, name] of REGIONS)

@@ -21,6 +21,11 @@ const smoltRun = (fish, weights) => phaseOf(fish.stage) === "smolt" && weights.s
 export function createSchool(scene, { random, brawls = null, coat = "smolt", count: COUNT = 16, when = smoltRun, title = "Smolt", kind = "smolt" }) {
   const range = (a, b) => a + (b - a) * random();
   const mesh = createFishMesh(scene, "salmon", coat, COUNT, { name: `${title} school`, cacheKey: `school-${coat}`, detail: 0.5, castShadow: coat !== "smolt" });
+  // The others going up to spawn have their hooked jaws and humped backs too.
+  if (coat === "spawner" && mesh.materials.uniforms?.coat_kype) {
+    mesh.materials.uniforms.coat_hump.value = 0.7;
+    mesh.materials.uniforms.coat_kype.value = 0.8;
+  }
   const members = Array.from({ length: COUNT }, (_, i) => ({
     slot: i,
     active: false,

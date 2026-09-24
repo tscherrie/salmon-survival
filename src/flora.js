@@ -238,6 +238,171 @@ export function sugarKelp(batch, x, z, ground, surface, flow, random, scale = 1)
 }
 
 // ---------------------------------------------------------------------------------------
+// Five more of the river's and the shore's plants.
+
+// A floating leaf: a flat round pad with its notch, the rim turned up a little, lying on
+// the surface; it hardly sways, only rides the ripples. From below it is a dark disc against
+// the light, veined, reddish where the sun comes through.
+function pad(batch, centre, radius, notch, color, root, random) {
+  const range = ranger(random);
+  const rings = 3,
+    segments = 16;
+  const start = batch.positions.length / 3;
+  const strand = { direction: vec(0, 1, 0), tangent: vec(1, 0, 0), distance: 0.2, compliance: 0.05 };
+  const gap = 0.32;
+  for (let r = 0; r <= rings; r++) {
+    const f = r / rings;
+    for (let k = 0; k <= segments; k++) {
+      const a = notch + gap / 2 + (k / segments) * (TAU - gap);
+      const rr = radius * f * (1 + 0.04 * Math.sin(a * 5 + radius));
+      const p = centre.clone().add(vec(Math.cos(a) * rr, 0.08 * f * f * radius * 0.4, Math.sin(a) * rr));
+      const c = color.clone().multiplyScalar(0.82 + 0.25 * f + 0.06 * Math.sin(a * 11));
+      batch.vertex(p, [k / segments, f], c, root, strand, 0.45);
+      if (r < rings && k < segments) {
+        const i = start + r * (segments + 1) + k;
+        batch.quad(i, i + 1, i + segments + 1, i + segments + 2);
+      }
+    }
+  }
+  void range;
+}
+
+// The yellow water-lily: pads on the slack water of the pools and the lower river, each on
+// its long stalk from the mud; lettuce-like leaves under water at the foot; a yellow cup of
+// a flower held just above the surface in summer.
+export function waterLily(batch, x, z, ground, surface, flow, random, scale = 1) {
+  const range = ranger(random);
+  const root = vec(x, ground - 0.05, z);
+  const depth = surface - ground;
+  if (depth < 1.2) return;
+  const stalk = new THREE.Color().setHSL(0.16, 0.35, 0.28);
+  const pads = Math.floor(range(3, 7));
+  for (let k = 0; k < pads; k++) {
+    const a = range(0, TAU);
+    const out = range(0.5, 2.5) * scale + depth * 0.25;
+    const at = vec(x + Math.cos(a) * out, surface - 0.02, z + Math.sin(a) * out);
+    const mid = root.clone().lerp(at, 0.5).add(vec(range(-0.4, 0.4), 0, range(-0.4, 0.4)));
+    stem(batch, [root.clone(), mid, at.clone().add(vec(0, -0.05, 0))], 0.035 * scale, stalk, root, 0.35);
+    const green = new THREE.Color().setHSL(range(0.22, 0.28), range(0.45, 0.6), range(0.17, 0.24));
+    if (random() < 0.2) green.lerp(new THREE.Color(0.45, 0.32, 0.1), 0.5);
+    pad(batch, at, range(1.1, 2.1) * scale, range(0, TAU), green, root, random);
+  }
+  // The submerged leaves: thin, wavy, pale.
+  for (let k = 0; k < 4; k++) {
+    const a = range(0, TAU);
+    const dir = vec(Math.cos(a), 0, Math.sin(a));
+    const length = Math.min(depth * 0.6, range(1.2, 2.4) * scale);
+    const tip = root.clone().addScaledVector(dir, length * 0.8).add(vec(0, length * 0.7, 0));
+    blade(batch, [root.clone(), root.clone().addScaledVector(dir, length * 0.3).add(vec(0, length * 0.4, 0)), tip], range(0.5, 0.8) * scale, new THREE.Color().setHSL(0.2, 0.45, 0.3), root, 0.9, { rows: 8, cols: 4, thin: 1 });
+  }
+  // A flower or two: five yellow sepals cupped round the centre, just clear of the water.
+  const flowers = random() < 0.6 ? Math.floor(range(1, 3)) : 0;
+  for (let k = 0; k < flowers; k++) {
+    const a = range(0, TAU);
+    const out = range(0.3, 1.8) * scale;
+    const at = vec(x + Math.cos(a) * out, surface + 0.35 * scale, z + Math.sin(a) * out);
+    stem(batch, [root.clone(), root.clone().lerp(at, 0.5), at], 0.03 * scale, stalk, root, 0.3);
+    const yellow = new THREE.Color().setHSL(0.13, 0.9, 0.5);
+    for (let q = 0; q < 5; q++) {
+      const b = (q / 5) * TAU + range(-0.1, 0.1);
+      const dir = vec(Math.cos(b), 0, Math.sin(b));
+      const r = 0.3 * scale;
+      blade(batch, [at.clone(), at.clone().addScaledVector(dir, r * 0.7).add(vec(0, r * 0.45, 0)), at.clone().addScaledVector(dir, r * 0.9).add(vec(0, r * 1.1, 0))], r * 0.55, yellow, root, 0.2, { rows: 4, cols: 2, thin: 0.6, twist: b + Math.PI / 2 });
+    }
+  }
+}
+
+// Bladderwrack: olive-brown fronds forking again and again from a holdfast on the rocks of
+// the shore, a pair of air bladders at each fork, lifting them toward the light.
+export function bladderwrack(batch, x, z, ground, surface, flow, random, scale = 1) {
+  const range = ranger(random);
+  const root = vec(x, ground - 0.03, z);
+  const olive = new THREE.Color().setHSL(range(0.075, 0.1), range(0.55, 0.7), range(0.13, 0.19));
+  const bladder = olive.clone().multiplyScalar(1.3);
+  const fork = (from, dir, length, depth) => {
+    const to = from.clone().addScaledVector(dir, length);
+    to.y = Math.min(to.y, surface - 0.2);
+    const mid = from.clone().lerp(to, 0.5).add(vec(0, length * 0.05, 0));
+    const c = olive.clone().multiplyScalar(range(0.85, 1.15));
+    blade(batch, [from, mid, to], length * 0.18 * scale, c, root, 0.7, { rows: 4, cols: 2, thin: 0.8, twist: Math.atan2(dir.z, dir.x) + Math.PI / 2 });
+    if (depth > 0) {
+      // The bladders, a pair of small swellings just below the fork.
+      for (const side of [-1, 1]) {
+        const at = from.clone().lerp(to, 0.8).add(vec(-dir.z * side * length * 0.08, 0, dir.x * side * length * 0.08));
+        blade(batch, [at.clone().addScaledVector(dir, -length * 0.07), at, at.clone().addScaledVector(dir, length * 0.07)], length * 0.09, bladder, root, 0.7, { rows: 3, cols: 2, thin: 0.5 });
+      }
+      for (const turn of [-0.45, 0.45]) {
+        const d = dir.clone().applyAxisAngle(vec(0, 1, 0), turn + range(-0.15, 0.15)).add(vec(0, range(0.05, 0.25), 0)).normalize();
+        fork(to, d, length * range(0.7, 0.85), depth - 1);
+      }
+    }
+  };
+  const fronds = Math.floor(range(4, 7));
+  for (let k = 0; k < fronds; k++) {
+    const a = flow + range(-1.4, 1.4);
+    const dir = vec(Math.cos(a), range(0.5, 1.1), Math.sin(a)).normalize();
+    fork(root.clone(), dir, range(1.4, 2.4) * scale, 3);
+  }
+}
+
+// Dulse and other red weeds: frilled wine-red blades in the shade of the kelp.
+export function redWeed(batch, x, z, ground, surface, flow, random, scale = 1) {
+  const range = ranger(random);
+  const root = vec(x, ground - 0.03, z);
+  const count = Math.floor(range(4, 8));
+  for (let i = 0; i < count; i++) {
+    const a = flow + range(-1.5, 1.5);
+    const dir = vec(Math.cos(a), 0, Math.sin(a));
+    const length = range(1.5, 4) * scale;
+    const h = Math.min(surface - ground - 0.4, length * range(0.5, 0.9));
+    const points = [root.clone(), root.clone().addScaledVector(dir, length * 0.2).add(vec(0, h * 0.6, 0)), root.clone().addScaledVector(dir, length * 0.6).add(vec(0, h, 0)), root.clone().addScaledVector(dir, length).add(vec(0, h * 0.8, 0))];
+    const color = new THREE.Color().setHSL(range(0.95, 1.0), range(0.45, 0.65), range(0.14, 0.22));
+    blade(batch, points, range(0.35, 0.6) * scale, color, root, 1.0, { rows: 10, cols: 3, ribbon: true, thin: 1, twist: a + Math.PI / 2 });
+  }
+}
+
+// Water horsetail: a stand of hollow jointed stems in the shallows of the brook, dark
+// bands at the joints, straight up through the surface.
+export function horsetail(batch, x, z, ground, surface, random, scale = 1) {
+  const range = ranger(random);
+  const count = Math.floor(range(10, 22));
+  const root = vec(x, ground - 0.05, z);
+  for (let i = 0; i < count; i++) {
+    const r = Math.sqrt(random()) * 1.8 * scale;
+    const a = range(0, TAU);
+    const base = vec(x + Math.cos(a) * r, ground - 0.05, z + Math.sin(a) * r);
+    const top = Math.max(surface + range(1, 6) * scale, ground + range(3, 8) * scale);
+    const lean = vec(range(-1, 1), 0, range(-1, 1)).multiplyScalar(0.3);
+    const joints = Math.max(3, Math.floor((top - base.y) / (0.9 * scale)));
+    let from = base;
+    for (let j = 1; j <= joints; j++) {
+      const t = j / joints;
+      const to = base.clone().add(vec(lean.x * t, (top - base.y) * t, lean.z * t));
+      const c = j % 2 ? new THREE.Color().setHSL(range(0.26, 0.3), 0.45, 0.28) : new THREE.Color().setHSL(0.27, 0.4, 0.24);
+      stem(batch, [from, from.clone().lerp(to, 0.9), to], 0.045 * scale, c, root, 0.12);
+      from = to;
+    }
+  }
+}
+
+// Bur-reed: long soft ribbons rising from the bed of the slow river and trailing out
+// along the surface downstream.
+export function burReed(batch, x, z, ground, surface, flow, random, scale = 1) {
+  const range = ranger(random);
+  const root = vec(x, ground - 0.03, z);
+  const count = Math.floor(range(5, 10));
+  const depth = surface - ground;
+  for (let i = 0; i < count; i++) {
+    const a = flow + range(-0.4, 0.4);
+    const dir = vec(Math.cos(a), 0, Math.sin(a));
+    const float = range(3, 9) * scale;
+    const points = [root.clone(), root.clone().addScaledVector(dir, depth * 0.3).add(vec(0, depth * 0.6, 0)), root.clone().addScaledVector(dir, depth * 0.7 + float * 0.3).add(vec(0, depth - 0.08, 0)), root.clone().addScaledVector(dir, depth * 0.7 + float).add(vec(0, depth - 0.05, 0))];
+    const color = new THREE.Color().setHSL(range(0.2, 0.25), range(0.5, 0.65), range(0.2, 0.28));
+    blade(batch, points, range(0.1, 0.16) * scale, color, root, 1.1, { rows: 16, cols: 1, ribbon: true, thin: 1, twist: a + Math.PI / 2, browning: random() < 0.3 ? 0.25 : 0 });
+  }
+}
+
+// ---------------------------------------------------------------------------------------
 // The small green life of a clear northern river, what makes it a garden and not a
 // quarry: filamentous algae streaming from the stones in the riffles, water starwort and
 // alternate water-milfoil in the slack water, low turf of bulbous rush and moss over the
@@ -474,60 +639,3 @@ export class SolidBatch {
   }
 }
 
-const TREE_PARTS = {
-  cone: new THREE.ConeGeometry(1, 1, 9, 1, true).translate(0, 0.5, 0),
-  trunk: new THREE.CylinderGeometry(0.7, 1, 1, 7, 1, true).translate(0, 0.5, 0),
-  blob: new THREE.IcosahedronGeometry(1, 1),
-};
-
-export function spruce(batch, x, y, z, height, random) {
-  const range = ranger(random);
-  const m = new THREE.Matrix4();
-  const trunk = new THREE.Color(0.2, 0.14, 0.1);
-  m.compose(vec(x, y - 1, z), new THREE.Quaternion(), vec(height * 0.018, height * 0.4, height * 0.018));
-  batch.add(TREE_PARTS.trunk, m, trunk);
-  const tiers = Math.floor(range(6, 9));
-  const green = new THREE.Color().setHSL(range(0.33, 0.4), range(0.3, 0.45), range(0.06, 0.09));
-  for (let i = 0; i < tiers; i++) {
-    const t = i / tiers;
-    const radius = height * 0.2 * (1 - t) + height * 0.02;
-    const base = y + height * (0.12 + 0.82 * t);
-    const tier = height * (0.22 - 0.08 * t);
-    m.compose(vec(x, base, z), new THREE.Quaternion().setFromAxisAngle(vec(0, 1, 0), range(0, TAU)), vec(radius, tier, radius));
-    batch.add(TREE_PARTS.cone, m, green, (p, n) => 0.75 + 0.35 * Math.max(0, n.y));
-  }
-}
-
-export function pine(batch, x, y, z, height, random) {
-  const range = ranger(random);
-  const m = new THREE.Matrix4();
-  m.compose(vec(x, y - 1, z), new THREE.Quaternion(), vec(height * 0.02, height * 0.85, height * 0.02));
-  batch.add(TREE_PARTS.trunk, m, new THREE.Color(0.42, 0.24, 0.14));
-  const green = new THREE.Color().setHSL(range(0.28, 0.33), range(0.4, 0.5), range(0.08, 0.11));
-  for (let i = 0; i < 4; i++) {
-    const r = height * range(0.1, 0.16);
-    m.compose(
-      vec(x + range(-1, 1) * r, y + height * range(0.72, 0.95), z + range(-1, 1) * r),
-      new THREE.Quaternion(),
-      vec(r, r * 0.55, r),
-    );
-    batch.add(TREE_PARTS.blob, m, green, (p, n) => 0.8 + 0.4 * Math.max(0, n.y));
-  }
-}
-
-export function birch(batch, x, y, z, height, random) {
-  const range = ranger(random);
-  const m = new THREE.Matrix4();
-  m.compose(vec(x, y - 1, z), new THREE.Quaternion(), vec(height * 0.014, height * 0.75, height * 0.014));
-  batch.add(TREE_PARTS.trunk, m, new THREE.Color(0.8, 0.8, 0.76), (p) => (Math.sin(p.y * 1.7) > 0.8 ? 0.2 : 1));
-  const green = new THREE.Color().setHSL(range(0.18, 0.24), range(0.45, 0.6), range(0.2, 0.28));
-  for (let i = 0; i < 5; i++) {
-    const r = height * range(0.1, 0.17);
-    m.compose(
-      vec(x + range(-1, 1) * r, y + height * range(0.5, 0.9), z + range(-1, 1) * r),
-      new THREE.Quaternion(),
-      vec(r, r * 1.2, r),
-    );
-    batch.add(TREE_PARTS.blob, m, green, (p, n) => 0.7 + 0.4 * Math.max(0, n.y));
-  }
-}
