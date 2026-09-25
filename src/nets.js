@@ -268,8 +268,9 @@ export function createNets(scene) {
       stuck.active = false;
       netPull.value.w = 0;
     },
-    // Returns "caught", "freed", "drowned" or null.
-    update(dt, fish) {
+    // Returns "caught", "freed", "drowned" or null. `harmless` (vegan mode): drawn, but they
+    // catch nothing.
+    update(dt, fish, harmless = false) {
       time += dt;
       // Only the nets near the fish are drawn in any detail.
       const nowNear = fish.river.s > NETS[0].s - 600;
@@ -304,7 +305,7 @@ export function createNets(scene) {
         }
         return null;
       }
-      if (stuck.torn > 0 || fish.length < MESH_PASSES || fish.captive || fish.airborne) return null;
+      if (stuck.torn > 0 || fish.length < MESH_PASSES || fish.captive || fish.airborne || harmless) return null;
       for (const n of nets) {
         // In the net's own frame: along it, across it, and how deep.
         const dx = fish.position.x - n.mesh.position.x,

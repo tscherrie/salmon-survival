@@ -613,8 +613,9 @@ async function start() {
     driveBar.hidden = false;
     sound.splash(0.9);
     track("drive", { outcome: "start", school: drive.size });
-    hud.toast("Treibjagd!", "Gänsesäger jagen den Schwarm. Bleib mittendrin – bis zur Stromschnelle!", 6);
-    hud.tip("drive", "<b>Die Treibjagd.</b> Gänsesäger jagen im Trupp: Unter Wasser kreisen sie um den Schwarm und stoßen auf jeden Smolt, der allein schwimmt. Bleib mitten im Schwarm und halt mit ihm Schritt. Hält ein Vogel kurz inne, stößt er gleich zu – dann zur Seite ausweichen oder Spurt (<kbd>Leertaste</kbd>). An der Stromschnelle geben sie auf.", 14);
+    hud.toast("Treibjagd!", mode.vegan ? "Gänsesäger jagen den Schwarm." : "Gänsesäger jagen den Schwarm. Bleib mittendrin – bis zur Stromschnelle!", 6);
+    if (mode.vegan) hud.tip("driveVegan", "<b>Die Treibjagd.</b> Gänsesäger jagen im Trupp: Unter Wasser kreisen sie um den Schwarm und holen sich einzelne Smolts. Dich lassen sie in Ruhe – zieh mit den anderen bis zur Stromschnelle.", 12);
+    else hud.tip("drive", "<b>Die Treibjagd.</b> Gänsesäger jagen im Trupp: Unter Wasser kreisen sie um den Schwarm und stoßen auf jeden Smolt, der allein schwimmt. Bleib mitten im Schwarm und halt mit ihm Schritt. Hält ein Vogel kurz inne, stößt er gleich zu – dann zur Seite ausweichen oder Spurt (<kbd>Leertaste</kbd>). An der Stromschnelle geben sie auf.", 14);
   }
   // "made": at the rapids; "left": the school went on without the fish; "died".
   function endDrive(how) {
@@ -633,7 +634,7 @@ async function start() {
     }
   }
   function stepDrive(dt) {
-    if (dead <= 0 && !mode.vegan && phaseOf(fish.stage) === "smolt" && conditions.light > 0.35 && drive.ready(fish, life.school.count)) startDrive();
+    if (dead <= 0 && phaseOf(fish.stage) === "smolt" && conditions.light > 0.35 && drive.ready(fish, life.school.count)) startDrive();
     const how = drive.update(dt, fish, time, life.hunters.list);
     if (how) endDrive(how);
     if (!drive.on) return;
@@ -642,7 +643,7 @@ async function start() {
     // Out on its own: the birds' first choice.
     const alone = drive.apart(fish) > drive.lead.radius;
     driveBar.classList.toggle("alone", alone);
-    if (alone && time - driveNagged > 6 && dead <= 0) {
+    if (alone && time - driveNagged > 6 && dead <= 0 && !mode.vegan) {
       driveNagged = time;
       hud.note("Bleib im Schwarm!");
     }
@@ -662,7 +663,7 @@ async function start() {
   const ballAt = new THREE.Vector3();
   function stepBall(dt) {
     const sea = regionWeights(fish.river.s).sea > 0.8;
-    const happened = baitball.update(dt, fish, { ok: dead <= 0 && !mode.vegan && phaseOf(fish.stage) === "sea" && sea && !fish.captive && fish.length >= 2.6, light: conditions.light, shoals: life.shoals, hunters: life.hunters });
+    const happened = baitball.update(dt, fish, { ok: dead <= 0 && phaseOf(fish.stage) === "sea" && sea && !fish.captive && fish.length >= 2.6, light: conditions.light, shoals: life.shoals, hunters: life.hunters });
     for (const e of happened) {
       if (e.type === "dive") {
         // A gannet going in: the splash, and its crack under the water.
@@ -670,15 +671,17 @@ async function start() {
         ripples.add(e.x, e.z, 2.4);
         falls.splash(e.x, e.y, e.z, 5);
         sound.splash(near);
-      } else if (e.type === "seal") hud.toast("Eine Robbe!", "Sie frisst mit – und hätte auch dich gern.", 5);
+      } else if (e.type === "seal") hud.toast("Eine Robbe!", mode.vegan ? "Sie frisst mit." : "Sie frisst mit – und hätte auch dich gern.", 5);
     }
     if (baitball.on && !ballShown) {
       ballShown = true;
       huntLabel.textContent = translate(baitball.ball.title);
-      huntBar.hidden = false;
+      // (vegan mode: a sight to see, nothing to catch -- no count)
+      huntBar.hidden = mode.vegan;
       track("ball", { outcome: "start", kind: baitball.ball.kind });
-      hud.toast(`${baitball.ball.title}!`, "Basstölpel stoßen hinein – schnapp dir, so viele du kannst!", 6);
-      hud.tip("ball", "<b>Ein Futterball!</b> Die Fische ballen sich dicht unter der Oberfläche zusammen, und von oben stoßen Basstölpel hinein. Schwimm hin – der grüne Pfeil zeigt die Richtung – und stoß mit <kbd>Leertaste</kbd> in den Ball: jeder Fang lässt dich wachsen. Bald kommt eine Robbe dazu – im Ball bist du für sie schwerer zu fassen.", 14);
+      hud.toast(`${baitball.ball.title}!`, mode.vegan ? "Basstölpel stoßen hinein." : "Basstölpel stoßen hinein – schnapp dir, so viele du kannst!", 6);
+      if (mode.vegan) hud.tip("ballVegan", "<b>Ein Futterball!</b> Die Fische ballen sich dicht unter der Oberfläche zusammen, und von oben stoßen Basstölpel hinein. Der grüne Pfeil zeigt dir, wo – schau es dir an.", 12);
+      else hud.tip("ball", "<b>Ein Futterball!</b> Die Fische ballen sich dicht unter der Oberfläche zusammen, und von oben stoßen Basstölpel hinein. Schwimm hin – der grüne Pfeil zeigt die Richtung – und stoß mit <kbd>Leertaste</kbd> in den Ball: jeder Fang lässt dich wachsen. Bald kommt eine Robbe dazu – im Ball bist du für sie schwerer zu fassen.", 14);
     } else if (!baitball.on && ballShown) endBall(false);
     if (!baitball.on) return;
     huntFill.style.transform = `scaleX(${baitball.left.toFixed(3)})`;
@@ -691,7 +694,7 @@ async function start() {
     ballShown = false;
     huntBar.hidden = true;
     goal.classList.remove("on");
-    if (quiet) return;
+    if (quiet || mode.vegan) return;
     const n = baitball.caught;
     track("ball", { outcome: "end", caught: n, kind: baitball.ball.kind });
     hud.toast(n >= 8 ? "Festmahl!" : "Der Ball zerstiebt", `Erbeutet: ${n}`, 5);
@@ -800,7 +803,8 @@ async function start() {
         redd.start(fish);
         track("redd", { outcome: "start" });
         hud.toast("Daheim.", "Über dem Kies der Quelle schlägt ein Weibchen die Laichgrube.", 6);
-        hud.tip("redd", "<b>Daheim.</b> Ein Weibchen schlägt die Laichgrube: Sie legt sich auf die Seite und schlägt mit dem Schwanz den Kies frei. Bleib an ihrer Seite, bis sie bereit ist. Drängt sich ein anderer Milchner dazu, vertreib ihn mit einem Stoß (<kbd>Leertaste</kbd>) in die Flanke.", 15);
+        if (mode.vegan) hud.tip("reddVegan", "<b>Daheim.</b> Ein Weibchen schlägt die Laichgrube: Sie legt sich auf die Seite und schlägt mit dem Schwanz den Kies frei. Bleib an ihrer Seite, bis sie bereit ist.", 12);
+        else hud.tip("redd", "<b>Daheim.</b> Ein Weibchen schlägt die Laichgrube: Sie legt sich auf die Seite und schlägt mit dem Schwanz den Kies frei. Bleib an ihrer Seite, bis sie bereit ist. Drängt sich ein anderer Milchner dazu, vertreib ihn mit einem Stoß (<kbd>Leertaste</kbd>) in die Flanke.", 15);
       }
       reddBar.hidden = true;
       return;
@@ -1405,7 +1409,8 @@ async function start() {
   const threatAt = new THREE.Vector3();
   const warned = new WeakMap();
   function warnings() {
-    const list = dead > 0 || celebration.active || fish.safe ? [] : life.hunters.threats(fish, threatList);
+    // (vegan mode: nobody is after it -- no warnings)
+    const list = dead > 0 || celebration.active || fish.safe || mode.vegan ? [] : life.hunters.threats(fish, threatList);
     if (list === threatList && redd.on) redd.threats(fish, list);
     list.sort((a, b) => b.level - a.level);
     const w = habitat.clientWidth,
@@ -1592,15 +1597,14 @@ async function start() {
       // The account of this life: the way swum; and the siblings dying unseen as it grows.
       const moved = fish.position.distanceTo(lastPlace);
       if (moved < 5) brood.moved(moved);
-      // (in vegan mode the siblings live too)
-      if (!mode.vegan && brood.update(fish.stage, fish.progress, STAGES)) showBrood();
+      if (brood.update(fish.stage, fish.progress, STAGES)) showBrood();
       if (time > 40) hud.tip("brood", broodWord("firstTip", { size: formatNumber(brood.size) }), 13);
     }
     else readInput(dt);
     lastPlace.copy(fish.position);
-    // The gill nets in the estuary (none of that in vegan mode).
-    if (dead <= 0 && !fish.safe && !mode.vegan) {
-      const net = nets.update(dt, fish);
+    // The gill nets in the estuary (in vegan mode they catch nothing).
+    if (dead <= 0 && !fish.safe) {
+      const net = nets.update(dt, fish, mode.vegan);
       if (net === "caught") {
         shake = 1;
         sound.thump();
@@ -1614,7 +1618,7 @@ async function start() {
       if (nets.stuck.active) shake = Math.max(shake, 0.25);
     }
     // What happens now and then: storms, anglers, otters, floes, the northern lights.
-    for (const e of events.update(dt, { fish, time, dead, peaceful: mode.vegan })) {
+    for (const e of events.update(dt, { fish, time, dead })) {
       switch (e.type) {
         case "storm":
           hud.note("Ein Gewitter zieht auf …");
@@ -1632,7 +1636,8 @@ async function start() {
           }
           break;
         case "angler":
-          hud.tip("angler", "<b>Ein Angler am Ufer!</b> Seine Fliege treibt verlockend über das Wasser – aber an ihr hängt eine feine Schnur. Beißt du zu, hängst du am Haken.", 10);
+          // (vegan mode: his fly is nothing to it)
+          if (!mode.vegan) hud.tip("angler", "<b>Ein Angler am Ufer!</b> Seine Fliege treibt verlockend über das Wasser – aber an ihr hängt eine feine Schnur. Beißt du zu, hängst du am Haken.", 10);
           break;
         case "hooked":
           shake = 1;
@@ -1698,7 +1703,7 @@ async function start() {
         sound.swallow(clamp(Math.log10((e.nutrition ?? 1) + 1) / 3, 0.08, 0.9));
         ateSomething = true;
       } else if (e.type === "stage") {
-        if (!mode.vegan) brood.reached(e.stage, STAGES);
+        brood.reached(e.stage, STAGES);
         showBrood();
         celebrate(e.stage);
         badges.award(`stage:${STAGES[e.stage].id}`, stageBadge(STAGES[e.stage]), { delay: 6.5 });
@@ -1781,7 +1786,7 @@ async function start() {
     // The drive: a goosander dived into the school and came out with one of the others.
     if (outcome.raided) {
       sound.thump();
-      hud.tip("raid", "Ein Gänsesäger hat sich einen Smolt aus dem Schwarm geholt. Mitten im Schwarm trifft es selten dich – am Rand und allein fast immer.", 9);
+      if (!mode.vegan) hud.tip("raid", "Ein Gänsesäger hat sich einen Smolt aus dem Schwarm geholt. Mitten im Schwarm trifft es selten dich – am Rand und allein fast immer.", 9);
     }
     if ((outcome.school ?? 0) >= 6) feat("school");
     // The run home: in the company of the others the fish goes easier.
@@ -1869,7 +1874,7 @@ async function start() {
     // Tips, each once, when they matter.
     const st = STAGES[fish.stage];
     if (mode.vegan && time > 6 && !hud.seen("vegan"))
-      hud.tip("vegan", "<b>Vegan-Modus.</b> Niemand wird gefressen – nicht du und nicht von dir. Du wächst mit der Zeit und mit jedem Stück Weg: flussab, solange du jung bist, im Meer überall, und zum Schluss heim zur Quelle.", 12);
+      hud.tip("vegan", "<b>Vegan-Modus.</b> Keiner jagt dich, und du jagst keinen: Was im Wasser treibt, sind andere Lebewesen, die ihr eigenes Leben führen. Hunger hast du nicht – du wächst mit der Zeit und mit jedem Stück Weg: flussab, solange du jung bist, im Meer überall, und zum Schluss heim zur Quelle.", 12);
     else if (windedOnce && fish.winded)
       hud.tip("winded", "<b>Außer Atem!</b> Jeder Spurt, jedes Schnappen und jeder Sprung mit <kbd>Leertaste</kbd> kostet <b>Kraft</b>. Lass dich treiben (<kbd>W</kbd> loslassen) oder halte dich am Grund fest – dann füllt sich der helle Teil wieder, bis zur Kraft aus dem Futter (gestreift).", 10);
     else if (!st.fasting && !st.sea && fish.dart && !mode.vegan)
@@ -1923,7 +1928,7 @@ async function start() {
       const d = fish.river.s - SALMON_FALL.s;
       if (d > 0 && d < 60 && !fallMet) {
         fallMet = true;
-        hud.toast("Lachsfall", mode.vegan ? "Der höchste Sprung deines Lebens." : "Oben an der Kante fischt ein Bär.", 5);
+        hud.toast("Lachsfall", "Oben an der Kante fischt ein Bär.", 5);
       }
       if (d > 0 && d < 30 && mode.vegan)
         hud.tip("salmonfallVegan", "<b>Der Lachsfall.</b> Halte <kbd>Leertaste</kbd> gedrückt und lass los, wenn die Sprungkraft ganz oben ist – mit Anlauf und genug Kraft trägt dich der Sprung über die Kante.", 12);

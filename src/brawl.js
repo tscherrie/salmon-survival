@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { blow, breathe, contact, freshFighter, takeBlow, winded } from "./fight.js";
+import { mode } from "./vegan.js";
 
 // Fighting the rest. Every fish the salmon can reach and cannot swallow -- a shoal fish too
 // big for its mouth, a young trout, a smolt of its own school -- takes a blow (Space) the
@@ -35,7 +36,8 @@ export function createBrawls(random = Math.random) {
     // The salmon's burst landing on `m` ({ position, heading, size }): a blow, and how the fish
     // takes it. Returns true if it landed.
     strike(m, fish, { kind, title, temper = 1 }) {
-      if (fish.lunging <= 0 || m.hitBy === fish.lungeCount || fish.safe || fish.captive) return false;
+      // (vegan mode: the salmon hurts nobody)
+      if (fish.lunging <= 0 || m.hitBy === fish.lungeCount || fish.safe || fish.captive || mode.vegan) return false;
       const reach = m.size + fish.length * 2;
       if (m.position.distanceToSquared(fish.position) > reach * reach) return false;
       const where = contact(fish, m);

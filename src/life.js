@@ -231,8 +231,7 @@ function createFood(scene, { count = 240 } = {}) {
   // Less in the cold months, more in an evening rise, and more past a spot the fish holds
   // as its own.
   let focus = 0;
-  // (vegan mode: nothing drifts to be eaten)
-  const activeCount = (fish) => mode.vegan ? 0 : Math.min(count, Math.round(count * (fish.length < 1.6 ? 0.5 : 1) * (0.4 + 0.6 * conditions.plenty) * (1 + 0.6 * conditions.hatch) * (1 + 0.55 * focus)));
+  const activeCount = (fish) => Math.min(count, Math.round(count * (fish.length < 1.6 ? 0.5 : 1) * (0.4 + 0.6 * conditions.plenty) * (1 + 0.6 * conditions.hatch) * (1 + 0.55 * focus)));
 
   const items = Array.from({ length: count }, () => ({
     type: "midge",
@@ -286,10 +285,15 @@ function createFood(scene, { count = 240 } = {}) {
     return "midge";
   }
 
+  // `lean` (0..1): how far the fish is outrunning the drift. The drift comes down to it from
+  // upstream; a fish racing down the river -- or riding the fast water past the slow --
+  // leaves it all behind and meets nothing. Then new drift is put in far downstream as well,
+  // out of sight ahead of it, and what is left far behind is let go sooner.
+  let lean = 0;
   function window(fish) {
     const L = fish.length;
     const up = clamp(14 + 18 * L, 14, 100);
-    return { up, down: up * 0.4, side: clamp(2.5 + 4 * L, 3, 40), depth: clamp(1 + 2.5 * L, 1.2, 25) };
+    return { up, down: up * (0.4 + 0.6 * lean), back: up * (1 - 0.45 * lean), side: clamp(2.5 + 4 * L, 3, 40), depth: clamp(1 + 2.5 * L, 1.2, 25) };
   }
 
   // Put an item somewhere in the water round the fish: at the upstream edge when refilling,
@@ -320,8 +324,9 @@ function createFood(scene, { count = 240 } = {}) {
     }
     const onBed = type.mode === "bed";
     for (let tries = 0; tries < 6; tries++) {
-      // Things on the bottom do not drift in from upstream: they are wherever they are.
-      const s = anywhere || onBed ? s0 + range(-w.down, w.up) * -1 : s0 - w.up + range(0, w.up * 0.25);
+      // Things on the bottom do not drift in from upstream: they are wherever they are. The
+      // drift comes in at the upstream edge -- or, when the fish outruns it, far ahead.
+      const s = anywhere || onBed ? s0 - range(-w.down, w.back) : random() < lean ? s0 + w.down * range(0.7, 1) : s0 - w.back + range(0, w.back * 0.25);
       if (onBed && !anywhere && Math.abs(s - s0) < 2 + fish.length * 2) continue;
       const c = section(Math.min(s, S.coast));
       // Most of the drift rides the seams of fast water; some anywhere across. On a good
@@ -428,7 +433,10 @@ function createFood(scene, { count = 240 } = {}) {
         pullDistance = prior?.position ? prior.distance : 1.1 * L + 0.22,
         pullAhead = prior?.position ? prior.ahead : 0;
       const fasting = salmon.stage().fasting && fish.lunging <= 0 && !((fish.striking ?? 0) > 0);
-      const canEat = !fish.airborne && !fasting && !fish.captive;
+      // (vegan mode: the drift is only other small lives going about theirs -- not food, and
+      // not lit up as food)
+      const canEat = !fish.airborne && !fasting && !fish.captive && !mode.vegan;
+      if (mode.vegan) glow.value = 0;
       const active = activeCount(fish);
       // Inside the mouth, a little behind the lips: where swallowed food goes.
       gullet.copy(fish.mouth).addScaledVector(fish.heading, (-0.07 * L) / 0.79);
@@ -456,6 +464,8 @@ function createFood(scene, { count = 240 } = {}) {
         }
       }
       let halo = 0;
+      let ahead = 0,
+        drifting = 0;
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (!item.alive) {
@@ -488,7 +498,7 @@ function createFood(scene, { count = 240 } = {}) {
           const floor = bed(river.s, river.u);
           position.y = floor + item.size * 0.3;
           const behind = river.s - fish.river.s;
-          if (behind > w.down || behind < -w.up - 10 || Math.abs(river.u - fish.river.u) > w.side * 1.6 || lv - floor < 0.2) item.alive = false;
+          if (behind > w.down + 2 || behind < -w.back - 10 || Math.abs(river.u - fish.river.u) > w.side * 1.6 || lv - floor < 0.2) item.alive = false;
         } else {
           locate(position.x, position.z, river.s, river);
           current(river.s, river.u, position.y, flow, time);
@@ -533,7 +543,9 @@ function createFood(scene, { count = 240 } = {}) {
             position.y = lerp(floor + 0.1, lv - 0.1, item.eta);
           }
           const behind = river.s - fish.river.s;
-          if (behind > w.down || behind < -w.up - 10 || Math.abs(river.u - fish.river.u) > w.side * 1.6 || lv - floor < 0.2) item.alive = false;
+          if (behind > w.down + 2 || behind < -w.back - 10 || Math.abs(river.u - fish.river.u) > w.side * 1.6 || lv - floor < 0.2) item.alive = false;
+          else if (behind > 0) ahead++;
+          drifting++;
         }
         if (item.eatenAt >= 0 && clock - item.eatenAt > 0.2) item.alive = false;
         // In front of the mouth and small enough to swallow: taken.
@@ -565,7 +577,7 @@ function createFood(scene, { count = 240 } = {}) {
         mesh.setMatrixAt(slot, object.matrix);
         color.setRGB(...type.color);
         mesh.setColorAt(slot, color);
-        const edible = fits && !fasting ? 1 : 0;
+        const edible = fits && !fasting && !mode.vegan ? 1 : 0;
         edibleFlags[item.type].setX(slot, edible);
         haloPositions[halo * 3] = position.x;
         haloPositions[halo * 3 + 1] = position.y;
@@ -574,7 +586,7 @@ function createFood(scene, { count = 240 } = {}) {
         // eat glows warm and breathes, what is too big for it hardly at all.
         const near = 1 - Math.min(1, position.distanceTo(fish.position) / (3 + L * 8));
         const breathe = 1 + 0.22 * Math.sin(clock * 5 + i * 1.7);
-        haloSizes[halo] = Math.max(item.size * 3.2, 0.12) * shrink * (edible ? breathe : 0.45) * near;
+        haloSizes[halo] = mode.vegan ? 0 : Math.max(item.size * 3.2, 0.12) * shrink * (edible ? breathe : 0.45) * near;
         if (edible) {
           haloColors[halo * 3] = 0.95 + type.color[0] * 0.2;
           haloColors[halo * 3 + 1] = 0.72 + type.color[1] * 0.15;
@@ -586,6 +598,13 @@ function createFood(scene, { count = 240 } = {}) {
         }
         halo++;
       }
+      // Swimming down the river faster than the water, the fish outruns the drift; and holding
+      // its place, about a quarter of the drift is below it (it has passed it) -- much less,
+      // and it is outrunning it too, riding the fast water past the slow.
+      frame(fish.river.s, at);
+      const down = (fish.relative.x * at.tx + fish.relative.z * at.tz) / (1.5 + 1.5 * L);
+      const want = Math.max(clamp(down, 0, 1), drifting > 10 ? clamp((0.2 - ahead / drifting) / 0.15, 0, 1) : 0);
+      lean += (want - lean) * (1 - Math.exp(-dt / (want > lean ? 0.6 : 2)));
       for (const [name, mesh] of Object.entries(meshes)) {
         const n = counts[name];
         mesh.count = n;
@@ -837,7 +856,7 @@ function createShoals(scene, { detail, brawls }) {
           // The shoal as a whole: holding in the river, roaming at sea, running from the salmon.
           const toFish = delta.subVectors(group.centre, fish.position);
           const d = toFish.length();
-          const threat = spec.flees && L > spec.ref * 1.6 && !mode.vegan ? 1 : 0;
+          const threat = spec.flees && L > spec.ref * 1.6 ? 1 : 0;
           const fear = threat * clamp(1 - (d - L * 2) / (6 + L * 4), 0, 1) * clamp(0.4 + fish.relative.length() / 3, 0.4, 1.5);
           group.panic = Math.max(group.panic - dt * 0.4, fear);
           if (group.ball) {
@@ -1017,8 +1036,6 @@ function createHunters(scene, { detail }) {
   // until it is swallowed or carried off.
   const captive = { active: false, kind: null, hunter: null, grip: new THREE.Vector3(), heading: new THREE.Vector3(1, 0, 0), t: 0 };
   const forward = new THREE.Vector3();
-  // (vegan mode, when they were all sent away)
-  let peaceful = false;
   function seize(kind, hunter = null) {
     captive.active = true;
     captive.kind = kind;
@@ -1123,22 +1140,8 @@ function createHunters(scene, { detail }) {
     update(dt, fish, time, travel, covered, cruise = 1, decoy = null, occluded = null, exposed = 0, drive = null) {
       const L = fish.length;
       const result = { bitten: false, killed: null, decoy: false, hits: [], watched: false, hidden: false };
-      // Vegan mode: no hunters about at all -- nobody is eaten.
-      if (mode.vegan) {
-        if (!peaceful) {
-          peaceful = true;
-          predators.reset();
-        }
-        bird.mode = "away";
-        kingfisher.visible = false;
-        heron.mode = "away";
-        heronLegs.visible = heronHead.visible = false;
-        bear.active = false;
-        bear.striking = false;
-        bearLegs.visible = bearPaw.visible = false;
-        return result;
-      }
-      peaceful = false;
+      // (Vegan mode: the hunters are all about, going after whatever they go after -- only
+      // never after the salmon. See predators.js, and the kingfisher, heron and bear below.)
       const deep = level(fish.river.s) - fish.position.y;
       if (captive.active) captive.t += dt;
       // How far a hunter can see: clear in the brook and the sea, less in the brown lower
@@ -1155,7 +1158,7 @@ function createHunters(scene, { detail }) {
       const brookish = suit({ brook: 1, upper: 0.7 }, fish.river.s);
       // A kingfisher hunts by day, and not over ice.
       const birdLight = conditions.light > 0.45 && conditions.ice < 0.5;
-      if (bird.mode === "away" && bird.next <= 0 && birdLight && L < 1.3 && brookish > 0.4 && deep < 3 + L && !covered && !fish.airborne) {
+      if (bird.mode === "away" && bird.next <= 0 && birdLight && L < 1.3 && brookish > 0.4 && deep < 3 + L && !covered && !fish.airborne && !mode.vegan) {
         bird.mode = "hover";
         bird.t = 0;
         bird.surface = level(fish.river.s);
@@ -1234,7 +1237,7 @@ function createHunters(scene, { detail }) {
         const horizontal = Math.hypot(dx, dz);
         if (heron.mode === "stand") {
           heron.head.set(heron.position.x + 2, lv + 16, heron.position.z);
-          if (horizontal < 5 && deep < 4.5 && !covered && L < 3.2 && !fish.airborne && !fish.safe) {
+          if (horizontal < 5 && deep < 4.5 && !covered && L < 3.2 && !fish.airborne && !fish.safe && !mode.vegan) {
             heron.mode = "strike";
             heron.strike = 0;
             heron.target.copy(fish.position).addScaledVector(fish.velocity, 0.3);
@@ -1249,7 +1252,7 @@ function createHunters(scene, { detail }) {
           if (t >= 1 && !heron.checked) {
             heron.checked = true;
             result.splash = { x: heron.target.x, y: lv, z: heron.target.z, strength: 0.8 };
-            if (heron.target.distanceTo(fish.position) < 0.7 + L * 0.35) {
+            if (heron.target.distanceTo(fish.position) < 0.7 + L * 0.35 && !mode.vegan) {
               if (L < 2.4 && !captive.active) {
                 result.killed = "Vom Graureiher erbeutet";
                 seize("heron");
@@ -1302,7 +1305,7 @@ function createHunters(scene, { detail }) {
         const lv = level(s);
         const dx = fish.position.x - bearLegs.position.x,
           dz = fish.position.z - bearLegs.position.z;
-        const near = Math.hypot(dx, dz) < 12 && fish.position.y > lv - 5;
+        const near = Math.hypot(dx, dz) < 12 && fish.position.y > lv - 5 && !mode.vegan;
         // It fishes in a rhythm: the paw goes up (a moment, for all to see), comes down into
         // the water by the lip with a smack -- at the salmon, if one is near, otherwise at
         // the white water -- and rests a few seconds. A salmon leaping the fall lands safe
@@ -1342,7 +1345,7 @@ function createHunters(scene, { detail }) {
           bear.checked = true;
           result.splash = { x: bear.target.x, y: lv, z: bear.target.z, strength: 1.4 };
           result.bearSmack = true;
-          if (bear.target.distanceTo(fish.position) < 3.5 && !captive.active && !fish.safe) {
+          if (bear.target.distanceTo(fish.position) < 3.5 && !captive.active && !fish.safe && !mode.vegan) {
             result.killed = "Vom Bären gefangen";
             seize("bear");
           }
@@ -1815,7 +1818,7 @@ export function createLife(scene, { detail = true, terrain, salmon }) {
       motes.material.uniforms.scale.value = value;
     },
     light(value) {
-      food.glow.value = 0.175 * value + 0.05;
+      food.glow.value = mode.vegan ? 0 : 0.175 * value + 0.05;
       food.haloMaterial.uniforms.light.value = value;
       motes.material.uniforms.light.value = 0.25 + 0.75 * value;
     },

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { MODEL_LENGTH, createFishMesh } from "./anatomy.js";
 import { S, bed, frame, level, locate, place, section } from "./course.js";
+import { mode } from "./vegan.js";
 
 // The finale: home, on the gravel of the spring. A hen is there before him, cutting the
 // redd -- turning on her side and beating her tail against the bottom until the gravel
@@ -221,7 +222,8 @@ export function createRedd(scene) {
       }
 
       // ---- The rivals.
-      if (!state.spawning && clock > nextRival && !rivals.some((r) => r.mode === "approach" || r.mode === "court")) {
+      // (vegan mode: no fight over her -- the other cocks keep their distance)
+      if (!state.spawning && !mode.vegan && clock > nextRival && !rivals.some((r) => r.mode === "approach" || r.mode === "court")) {
         const r = rivals.find((q) => q.mode === "wait" && clock > q.until);
         if (r) {
           r.mode = "approach";
@@ -245,7 +247,7 @@ export function createRedd(scene) {
           if (r.velocity.lengthSq() > 0.5) r.heading.lerp(tmp.copy(r.velocity).normalize(), 1 - Math.exp(-dt * 4)).normalize();
           else r.heading.lerp(her.heading, 1 - Math.exp(-dt * 3)).normalize();
           // Struck in a dash: off he goes.
-          if (fish.lunging > 0 && !fish.safe) {
+          if (fish.lunging > 0 && !fish.safe && !mode.vegan) {
             const hit = fish.mouth ? fish.mouth.distanceTo(r.position) : fish.position.distanceTo(r.position);
             if (hit < r.size * 0.45 + L * 0.3) {
               r.mode = "flee";

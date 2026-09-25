@@ -3,6 +3,7 @@ import { MODEL_LENGTH, createFishMesh } from "./anatomy.js";
 import { S, bed, current, frame, level, locate, place, regionWeights, section } from "./course.js";
 import { phaseOf } from "./salmon.js";
 import { blow, breathe, contact, freshFighter, takeBlow, winded } from "./fight.js";
+import { mode } from "./vegan.js";
 
 // Other young salmon, each holding its own patch of the river. A fry or parr that has a
 // good spot -- in front of a stone, where the drift comes past close and the current is
@@ -173,7 +174,8 @@ export function createRivals(scene, { random }) {
         let gape = 0;
 
         // A fight: a burst that lands on the holder is a blow.
-        if (fish.lunging > 0 && r.hitBy !== fish.lungeCount && r.mode !== "flee" && !fish.safe && d < 1.5 * (L + r.size) && d > 1e-3) {
+        // (vegan mode: no blows either way -- the holders let it pass, and it hurts none)
+        if (fish.lunging > 0 && r.hitBy !== fish.lungeCount && r.mode !== "flee" && !fish.safe && d < 1.5 * (L + r.size) && d > 1e-3 && !mode.vegan) {
           const where = contact(fish, r);
           if (where) {
             r.hitBy = fish.lungeCount;
@@ -234,7 +236,7 @@ export function createRivals(scene, { random }) {
               } else r.feedCool = range(0.5, 1.5);
             }
             // An intruder in its patch: turn to face it and spread the fins.
-            if (d < reach && r.cool <= 0 && young && !fish.safe && !winded(r)) {
+            if (d < reach && r.cool <= 0 && young && !fish.safe && !winded(r) && !mode.vegan) {
               r.mode = "display";
               r.until = time + 0.7;
               events.push({ type: "display" });

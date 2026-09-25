@@ -1,9 +1,10 @@
-// Vegan mode, chosen on the start card: nobody is eaten. The salmon eats nothing and nothing
-// eats it -- no hunters after it, no nets, no angler's hook, no bear at the falls, no
-// goosanders driving the smolts, no bait ball -- and it grows with time and with the way it
-// swims: down the river while young, anywhere at sea, up the river home (as before). Its
-// siblings live too. It can be switched on the card before each swim; ?vegan / ?vegan=0
-// sets it for one visit.
+// Vegan mode, chosen on the start card. The world stays as it is -- the drift, the shoals,
+// the birds and the bear, the goosanders driving the smolts, the gannets at the bait ball,
+// all of them hunting one another as ever -- but nobody goes for the salmon, and the salmon
+// goes for nobody: it eats nothing, hunts nothing, strikes no one, is never hungry, and the
+// drift is no longer lit up as its food. No net or hook takes it either. It grows with time
+// and with the way it swims: down the river while young, anywhere at sea, up the river home.
+// It can be switched on the card before each swim; ?vegan / ?vegan=0 sets it for one visit.
 
 const KEY = "salmon-survival-vegan";
 

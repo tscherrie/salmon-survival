@@ -6,6 +6,7 @@ import { conditions } from "./seasons.js";
 import { blow, breathe, contact, freshFighter, takeBlow, winded } from "./fight.js";
 import { odds } from "./brawl.js";
 import { less } from "./heritage.js";
+import { mode } from "./vegan.js";
 
 // What hunts the salmon under water, and how. Every hunter senses the fish the same way --
 // by sight, over a distance that shrinks in murky water and in cover and grows when the
@@ -203,7 +204,8 @@ export function createPredators(scene, { random, seize, captive }) {
   // it, -1 it would see it but the fish is hidden (in weed, or behind a stone or the lie of
   // the bed), 0 nothing.
   function perceive(h, fish, ctx) {
-    if (fish.captive || fish.airborne) return 0;
+    // (vegan mode: the salmon is nobody's prey -- they do not so much as look at it)
+    if (fish.captive || fish.airborne || mode.vegan) return 0;
     toFish.subVectors(fish.position, h.position);
     const d = toFish.length();
     const L = fish.length;
@@ -465,7 +467,7 @@ export function createPredators(scene, { random, seize, captive }) {
         dir.copy(h.heading);
         let prevMode = h.mode;
         // The salmon fights back: a burst that lands on it is a blow.
-        if (spec.fights && !h.beaten && !held && fish.lunging > 0 && h.hitBy !== fish.lungeCount && !fish.safe && d < h.size + L * 2) {
+        if (spec.fights && !h.beaten && !held && fish.lunging > 0 && h.hitBy !== fish.lungeCount && !fish.safe && d < h.size + L * 2 && !mode.vegan) {
           const where = contact(fish, h);
           if (where) {
             h.hitBy = fish.lungeCount;
@@ -514,7 +516,7 @@ export function createPredators(scene, { random, seize, captive }) {
             if (spec.drive && ctx.drive) {
               // Circling the school, a little above it, each on its own side -- or, when the
               // salmon has fallen out of it, round the salmon: a smolt on its own is theirs.
-              const alone = fish.position.distanceTo(ctx.drive.position) > ctx.drive.radius * 1.3;
+              const alone = !mode.vegan && fish.position.distanceTo(ctx.drive.position) > ctx.drive.radius * 1.3;
               const lead = alone ? fish.position : ctx.drive.position;
               const a = time * 0.35 + h.index * (TAU / 3);
               const r = 9 + 3 * Math.sin(time * 0.5 + h.index * 1.3);
@@ -544,7 +546,8 @@ export function createPredators(scene, { random, seize, captive }) {
             // edge or on its own (or, now and then, even in the middle).
             const turn = !spec.drive || (time > driveNext && !list.some((o) => o !== h && o.spec.drive && ["notice", "chase", "strike", "recover", "raid"].includes(o.mode)));
             if (spec.drive && ctx.drive && h.rest <= 0 && turn) {
-              const inside = fish.position.distanceTo(ctx.drive.position) < ctx.drive.radius;
+              // (vegan mode: only ever at the others)
+              const inside = mode.vegan || fish.position.distanceTo(ctx.drive.position) < ctx.drive.radius;
               // (and not one straight after another)
               if (inside || sees) driveNext = time + 6;
               if (inside && (!sees || random() < 0.75)) {
