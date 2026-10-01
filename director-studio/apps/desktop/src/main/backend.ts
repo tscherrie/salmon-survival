@@ -99,7 +99,7 @@ export interface OpenProject {
   runState: RunState;
   activities: ToolActivity[];
   site: { url: string; stop(): Promise<void> } | null;
-  /** Bereits gezeigte Systemhinweise (Text), damit derselbe Hinweis nicht mehrfach erscheint. */
+  /** Bereits gezeigte Systemhinweise (Schlüssel siehe {@link noticeKey}), damit derselbe Hinweis nicht mehrfach erscheint. */
   notices: Set<string>;
 }
 
@@ -307,7 +307,7 @@ export class StudioBackend implements StudioApi {
       },
       attach: async (open) => {
         // Hinweise früherer Sitzungen nicht wiederholen (die beschädigte Zeile bleibt ja bestehen).
-        for (const m of await open.store.listMessages().catch(() => [])) if (m.role === 'system') open.notices.add(m.text);
+        for (const m of await open.store.listMessages().catch(() => [])) if (m.role === 'system') open.notices.add(noticeKey(m.text));
         target = open;
         for (const message of pending.splice(0)) await this.postNotice(open, notice(message), { once: true }).catch(() => undefined);
       },
@@ -320,8 +320,8 @@ export class StudioBackend implements StudioApi {
    */
   private async postNotice(open: OpenProject, text: string, options: { once?: boolean } = {}): Promise<void> {
     if (options.once) {
-      if (open.notices.has(text)) return;
-      open.notices.add(text);
+      if (open.notices.has(noticeKey(text))) return;
+      open.notices.add(noticeKey(text));
     }
     const message: ChatMessage = { id: defaultIdGenerator('msg'), role: 'system', text, createdAt: new Date().toISOString() };
     await open.store.appendMessage(message);
@@ -747,6 +747,14 @@ export class StudioBackend implements StudioApi {
     const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
     if (failed) throw failed.reason;
   }
+}
+
+/**
+ * Vergleichsschlüssel für Systemhinweise: Eine beschädigte Journalzeile heißt beim ersten Öffnen „unvollständige
+ * letzte Zeile“, später (wenn danach weitere Zeilen stehen) „beschädigte Zeile“ – es ist aber derselbe Hinweis.
+ */
+export function noticeKey(text: string): string {
+  return text.replace(/(?:Unvollständige letzte|Beschädigte) Zeile/g, 'Zeile').replace(/ \(vermutlich Absturz beim Schreiben\)/g, '');
 }
 
 /** Systemhinweis über beim Rendern ausgelassene Medien (fehlende/defekte Dateien). */

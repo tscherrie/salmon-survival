@@ -68,7 +68,7 @@ describe('Render-Medien der Timeline', () => {
               duration: 30,
               assetId: base!.id,
               props: { rotoscope: roto!.id, logoAsset: logo!.id, maskAssetId: mask!.id, title: 'kein Asset' },
-              transitionIn: { componentId: 'wipe', durationFrames: 10, props: { textureAsset: wipe!.id } },
+              transitionIn: { type: 'component', componentId: 'wipe', durationFrames: 10, props: { textureAsset: wipe!.id } },
             },
           ],
         },

@@ -11,7 +11,7 @@ import {
 } from '../src/index.ts';
 import { OPS_SCHEMA_LIMIT } from '../src/tools/documents.ts';
 import { stableJson } from '../src/util.ts';
-import { createProject, makeEnv, tempRoot } from './helpers.ts';
+import { createProject, FakeRender, makeEnv, tempRoot } from './helpers.ts';
 
 let root: string;
 let cleanup: () => Promise<void>;
@@ -151,6 +151,31 @@ describe('Dokument-Werkzeuge', () => {
   it('Systemprompt und write_site_file nennen die netzlose Vorschau', () => {
     expect(DIRECTOR_SYSTEM_PROMPT).toContain('no outside network');
     expect(tool('write_site_file').description).toMatch(/kein externes Netz/);
+  });
+});
+
+// ───────────────────────── Ausgelassene Medien beim Rendern ─────────────────────────
+
+class MissingMediaRender extends FakeRender {
+  override async renderTimelineStill(input: { frame: number; formatId?: string; out: string; onMediaError?: (issue: { clipId: string; assetId: string; message: string }) => void }) {
+    input.onMediaError?.({ clipId: 'shot_7', assetId: 'ast_weg', message: 'Datei fehlt: /Volumes/Extern/take.mp4' });
+    input.onMediaError?.({ clipId: 'shot_7', assetId: 'ast_weg', message: 'Datei fehlt: /Volumes/Extern/take.mp4' });
+    return super.renderTimelineStill(input);
+  }
+}
+
+describe('render_still / frames: ausgelassene Medien', () => {
+  it('nennen fehlende Medien im Ergebnis, statt ein unvollständiges Bild kommentarlos zu zeigen', async () => {
+    const env = makeEnv(project, { render: new MissingMediaRender() });
+    const still = await tool('render_still').run({ target: 'timeline', frame: 0 }, env.ctx);
+    expect(still.isError).toBeFalsy();
+    const text = resultText(still);
+    expect(text).toMatch(/Achtung – ein Medium fehlte oder war defekt/);
+    expect(text.match(/shot_7/g)).toHaveLength(1);
+    const frames = await tool('frames').run({ source: 'timeline', timesSec: [0, 1] }, env.ctx);
+    expect(resultText(frames)).toContain('Clip shot_7 (Asset ast_weg): Datei fehlt');
+    const clean = await tool('render_still').run({ target: 'timeline', frame: 0 }, makeEnv(project).ctx);
+    expect(resultText(clean)).not.toMatch(/Achtung/);
   });
 });
 
