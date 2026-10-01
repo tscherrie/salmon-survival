@@ -1,5 +1,4 @@
 import type { DirectorRuntime, LoopEvent, RuntimeSetup, RuntimeTurnInput, TurnResult, TurnStopReason } from '../runtime.ts';
-import { preflightGenerate } from '../tools/generation.ts';
 import { parseToolInput, errorResult, resultText, type AnyDirectorTool, type ToolResult, type ToolContext } from '../tools/registry.ts';
 import { replayTranscript, type TranscriptStore } from '../transcript.ts';
 import type { CanonicalBlock } from '../transports/types.ts';
@@ -113,8 +112,9 @@ export class AgentSdkRuntime implements DirectorRuntime {
       if (toolName.startsWith(prefix)) {
         const tool = this.toolsByName.get(toolName.slice(prefix.length));
         if (!tool) return { behavior: 'deny' as const, message: `Unbekanntes Studio-Tool ${toolName}` };
-        if (tool.sideEffect === 'paid' && tool.name === 'generate') {
-          const gate = await preflightGenerate(input, { ...ctx, signal: opts.signal });
+        // Kostenpflichtige Tools (generate, extract_rotoscope …) laufen vorab durch dieselben Gates.
+        if (tool.sideEffect === 'paid' && tool.preflight) {
+          const gate = await tool.preflight(input, { ...ctx, signal: opts.signal });
           if (!gate.ok) return { behavior: 'deny' as const, message: gate.reason };
         }
         return { behavior: 'allow' as const, updatedInput: input };

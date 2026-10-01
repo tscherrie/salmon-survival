@@ -230,6 +230,13 @@ describe('PreviewController – externe Links und Navigation', () => {
     expect(nav('https://example.org/')).toBe(true);
     expect(opened).toEqual(['https://example.com/', 'https://example.org/']);
 
+    // Klicks im Pick-Modus sind keine Freigabe für externe Links.
+    await ctl.setPickMode('p1', true);
+    wc.emit('input-event', {}, { type: 'mouseUp' });
+    await ctl.setPickMode('p1', false);
+    open('https://example.com/nach-pick');
+    expect(opened).toHaveLength(2);
+
     const frameNav = { url: 'https://tracker.example/', isMainFrame: false, preventDefault: vi.fn() };
     wc.emit('will-frame-navigate', frameNav);
     expect(frameNav.preventDefault).toHaveBeenCalled();
@@ -319,6 +326,18 @@ describe('PreviewController – Laden, Fehler, Fenster', () => {
     expect(() => ctl.closeAll()).not.toThrow();
     expect(view.webContents.close).toHaveBeenCalled();
     expect(ctl.currentUrl('p1')).toBeNull();
+  });
+
+  it('emuliert den Viewport erst, wenn eine Seite gerendert ist (sonst SIGSEGV in Electron)', async () => {
+    const ctl = makeController();
+    await ctl.open('p1', URL_BASE, 'mobile');
+    const wc = lastView().webContents;
+    ctl.setBounds('p1', { x: 0, y: 0, width: 400, height: 300 });
+    expect(wc.enableDeviceEmulation).not.toHaveBeenCalled();
+    wc.emit('dom-ready');
+    expect(wc.enableDeviceEmulation).toHaveBeenCalledWith(expect.objectContaining({ screenPosition: 'mobile', screenSize: { width: 390, height: 844 } }));
+    await ctl.open('p1', URL_BASE, 'desktop');
+    expect(wc.enableDeviceEmulation).toHaveBeenLastCalledWith(expect.objectContaining({ screenPosition: 'desktop' }));
   });
 
   it('rechnet Renderer-Koordinaten mit dem Zoomfaktor in Fenster-DIPs um', async () => {

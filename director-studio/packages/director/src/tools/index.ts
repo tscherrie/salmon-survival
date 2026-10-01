@@ -1,4 +1,4 @@
-import { createTextAssetTool, getAssetTool, rejectAssetTool, searchAssetsTool, updateAssetTool } from './assets.ts';
+import { createTextAssetTool, getAssetTool, importUrlTool, rejectAssetTool, searchAssetsTool, updateAssetTool } from './assets.ts';
 import { exportProjectTool, listSiteFilesTool, readSiteFileTool, renderStillTool, screenshotSiteTool, writeComponentTool, writeSiteFileTool } from './code.ts';
 import { askUserTool, postUpdateTool, proposeCheckpointTool, setBriefTool } from './communication.ts';
 import { applyDocumentOpsTool, getDocumentTool, restoreVersionTool } from './documents.ts';
@@ -7,12 +7,14 @@ import { delegateTool, loadSkillTool, webFetchTool, webSearchTool } from './misc
 import { estimateCostTool, getModelSchemaTool, searchModelsTool } from './models.ts';
 import { analyzeAudioTool, checkAvSyncTool, contactSheetTool, cutAudioTool, framesTool, transcribeTool } from './perception.ts';
 import type { AnyDirectorTool } from './registry.ts';
+import { extractRotoscopeTool } from './rotoscope.ts';
 
 export * from './registry.ts';
 export * from './generation.ts';
 export { resolveSitePath, assertInsideReal } from './code.ts';
 export { summaryDiff, opsSchemaFor, assetNames } from './documents.ts';
 export { DELEGATE_READ_ONLY_TOOLS, DELEGATE_MODELS } from './misc.ts';
+export { ROTOSCOPE_KINDS, pickRotoscopeModel, type RotoscopeKind } from './rotoscope.ts';
 export { capabilitySummary, modelLine } from './models.ts';
 
 export interface ToolsetOptions {
@@ -46,6 +48,7 @@ export function buildDirectorTools(options: ToolsetOptions = {}): AnyDirectorToo
     updateAssetTool,
     rejectAssetTool,
     createTextAssetTool,
+    importUrlTool,
     // Wahrnehmung & Analyse
     framesTool,
     contactSheetTool,
@@ -53,6 +56,7 @@ export function buildDirectorTools(options: ToolsetOptions = {}): AnyDirectorToo
     transcribeTool,
     checkAvSyncTool,
     cutAudioTool,
+    extractRotoscopeTool,
     // Dokumente
     getDocumentTool,
     applyDocumentOpsTool,

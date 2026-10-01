@@ -93,18 +93,19 @@ export class DirectorSession {
     this.skills = deps.options?.skills ?? defaultSkillLibrary();
     this.sessionUi = {
       emit: (event) => deps.ui.emit(event),
-      askUser: async (questions, signal) => {
+      // Lauf-ID explizit weiterreichen (Tools geben ihre eigene mit; sonst der aktuelle Lauf der Session).
+      askUser: async (questions, signal, meta) => {
         this.setState('waiting_user');
         try {
-          return await deps.ui.askUser(questions, signal);
+          return await deps.ui.askUser(questions, signal, { runId: meta?.runId ?? this.runId ?? undefined });
         } finally {
           if (this.runState === 'waiting_user') this.setState('running');
         }
       },
-      requestApproval: async (request, signal) => {
+      requestApproval: async (request, signal, meta) => {
         this.setState('waiting_user');
         try {
-          return await deps.ui.requestApproval(request, signal);
+          return await deps.ui.requestApproval(request, signal, { runId: meta?.runId ?? this.runId ?? undefined });
         } finally {
           if (this.runState === 'waiting_user') this.setState('running');
         }

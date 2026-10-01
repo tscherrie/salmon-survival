@@ -27,6 +27,8 @@ export interface BudgetGateContext {
   ui: UiPort;
   signal: AbortSignal;
   projectId: string;
+  /** Lauf, aus dem die Freigabe-Anfrage stammt (an die UI durchgereicht). */
+  runId?: string | undefined;
 }
 
 export type BudgetGateResult = { ok: true; checkpointId: string; approvedExtraUsd: number } | { ok: false; reason: string };
@@ -41,6 +43,12 @@ export async function budgetGate(ctx: BudgetGateContext, amountUsd: number, purp
   const checkpointId = active?.id ?? EXTRA_BUDGET_CHECKPOINT;
   const check = ctx.project.budgetCheck(amountUsd, checkpointId);
   if (check.ok) return { ok: true, checkpointId, approvedExtraUsd: 0 };
+  // Ungültige Schätzung (NaN, unendlich, negativ): keine Freigabekarte – eine Nachfreigabe könnte sie nicht decken.
+  if (check.invalid || !Number.isFinite(check.shortfallUsd)) {
+    return { ok: false, reason: `Kostenschätzung unbrauchbar: ${check.reason}. Prüfe Modell und Parameter (estimate_cost) statt es erneut zu versuchen.` };
+  }
+  // Fehlbetrag unterhalb der Buchungsgenauigkeit (gerundet $0): passt.
+  if (check.shortfallUsd <= 0) return { ok: true, checkpointId, approvedExtraUsd: 0 };
   const where = active ? `Checkpoint „${active.title}“` : 'kein freigegebener Checkpoint';
   const approved = await ctx.ui.requestApproval(
     {
@@ -50,6 +58,7 @@ export async function budgetGate(ctx: BudgetGateContext, amountUsd: number, purp
       amountUsd: check.shortfallUsd,
     },
     ctx.signal,
+    { runId: ctx.runId },
   );
   if (!approved) {
     return { ok: false, reason: `Budget nicht freigegeben: ${check.reason}. Frage den Nutzer mit konkreten Optionen (günstigeres Modell, kürzere Dauer, Budget erhöhen) statt es erneut zu versuchen.` };

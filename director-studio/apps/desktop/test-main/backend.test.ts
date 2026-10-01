@@ -1,13 +1,13 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm, stat, writeFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdtemp, readFile, rm, stat, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { StudioEvent } from '@studio/core';
 import { DirectorSession, FakeTransport, fakeText, fakeToolUse, type FakeStep } from '@studio/director';
 import { defaultMediaToolkit } from '@studio/media';
-import { StudioBackend, type BackendDeps, type OpenProject } from '../src/main/backend.ts';
+import { StudioBackend, type BackendDeps, type OpenProject, type PreviewPort } from '../src/main/backend.ts';
 import type { SecretCipher } from '../src/main/secrets.ts';
 import { CombinedCatalog, FalHub } from '../src/main/services.ts';
 
@@ -23,7 +23,7 @@ let events: StudioEvent[];
 let script: FakeStep[];
 let opened: string[];
 
-function makeBackend(extra: Partial<BackendDeps['overrides']> = {}): StudioBackend {
+function makeBackend(extra: Partial<BackendDeps['overrides']> = {}, deps: Partial<BackendDeps> = {}): StudioBackend {
   return new StudioBackend({
     appDataDir: join(root, 'appdata'),
     documentsDir: join(root, 'docs'),
@@ -39,6 +39,7 @@ function makeBackend(extra: Partial<BackendDeps['overrides']> = {}): StudioBacke
       },
     },
     emit: (e) => events.push(e),
+    ...(deps.preview ? { preview: deps.preview } : {}),
     overrides: {
       agentSdkAvailable: false,
       env: {},
@@ -300,5 +301,149 @@ describe('StudioBackend – Medien, Vorschau, Export', () => {
     await expect(backend.transcribe(snap.manifest.id, new ArrayBuffer(8), 'audio/webm')).rejects.toThrow(/fal-Key/);
     await expect(backend.openExternal('file:///etc/passwd')).rejects.toThrow(/http/);
     await backend.shutdown();
+  });
+});
+
+/** Attrappe des PreviewControllers (Electron-frei). */
+function fakePreview(options: { current?: string | null; failClose?: string } = {}) {
+  const calls: string[] = [];
+  const port: PreviewPort = {
+    open: async (_id, url, viewport) => {
+      calls.push(`open:${url}:${viewport}`);
+    },
+    navigate: async (_id, path) => {
+      calls.push(`navigate:${path}`);
+    },
+    setBounds: () => undefined,
+    setPickMode: async () => undefined,
+    currentUrl: () => options.current ?? null,
+    close: (id) => {
+      calls.push(`close:${id}`);
+      if (id === options.failClose) throw new Error('Object has been destroyed');
+    },
+    closeAll: () => {
+      calls.push('closeAll');
+    },
+  };
+  return { calls, port };
+}
+
+function projectsOf(backend: StudioBackend): Map<string, OpenProject> {
+  return (backend as unknown as { projects: Map<string, OpenProject> }).projects;
+}
+
+describe('StudioBackend – Review-Befunde', () => {
+  it('liefert für Projekte ohne Kategorie kein Platzhalter-Deck, sondern document: null', async () => {
+    const backend = makeBackend();
+    const snap = await backend.createProject({ title: 'Offen', category: null, directory: root });
+    expect(snap.document).toBeNull();
+    expect((await backend.getSnapshot(snap.manifest.id)).document).toBeNull();
+    await backend.shutdown();
+  });
+
+  it('meldet die Anthropic-Anmeldung getrennt nach API-Key und OAuth-Profil', async () => {
+    const backend = makeBackend();
+    expect((await backend.getAuthStatus()).anthropic).toEqual({ apiKey: false, oauthProfile: false });
+    await backend.setSecret('anthropic', 'sk-ant-x');
+    expect((await backend.getAuthStatus()).anthropic).toEqual({ apiKey: true, oauthProfile: false });
+    await mkdir(join(root, 'home', '.config', 'anthropic', 'credentials'), { recursive: true });
+    await writeFile(join(root, 'home', '.config', 'anthropic', 'credentials', 'default.json'), '{}');
+    expect((await backend.getAuthStatus()).anthropic).toEqual({ apiKey: true, oauthProfile: true });
+    await backend.shutdown();
+  });
+
+  it('lädt die Keys nach einem Lesefehler erneut, statt den Fehler zu cachen', async () => {
+    await mkdir(join(root, 'appdata', 'secrets.json'), { recursive: true });
+    const backend = makeBackend();
+    await expect(backend.getAuthStatus()).rejects.toThrow();
+    await rm(join(root, 'appdata', 'secrets.json'), { recursive: true });
+    const status = await backend.getAuthStatus();
+    expect(status.falConfigured).toBe(false);
+    await backend.setSecret('fal', 'fal-key');
+    expect((await backend.getAuthStatus()).falConfigured).toBe(true);
+    await backend.shutdown();
+  });
+
+  it('übernimmt die Picker-Defaults des Nutzers für neue Projekte', async () => {
+    const backend = makeBackend();
+    await backend.updateSettings({ defaultPickers: { video: { mode: 'model', modelId: 'fal-ai/veo3.1' } } });
+    const snap = await backend.createProject({ title: 'Picker-Default', category: 'video', directory: root });
+    expect(snap.manifest.pickers.video).toEqual({ mode: 'model', modelId: 'fal-ai/veo3.1' });
+    expect(snap.manifest.pickers.director).toEqual({ mode: 'model', modelId: 'claude-opus-5-5' });
+    await backend.shutdown();
+  });
+
+  it('liefert Lineage und ordnet verknüpfte Dateien neu zu', async () => {
+    const backend = makeBackend();
+    const snap = await backend.createProject({ title: 'Lineage', category: 'graphic', directory: root });
+    const id = snap.manifest.id;
+    await writeFile(join(root, 'a.txt'), 'Inhalt A');
+    await writeFile(join(root, 'b.txt'), 'Inhalt B');
+    const [a, b] = await backend.importFiles(id, [join(root, 'a.txt'), join(root, 'b.txt')], 'link');
+    await projectsOf(backend).get(id)!.store.addLineage([{ parentId: a!.id, childId: b!.id, relation: 'derived' }]);
+    expect(await backend.getLineage(id, b!.id)).toEqual({ parents: [{ parentId: a!.id, childId: b!.id, relation: 'derived' }], children: [] });
+    expect((await backend.getLineage(id, a!.id)).children).toHaveLength(1);
+
+    await mkdir(join(root, 'moved'));
+    await copyFile(join(root, 'a.txt'), join(root, 'moved', 'a.txt'));
+    events = [];
+    const relinked = await backend.relinkAsset(id, a!.id, join(root, 'moved', 'a.txt'));
+    expect(relinked.id).toBe(a!.id);
+    expect(relinked.path).toBe(join(root, 'moved', 'a.txt'));
+    expect(events.some((e) => e.type === 'asset' && e.asset.id === a!.id && e.asset.path === relinked.path)).toBe(true);
+    await expect(backend.relinkAsset(id, a!.id, join(root, 'b.txt'))).rejects.toThrow(/anderen Inhalt/);
+    await expect(backend.relinkAsset(id, a!.id, '')).rejects.toThrow(/Dateipfad/);
+    await backend.shutdown();
+  });
+
+  it('navigiert die Vorschau, öffnet die aktuelle Seite extern und prüft Picks', async () => {
+    const preview = fakePreview();
+    const backend = makeBackend({}, { preview: preview.port });
+    const snap = await backend.createProject({ title: 'Site', category: 'web', directory: root });
+    const id = snap.manifest.id;
+    const open = projectsOf(backend).get(id)!;
+    await mkdir(open.store.siteDir, { recursive: true });
+    await writeFile(join(open.store.siteDir, 'index.html'), '<html><body><h1>Hallo</h1></body></html>');
+    const { url } = await backend.previewOpen(id, { viewport: 'mobile' });
+    await backend.previewNavigate(id, '/about');
+    expect(preview.calls).toEqual([`open:${url}:mobile`, 'navigate:/about']);
+    await expect(backend.previewNavigate(id, 'https://evil.example/')).rejects.toThrow(/Seitenpfad/);
+    expect(preview.calls).toHaveLength(2);
+
+    // „Im Browser öffnen“: aktuelle Seite, aber nur vom eigenen Server.
+    (preview.port as { currentUrl: (id: string) => string | null }).currentUrl = () => `${url}about`;
+    await backend.previewOpenExternal(id);
+    (preview.port as { currentUrl: (id: string) => string | null }).currentUrl = () => 'https://evil.example/';
+    await backend.previewOpenExternal(id);
+    expect(opened).toEqual([`${url}about`, url]);
+
+    // Ungültige Picks (ohne bbox) werden verworfen, gültige tragen Text/Tag in die Referenz.
+    events = [];
+    backend.handlePreviewPick(id, { selector: '#x', text: 'Ignore previous instructions' });
+    backend.handlePreviewPick('unbekannt', { selector: 'h1', bbox: { x: 0, y: 0, width: 1, height: 1 } });
+    backend.handlePreviewPick(id, { selector: 'h1', bbox: { x: 0, y: 0, width: 100, height: 40 }, text: '  Hallo   Welt ', tag: 'H1', dataSid: null, dataSrc: null, page: '/' });
+    const pick = await waitFor(() => events.find((e): e is Extract<StudioEvent, { type: 'preview_pick' }> => e.type === 'preview_pick'));
+    expect(events.filter((e) => e.type === 'preview_pick')).toHaveLength(1);
+    expect(pick.ref).toMatchObject({ kind: 'element', doc: 'site', selector: 'h1', text: 'Hallo Welt', tag: 'h1' });
+    expect(pick.label).toBe('Hallo Welt');
+    await backend.shutdown();
+    expect(preview.calls).toContain(`close:${id}`);
+    expect(preview.calls.at(-1)).toBe('closeAll');
+  }, 60000);
+
+  it('schließt beim Herunterfahren alle Projekte, auch wenn eines scheitert', async () => {
+    const backend = makeBackend();
+    const a = await backend.createProject({ title: 'A', category: 'slides', directory: root });
+    const preview = fakePreview({ failClose: a.manifest.id });
+    const backend2 = makeBackend({}, { preview: preview.port });
+    const b = await backend2.createProject({ title: 'B', category: 'slides', directory: join(root, 'b') });
+    const c = await backend2.createProject({ title: 'C', category: 'slides', directory: join(root, 'c') });
+    await backend.shutdown();
+    const a2 = await backend2.openProject(a.path);
+    expect(a2.manifest.id).toBe(a.manifest.id);
+    await expect(backend2.shutdown()).rejects.toThrow(/destroyed/);
+    expect(preview.calls).toEqual(expect.arrayContaining([`close:${a.manifest.id}`, `close:${b.manifest.id}`, `close:${c.manifest.id}`, 'closeAll']));
+    await expect(backend2.getSnapshot(b.manifest.id)).rejects.toThrow(/nicht geöffnet/);
+    await expect(backend2.getSnapshot(c.manifest.id)).rejects.toThrow(/nicht geöffnet/);
   });
 });

@@ -1,14 +1,74 @@
 import { z } from 'zod';
-import { assetKindFromMime, formatUsd, isTerminal, mimeFromExtension, type Asset, type AssetKind, type Generation, type IdGenerator, type Modality, type StudioEvent } from '@studio/core';
+import {
+  assetKindFromMime,
+  formatUsd,
+  isTerminal,
+  mimeFromExtension,
+  type Asset,
+  type AssetKind,
+  type Generation,
+  type GenerationQueueHandle,
+  type IdGenerator,
+  type LineageRelation,
+  type Modality,
+  type StudioEvent,
+} from '@studio/core';
 import type { ProjectStore } from '@studio/project';
 import { budgetGate, emitBudget, pickerGate } from '../gates.ts';
 import { normalizeProbe } from '../normalize.ts';
 import type { Clock, GenerationPort, GenerationRunOptions, MediaOutput, MediaPort, ModelCatalogPort, QueueHandle } from '../ports.ts';
 import { errorMessage, formatSec, isAbortError, projectTempDir, raceAbort, truncate } from '../util.ts';
-import { defineTool, errorResult, textResult, type ToolContext } from './registry.ts';
+import { defineTool, errorResult, textResult, type ToolContext, type ToolResult } from './registry.ts';
 
-/** Journal-Eintrag mit fal-Queue-Handle (für die Wiederaufnahme nach einem Absturz). */
-export type JournaledGeneration = Generation & { queueHandle?: QueueHandle | undefined };
+/** Wie die Ergebnisse einer Generierung als Assets abgelegt werden (Standard: wie bei `generate`). */
+export interface GenerationIngestOptions {
+  /** Lineage-Beziehung der Ergebnisse zu den Eingabe-Assets (Standard `input`; Extraktionen: `extracted`). */
+  parentRelation?: LineageRelation | undefined;
+  /** Subtyp der Medien-Ergebnisse, z. B. `rotoscope-mask`. */
+  subtype?: string | undefined;
+  /** Zusätzliche Metadaten an jedem Ergebnis-Asset. */
+  metadata?: Record<string, unknown> | undefined;
+  /**
+   * Zusätzlich die Rohantwort des Modells (Medien-URLs durch `asset:<id>` ersetzt) als Daten-Asset sichern –
+   * z. B. Keypoints einer Pose-Erkennung neben dem Vorschauvideo.
+   */
+  dataAsset?: { subtype: string } | undefined;
+}
+
+/**
+ * Journal-Eintrag einer Generierung. `queueHandle` und `billableUnits` sind typisierte Felder von
+ * {@link Generation}. Ältere Einträge trugen zusätzlich `requestId`/`endpointId` im `queueHandle` – sie werden
+ * beim Lesen weiter berücksichtigt (siehe {@link resumeHandleOf}). `ingest` hält die Ablage-Optionen für die
+ * Wiederaufnahme nach einem Absturz fest.
+ */
+export type JournaledGeneration = Omit<Generation, 'queueHandle'> & {
+  queueHandle?: (GenerationQueueHandle & Partial<Pick<QueueHandle, 'requestId' | 'endpointId'>>) | undefined;
+  ingest?: GenerationIngestOptions | undefined;
+};
+
+/** Handle für `GenerationPort.resume` aus einem (ggf. alten) Journal-Eintrag; `undefined` ohne request_id. */
+export function resumeHandleOf(gen: JournaledGeneration): (Pick<QueueHandle, 'requestId' | 'endpointId'> & Partial<QueueHandle>) | undefined {
+  const legacy = gen.queueHandle;
+  const requestId = gen.requestId ?? legacy?.requestId;
+  if (!requestId) return undefined;
+  return {
+    requestId,
+    endpointId: gen.endpointId,
+    ...(typeof legacy?.statusUrl === 'string' ? { statusUrl: legacy.statusUrl } : {}),
+    ...(typeof legacy?.responseUrl === 'string' ? { responseUrl: legacy.responseUrl } : {}),
+    ...(typeof legacy?.cancelUrl === 'string' ? { cancelUrl: legacy.cancelUrl } : {}),
+  };
+}
+
+/** Öffentliche Sicht (Ereignisse an die UI): nur die typisierten Felder von {@link Generation}. */
+export function publicGeneration(gen: JournaledGeneration): Generation {
+  const { queueHandle, ingest: _ingest, ...rest } = gen;
+  const handle =
+    queueHandle && typeof queueHandle.statusUrl === 'string' && typeof queueHandle.responseUrl === 'string' && typeof queueHandle.cancelUrl === 'string'
+      ? { statusUrl: queueHandle.statusUrl, responseUrl: queueHandle.responseUrl, cancelUrl: queueHandle.cancelUrl }
+      : undefined;
+  return { ...rest, ...(handle ? { queueHandle: handle } : {}) };
+}
 
 export interface GenerationJobInput {
   endpointId: string;
@@ -20,6 +80,8 @@ export interface GenerationJobInput {
   inputAssetIds: string[];
   outputTitle?: string | undefined;
   outputTags?: string[] | undefined;
+  /** Ablage der Ergebnisse (Subtyp, Lineage-Beziehung, Daten-Asset); Standard wie `generate`. */
+  ingest?: GenerationIngestOptions | undefined;
 }
 
 export interface GenerationOutcome {
@@ -75,6 +137,7 @@ export class GenerationManager {
       outputAssetIds: [],
       outputTitle: job.outputTitle,
       outputTags: job.outputTags,
+      ...(job.ingest ? { ingest: job.ingest } : {}),
       createdAt: clock(),
     };
     // Absturzsicherheit: Journal + Reservierung, bevor irgendetwas an fal geht.
@@ -92,7 +155,7 @@ export class GenerationManager {
     if (!job) {
       const gen = this.deps.project.getGeneration(id);
       if (!gen) throw new Error(`Generierung „${id}“ existiert nicht`);
-      return { generation: gen, assets: gen.outputAssetIds.map((a) => this.deps.project.getAsset(a)).filter((a): a is Asset => !!a) };
+      return { generation: publicGeneration(gen), assets: gen.outputAssetIds.map((a) => this.deps.project.getAsset(a)).filter((a): a is Asset => !!a) };
     }
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<undefined>((resolve) => {
@@ -111,13 +174,13 @@ export class GenerationManager {
       job.controller.abort();
       return (await job.promise).generation;
     }
-    const gen = this.deps.project.getGeneration(id);
-    if (!gen || isTerminal(gen.status)) return gen;
+    const gen = this.deps.project.getGeneration(id) as JournaledGeneration | undefined;
+    if (!gen || isTerminal(gen.status)) return gen && publicGeneration(gen);
     await this.deps.project.budgetRelease(id);
-    const canceled: Generation = { ...gen, status: 'canceled', finishedAt: this.deps.clock(), error: 'Abgebrochen' };
-    await this.deps.project.saveGeneration(canceled);
+    const canceled: JournaledGeneration = { ...gen, status: 'canceled', finishedAt: this.deps.clock(), error: 'Abgebrochen', etaSec: undefined };
+    await this.saveJournal(canceled);
     this.emitGeneration(canceled);
-    return canceled;
+    return publicGeneration(canceled);
   }
 
   /** Bricht alle laufenden Jobs ab (z. B. beim Schließen ohne Wiederaufnahme). */
@@ -142,19 +205,20 @@ export class GenerationManager {
     for (const gen of project.listGenerations(['queued', 'running']) as JournaledGeneration[]) {
       if (this.jobs.has(gen.id)) continue;
       const resume = this.deps.generation.resume?.bind(this.deps.generation);
-      if (gen.requestId && resume) {
-        const handle = { ...(gen.queueHandle ?? {}), requestId: gen.requestId, endpointId: gen.endpointId };
+      const handle = resumeHandleOf(gen);
+      if (handle && resume) {
         this.start(gen, (opts) => resume(handle, { ...(opts.signal ? { signal: opts.signal } : {}), ...(opts.onStatus ? { onStatus: opts.onStatus } : {}) }));
         resumed.push(gen.id);
       } else {
         await project.budgetRelease(gen.id);
-        const next: Generation = {
+        const next: JournaledGeneration = {
           ...gen,
           status: 'failed',
           finishedAt: this.deps.clock(),
-          error: gen.requestId ? 'Nach Neustart nicht fortsetzbar (kein Resume im fal-Adapter)' : 'Vor dem Absenden unterbrochen (App-Neustart)',
+          etaSec: undefined,
+          error: handle ? 'Nach Neustart nicht fortsetzbar (kein Resume im fal-Adapter)' : 'Vor dem Absenden unterbrochen (App-Neustart)',
         };
-        await project.saveGeneration(next);
+        await this.saveJournal(next);
         this.emitGeneration(next);
         failed.push(gen.id);
       }
@@ -176,7 +240,7 @@ export class GenerationManager {
     const save = (patch: Partial<JournaledGeneration>): Promise<unknown> => {
       chain = chain.then(async () => {
         current = { ...current, ...patch };
-        await project.saveGeneration(current);
+        await this.saveJournal(current);
         this.emitGeneration(current);
       });
       return chain;
@@ -185,39 +249,59 @@ export class GenerationManager {
       const { output, billableUnits } = await runner({
         signal,
         onSubmitted: async (handle) => {
-          await save({ requestId: handle.requestId, queueHandle: handle, submittedAt: clock() });
+          // Nur die typisierten Queue-URLs journalisieren (request_id hat ein eigenes Feld).
+          await save({
+            requestId: handle.requestId,
+            queueHandle: { statusUrl: handle.statusUrl, responseUrl: handle.responseUrl, cancelUrl: handle.cancelUrl },
+            submittedAt: clock(),
+          });
         },
         onStatus: (status) => {
           const state = status.state.toUpperCase();
           const nextStatus = state.includes('PROGRESS') || state === 'RUNNING' ? 'running' : state.includes('QUEUE') ? 'queued' : current.status;
-          const changed = nextStatus !== current.status || status.queuePosition !== current.queuePosition;
+          const etaSec = status.etaSec !== undefined && Number.isFinite(status.etaSec) && status.etaSec >= 0 ? status.etaSec : undefined;
+          const changed = nextStatus !== current.status || status.queuePosition !== current.queuePosition || etaSec !== current.etaSec;
           if (changed) {
-            void save({ status: nextStatus, queuePosition: status.queuePosition, logs: status.logs.slice(-20) });
+            void save({ status: nextStatus, queuePosition: status.queuePosition, etaSec, logs: status.logs.slice(-20) });
           }
         },
       });
       await chain;
-      const exact = this.exactCost(current.endpointId, billableUnits);
+      const units = billableUnits !== undefined && Number.isFinite(billableUnits) && billableUnits >= 0 ? billableUnits : undefined;
+      const exact = this.exactCost(current.endpointId, units);
       const actualUsd = exact ?? current.estimateUsd;
       const assets = await this.ingest(current, output, actualUsd);
       await project.budgetSettle(current.id, actualUsd, {
         source: 'fal',
         checkpointId: current.checkpointId,
-        note: exact !== undefined ? `Ist laut fal: ${billableUnits} Einheiten` : 'Ist = Schätzung (exakte Kosten nicht gemeldet)',
+        note: exact !== undefined ? `Ist laut fal: ${units} Einheiten` : 'Ist = Schätzung (exakte Kosten nicht gemeldet)',
       });
-      await save({ status: 'completed', outputAssetIds: assets.map((a) => a.id), costUsd: actualUsd, finishedAt: clock(), queuePosition: undefined });
+      await save({
+        status: 'completed',
+        outputAssetIds: assets.map((a) => a.id),
+        costUsd: actualUsd,
+        ...(units !== undefined ? { billableUnits: units } : {}),
+        finishedAt: clock(),
+        queuePosition: undefined,
+        etaSec: undefined,
+      });
       await chain;
       emitBudget(project, this.deps.projectId, { emit: this.deps.emit });
-      return { generation: current, assets };
+      return { generation: publicGeneration(current), assets };
     } catch (error) {
       await chain.catch(() => undefined);
       const canceled = signal.aborted || isAbortError(error);
       await project.budgetRelease(current.id);
-      await save({ status: canceled ? 'canceled' : 'failed', error: canceled ? 'Abgebrochen' : truncate(errorMessage(error), 2000), finishedAt: clock(), queuePosition: undefined });
+      await save({ status: canceled ? 'canceled' : 'failed', error: canceled ? 'Abgebrochen' : truncate(errorMessage(error), 2000), finishedAt: clock(), queuePosition: undefined, etaSec: undefined });
       await chain.catch(() => undefined);
       emitBudget(project, this.deps.projectId, { emit: this.deps.emit });
-      return { generation: current, assets: [] };
+      return { generation: publicGeneration(current), assets: [] };
     }
+  }
+
+  /** Schreibt einen Journal-Eintrag (inkl. Ablage-Optionen, die {@link Generation} nicht kennt). */
+  private saveJournal(gen: JournaledGeneration): Promise<unknown> {
+    return this.deps.project.saveGeneration(gen as Generation);
   }
 
   /** Exakte Kosten aus abgerechneten Einheiten × Einheitspreis (nur USD-Preise). */
@@ -229,21 +313,24 @@ export class GenerationManager {
   }
 
   /** Lädt alle Ausgaben herunter und registriert sie als Assets mit Lineage und Kostenanteil. */
-  private async ingest(gen: Generation, output: unknown, costUsd: number): Promise<Asset[]> {
+  private async ingest(gen: JournaledGeneration, output: unknown, costUsd: number): Promise<Asset[]> {
     const { project, generation, media } = this.deps;
+    const opts = gen.ingest ?? {};
     let outputs: MediaOutput[] = generation.extractMediaOutputs(output);
     if (outputs.length === 0 && output !== undefined) outputs = generation.extractMediaOutputs({ output });
     const prompt = typeof gen.input.prompt === 'string' ? gen.input.prompt : typeof gen.input.text === 'string' ? gen.input.text : undefined;
-    const parents = gen.inputAssetIds.map((assetId) => ({ assetId, relation: 'input' as const }));
+    const relation: LineageRelation = opts.parentRelation ?? 'input';
+    const parents = gen.inputAssetIds.map((assetId) => ({ assetId, relation }));
     const baseTitle = gen.outputTitle ?? truncate(gen.purpose, 80);
     const tags = gen.outputTags ?? [];
+    const metadata = opts.metadata ? { metadata: opts.metadata } : {};
     const assets: Asset[] = [];
     if (outputs.length === 0) {
       // Kein Medium erkannt: Rohantwort als Daten-Asset sichern, damit nichts verloren geht.
       const asset = await project.addAssetFromBuffer(JSON.stringify(output ?? null, null, 2), {
         fileName: 'output.json',
         kind: 'data',
-        subtype: 'model-output',
+        subtype: opts.dataAsset?.subtype ?? opts.subtype ?? 'model-output',
         title: baseTitle,
         tags,
         source: 'generated',
@@ -252,6 +339,7 @@ export class GenerationManager {
         costUsd,
         description: gen.purpose,
         parents,
+        ...metadata,
         ...(prompt ? { prompt } : {}),
       });
       this.deps.emit({ type: 'asset', projectId: this.deps.projectId, asset });
@@ -270,6 +358,8 @@ export class GenerationManager {
         costUsd: share,
         description: gen.purpose,
         parents,
+        ...(opts.subtype ? { subtype: opts.subtype } : {}),
+        ...metadata,
         ...(prompt ? { prompt } : {}),
       };
       let asset: Asset;
@@ -309,13 +399,50 @@ export class GenerationManager {
       assets.push(asset);
       this.deps.emit({ type: 'asset', projectId: this.deps.projectId, asset });
     }
+    if (opts.dataAsset) {
+      // Rohantwort mit Verweisen auf die soeben abgelegten Medien (fal-URLs sind nicht dauerhaft).
+      const byUrl = new Map<string, string>();
+      outputs.forEach((out, i) => {
+        if (out.url && assets[i]) byUrl.set(out.url, `asset:${assets[i]!.id}`);
+      });
+      const data = {
+        generationId: gen.id,
+        endpointId: gen.endpointId,
+        sourceAssetIds: gen.inputAssetIds,
+        outputs: assets.map((a) => ({ assetId: a.id, kind: a.kind, ...(a.mime ? { mime: a.mime } : {}) })),
+        output: replaceStrings(output ?? null, byUrl),
+      };
+      const asset = await project.addAssetFromBuffer(JSON.stringify(data, null, 2), {
+        fileName: `${opts.dataAsset.subtype}.json`,
+        kind: 'data',
+        subtype: opts.dataAsset.subtype,
+        title: `${baseTitle} (Daten)`,
+        tags,
+        source: 'generated',
+        modelId: gen.endpointId,
+        generationId: gen.id,
+        costUsd: 0,
+        description: gen.purpose,
+        parents,
+        ...metadata,
+      });
+      assets.push(asset);
+      this.deps.emit({ type: 'asset', projectId: this.deps.projectId, asset });
+    }
     return assets;
   }
 
-  private emitGeneration(gen: Generation): void {
-    const { queueHandle: _handle, ...plain } = gen as JournaledGeneration;
-    this.deps.emit({ type: 'generation', projectId: this.deps.projectId, generation: plain });
+  private emitGeneration(gen: JournaledGeneration): void {
+    this.deps.emit({ type: 'generation', projectId: this.deps.projectId, generation: publicGeneration(gen) });
   }
+}
+
+/** Ersetzt Strings, die exakt einem Schlüssel von `map` entsprechen (rekursiv, ohne die Eingabe zu verändern). */
+function replaceStrings(value: unknown, map: ReadonlyMap<string, string>): unknown {
+  if (typeof value === 'string') return map.get(value) ?? value;
+  if (Array.isArray(value)) return value.map((v) => replaceStrings(v, map));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, replaceStrings(v, map)]));
+  return value;
 }
 
 function normalizeMime(mime: string): string {
@@ -379,35 +506,131 @@ export const generateInputSchema = z.object({
   wait: z.boolean().optional().describe('true = auf das Ergebnis warten (Standard false).'),
 });
 
+/** Eine geplante Generierung – gemeinsam für `generate` und spezialisierte Tools wie `extract_rotoscope`. */
+export interface GenerationRequest {
+  endpointId: string;
+  input: Record<string, unknown>;
+  purpose: string;
+  outputTitle?: string | undefined;
+  tags?: string[] | undefined;
+  inputAssetIds?: string[] | undefined;
+  wait?: boolean | undefined;
+  ingest?: GenerationIngestOptions | undefined;
+  /** Zusätzliche Zeile im Ergebnis (z. B. welches Modell bei „Auto“ gewählt wurde). */
+  note?: string | undefined;
+}
+
+export type PreflightResult = { ok: true } | { ok: false; reason: string };
+
 /**
  * Picker- und Budget-Gate für eine geplante Generierung, ohne etwas auszuführen. Fordert bei Bedarf die
  * Budgetfreigabe an (und bucht sie). Wird vom `canUseTool`-Hook des Agent SDK genutzt; das Tool selbst
  * prüft beim Ausführen erneut (dann ohne erneute Rückfrage, da die Freigabe schon gebucht ist).
  */
-export async function preflightGenerate(input: unknown, ctx: ToolContext): Promise<{ ok: true } | { ok: false; reason: string }> {
+export async function preflightGenerationRequest(request: GenerationRequest, ctx: ToolContext): Promise<PreflightResult> {
+  const model = ctx.catalog.get(request.endpointId);
+  const gate = pickerGate(ctx.project, model, request.endpointId);
+  if (!gate.ok) return gate;
+  const refIds = [...collectAssetRefs(request.input)];
+  const probeInput = replaceAssetRefs(request.input, Object.fromEntries(refIds.map((id) => [id, `https://upload.pending.invalid/${id}`])));
+  const estimate = await ctx.catalog.estimate(request.endpointId, probeInput);
+  const budget = await budgetGate(ctx, estimate.usd, `${request.purpose} (${request.endpointId}, ≈ ${formatUsd(estimate.usd)})`);
+  return budget.ok ? { ok: true } : budget;
+}
+
+/** Vorabprüfung für das `generate`-Tool (Eingabe ungeprüft wie vom Modell). */
+export async function preflightGenerate(input: unknown, ctx: ToolContext): Promise<PreflightResult> {
   const parsed = generateInputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, reason: `Ungültige Eingabe: ${parsed.error.issues.map((i) => i.message).join('; ')}` };
-  const args = parsed.data;
-  const model = ctx.catalog.get(args.endpointId);
-  const gate = pickerGate(ctx.project, model, args.endpointId);
-  if (!gate.ok) return gate;
-  const refIds = [...collectAssetRefs(args.input)];
-  const probeInput = replaceAssetRefs(args.input, Object.fromEntries(refIds.map((id) => [id, `https://upload.pending.invalid/${id}`])));
-  const estimate = await ctx.catalog.estimate(args.endpointId, probeInput);
-  const budget = await budgetGate(ctx, estimate.usd, `${args.purpose} (${args.endpointId}, ≈ ${formatUsd(estimate.usd)})`);
-  return budget.ok ? { ok: true } : budget;
+  return preflightGenerationRequest(parsed.data, ctx);
+}
+
+/**
+ * Führt eine Generierung mit allen Gates aus: Picker, Schema-Validierung, Budget (ggf. Freigabekarte),
+ * zweckgebundener Upload der `asset:<id>`-Dateien, Journal + Reservierung, Hintergrundjob.
+ */
+export async function runGenerationRequest(request: GenerationRequest, ctx: ToolContext): Promise<ToolResult> {
+  const model = ctx.catalog.get(request.endpointId);
+  const gate = pickerGate(ctx.project, model, request.endpointId);
+  if (!gate.ok) return errorResult(gate.reason);
+
+  const refIds = [...collectAssetRefs(request.input)];
+  const files: Record<string, { path: string; mime?: string | undefined; asset: Asset }> = {};
+  for (const id of refIds) {
+    const asset = ctx.project.getAsset(id);
+    const path = asset && ctx.project.assetFilePath(asset);
+    if (!asset || !path) return errorResult(`Asset „${id}“ existiert nicht oder hat keine Datei (in "asset:${id}").`);
+    files[id] = { path, mime: asset.mime, asset };
+  }
+  const placeholders = Object.fromEntries(refIds.map((id) => [id, `https://upload.pending.invalid/${id}`]));
+  const probeInput = replaceAssetRefs(request.input, placeholders);
+
+  const validation = await ctx.catalog.validate(request.endpointId, probeInput);
+  if (!validation.ok) {
+    return errorResult(`Eingabe passt nicht zum Schema von ${request.endpointId}:\n- ${validation.errors.join('\n- ')}\nLies das Schema mit get_model_schema und korrigiere die Parameter.`);
+  }
+  const estimate = await ctx.catalog.estimate(request.endpointId, probeInput);
+  const budget = await budgetGate(ctx, estimate.usd, `${request.purpose} (${request.endpointId}, ≈ ${formatUsd(estimate.usd)})`);
+  if (!budget.ok) return errorResult(budget.reason);
+
+  const urls: Record<string, string> = {};
+  for (const [id, file] of Object.entries(files)) {
+    ctx.emitProgress(`Lade ${file.asset.title} für ${request.endpointId} hoch …`);
+    try {
+      urls[id] = await ctx.generation.uploadFile(file.path, file.mime);
+    } catch (error) {
+      return errorResult(`Upload von ${id} fehlgeschlagen: ${errorMessage(error)}`);
+    }
+    const previous = Array.isArray(file.asset.metadata?.falUploads) ? (file.asset.metadata!.falUploads as unknown[]) : [];
+    // Uploads werden am Asset protokolliert (Privatsphäre nachvollziehbar).
+    await ctx.project.updateAsset(id, { metadata: { falUploads: [...previous, { at: ctx.clock(), endpointId: request.endpointId, purpose: request.purpose }] } });
+  }
+  const input = replaceAssetRefs(request.input, urls);
+  const inputAssetIds = [...new Set([...refIds, ...(request.inputAssetIds ?? [])])];
+  const id = await ctx.jobs.submit({
+    endpointId: request.endpointId,
+    modality: gate.modality,
+    input,
+    purpose: request.purpose,
+    estimateUsd: estimate.usd,
+    checkpointId: budget.checkpointId,
+    inputAssetIds,
+    outputTitle: request.outputTitle,
+    outputTags: request.tags,
+    ...(request.ingest ? { ingest: request.ingest } : {}),
+  });
+  const head = [
+    request.note,
+    `Generierung ${id} gestartet: ${model?.displayName ?? request.endpointId} · Schätzung ${formatUsd(estimate.usd)} (${estimate.basis}${estimate.exact ? '' : ', geschätzt'}) · Budget ${budget.checkpointId}${budget.approvedExtraUsd ? ` (+${formatUsd(budget.approvedExtraUsd)} nachfreigegeben)` : ''}.`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+  if (!request.wait) return textResult(`${head}\nLäuft im Hintergrund – arbeite weiter und hole das Ergebnis mit await_generations(["${id}"]).`);
+  try {
+    const outcome = await ctx.jobs.wait(id, 30 * 60_000, ctx.signal);
+    if (!outcome) return textResult(`${head}\nNoch nicht fertig (Zeitlimit). Später mit await_generations(["${id}"]) abholen.`);
+    const result = describeOutcome(outcome.generation, outcome.assets);
+    return outcome.generation.status === 'completed' ? textResult(`${head}\n${result}`) : errorResult(`${head}\n${result}`);
+  } catch (error) {
+    if (isAbortError(error)) return textResult(`${head}\nWarten unterbrochen; die Generierung läuft im Hintergrund weiter.`);
+    throw error;
+  }
 }
 
 // ───────────────────────── Tools ─────────────────────────
 
 function describeOutcome(gen: Generation, assets: Asset[]): string {
   if (gen.status === 'completed') {
-    const list = assets.map((a) => `  - ${a.id} ${a.kind}${a.durationMs ? ` ${formatSec(a.durationMs / 1000)}` : ''}${a.width ? ` ${a.width}×${a.height}` : ''} „${a.title}“`).join('\n');
-    return `${gen.id}: fertig (${gen.endpointId}, gebucht ${formatUsd(gen.costUsd ?? gen.estimateUsd)}).\n${list || '  (keine Ausgaben)'}\nPrüfe das Ergebnis (get_asset/frames/contact_sheet), bevor du es verwendest.`;
+    const list = assets
+      .map((a) => `  - ${a.id} ${a.kind}${a.subtype ? `/${a.subtype}` : ''}${a.durationMs ? ` ${formatSec(a.durationMs / 1000)}` : ''}${a.width ? ` ${a.width}×${a.height}` : ''} „${a.title}“`)
+      .join('\n');
+    const units = gen.billableUnits !== undefined ? `, ${gen.billableUnits} abgerechnete Einheiten` : '';
+    return `${gen.id}: fertig (${gen.endpointId}, gebucht ${formatUsd(gen.costUsd ?? gen.estimateUsd)}${units}).\n${list || '  (keine Ausgaben)'}\nPrüfe das Ergebnis (get_asset/frames/contact_sheet), bevor du es verwendest.`;
   }
   if (gen.status === 'failed') return `${gen.id}: FEHLGESCHLAGEN (${gen.endpointId}): ${gen.error ?? 'unbekannter Fehler'}. Reservierung freigegeben.`;
   if (gen.status === 'canceled') return `${gen.id}: abgebrochen. Reservierung freigegeben.`;
-  return `${gen.id}: ${gen.status === 'queued' ? `in der Warteschlange${gen.queuePosition !== undefined ? ` (Position ${gen.queuePosition})` : ''}` : 'läuft'} (${gen.endpointId}).`;
+  const eta = gen.etaSec !== undefined ? `, noch ca. ${Math.max(1, Math.round(gen.etaSec))} s` : '';
+  return `${gen.id}: ${gen.status === 'queued' ? `in der Warteschlange${gen.queuePosition !== undefined ? ` (Position ${gen.queuePosition})` : ''}` : 'läuft'} (${gen.endpointId}${eta}).`;
 }
 
 export const generateTool = defineTool({
@@ -422,67 +645,8 @@ export const generateTool = defineTool({
   ].join(' '),
   input: generateInputSchema,
   sideEffect: 'paid',
-  async run(args, ctx) {
-    const model = ctx.catalog.get(args.endpointId);
-    const gate = pickerGate(ctx.project, model, args.endpointId);
-    if (!gate.ok) return errorResult(gate.reason);
-
-    const refIds = [...collectAssetRefs(args.input)];
-    const files: Record<string, { path: string; mime?: string | undefined; asset: Asset }> = {};
-    for (const id of refIds) {
-      const asset = ctx.project.getAsset(id);
-      const path = asset && ctx.project.assetFilePath(asset);
-      if (!asset || !path) return errorResult(`Asset „${id}“ existiert nicht oder hat keine Datei (in "asset:${id}").`);
-      files[id] = { path, mime: asset.mime, asset };
-    }
-    const placeholders = Object.fromEntries(refIds.map((id) => [id, `https://upload.pending.invalid/${id}`]));
-    const probeInput = replaceAssetRefs(args.input, placeholders);
-
-    const validation = await ctx.catalog.validate(args.endpointId, probeInput);
-    if (!validation.ok) {
-      return errorResult(`Eingabe passt nicht zum Schema von ${args.endpointId}:\n- ${validation.errors.join('\n- ')}\nLies das Schema mit get_model_schema und korrigiere die Parameter.`);
-    }
-    const estimate = await ctx.catalog.estimate(args.endpointId, probeInput);
-    const budget = await budgetGate(ctx, estimate.usd, `${args.purpose} (${args.endpointId}, ≈ ${formatUsd(estimate.usd)})`);
-    if (!budget.ok) return errorResult(budget.reason);
-
-    const urls: Record<string, string> = {};
-    for (const [id, file] of Object.entries(files)) {
-      ctx.emitProgress(`Lade ${file.asset.title} für ${args.endpointId} hoch …`);
-      try {
-        urls[id] = await ctx.generation.uploadFile(file.path, file.mime);
-      } catch (error) {
-        return errorResult(`Upload von ${id} fehlgeschlagen: ${errorMessage(error)}`);
-      }
-      const previous = Array.isArray(file.asset.metadata?.falUploads) ? (file.asset.metadata!.falUploads as unknown[]) : [];
-      // Uploads werden am Asset protokolliert (Privatsphäre nachvollziehbar).
-      await ctx.project.updateAsset(id, { metadata: { falUploads: [...previous, { at: ctx.clock(), endpointId: args.endpointId, purpose: args.purpose }] } });
-    }
-    const input = replaceAssetRefs(args.input, urls);
-    const inputAssetIds = [...new Set([...refIds, ...(args.inputAssetIds ?? [])])];
-    const id = await ctx.jobs.submit({
-      endpointId: args.endpointId,
-      modality: gate.modality,
-      input,
-      purpose: args.purpose,
-      estimateUsd: estimate.usd,
-      checkpointId: budget.checkpointId,
-      inputAssetIds,
-      outputTitle: args.outputTitle,
-      outputTags: args.tags,
-    });
-    const head = `Generierung ${id} gestartet: ${model?.displayName ?? args.endpointId} · Schätzung ${formatUsd(estimate.usd)} (${estimate.basis}${estimate.exact ? '' : ', geschätzt'}) · Budget ${budget.checkpointId}${budget.approvedExtraUsd ? ` (+${formatUsd(budget.approvedExtraUsd)} nachfreigegeben)` : ''}.`;
-    if (!args.wait) return textResult(`${head}\nLäuft im Hintergrund – arbeite weiter und hole das Ergebnis mit await_generations(["${id}"]).`);
-    try {
-      const outcome = await ctx.jobs.wait(id, 30 * 60_000, ctx.signal);
-      if (!outcome) return textResult(`${head}\nNoch nicht fertig (Zeitlimit). Später mit await_generations(["${id}"]) abholen.`);
-      const result = describeOutcome(outcome.generation, outcome.assets);
-      return outcome.generation.status === 'completed' ? textResult(`${head}\n${result}`) : errorResult(`${head}\n${result}`);
-    } catch (error) {
-      if (isAbortError(error)) return textResult(`${head}\nWarten unterbrochen; die Generierung läuft im Hintergrund weiter.`);
-      throw error;
-    }
-  },
+  preflight: preflightGenerate,
+  run: (args, ctx) => runGenerationRequest(args, ctx),
 });
 
 export const awaitGenerationsTool = defineTool({

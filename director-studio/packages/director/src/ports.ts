@@ -44,6 +44,8 @@ export interface QueueHandle {
 export interface QueueStatus {
   state: string;
   queuePosition?: number;
+  /** Geschätzte Restdauer in Sekunden, falls der Adapter sie kennt (Anzeige im Panel). */
+  etaSec?: number;
   logs: string[];
 }
 
@@ -80,7 +82,7 @@ export interface GenerationPort {
    * Optional: setzt das Polling einer bereits eingereichten Anfrage fort (Absturz-Wiederaufnahme).
    * `statusUrl`/`responseUrl`/`cancelUrl` fehlen evtl. bei alten Journal-Einträgen.
    */
-  resume?(handle: Pick<QueueHandle, 'requestId' | 'endpointId'> & Partial<QueueHandle>, opts: Omit<GenerationRunOptions, 'onSubmitted'>): Promise<{ output: unknown }>;
+  resume?(handle: Pick<QueueHandle, 'requestId' | 'endpointId'> & Partial<QueueHandle>, opts: Omit<GenerationRunOptions, 'onSubmitted'>): Promise<{ output: unknown; billableUnits?: number }>;
   /** Lädt eine lokale Datei temporär in den fal-Storage und liefert die URL. */
   uploadFile(path: string, contentType?: string): Promise<string>;
   /** Findet Medien-Ausgaben in einer Modellantwort (wird mit `output` aus `run()` aufgerufen). */
@@ -137,20 +139,42 @@ export interface TranscribePort {
 
 // ───────────────────────── Web (Fallback ohne Server-Websuche) ─────────────────────────
 
+export interface WebDownload {
+  /** Heruntergeladene Datei in `destDir` (wird in den Projektspeicher verschoben). */
+  path: string;
+  contentType?: string;
+  bytes?: number;
+  /** Seitentitel bzw. Dateiname laut Server, falls bekannt. */
+  title?: string;
+  /** Endgültige URL nach Weiterleitungen. */
+  finalUrl?: string;
+}
+
 export interface WebPort {
   search?(query: string): Promise<Array<{ title: string; url: string; snippet: string }>>;
   fetch?(url: string): Promise<{ title?: string; text: string; contentType: string }>;
+  /**
+   * Lädt eine Web-Referenz (Bild, Video, Audio, PDF, Seite) nach `destDir` herunter – für `import_url`. Die
+   * Implementierung prüft Schema, Ziel (keine lokalen/privaten Adressen) und Größe.
+   */
+  download?(url: string, destDir: string, opts?: { signal?: AbortSignal }): Promise<WebDownload>;
 }
 
 // ───────────────────────── UI ─────────────────────────
+
+/** Zusatzangaben zu einer blockierenden Rückfrage bzw. Freigabe. */
+export interface UiRequestMeta {
+  /** Lauf, aus dem die Anfrage stammt (wird explizit durchgereicht statt aus `run_state` erraten). */
+  runId?: string | undefined;
+}
 
 /** Wie der Director mit dem Nutzer spricht (implementiert von Session/App, z. B. {@link InteractiveUi}). */
 export interface UiPort {
   emit(event: StudioEvent): void;
   /** Blockiert, bis der Nutzer geantwortet hat. Ergebnis: Frage-ID → Antwort (Label oder Freitext). */
-  askUser(questions: DirectorQuestion[], signal: AbortSignal): Promise<Record<string, string>>;
+  askUser(questions: DirectorQuestion[], signal: AbortSignal, meta?: UiRequestMeta): Promise<Record<string, string>>;
   /** Approval-Karte (Budget, Upload, Export); `true` = freigegeben. */
-  requestApproval(req: Omit<ApprovalRequest, 'id' | 'createdAt'>, signal: AbortSignal): Promise<boolean>;
+  requestApproval(req: Omit<ApprovalRequest, 'id' | 'createdAt'>, signal: AbortSignal, meta?: UiRequestMeta): Promise<boolean>;
 }
 
 // ───────────────────────── Uhr & IDs ─────────────────────────

@@ -1,9 +1,10 @@
 import { defaultIdGenerator, type ApprovalRequest, type DirectorQuestion, type IdGenerator, type StudioEvent } from '@studio/core';
-import { systemClock, type Clock, type UiPort } from './ports.ts';
+import { systemClock, type Clock, type UiPort, type UiRequestMeta } from './ports.ts';
 import { abortError } from './util.ts';
 
 interface PendingQuestion {
   questionId: string;
+  runId: string;
   questions: DirectorQuestion[];
   resolve: (answers: Record<string, string>) => void;
   reject: (error: Error) => void;
@@ -11,6 +12,7 @@ interface PendingQuestion {
 
 interface PendingApproval {
   request: ApprovalRequest;
+  runId: string | undefined;
   resolve: (approved: boolean) => void;
   reject: (error: Error) => void;
 }
@@ -18,12 +20,13 @@ interface PendingApproval {
 /**
  * Fertige UiPort-Implementierung über Ereignisse: Rückfragen und Freigaben werden als `question` /
  * `approval` gemeldet und blockieren, bis die App `answerQuestion` bzw. `decideApproval` aufruft
- * (StudioApi → IPC). Abbruch über das AbortSignal des Laufs.
+ * (StudioApi → IPC). Abbruch über das AbortSignal des Laufs. Die Lauf-ID kommt explizit vom Aufrufer
+ * (`meta.runId`), nicht aus zuletzt gesehenen `run_state`-Ereignissen – sonst trüge eine Rückfrage eines
+ * Subagenten oder eines noch laufenden Hintergrund-Tools die ID eines späteren Laufs.
  */
 export class InteractiveUi implements UiPort {
   private readonly questions = new Map<string, PendingQuestion>();
   private readonly approvals = new Map<string, PendingApproval>();
-  private runId: string | null = null;
   private readonly clock: Clock;
   private readonly ids: IdGenerator;
 
@@ -33,13 +36,13 @@ export class InteractiveUi implements UiPort {
   }
 
   emit(event: StudioEvent): void {
-    if (event.type === 'run_state') this.runId = event.runId;
     this.options.emit(event);
   }
 
-  askUser(questions: DirectorQuestion[], signal: AbortSignal): Promise<Record<string, string>> {
+  askUser(questions: DirectorQuestion[], signal: AbortSignal, meta?: UiRequestMeta): Promise<Record<string, string>> {
     if (signal.aborted) return Promise.reject(abortError());
     const questionId = this.ids('qst');
+    const runId = meta?.runId ?? '';
     return new Promise<Record<string, string>>((resolve, reject) => {
       const onAbort = () => {
         if (!this.questions.delete(questionId)) return;
@@ -49,6 +52,7 @@ export class InteractiveUi implements UiPort {
       signal.addEventListener('abort', onAbort, { once: true });
       this.questions.set(questionId, {
         questionId,
+        runId,
         questions,
         resolve: (answers) => {
           signal.removeEventListener('abort', onAbort);
@@ -56,7 +60,7 @@ export class InteractiveUi implements UiPort {
         },
         reject,
       });
-      this.options.emit({ type: 'question', projectId: this.options.projectId, runId: this.runId ?? '', questions, questionId });
+      this.options.emit({ type: 'question', projectId: this.options.projectId, runId, questions, questionId });
     });
   }
 
@@ -70,7 +74,7 @@ export class InteractiveUi implements UiPort {
     return true;
   }
 
-  requestApproval(req: Omit<ApprovalRequest, 'id' | 'createdAt'>, signal: AbortSignal): Promise<boolean> {
+  requestApproval(req: Omit<ApprovalRequest, 'id' | 'createdAt'>, signal: AbortSignal, meta?: UiRequestMeta): Promise<boolean> {
     if (signal.aborted) return Promise.reject(abortError());
     const request: ApprovalRequest = { ...req, id: this.ids('apr'), createdAt: this.clock() };
     return new Promise<boolean>((resolve, reject) => {
@@ -82,6 +86,7 @@ export class InteractiveUi implements UiPort {
       signal.addEventListener('abort', onAbort, { once: true });
       this.approvals.set(request.id, {
         request,
+        runId: meta?.runId,
         resolve: (approved) => {
           signal.removeEventListener('abort', onAbort);
           resolve(approved);
@@ -101,12 +106,14 @@ export class InteractiveUi implements UiPort {
     return true;
   }
 
-  pendingQuestion(): { questionId: string; questions: DirectorQuestion[] } | null {
+  /** Älteste offene Rückfrage samt Lauf, aus dem sie stammt. */
+  pendingQuestion(): { questionId: string; runId: string; questions: DirectorQuestion[] } | null {
     const first = this.questions.values().next().value as PendingQuestion | undefined;
-    return first ? { questionId: first.questionId, questions: first.questions } : null;
+    return first ? { questionId: first.questionId, runId: first.runId, questions: first.questions } : null;
   }
 
-  pendingApprovals(): ApprovalRequest[] {
-    return [...this.approvals.values()].map((a) => a.request);
+  /** Offene Freigaben; mit `runId` nur die dieses Laufs. */
+  pendingApprovals(runId?: string): ApprovalRequest[] {
+    return [...this.approvals.values()].filter((a) => runId === undefined || a.runId === runId).map((a) => a.request);
   }
 }

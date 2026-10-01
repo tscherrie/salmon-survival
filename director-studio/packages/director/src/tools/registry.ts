@@ -63,6 +63,11 @@ export interface DirectorTool<S extends z.ZodObject<any> = z.ZodObject<any>> {
   description: string;
   input: S;
   sideEffect: ToolSideEffect;
+  /**
+   * Optionale Vorabprüfung kostenpflichtiger Tools (Picker-, Budget-Gate inkl. Freigabekarte) ohne Ausführung –
+   * genutzt vom `canUseTool`-Hook des Agent SDK. Die Eingabe ist ungeprüft (wie vom Modell geliefert).
+   */
+  preflight?(input: unknown, ctx: ToolContext): Promise<{ ok: true } | { ok: false; reason: string }>;
   run(input: z.output<S>, ctx: ToolContext): Promise<ToolResult>;
 }
 

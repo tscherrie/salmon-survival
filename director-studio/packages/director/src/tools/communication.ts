@@ -45,7 +45,7 @@ export const askUserTool = defineTool({
       options: q.options.map((o) => ({ label: o.label, description: o.description })),
       multiSelect: q.multiSelect,
     }));
-    const answers = await ctx.ui.askUser(questions, ctx.signal);
+    const answers = await ctx.ui.askUser(questions, ctx.signal, { runId: ctx.runId });
     const lines = questions.map((q) => {
       const answer = answers[q.id] ?? answers[q.question] ?? '(keine Antwort)';
       return `${q.header ? `[${q.header}] ` : ''}${q.question}\n→ ${answer}`;

@@ -51,6 +51,8 @@ interface PreviewEntry {
   gestures: GestureGate;
   /** Fenster, in dem die View hängt (nach macOS-Fenster-Neuaufbau neu einhängen). */
   attachedTo: BrowserWindow | null;
+  /** Erst nach der ersten Seite gibt es eine Render-Ansicht; Geräte-Emulation davor bringt Electron zum Absturz (SIGSEGV). */
+  rendered: boolean;
 }
 
 type PreviewState = { url: string | null; status: 'starting' | 'ready' | 'error'; error?: string };
@@ -73,6 +75,8 @@ function isAbortError(error: unknown): boolean {
 
 export class PreviewController {
   private readonly entries = new Map<string, PreviewEntry>();
+  /** Partitionen mit Download-Sperre (Ereignis-Listener nur einmal registrieren). */
+  private readonly downloadBlocked = new Set<string>();
 
   constructor(
     private readonly getWindow: () => BrowserWindow | null,
@@ -170,11 +174,14 @@ export class PreviewController {
         devTools: true,
       },
     });
-    const entry: PreviewEntry = { view, url, host, viewport, pickMode: false, token: randomBytes(24).toString('hex'), gestures: new GestureGate(3000), attachedTo: null };
+    const entry: PreviewEntry = { view, url, host, viewport, pickMode: false, token: randomBytes(24).toString('hex'), gestures: new GestureGate(3000), attachedTo: null, rendered: false };
     const wc = view.webContents;
     const current = () => this.entries.get(projectId) === entry;
 
-    wc.on('input-event', (_event, input) => entry.gestures.note(input.type));
+    // Klicks im Pick-Modus wählen Elemente aus – sie zählen nicht als Freigabe für externe Links.
+    wc.on('input-event', (_event, input) => {
+      if (!entry.pickMode) entry.gestures.note(input.type);
+    });
     wc.setWindowOpenHandler(({ url: target }) => {
       this.openFromPreview(entry, target);
       return { action: 'deny' };
@@ -196,6 +203,10 @@ export class PreviewController {
       if (!event.frame || event.frame !== wc.mainFrame) return;
       const payload = parsePickMessage(event.message, entry.token);
       if (payload) this.onPick(projectId, payload);
+    });
+    wc.on('dom-ready', () => {
+      entry.rendered = true;
+      if (current()) this.applyViewport(entry);
     });
     wc.on('did-finish-load', () => {
       if (!current()) return;
@@ -221,7 +232,10 @@ export class PreviewController {
     const allowedHost = () => this.entries.get(projectId)?.host ?? null;
     ses.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
     ses.setPermissionCheckHandler(() => false);
-    ses.on('will-download', (event) => event.preventDefault());
+    if (!this.downloadBlocked.has(partition)) {
+      this.downloadBlocked.add(partition);
+      ses.on('will-download', (event) => event.preventDefault());
+    }
     ses.webRequest.onBeforeRequest((details, callback) => {
       callback({ cancel: !isPreviewRequestAllowed(details.url, allowedHost()) });
     });
@@ -280,7 +294,7 @@ export class PreviewController {
   }
 
   private applyViewport(entry: PreviewEntry): void {
-    if (entry.view.webContents.isDestroyed()) return;
+    if (!entry.rendered || entry.view.webContents.isDestroyed()) return;
     const size = VIEWPORT_SIZES[entry.viewport];
     const bounds = entry.view.getBounds();
     // Skaliert die Seite so, dass der gewählte Viewport in die sichtbare Fläche passt.
