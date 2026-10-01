@@ -7159,6 +7159,9 @@ button.step-btn:hover {
 .settings-row-text .settings-row-label {
   flex: none;
 }
+.settings-row:has(> .settings-row-text) {
+  padding: 6px 0;
+}
 .settings-row .btn,
 .settings-row .seg {
   flex: none;

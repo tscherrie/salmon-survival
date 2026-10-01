@@ -89,8 +89,10 @@ describe('Toasts (DESIGN.md §7.11)', () => {
 describe('Einstellungen: Darstellung (DESIGN.md §7.13)', () => {
   it('Theme, erhöhter Kontrast, technische Details und „Hinweise zurücksetzen“ wirken sofort', async () => {
     const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
-    act(() => studio.store.getState().completeCoach('markerStrip'));
-    expect(studio.store.getState().coach.markerStrip).toBe('done');
+    act(() => {
+      for (const key of ['markerStrip', 'monitorPointing', 'altReference'] as const) studio.store.getState().completeCoach(key);
+    });
+    expect(studio.store.getState().coach).toEqual({ markerStrip: 'done', monitorPointing: 'done', altReference: 'done' });
     let tech = false;
     function TechProbe() {
       tech = useTechDetails();
@@ -111,6 +113,8 @@ describe('Einstellungen: Darstellung (DESIGN.md §7.13)', () => {
     await user.click(screen.getByRole('switch', { name: 'Technische Details im Verlauf' }));
     expect(tech).toBe(true);
     await user.click(screen.getByRole('button', { name: 'Hinweise zurücksetzen' }));
-    expect(studio.store.getState().coach.markerStrip).toBe('open');
+    // Alle drei einmaligen Hinweise (§8.6) erscheinen wieder, auch nach dem Neustart (gespeichert)
+    expect(studio.store.getState().coach).toEqual({ markerStrip: 'open', monitorPointing: 'open', altReference: 'open' });
+    expect(JSON.parse(localStorage.getItem(COACH_KEY)!)).toEqual({ markerStrip: 'open', monitorPointing: 'open', altReference: 'open' });
   });
 });

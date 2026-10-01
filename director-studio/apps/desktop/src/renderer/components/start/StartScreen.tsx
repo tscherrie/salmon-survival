@@ -4,7 +4,7 @@ import { formatDateTime, getLanguage, useT } from '../../i18n.ts';
 import { useActions, useApi, useApiMode, useStudio } from '../../state/context.tsx';
 import { isEditableTarget } from '../workspace/Workspace.tsx';
 import { BrandMark, Icon, type IconName } from '../common/Icon.tsx';
-import { isMacPlatform } from '../common/Kbd.tsx';
+import { ariaKeyShortcuts, isMacPlatform } from '../common/Kbd.tsx';
 import { ThemeToggle } from '../common/ThemeToggle.tsx';
 import { Tooltip } from '../common/Tooltip.tsx';
 import { AuthStatusPanel } from './AuthStatusPanel.tsx';
@@ -355,13 +355,13 @@ function Launch({ onNew, onOpenExisting, onSettings }: { onNew: (category?: Proj
       <p className="launch-lede">{t('start.tagline')}</p>
       <div className="launch-actions">
         <Tooltip label={t('start.newProject')} keys={['mod', 'N']}>
-          <button type="button" className="btn primary lg" onClick={() => onNew()} aria-keyshortcuts={isMacPlatform() ? 'Meta+N' : 'Control+N'}>
+          <button type="button" className="btn primary lg" onClick={() => onNew()} aria-keyshortcuts={ariaKeyShortcuts(['mod', 'N'])}>
             <Icon name="plus" size={16} />
             {t('start.newProject')}
           </button>
         </Tooltip>
         <Tooltip label={t('start.openProject')} keys={['mod', 'O']}>
-          <button type="button" className="btn lg" onClick={onOpenExisting} aria-keyshortcuts={isMacPlatform() ? 'Meta+O' : 'Control+O'}>
+          <button type="button" className="btn lg" onClick={onOpenExisting} aria-keyshortcuts={ariaKeyShortcuts(['mod', 'O'])}>
             <Icon name="folder" size={16} />
             {t('start.openProject')}
           </button>
