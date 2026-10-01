@@ -17,6 +17,7 @@ import {
   type DirectorRuntimeId,
   type ExportOptions,
   type LineageEdge,
+  type MediaToolsStatus,
   type Modality,
   type ModelInfo,
   type PickerSelection,
@@ -43,11 +44,12 @@ import {
   SkillLibrary,
   type WebPort,
 } from '@studio/director';
-import { defaultMediaToolkit, type MediaToolkit } from '@studio/media';
+import { MediaToolkit } from '@studio/media';
 import { ProjectStore, RecentProjects } from '@studio/project';
 import type { MediaErrorInfo } from '@studio/render/browser';
 import { buildAssetUrl, type AssetVariant, type ResolvedAssetFile } from './asset-protocol.ts';
 import { exportProject as runExport } from './exporter.ts';
+import { locateFfmpeg, type FfmpegLocation } from './ffmpeg.ts';
 import { SecretStore, type SecretCipher, type SecretName } from './secrets.ts';
 import { resolvePreviewPath, validatePickPayload } from './security.ts';
 import { CombinedCatalog, DerivedMedia, FalHub, renderPortFor, RenderService } from './services.ts';
@@ -76,6 +78,11 @@ export interface BackendDeps {
   shell: { openExternal(url: string): Promise<void>; showItemInFolder(path: string): void };
   preview?: PreviewPort | undefined;
   emit(event: StudioEvent): void;
+  /**
+   * Ausgelieferte App: Ordner mit mitgelieferten ffmpeg/ffprobe (`<resources>/ffmpeg`) und ob die
+   * Chromium-Headless-Shell bei Bedarf geladen wird (siehe `RenderService.ensureChromium`).
+   */
+  runtime?: { bundledFfmpegDir?: string | undefined; provisionChromium?: boolean | undefined } | undefined;
   /** Für Tests: Medien-Toolkit, Render-Dienst, Director-Fabrik ersetzen. */
   overrides?: {
     media?: MediaToolkit;
@@ -87,6 +94,8 @@ export interface BackendDeps {
     platform?: NodeJS.Platform;
     skillsDir?: string;
     web?: WebPort;
+    /** ffmpeg-Suche: Prüfung „ausführbare Datei“ ersetzen (Tests ohne echtes Dateisystem). */
+    isExecutable?: (file: string) => boolean;
   };
 }
 
@@ -120,6 +129,8 @@ export class StudioBackend implements StudioApi {
   private readonly derived: DerivedMedia;
   private readonly projects = new Map<string, OpenProject>();
   private mediaValue: MediaToolkit | null;
+  /** Ergebnis der ffmpeg-Suche (verworfen, wenn sich `ffmpegPath` ändert). */
+  private mediaLocation: FfmpegLocation | null = null;
   private agentSdkAvailable: Promise<boolean> | null = null;
   private secretsLoaded: Promise<void> | null = null;
 
@@ -129,14 +140,66 @@ export class StudioBackend implements StudioApi {
     this.recent = new RecentProjects(deps.appDataDir);
     this.fal = new FalHub(join(deps.appDataDir, 'fal-catalog.json'));
     this.catalog = new CombinedCatalog(() => this.fal.get());
-    this.render = deps.overrides?.render ?? new RenderService({ workDir: join(deps.appDataDir, 'render-cache'), browserExecutable: process.env.STUDIO_CHROMIUM_PATH });
+    this.render =
+      deps.overrides?.render ??
+      new RenderService({
+        workDir: join(deps.appDataDir, 'render-cache'),
+        browserExecutable: process.env.STUDIO_CHROMIUM_PATH,
+        provisionChromium: deps.runtime?.provisionChromium === true,
+      });
     this.mediaValue = deps.overrides?.media ?? null;
     this.derived = new DerivedMedia(() => this.media);
   }
 
+  /**
+   * Medien-Werkzeuge mit den gefundenen ffmpeg/ffprobe-Pfaden. Asynchrone Einstiege rufen vorher
+   * {@link ensureMediaTools} auf (berücksichtigt die Einstellung `ffmpegPath`); ohne das gilt die Suche ohne Einstellung.
+   */
   private get media(): MediaToolkit {
-    this.mediaValue ??= defaultMediaToolkit();
+    this.mediaValue ??= this.toolkitFor(this.mediaLocation ?? this.locateMediaTools(undefined));
     return this.mediaValue;
+  }
+
+  private locateMediaTools(settingsPath: string | undefined): FfmpegLocation {
+    const o = this.deps.overrides;
+    return locateFfmpeg({
+      platform: o?.platform ?? process.platform,
+      env: o?.env ?? process.env,
+      homedir: o?.homedir ?? homedir(),
+      settingsPath,
+      bundledDir: this.deps.runtime?.bundledFfmpegDir,
+      isExecutable: o?.isExecutable,
+    });
+  }
+
+  private toolkitFor(location: FfmpegLocation): MediaToolkit {
+    // Nicht gefunden: Programmnamen behalten – der Aufruf scheitert dann mit der Meldung aus @studio/media.
+    return new MediaToolkit({ ffmpegPath: location.ffmpeg ?? 'ffmpeg', ffprobePath: location.ffprobe ?? 'ffprobe' });
+  }
+
+  /** ffmpeg/ffprobe suchen (einmal je Einstellungsstand) und die Werkzeuge darauf einstellen. */
+  private async ensureMediaTools(): Promise<FfmpegLocation> {
+    if (this.mediaLocation) return this.mediaLocation;
+    const settings = await this.settings.get();
+    const location = this.locateMediaTools(settings.ffmpegPath);
+    if (location.message) console.warn(`[media] ${location.message.replace(/\*\*/g, '')}`);
+    this.mediaLocation = location;
+    if (!this.deps.overrides?.media) this.mediaValue = this.toolkitFor(location);
+    return location;
+  }
+
+  /** Status für Einstellungen/Systemprüfung (ohne die internen Warnungen). */
+  async mediaToolsStatus(): Promise<MediaToolsStatus> {
+    const { ffmpeg, ffprobe, source, message } = await this.ensureMediaTools();
+    return { ffmpeg, ffprobe, source, message };
+  }
+
+  /** Einmal je Projekt ein Systemhinweis, wenn ffmpeg/ffprobe fehlen (mit Installationsbefehl). */
+  private async noticeMissingMediaTools(open: OpenProject): Promise<void> {
+    if (this.deps.overrides?.media) return;
+    const location = await this.ensureMediaTools();
+    if (location.ffmpeg && location.ffprobe) return;
+    if (location.message) await this.postNotice(open, location.message, { once: true });
   }
 
   private ensureSecrets(): Promise<void> {
@@ -175,6 +238,10 @@ export class StudioBackend implements StudioApi {
 
   async updateSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
     const next = await this.settings.update(patch);
+    if (patch && typeof patch === 'object' && 'ffmpegPath' in patch) {
+      this.mediaLocation = null;
+      this.mediaValue = this.deps.overrides?.media ?? null;
+    }
     if ('preferredRuntime' in patch || 'allowClaudeSubscription' in patch) await this.resetSessions();
     return next;
   }
@@ -204,6 +271,7 @@ export class StudioBackend implements StudioApi {
       active: result.active,
       falConfigured: this.fal.hasKey,
       anthropic: { apiKey: !!anthropicApiKey?.trim(), oauthProfile: hasAnthropicProfile },
+      media: await this.mediaToolsStatus(),
     };
   }
 
@@ -243,6 +311,7 @@ export class StudioBackend implements StudioApi {
     });
     const open = this.register(store);
     await this.touchRecent(open);
+    await this.noticeMissingMediaTools(open).catch(() => undefined);
     return this.snapshot(open);
   }
 
@@ -256,6 +325,7 @@ export class StudioBackend implements StudioApi {
     const open = this.register(store);
     // Übersprungene Journalzeilen u. Ä. stehen als Systemhinweis im Panel (und damit schon im Snapshot).
     await warnings.attach(open);
+    await this.noticeMissingMediaTools(open).catch(() => undefined);
     await this.touchRecent(open);
     // Absturz-Wiederaufnahme laufender Generierungen (braucht fal-Key und eine Session).
     void this.resumeGenerations(open);
@@ -381,6 +451,7 @@ export class StudioBackend implements StudioApi {
 
   private async createSession(open: OpenProject, runtime: DirectorRuntimeId): Promise<DirectorSession> {
     await this.fal.ready();
+    await this.ensureMediaTools();
     const { store } = open;
     const skills = this.deps.overrides?.skillsDir ? SkillLibrary.fromDirectory(this.deps.overrides.skillsDir) : process.env.STUDIO_SKILLS_DIR ? SkillLibrary.fromDirectory(process.env.STUDIO_SKILLS_DIR) : undefined;
     const common = {
@@ -510,6 +581,7 @@ export class StudioBackend implements StudioApi {
 
   async importFiles(projectId: string, paths: string[], mode: 'link' | 'import'): Promise<Asset[]> {
     const open = this.project(projectId);
+    await this.ensureMediaTools();
     const out: Asset[] = [];
     for (const path of paths) {
       let asset = await open.store.importFile(path, mode, { title: basename(path) });
@@ -692,6 +764,7 @@ export class StudioBackend implements StudioApi {
 
   async exportProject(projectId: string, options: ExportOptions): Promise<{ path: string }> {
     const open = this.project(projectId);
+    await this.ensureMediaTools();
     const missing = new Map<string, MediaErrorInfo>();
     try {
       return await runExport(open.store, options, {

@@ -78,18 +78,21 @@ export async function exportProject(store: ProjectStore, options: ExportOptions,
           return { path: out };
         }
         if (target === 'pdf') {
+          await deps.render.ensureChromium();
           const result = await mod.renderDeck(doc, { assetUrl, outDir: work, formats: ['pdf'] });
           if (!result.pdf) throw new Error('PDF konnte nicht erzeugt werden');
           await copyFile(result.pdf, out);
           return { path: out };
         }
         const folder = join(outDir, base);
+        await deps.render.ensureChromium();
         await mod.renderDeck(doc, { assetUrl, outDir: folder, formats: ['png'] });
         return { path: folder };
       }
       case 'canvas': {
         assertTarget(target, 'canvas');
         const mod = await deps.render.load();
+        if (target !== 'svg') await deps.render.ensureChromium();
         await mod.renderCanvas(doc, { assetUrl: (id) => assetFileUrl(store, id), out, format: target as 'png' | 'jpeg' | 'pdf' | 'svg' });
         return { path: out };
       }

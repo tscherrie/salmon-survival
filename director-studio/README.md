@@ -7,6 +7,61 @@ Du zeigst auf Stellen, sprichst oder schreibst, und der Director führt aus.
 Planung und Architektur stehen in [`../docs/director-studio/PLAN.md`](../docs/director-studio/PLAN.md), der
 Director-Systemprompt in [`../docs/director-studio/DIRECTOR_SYSTEM_PROMPT.md`](../docs/director-studio/DIRECTOR_SYSTEM_PROMPT.md).
 
+## Als App installieren (macOS / Windows)
+
+Ein Befehl baut die App auf deinem Rechner und installiert sie. Derselbe Befehl mit `--update` (bzw. `-Update`)
+holt den neuesten Stand und ersetzt die installierte App; Einstellungen, Keys und Projekte bleiben erhalten.
+
+**Voraussetzungen:** git, Node.js ≥ 22.13 und ffmpeg.
+macOS: `xcode-select --install` (git), `brew install node ffmpeg`. Windows: `winget install Git.Git OpenJS.NodeJS.LTS Gyan.FFmpeg`.
+Die Skripte prüfen das vorher und nennen fehlende Befehle; Homebrew installieren sie nicht.
+
+**macOS** (Apple Silicon oder Intel, gebaut wird für die Architektur des Macs):
+
+```bash
+git clone https://github.com/tscherrie/salmon-survival.git && cd salmon-survival
+git checkout claude/zealous-faraday-yswfo1
+bash director-studio/scripts/install-mac.sh            # Update: … install-mac.sh --update
+```
+
+Die App landet in `/Applications/Director Studio.app` (ohne Schreibrechte dort in `~/Applications`). Start über
+Launchpad, Spotlight oder `open -a "Director Studio"`.
+
+**Windows** (PowerShell):
+
+```powershell
+git clone https://github.com/tscherrie/salmon-survival.git; cd salmon-survival
+git checkout claude/zealous-faraday-yswfo1
+powershell -ExecutionPolicy Bypass -File director-studio\scripts\install-win.ps1   # Update: … -Update
+```
+
+Die App landet in `%LOCALAPPDATA%\Programs\Director Studio` mit Startmenü-Eintrag (`-DesktopShortcut` legt
+zusätzlich eine Desktop-Verknüpfung an). Mit `-Installer` entsteht stattdessen ein NSIS-Installer
+(`apps\desktop\release\Director-Studio-Setup-*.exe`), den das Skript für den aktuellen Benutzer ausführt.
+
+**Keys:** Die App fragt beim ersten Start in den **Einstellungen** nach dem Anthropic-API-Key (oder nutzt
+`ant auth login`) und dem fal-Key. Sie speichert die Keys verschlüsselt im Datenordner, den Schlüssel dazu verwahrt
+der Schlüsselbund des Betriebssystems (macOS-Schlüsselbund bzw. Windows-DPAPI). Keys gehören nie in `.env`-Dateien,
+Umgebungsvariablen oder Skripte; die Installationsskripte fragen keine ab.
+
+**Wo liegt was:** Daten unter `~/Library/Application Support/Director Studio` bzw. `%APPDATA%\Director Studio`
+(Einstellungen, verschlüsselte Keys, Caches). Beim ersten Rendern lädt die App einmalig die Chromium-Headless-Shell
+von Remotion (ca. 100 MB) nach `runtime/` in diesen Ordner. Projekte liegen unter `Dokumente/Director Studio`.
+ffmpeg sucht die App selbst (Einstellung `ffmpegPath`, `FFMPEG_PATH`, Homebrew, winget/Chocolatey/Scoop, `PATH`);
+fehlt es, steht ein Hinweis mit dem Installationsbefehl im Projekt und unter **Hilfe → Systemprüfung**.
+
+**Gatekeeper (macOS):** Lokal gebaute Apps sind ad hoc signiert und ohne Quarantäne-Markierung, sie starten
+normal. Nach einem Update fragt macOS eventuell einmal nach dem Zugriff auf „Director Studio Safe Storage“ und
+erneut nach dem Mikrofon; „Immer erlauben“ bzw. „OK“ wählen (die lokale Signatur ändert sich mit jedem Build). Eine
+auf einen anderen Mac kopierte App blockiert Gatekeeper („nicht verifizierter Entwickler“): Rechtsklick → Öffnen,
+oder `xattr -dr com.apple.quarantine "/Applications/Director Studio.app"`. Für die Weitergabe signiert
+`npm run dist:mac` mit einer Developer ID, wenn `CSC_LINK`/`CSC_KEY_PASSWORD` (oder `CSC_NAME`) gesetzt sind, und
+notarisiert mit `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`.
+
+**SmartScreen (Windows):** Der Installer ist unsigniert. Auf dem Rechner, auf dem er gebaut wurde, startet er
+ohne Rückfrage. Heruntergeladen oder kopiert warnt SmartScreen („Der Computer wurde durch Windows geschützt“):
+„Weitere Informationen“ → „Trotzdem ausführen“. Signieren lässt er sich mit `CSC_LINK`/`CSC_KEY_PASSWORD`.
+
 ## Selbst ausprobieren
 
 ### Voraussetzungen
@@ -75,6 +130,18 @@ danach folgen Checkpoints mit Budgetfreigabe. Projekte liegen als Ordner `*.dstu
 | `npm run test:e2e` | Oberfläche im Browser (Playwright, Fake-Backend) |
 | `npm run test:electron` | Smoke-Test der echten Electron-App (unter Linux: `xvfb-run -a npm run test:electron`) |
 | `npm run build` | Main/Preload (esbuild) und Oberfläche (Vite) nach `apps/desktop/out` |
+| `npm run dist` | Installer für diese Plattform (macOS `.dmg`, Windows NSIS-`.exe`) nach `apps/desktop/release` |
+| `npm run dist:dir` | Nur die entpackte App (`release/mac-arm64/Director Studio.app`, `release/win-unpacked` …) |
+| `npm run dist:mac`, `npm run dist:win` | Wie `dist`, mit ausdrücklicher Plattform (muss die des Build-Rechners sein) |
+| `npm run test:packaged` | Smoke-Test der gepackten App inkl. echtem Video-/PDF-Export (`xvfb-run -a` unter Linux) |
+
+**Paketierung:** `dist` baut, stellt die App in `apps/desktop/dist/stage` zusammen (`scripts/stage-app.mjs`) und
+ruft electron-builder auf. Die App selbst (Main, Preload, Oberfläche) liegt im `app.asar`; die Laufzeitpakete
+(externe Importe des Main-Bündels laut esbuild-Metafile samt Abhängigkeiten, in den Lockfile-Versionen, nur mit den
+nativen Binaries des Build-Rechners) liegen daneben in `resources/node_modules`, zusammen mit den Quellen von
+`@studio/render` und `@studio/core`, die Remotion zur Laufzeit bündelt. Danach prüft `scripts/verify-app.mjs` mit
+dem gepackten Electron, dass sich jeder externe Import aus der App heraus auflösen und laden lässt und die nativen
+Helfer starten. Deshalb gilt: Mac-App auf dem Mac bauen, Windows-App unter Windows.
 
 ### Struktur
 
@@ -97,9 +164,11 @@ danach folgen Checkpoints mit Budgetfreigabe. Projekte liegen als Ordner `*.dstu
 | `STUDIO_USER_DATA` | eigener App-Datenordner (Tests, mehrere Profile) |
 | `STUDIO_SKILLS_DIR` | Director-Skills aus einem anderen Ordner laden |
 | `STUDIO_RENDERER_URL` | Oberfläche von einem Dev-Server laden |
+| `STUDIO_PACKAGED_APP` | Pfad zum Binary der gepackten App für `npm run test:packaged` |
 
 ### Noch offen
 
-- Installer (`.dmg`/`.exe`) mit Signierung/Notarisierung (Konfiguration liegt in `apps/desktop/electron-builder.yml`)
+- Signierung mit Developer ID/Zertifikat und Notarisierung ausprobieren (vorbereitet über `CSC_LINK`, `APPLE_ID` …),
+  App-Icon, eigene ffmpeg-Builds unter `apps/desktop/vendor/ffmpeg/<os>-<arch>` (optional, siehe electron-builder.yml)
 - Tests gegen die echten Dienste (fal, Anthropic) mit Netzwerkfreigabe
 - Lizenzfragen vor einer Weitergabe: Remotion (Firmenlizenz/„Automators“), ffmpeg-Build, Codec-Patente

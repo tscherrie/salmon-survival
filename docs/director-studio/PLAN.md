@@ -554,8 +554,12 @@ mit Seed) → Basis ausblenden oder mischen → QA per Stills.
 3. **Desktop-App:** UI-Komponenten, IPC, Utility-Prozesse, Einstellungen (Keys/Anmeldung).
 4. **E2E und Härtung**, danach groß angelegte Tests mit echten Keys (fal/Anthropic) in einer Umgebung mit
    Netzwerkfreigabe.
-5. **Später:** Mehrnutzer (Sync/Teams), Signierung/Notarisierung, Auto-Update, lokale ML-Option (Apple Silicon /
-   NVIDIA), Deploy-Integrationen.
+5. **Installierbare App:** `npm run dist`/`dist:dir` (electron-builder, Staging mit den Laufzeitpaketen außerhalb
+   des asar, Vollständigkeitsprüfung mit dem gepackten Electron), Installationsskripte für macOS (ad hoc signiert,
+   Hardened Runtime) und Windows (NSIS bzw. Kopie mit Startmenü-Eintrag), ffmpeg-Suche im Hauptprozess. Siehe
+   `director-studio/README.md`, Abschnitt „Als App installieren“.
+6. **Später:** Mehrnutzer (Sync/Teams), Signierung mit Developer ID/Zertifikat und Notarisierung (über `CSC_LINK`,
+   `APPLE_ID` … vorbereitet), Auto-Update, lokale ML-Option (Apple Silicon / NVIDIA), Deploy-Integrationen.
 
 ## 19a. Ergebnisse der Desktop-Recherche (übernommen)
 
@@ -569,7 +573,9 @@ mit Seed) → Basis ausblenden oder mischen → QA per Stills.
   Mit `X-Fal-Store-IO: 0` speichert fal keine Payloads, dazu kommen Lifecycle-Header. Preise kommen aus
   `/v1/models/pricing`, Schätzungen aus `/estimate`.
 - **Render-Pipeline:** Remotion rendert **nur das Bild** (stumm), ffmpeg mischt das Audio (Ducking, Fades,
-  Lautheit) und muxt am Ende. Die Headless-Shell wird auf Electrons Chromium gepinnt.
+  Lautheit) und muxt am Ende. Die Headless-Shell wird auf Electrons Chromium gepinnt. (Stand der gepackten App:
+  Remotions getestete Headless-Shell, beim ersten Rendern in den Datenordner geladen und auch für Playwright genutzt;
+  siehe `RenderService.ensureChromium`.)
 - **Lizenzen vor Distribution klären:** Das ffmpeg im Remotion-Compositor ist mit GPL und fdk-aac gebaut. Für
   Prompt-to-Video-Apps gilt das Remotion-„Automators“-Modell. Codec-Patente lassen sich über OS-Encoder
   umgehen (VideoToolbox, Media Foundation). HyperFrames (Apache-2.0) ist als Ausweichoption zu beobachten.

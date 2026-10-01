@@ -54,6 +54,21 @@ export interface AuthStatus {
   falConfigured: boolean;
   /** Anthropic-Anmeldung: API-Key hinterlegt bzw. OAuth-Profil (Claude-Abo) gefunden. */
   anthropic: { apiKey: boolean; oauthProfile: boolean };
+  /** Lokale Werkzeuge für Medien (fehlt bei älteren Backends). */
+  media?: MediaToolsStatus | undefined;
+}
+
+/** Herkunft eines gefundenen ffmpeg: Einstellung, Umgebungsvariable, mit der App geliefert, bekannter Installationsort oder PATH. */
+export type MediaToolSource = 'settings' | 'env' | 'bundled' | 'system' | 'path';
+
+/** Ergebnis der ffmpeg/ffprobe-Suche im Hauptprozess. */
+export interface MediaToolsStatus {
+  /** Absoluter Pfad zu ffmpeg bzw. `null`, wenn keins gefunden wurde. */
+  ffmpeg: string | null;
+  ffprobe: string | null;
+  source: MediaToolSource | null;
+  /** Deutscher Hinweis mit Installationsbefehl, wenn etwas fehlt; sonst `null`. */
+  message: string | null;
 }
 
 export interface AppSettings {
@@ -69,6 +84,8 @@ export interface AppSettings {
    * kommen aus `DEFAULT_PICKERS`. Zusammenführen mit `initialPickers()`.
    */
   defaultPickers?: PickerState | undefined;
+  /** Eigener Pfad zu ffmpeg (ffprobe wird daneben gesucht); leer = automatisch suchen. */
+  ffmpegPath?: string | undefined;
 }
 
 export interface CreateProjectInput {

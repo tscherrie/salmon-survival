@@ -1,11 +1,15 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, safeStorage, shell, type IpcMainInvokeEvent } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, safeStorage, screen, shell, type IpcMainInvokeEvent } from 'electron';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { StudioEvent } from '@studio/core';
 import { PICKER_SCRIPT } from '@studio/render/browser';
+import { prepareRuntimeDir, systemCheckText } from './app-env.ts';
 import { ASSET_SCHEME, createAssetHandler } from './asset-protocol.ts';
 import { StudioBackend } from './backend.ts';
+import { extendGuiPath } from './ffmpeg.ts';
 import { channelFor, EVENT_CHANNEL, GESTURE_METHODS, STUDIO_METHODS, type IpcErrorPayload } from './ipc-contract.ts';
+import { buildMenuTemplate } from './menu.ts';
 import { PreviewController } from './preview.ts';
 import { GestureGate, isAllowedAppSubframeUrl, isAppUrl, safeExternalUrl } from './security.ts';
 
@@ -21,8 +25,25 @@ const devUrl = process.env.STUDIO_RENDERER_URL;
 /** Einstieg der App. Das Hauptfenster darf nichts anderes laden (Navigationssperre, IPC-Absenderprüfung). */
 const appUrl = devUrl ?? pathToFileURL(rendererEntry).href;
 
+const APP_NAME = 'Director Studio';
+/** Fenstergrößen laut DESIGN.md §2.3 (empfohlenes Minimum 1180 × 720). */
+const WINDOW = { width: 1600, height: 1000, minWidth: 1180, minHeight: 720 };
+
 // Isolierter Datenordner (Tests, mehrere Profile).
 if (process.env.STUDIO_USER_DATA) app.setPath('userData', process.env.STUDIO_USER_DATA);
+
+// Aus Finder/Dock gestartet fehlen unter macOS die Homebrew-Ordner im PATH (ffmpeg, git …).
+const guiPath = extendGuiPath(process.platform, process.env.PATH);
+if (guiPath !== undefined) process.env.PATH = guiPath;
+
+// Ausgelieferte App: beschreibbarer Arbeitsordner (Remotion lädt seine Headless-Shell relativ dazu).
+if (app.isPackaged) {
+  try {
+    process.chdir(prepareRuntimeDir(app.getPath('userData')));
+  } catch (error) {
+    console.warn('Arbeitsordner konnte nicht vorbereitet werden:', error);
+  }
+}
 
 protocol.registerSchemesAsPrivileged([
   { scheme: ASSET_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true } },
@@ -46,14 +67,16 @@ async function openExternalSafely(raw: string): Promise<void> {
 }
 
 async function createWindow(): Promise<void> {
+  // Auf kleineren Bildschirmen (z. B. 13-Zoll-MacBook) passt sich die Startgröße dem Arbeitsbereich an.
+  const area = screen.getPrimaryDisplay().workAreaSize;
   const win = new BrowserWindow({
-    width: 1600,
-    height: 1000,
-    minWidth: 1280,
-    minHeight: 800,
+    width: Math.max(WINDOW.minWidth, Math.min(WINDOW.width, area.width)),
+    height: Math.max(WINDOW.minHeight, Math.min(WINDOW.height, area.height)),
+    minWidth: WINDOW.minWidth,
+    minHeight: WINDOW.minHeight,
     show: false,
     backgroundColor: '#111214',
-    title: 'Director Studio',
+    title: APP_NAME,
     webPreferences: {
       preload: join(here, '../preload/index.cjs'),
       contextIsolation: true,
@@ -167,23 +190,52 @@ async function main(): Promise<void> {
     },
     preview,
     emit: broadcast,
+    runtime: {
+      // Mitgelieferte ffmpeg/ffprobe (extraResources, optional) und Chromium-Bereitstellung nur in der gepackten App.
+      bundledFfmpegDir: app.isPackaged ? join(process.resourcesPath, 'ffmpeg') : undefined,
+      provisionChromium: app.isPackaged,
+    },
   });
   protocol.handle(ASSET_SCHEME, createAssetHandler((projectId, assetId, variant) => backend!.resolveAssetFile(projectId, assetId, variant)));
   registerIpc(backend);
-  Menu.setApplicationMenu(buildMenu());
+  app.setAboutPanelOptions({ applicationName: APP_NAME, applicationVersion: app.getVersion() });
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate(
+      buildMenuTemplate({
+        platform: process.platform,
+        isDev: !app.isPackaged,
+        appName: APP_NAME,
+        actions: {
+          openDataFolder: () => void shell.openPath(app.getPath('userData')),
+          openProjectsFolder: () => void openProjectsFolder().catch((error) => console.error('Projektordner:', error)),
+          showSystemCheck: () => void showSystemCheck().catch((error) => console.error('Systemprüfung:', error)),
+        },
+      }),
+    ),
+  );
   await createWindow();
   if (isSmokeTest) console.log('STUDIO_SMOKE_READY');
 }
 
-function buildMenu(): Menu {
-  const isMac = process.platform === 'darwin';
-  return Menu.buildFromTemplate([
-    ...(isMac ? [{ role: 'appMenu' as const }] : []),
-    { role: 'fileMenu' },
-    { role: 'editMenu' },
-    { role: 'viewMenu' },
-    { role: 'windowMenu' },
-  ]);
+async function openProjectsFolder(): Promise<void> {
+  if (!backend) return;
+  const { projectsDir } = await backend.getSettings();
+  await mkdir(projectsDir, { recursive: true });
+  await shell.openPath(projectsDir);
+}
+
+/** Hilfe → Systemprüfung: gefundene Werkzeuge, Chromium und Datenordner. */
+async function showSystemCheck(): Promise<void> {
+  if (!backend) return;
+  const text = systemCheckText({
+    media: await backend.mediaToolsStatus(),
+    chromium: process.env.STUDIO_CHROMIUM_PATH ?? null,
+    provisionChromium: app.isPackaged,
+    userData: app.getPath('userData'),
+  });
+  const options = { type: text.ok ? ('info' as const) : ('warning' as const), title: 'Systemprüfung', message: text.message, detail: text.detail, buttons: ['OK'] };
+  if (mainWindow && !mainWindow.isDestroyed()) await dialog.showMessageBox(mainWindow, options);
+  else await dialog.showMessageBox(options);
 }
 
 function focusMainWindow(): void {
