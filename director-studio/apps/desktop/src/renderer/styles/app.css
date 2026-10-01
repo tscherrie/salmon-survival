@@ -7022,8 +7022,9 @@ button.step-btn:hover {
 }
 
 /*
- * Toasts (§7.11): im Arbeitsbereich unten links über der Bühne (`--toast-x` setzt Workspace.tsx aus --side-l), damit
- * Monitor und Senden frei bleiben; auf dem Startbildschirm unten rechts. Icon in der Bedeutungsfarbe.
+ * Toasts (§7.11): im Arbeitsbereich unten links in der Mittelzone, 16 px über der Bühne (`--toast-x`/`--toast-y` setzt
+ * Workspace.tsx aus --side-l und der Bühnenhöhe), damit Monitor und Senden frei bleiben; auf dem Startbildschirm unten
+ * rechts. Icon in der Bedeutungsfarbe.
  */
 .toasts {
   position: fixed;
@@ -7038,6 +7039,7 @@ button.step-btn:hover {
 }
 .toasts.is-workspace {
   right: auto;
+  bottom: var(--toast-y, 16px);
   left: var(--toast-x, 16px);
 }
 .toasts:not(.is-workspace) {
