@@ -57,9 +57,13 @@ export function electronFuses({ testFuses = false } = {}) {
   };
 }
 
-/** macOS-Signierung: ad hoc (lokal) oder mit Developer ID; jeweils mit den passenden Entitlements. */
+/**
+ * macOS-Signierung: ad hoc (lokal) oder mit Developer ID; jeweils mit den passenden Entitlements. Absolute Pfade:
+ * Programmatisch übergeben reicht electron-builder sie unverändert an codesign weiter, und das läuft im
+ * Arbeitsordner des Aufrufers (install-mac.sh startet dist.mjs aus director-studio/, nicht aus apps/desktop/).
+ */
 export function macSigningConfig({ hasDeveloperId }) {
-  const entitlements = hasDeveloperId ? 'build/entitlements.mac.plist' : 'build/entitlements.mac.adhoc.plist';
+  const entitlements = path.join(APP_DIR, 'build', hasDeveloperId ? 'entitlements.mac.plist' : 'entitlements.mac.adhoc.plist');
   return {
     ...(hasDeveloperId ? {} : { identity: '-', notarize: false }),
     entitlements,

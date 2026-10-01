@@ -69,8 +69,10 @@ describe('electron-builder.yml', () => {
 
   it('macOS ad hoc: zusätzlich nur disable-library-validation (keine Team-ID), nie DYLD-Variablen oder unsignierter Speicher', async () => {
     const adhoc = macSigningConfig({ hasDeveloperId: false });
-    expect(adhoc).toMatchObject({ identity: '-', notarize: false, entitlements: 'build/entitlements.mac.adhoc.plist', entitlementsInherit: 'build/entitlements.mac.adhoc.plist' });
-    expect(entitlementKeys(await readFile(join(appDir, adhoc.entitlements), 'utf8'))).toEqual([
+    // Absolute Pfade: codesign läuft im Arbeitsordner des Aufrufers (install-mac.sh: director-studio/).
+    const adhocPlist = join(appDir, 'build', 'entitlements.mac.adhoc.plist');
+    expect(adhoc).toMatchObject({ identity: '-', notarize: false, entitlements: adhocPlist, entitlementsInherit: adhocPlist });
+    expect(entitlementKeys(await readFile(adhoc.entitlements, 'utf8'))).toEqual([
       'com.apple.security.cs.allow-jit',
       'com.apple.security.cs.disable-library-validation',
       'com.apple.security.device.audio-input',
@@ -78,7 +80,7 @@ describe('electron-builder.yml', () => {
     ]);
     const developerId = macSigningConfig({ hasDeveloperId: true });
     expect(developerId.identity).toBeUndefined();
-    expect(developerId.entitlements).toBe('build/entitlements.mac.plist');
+    expect(developerId.entitlements).toBe(join(appDir, 'build', 'entitlements.mac.plist'));
     // install-mac.sh signiert notfalls mit derselben Datei nach.
     expect(await readFile(join(appDir, '..', '..', 'scripts', 'install-mac.sh'), 'utf8')).toContain('build/entitlements.mac.adhoc.plist');
   });
