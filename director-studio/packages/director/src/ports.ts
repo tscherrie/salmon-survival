@@ -70,8 +70,12 @@ export interface MediaOutput {
 
 /** Implementiert von `@studio/fal` (Queue-Runner + Storage). */
 export interface GenerationPort {
-  /** Reicht ein, pollt bis zum Ende und liefert die Ausgabe. Abbruch über `signal` (fal cancel). */
-  run(endpointId: string, input: Record<string, unknown>, opts: GenerationRunOptions): Promise<{ output: unknown }>;
+  /**
+   * Reicht ein, pollt bis zum Ende und liefert die Ausgabe. Abbruch über `signal` (fal cancel).
+   * `billableUnits` (Header `x-fal-billable-units`, falls geliefert) ergibt mit dem Einheitspreis die
+   * exakten Ist-Kosten; sonst wird die Schätzung gebucht.
+   */
+  run(endpointId: string, input: Record<string, unknown>, opts: GenerationRunOptions): Promise<{ output: unknown; billableUnits?: number }>;
   /**
    * Optional: setzt das Polling einer bereits eingereichten Anfrage fort (Absturz-Wiederaufnahme).
    * `statusUrl`/`responseUrl`/`cancelUrl` fehlen evtl. bei alten Journal-Einträgen.
@@ -91,7 +95,7 @@ export interface GenerationPort {
 export interface MediaPort {
   probe(path: string): Promise<unknown>;
   extractFrames(src: string, timesSec: number[], outDir: string, opts?: { width?: number; format?: 'png' | 'jpg' }): Promise<unknown>;
-  contactSheet(src: string, out: string, opts: { count?: number; columns?: number; width?: number }): Promise<unknown>;
+  contactSheet(src: string, out: string, opts: { count?: number; columns?: number; width?: number; tileWidth?: number; labels?: boolean }): Promise<unknown>;
   cutAudio(src: string, out: string, range: { fromSec: number; toSec: number; handlesSec: number }): Promise<unknown>;
   detectBeats(src: string): Promise<unknown>;
   loudness(src: string): Promise<unknown>;

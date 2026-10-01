@@ -171,6 +171,19 @@ describe('generate – Journal, Upload, Ingest', () => {
     expect(assets[0]!.kind).toBe('image');
   });
 
+  it('bucht exakte Ist-Kosten aus abgerechneten Einheiten', async () => {
+    await approveBudget(5);
+    env.generation.billableUnits = 7;
+    await generateTool.run({ endpointId: 'minimax/h3-max/text-to-video', input: { prompt: 'x', duration: 10 }, purpose: 'T', wait: true }, env.ctx);
+    const gen = project.listGenerations()[0]!;
+    expect(gen.estimateUsd).toBeCloseTo(1.6);
+    expect(gen.costUsd).toBeCloseTo(1.12);
+    const actual = project.ledgerEntries().find((e) => e.refId === gen.id && e.kind === 'actual')!;
+    expect(actual.amountUsd).toBeCloseTo(1.12);
+    expect(actual.note).toContain('7 Einheiten');
+    expect(project.getAsset(gen.outputAssetIds[0]!)!.costUsd).toBeCloseTo(1.12);
+  });
+
   it('gibt die Reservierung bei Fehlschlag frei', async () => {
     await approveBudget(5);
     env.generation.failWith = new Error('fal: 500');

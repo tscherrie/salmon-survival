@@ -3,7 +3,7 @@ import { useStore } from 'zustand';
 import type { RefLabelContext, StudioApi, StudioDocument } from '@studio/core';
 import { apiModeOf, type ApiMode } from '../api.ts';
 import { labelContextFor } from '../lib/labels.ts';
-import type { StudioState, StudioStore } from './store.ts';
+import type { StudioActions, StudioState, StudioStore } from './store.ts';
 
 const StoreContext = createContext<StudioStore | null>(null);
 const ApiContext = createContext<{ api: StudioApi; mode: ApiMode } | null>(null);
@@ -28,9 +28,13 @@ export function useStudio<T>(selector: (state: StudioState) => T): T {
   return useStore(useStudioStore(), selector);
 }
 
-/** Aktionen sind stabil (Teil des Store-Objekts) – kein Abo nötig. */
-export function useActions(): StudioState {
-  return useStudioStore().getState();
+/**
+ * Aktionen des Stores – eine stabile Referenz (sicher in Effekt-Abhängigkeiten).
+ * Bewusst nur als `StudioActions` typisiert: Daten immer über `useStudio`/`getState()` lesen.
+ */
+export function useActions(): StudioActions {
+  const store = useStudioStore();
+  return useMemo(() => store.getState(), [store]);
 }
 
 export function useApi(): StudioApi {

@@ -37,7 +37,7 @@ export async function assetPreviewImage(
     const dir = await derivedDir(deps.project, asset.id);
     if (options.video === 'contact') {
       const out = join(dir, 'contact-sheet.jpg');
-      const result = pathOf(await deps.media.contactSheet(path, out, { count: 12, columns: 4, width: PREVIEW_WIDTH })) ?? out;
+      const result = pathOf(await deps.media.contactSheet(path, out, { count: 12, columns: 4, width: PREVIEW_WIDTH, tileWidth: Math.round(PREVIEW_WIDTH / 4), labels: true })) ?? out;
       return readImageBlock(result);
     }
     const durationSec = asset.durationMs ? asset.durationMs / 1000 : undefined;

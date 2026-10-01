@@ -114,7 +114,13 @@ export class DirectorLoop implements DirectorRuntime {
 
     try {
       if (this.options.compaction && !transport.caps.serverCompaction && estimateTokens(this.messages) > this.options.compaction.thresholdTokens) {
-        costUsd += await this.compact(runId, signal);
+        try {
+          costUsd += await this.compact(runId, signal);
+        } catch (e) {
+          if (isAbortError(e) || signal.aborted) throw e;
+          // Ohne Kompaktierung weiterarbeiten statt den Turn zu verlieren.
+          this.emit({ type: 'progress', text: `Kompaktierung fehlgeschlagen (${errorMessage(e)}) – fahre ohne fort.` });
+        }
       }
       await this.appendUserTurn(input);
 

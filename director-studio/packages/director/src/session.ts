@@ -22,7 +22,7 @@ import type { DirectorRuntime, LoopEvent, RuntimeSetup, TurnResult, UserContent 
 import { defaultSkillLibrary, SkillLibrary } from './skills.ts';
 import { buildDirectorTools, GenerationManager, type AnyDirectorTool, type SubagentRunner, type ToolContext } from './tools/index.ts';
 import { MemoryTranscriptStore, projectTranscriptStore } from './transcript.ts';
-import type { CanonicalBlock, ModelTransport } from './transports/types.ts';
+import type { CanonicalBlock, ModelTransport, TransportCaps } from './transports/types.ts';
 import { errorMessage } from './util.ts';
 
 export interface DirectorSessionOptions {
@@ -84,6 +84,7 @@ export class DirectorSession {
   private readonly sessionUi: UiPort;
   private readonly activities = new Map<string, ToolActivity>();
   private streamMessageId: string | null = null;
+  private projectIdValue: string | undefined;
 
   constructor(private readonly deps: DirectorSessionDeps) {
     this.clock = deps.clock ?? systemClock;
@@ -112,6 +113,7 @@ export class DirectorSession {
       project: deps.project,
       generation: deps.generation,
       media: deps.media,
+      catalog: deps.catalog,
       emit: (event) => deps.ui.emit(event),
       projectId: this.projectId,
       clock: this.clock,
@@ -120,7 +122,8 @@ export class DirectorSession {
   }
 
   get projectId(): string {
-    return this.deps.project.manifest.id;
+    this.projectIdValue ??= this.deps.project.manifest.id;
+    return this.projectIdValue;
   }
 
   get state(): RunState {
@@ -129,6 +132,11 @@ export class DirectorSession {
 
   get currentRunId(): string | null {
     return this.runId;
+  }
+
+  /** Fähigkeiten des aktiven Transports (z. B. für den Hinweis „eingeschränkte Fähigkeiten“ beim fal-Router); `null` vor dem ersten Turn bzw. bei Agent SDK. */
+  get transportCaps(): TransportCaps | null {
+    return this.transport?.caps ?? null;
   }
 
   /** Persistiert die Nutzernachricht sofort und führt den Turn aus (eingereiht, falls einer läuft). */

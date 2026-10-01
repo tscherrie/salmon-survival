@@ -3,7 +3,7 @@ import { assetKindFromMime, formatUsd, isTerminal, mimeFromExtension, type Asset
 import type { ProjectStore } from '@studio/project';
 import { budgetGate, emitBudget, pickerGate } from '../gates.ts';
 import { normalizeProbe } from '../normalize.ts';
-import type { Clock, GenerationPort, GenerationRunOptions, MediaOutput, MediaPort, QueueHandle } from '../ports.ts';
+import type { Clock, GenerationPort, GenerationRunOptions, MediaOutput, MediaPort, ModelCatalogPort, QueueHandle } from '../ports.ts';
 import { errorMessage, formatSec, isAbortError, projectTempDir, raceAbort, truncate } from '../util.ts';
 import { defineTool, errorResult, textResult, type ToolContext } from './registry.ts';
 
@@ -35,9 +35,11 @@ export interface GenerationManagerDeps {
   projectId: string;
   clock: Clock;
   ids: IdGenerator;
+  /** Für exakte Ist-Kosten aus `billableUnits` × Einheitspreis. */
+  catalog?: ModelCatalogPort | undefined;
 }
 
-type Runner = (opts: GenerationRunOptions) => Promise<{ output: unknown }>;
+type Runner = (opts: GenerationRunOptions) => Promise<{ output: unknown; billableUnits?: number }>;
 
 /**
  * Hintergrund-Generierungen: Journal VOR dem Absenden (Status `queued`), Reservierung im Ledger,
@@ -180,7 +182,7 @@ export class GenerationManager {
       return chain;
     };
     try {
-      const { output } = await runner({
+      const { output, billableUnits } = await runner({
         signal,
         onSubmitted: async (handle) => {
           await save({ requestId: handle.requestId, queueHandle: handle, submittedAt: clock() });
@@ -195,9 +197,15 @@ export class GenerationManager {
         },
       });
       await chain;
-      const assets = await this.ingest(current, output);
-      await project.budgetSettle(current.id, current.estimateUsd, { source: 'fal', checkpointId: current.checkpointId, note: 'Ist = Schätzung (exakte Kosten nicht gemeldet)' });
-      await save({ status: 'completed', outputAssetIds: assets.map((a) => a.id), costUsd: current.estimateUsd, finishedAt: clock(), queuePosition: undefined });
+      const exact = this.exactCost(current.endpointId, billableUnits);
+      const actualUsd = exact ?? current.estimateUsd;
+      const assets = await this.ingest(current, output, actualUsd);
+      await project.budgetSettle(current.id, actualUsd, {
+        source: 'fal',
+        checkpointId: current.checkpointId,
+        note: exact !== undefined ? `Ist laut fal: ${billableUnits} Einheiten` : 'Ist = Schätzung (exakte Kosten nicht gemeldet)',
+      });
+      await save({ status: 'completed', outputAssetIds: assets.map((a) => a.id), costUsd: actualUsd, finishedAt: clock(), queuePosition: undefined });
       await chain;
       emitBudget(project, this.deps.projectId, { emit: this.deps.emit });
       return { generation: current, assets };
@@ -212,8 +220,16 @@ export class GenerationManager {
     }
   }
 
+  /** Exakte Kosten aus abgerechneten Einheiten × Einheitspreis (nur USD-Preise). */
+  private exactCost(endpointId: string, billableUnits: number | undefined): number | undefined {
+    if (billableUnits === undefined || !Number.isFinite(billableUnits) || billableUnits < 0) return undefined;
+    const price = this.deps.catalog?.get(endpointId)?.price;
+    if (!price || price.currency !== 'USD') return undefined;
+    return billableUnits * price.unitPrice;
+  }
+
   /** Lädt alle Ausgaben herunter und registriert sie als Assets mit Lineage und Kostenanteil. */
-  private async ingest(gen: Generation, output: unknown): Promise<Asset[]> {
+  private async ingest(gen: Generation, output: unknown, costUsd: number): Promise<Asset[]> {
     const { project, generation, media } = this.deps;
     let outputs: MediaOutput[] = generation.extractMediaOutputs(output);
     if (outputs.length === 0 && output !== undefined) outputs = generation.extractMediaOutputs({ output });
@@ -233,7 +249,7 @@ export class GenerationManager {
         source: 'generated',
         modelId: gen.endpointId,
         generationId: gen.id,
-        costUsd: gen.estimateUsd,
+        costUsd,
         description: gen.purpose,
         parents,
         ...(prompt ? { prompt } : {}),
@@ -241,7 +257,7 @@ export class GenerationManager {
       this.deps.emit({ type: 'asset', projectId: this.deps.projectId, asset });
       return [asset];
     }
-    const share = outputs.length ? gen.estimateUsd / outputs.length : 0;
+    const share = outputs.length ? costUsd / outputs.length : 0;
     const tmp = await projectTempDir(project.dir, gen.id);
     for (const [i, out] of outputs.entries()) {
       const title = outputs.length > 1 ? `${baseTitle} (${i + 1}/${outputs.length})` : baseTitle;

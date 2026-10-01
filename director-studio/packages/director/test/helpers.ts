@@ -138,6 +138,8 @@ export class FakeGeneration implements GenerationPort {
   /** Wird vor dem Absenden aufgerufen, um den Journalstand zu prüfen. */
   onRun?: (endpointId: string) => string | undefined;
   failWith?: Error;
+  /** Abgerechnete Einheiten (wie `x-fal-billable-units`). */
+  billableUnits?: number;
   /** Hält den Lauf an, bis `release()` aufgerufen oder abgebrochen wird. */
   gate?: Promise<void>;
   private releaseGate?: () => void;
@@ -164,7 +166,7 @@ export class FakeGeneration implements GenerationPort {
       });
     }
     if (this.failWith) throw this.failWith;
-    return { output: this.outputs(endpointId) };
+    return { output: this.outputs(endpointId), ...(this.billableUnits !== undefined ? { billableUnits: this.billableUnits } : {}) };
   }
 
   async resume(handle: { requestId: string; endpointId: string }): Promise<{ output: unknown }> {
@@ -327,7 +329,7 @@ export function makeEnv(project: ProjectStore, overrides: Partial<ToolContext> =
   const progress: string[] = [];
   const posted: string[] = [];
   const projectId = project.manifest.id;
-  const jobs = new GenerationManager({ project, generation, media, emit: (e) => ui.emit(e), projectId, clock, ids });
+  const jobs = new GenerationManager({ project, generation, media, catalog, emit: (e) => ui.emit(e), projectId, clock, ids });
   const ctx: ToolContext = {
     project,
     catalog,

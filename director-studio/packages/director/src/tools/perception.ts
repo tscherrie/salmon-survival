@@ -96,7 +96,7 @@ export const contactSheetTool = defineTool({
       const path = assetPath(ctx, args.assetId, ['video']);
       const dir = await projectTempDir(ctx.projectDir, 'contact');
       const out = join(dir, 'contact-sheet.jpg');
-      const result = pathOf(await media.contactSheet(path, out, { count: args.count ?? 12, columns: args.columns ?? 4, width: PREVIEW_WIDTH })) ?? out;
+      const result = pathOf(await media.contactSheet(path, out, { count: args.count ?? 12, columns: args.columns ?? 4, width: PREVIEW_WIDTH, tileWidth: Math.round(PREVIEW_WIDTH / (args.columns ?? 4)), labels: true })) ?? out;
       const image = await readImageBlock(result);
       if (!image) return errorResult('Kontaktabzug konnte nicht gelesen werden.');
       return { content: [{ type: 'text', text: `Kontaktabzug ${args.assetId} (${args.count ?? 12} Frames, Zeit läuft zeilenweise):` }, image] };

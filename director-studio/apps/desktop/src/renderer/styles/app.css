@@ -1866,6 +1866,17 @@ select {
   height: 26px;
   font-size: 12px;
 }
+@media (max-width: 1560px) {
+  .select-label > span {
+    display: none;
+  }
+  .search-box {
+    width: 200px;
+  }
+  .kind-filters .filter-chip {
+    padding: 0 7px;
+  }
+}
 .assets-count {
   font-size: 11.5px;
   color: var(--text-faint);
