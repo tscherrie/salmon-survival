@@ -3,10 +3,11 @@ import { isSafeSitePath } from '@studio/core';
 import { BrowserCapabilityError } from './types.ts';
 import type { AssetMedia } from '@studio/render/browser';
 import { blobToDataUrl, fetchAsset } from './assets.ts';
+import { readRuntimeFile } from './runtime.ts';
 let initialized: Promise<void> | undefined;
 let compiler: typeof import('esbuild-wasm') | undefined;
 export async function initializeCompiler(wasmURL = '/runtime/esbuild.wasm'): Promise<void> {
-  initialized ??= (async () => { compiler ??= await import('esbuild-wasm'); const response = await fetch(new URL(wasmURL, document.baseURI), { credentials: 'omit' }); if (!response.ok) throw new Error(`Compiler ${response.status}`); const wasmModule = await WebAssembly.compile(await response.arrayBuffer()); await compiler.initialize({ wasmModule, worker: false }); })();
+  initialized ??= (async () => { compiler ??= await import('esbuild-wasm'); const response = await readRuntimeFile(wasmURL); const wasmModule = await WebAssembly.compile(new Uint8Array(response.bytes)); await compiler.initialize({ wasmModule, worker: false }); })();
   try { await initialized; } catch (error) { initialized = undefined; throw new BrowserCapabilityError('tsx-compiler', `TSX-Compiler nicht verfügbar: ${(error as Error).message}`); }
 }
 export async function compileComponentSource(source: string): Promise<string> {

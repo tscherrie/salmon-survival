@@ -11,10 +11,13 @@ export class BrowserStudioApi implements StudioApi {
   private files = new Map<string, File>();
   private objectUrls = new Set<string>();
   private assetUrls = new Map<string, string>();
+  private assetRecords = new Map<string,Asset>();
+  private assetSources = new Map<string,string>();
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
   private current: CloudSnapshot | null = null;
   private disposed = false;
   readonly missingAssets = new Map<string, string>();
+  private assetFileStates = new Map<string, { path?: string; sha256?: string; missing: boolean }>();
   private bounds: Rect | null = null;
   private jobs: BrowserJob[] = [];
   private jobListeners = new Set<() => void>();
@@ -76,6 +79,16 @@ export class BrowserStudioApi implements StudioApi {
   async openProject(path: string) { const data = await this.getSnapshot(path); this.watch(data); return data; }
   async getSnapshot(projectId: string) {
     const snapshot = await this.request<CloudSnapshot>(`/api/projects/${encodeURIComponent(projectId)}`);
+    for(const asset of snapshot.assets) {
+      const key=`${projectId}:${asset.id}`,fileState=this.assetFileStates.get(key);
+      this.assetRecords.set(key,asset);
+      const previous=this.assetSources.get(key)??(fileState?`${fileState.path??''}:${fileState.sha256??''}`:undefined);
+      if(previous!==undefined&&previous!==assetSource(asset)) {
+        const url=this.assetUrls.get(key);if(url)URL.revokeObjectURL(url);
+        this.assetUrls.delete(key);this.assetUrls.delete(`${key}:thumb`);this.assetUrls.delete(`${key}:proxy`);this.assetSources.delete(key);
+        this.assetFileStates.delete(key);this.missingAssets.delete(asset.id);
+      }
+    }
     if (this.host.getStatus().connected) await Promise.all(snapshot.assets.filter((asset) => asset.path && !this.assetUrls.has(`${projectId}:${asset.id}`)).map(async (asset) => {
       try {
         const parts:BlobPart[]=[]; let mime=asset.mime ?? 'application/octet-stream'; const chunkSize=262144;
@@ -83,20 +96,54 @@ export class BrowserStudioApi implements StudioApi {
           const data=await this.host.request<{base64:string;mime:string}>(`/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(asset.id)}?offset=${offset}&length=${chunkSize}`);
           parts.push(Uint8Array.from(atob(data.base64),(c)=>c.charCodeAt(0)));mime=data.mime;
         }
-        this.cacheAssetUrl(projectId,asset.id,new Blob(parts,{type:mime}));this.missingAssets.delete(asset.id);
-      } catch (error) { this.missingAssets.set(asset.id, error instanceof Error ? error.message : String(error)); }
+        this.cacheAssetUrl(projectId,asset,new Blob(parts,{type:mime}));this.recordAssetFileState(projectId,asset,null);
+      } catch (error) { const reason=confirmedMissingReason(error);if(reason)this.recordAssetFileState(projectId,asset,reason); }
     }));
+    snapshot.assets=snapshot.assets.map((asset)=>this.withAssetFileState(projectId,asset));
     for (const asset of snapshot.assets) {
-      const thumb = snapshot.assets.find((candidate) => candidate.path === asset.metadata?.thumbPath);
+      const thumb = typeof asset.metadata?.thumbPath==='string' ? snapshot.assets.find((candidate) => candidate.path === asset.metadata?.thumbPath && candidate.kind==='image') : undefined;
+      if(asset.kind==='video'&&!thumb)this.assetUrls.delete(`${projectId}:${asset.id}:thumb`);
       const url = thumb && this.assetUrls.get(`${projectId}:${thumb.id}`);
       if (url) this.assetUrls.set(`${projectId}:${asset.id}:thumb`,url);
     }
     this.setJobs(snapshot.jobs ?? []);
     return snapshot;
   }
-  private cacheAssetUrl(projectId: string, assetId: string, blob: Blob) {
-    const key = `${projectId}:${assetId}`; const previous = this.assetUrls.get(key); if (previous) URL.revokeObjectURL(previous);
-    const url = URL.createObjectURL(blob); this.objectUrls.add(url); this.assetUrls.set(key, url);
+  private withAssetFileState(projectId:string,asset:Asset):Asset {
+    const state=this.assetFileStates.get(`${projectId}:${asset.id}`);
+    if(!state||state.path!==asset.path||state.sha256!==asset.sha256)return asset;
+    const metadata={...asset.metadata};if(state.missing)metadata.missing=true;else delete metadata.missing;
+    return {...asset,metadata};
+  }
+  private recordAssetFileState(projectId:string,asset:Asset,reason:string|null) {
+    this.assetFileStates.set(`${projectId}:${asset.id}`,{path:asset.path,sha256:asset.sha256,missing:reason!==null});
+    if(reason)this.missingAssets.set(asset.id,reason);else this.missingAssets.delete(asset.id);
+    const current=this.current?.manifest.id===projectId?this.current.assets.find((item)=>item.id===asset.id):undefined;
+    if(current&&Boolean(current.metadata?.missing)!==(reason!==null)) {
+      const updated=this.withAssetFileState(projectId,asset);
+      this.current={...this.current!,assets:this.current!.assets.map((item)=>item.id===asset.id?updated:item)};
+      this.emit({type:'asset',projectId,asset:updated});
+    }
+  }
+  /** Confirm file availability through the owned transport; repair state stays local to this editor. */
+  async probeAssetFile(projectId:string,assetId:string):Promise<'ok'|'missing'|'unknown'> {
+    const snapshot=this.current?.manifest.id===projectId?this.current:await this.getSnapshot(projectId);
+    const asset=snapshot.assets.find((item)=>item.id===assetId);if(!asset)return 'unknown';
+    if(!asset.path){this.recordAssetFileState(projectId,asset,'Asset has no stored content.');return 'missing';}
+    if(this.host.getStatus().connected) {
+      if(this.assetUrls.has(`${projectId}:${assetId}`))return 'ok';
+      try {await this.host.request(`/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}?offset=0&length=1`);this.recordAssetFileState(projectId,asset,null);return 'ok';}
+      catch(error){const reason=confirmedMissingReason(error);if(!reason)return 'unknown';this.recordAssetFileState(projectId,asset,reason);return 'missing';}
+    }
+    try {
+      const response=await fetch(this.assetUrl(projectId,assetId),{method:'HEAD',credentials:'include',cache:'no-store',signal:AbortSignal.timeout(10000)});
+      if(response.status===404||response.status===409){this.recordAssetFileState(projectId,asset,`HTTP ${response.status}`);return 'missing';}
+      if(!response.ok)return 'unknown';this.recordAssetFileState(projectId,asset,null);return 'ok';
+    }catch{return 'unknown';}
+  }
+  private cacheAssetUrl(projectId: string, asset: Asset, blob: Blob) {
+    const key = `${projectId}:${asset.id}`; const previous = this.assetUrls.get(key); if (previous) URL.revokeObjectURL(previous);
+    const url = URL.createObjectURL(blob); this.objectUrls.add(url); this.assetUrls.set(key, url);this.assetSources.set(key,assetSource(asset));
   }
   async chooseDirectory(): Promise<string | null> { throw new Error('Cloudprojekte werden im Projektbrowser geöffnet. Ein lokaler Ordner ist für die Extension nicht erforderlich.'); }
   registerFile(file: File): string { const id = `browser-file:${crypto.randomUUID()}`; this.files.set(id, file); return id; }
@@ -142,7 +189,8 @@ export class BrowserStudioApi implements StudioApi {
       const response = await fetch(`${this.baseUrl}/api/projects/${encodeURIComponent(projectId)}/assets`, { method: 'POST', body, credentials: 'include' });
       if (!response.ok) throw new Error(`Import fehlgeschlagen (${response.status}).`); asset = await response.json() as Asset;
     }
-    if (this.host.getStatus().connected) this.cacheAssetUrl(projectId, asset.id, file);
+    if (this.host.getStatus().connected) this.cacheAssetUrl(projectId,asset,file);
+    this.recordAssetFileState(projectId,asset,null);asset=this.withAssetFileState(projectId,asset);
     if (meta.source === 'imported' && asset.kind === 'video') {
       const thumbnail = (await frames(file,{times:[Math.min(1,(asset.durationMs ?? 1000)/2000)],width:320}))[0];
       if (thumbnail) {
@@ -153,7 +201,7 @@ export class BrowserStudioApi implements StudioApi {
         if (thumbUrl) this.assetUrls.set(`${projectId}:${asset.id}:thumb`,thumbUrl);
       }
     }
-    this.emit({ type: 'asset', projectId, asset });
+    this.assetRecords.set(`${projectId}:${asset.id}`,asset);this.emit({ type: 'asset', projectId, asset });
     if (meta.source === 'imported' && (asset.kind === 'audio' || asset.kind === 'video')) await this.action(projectId,'createJob',{kind:'analyze_audio',input:{assetId:asset.id}});
     return asset;
   }
@@ -171,7 +219,18 @@ export class BrowserStudioApi implements StudioApi {
     return this.importFiles(projectId, files.map((file) => this.registerFile(file)), 'import');
   }
   searchAssets(projectId: string, query: AssetQuery) { return this.action<Asset[]>(projectId, 'searchAssets', { query }); }
-  assetUrl(projectId: string, assetId: string, variant: 'original' | 'proxy' | 'thumb' = 'original') { return this.assetUrls.get(`${projectId}:${assetId}:${variant}`) ?? this.assetUrls.get(`${projectId}:${assetId}`) ?? `${this.baseUrl}/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}?variant=${variant}`; }
+  assetUrl(projectId: string, assetId: string, variant: 'original' | 'proxy' | 'thumb' = 'original') {
+    const key=`${projectId}:${assetId}`,asset=this.assetRecords.get(key);
+    if(variant==='thumb'&&asset?.kind==='video') {
+      const path=asset.metadata?.thumbPath;
+      const thumbnail=typeof path==='string'?[...this.assetRecords].find(([recordKey,item])=>recordKey.startsWith(`${projectId}:`)&&item.path===path&&item.kind==='image')?.[1]:undefined;
+      if(!thumbnail)return '';
+      const cached=this.assetUrls.get(`${key}:thumb`)??this.assetUrls.get(`${projectId}:${thumbnail.id}`);if(cached)return cached;
+      if(this.host.getStatus().connected)return '';
+      return `${this.baseUrl}/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}?variant=thumb`;
+    }
+    return this.assetUrls.get(`${key}:${variant}`) ?? this.assetUrls.get(key) ?? `${this.baseUrl}/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}?variant=${variant}`;
+  }
   async revealAsset(projectId: string, assetId: string) { await this.openExternal(this.assetUrl(projectId, assetId)); }
   getLineage(projectId: string, assetId: string) { return this.action<{ parents: LineageEdge[]; children: LineageEdge[] }>(projectId, 'getLineage', { assetId }); }
   async relinkAsset(projectId: string, assetId: string, newPath: string) {
@@ -215,8 +274,8 @@ export class BrowserStudioApi implements StudioApi {
     });
     if(render !== this.webRender || this.disposed)return;
     if(frame !== this.webFrame || !this.webClient) {
-      this.webClient?.dispose();const {MediaSandboxClient}=await import('@studio/browser-media');
-      this.webFrame=frame;this.webClient=new MediaSandboxClient(frame);frame.src=new URL('/media-sandbox.html',window.document.baseURI).href;
+      this.webClient?.dispose();const {MediaSandboxClient,loadMediaSandbox}=await import('@studio/browser-media');
+      this.webFrame=frame;this.webClient=new MediaSandboxClient(frame);await loadMediaSandbox(frame);
     }
     this.webPath=pagePath;
     const preview = html.replace(/<\/body>/i,`${SITE_PICKER_SCRIPT}</body>`);
@@ -305,6 +364,8 @@ export class BrowserStudioApi implements StudioApi {
       await this.action(projectId,'updateJob',{jobId:job.id,executorId:this.executorId,patch:{status:'completed',output}});
       this.setJobs((await this.getSnapshot(projectId)).jobs ?? []); return output;
     } catch(error) {
+      const issues=(error as {issues?:Array<{assetId:string;reason:string}>})?.issues;
+      if(Array.isArray(issues))for(const issue of issues){const reason=confirmedMissingReason(issue.reason);const asset=this.current?.manifest.id===projectId?this.current.assets.find((item)=>item.id===issue.assetId):undefined;if(reason&&asset)this.recordAssetFileState(projectId,asset,reason);}
       await this.action(projectId,'updateJob',{jobId:job.id,executorId:this.executorId,patch:{status:signal.aborted?'canceled':'failed',error:error instanceof Error ? error.message : String(error)}}).catch(() => undefined);
       throw error;
     } finally { clearInterval(heartbeat); this.activeJobs.delete(job.id); this.jobControllers.delete(job.id); }
@@ -358,3 +419,8 @@ export class BrowserStudioApi implements StudioApi {
 
 // Keeps the document model name separate from the browser document in export execution.
 function documentGlobal(): Document { return window.document; }
+function assetSource(asset:Asset):string {return `${asset.path??''}:${asset.sha256??''}`;}
+function confirmedMissingReason(error:unknown):string|null {
+  const message=error instanceof Error?error.message:String(error);
+  return /ASSET_MISSING|Asset (?:bytes missing|has no stored content|not found)|Component bytes missing|HTTP (?:404|409)/i.test(message)?message:null;
+}

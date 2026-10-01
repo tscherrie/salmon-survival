@@ -21,6 +21,22 @@ export async function handleApi(request: Request, env: WorkerEnv): Promise<Respo
   try {
     const service = serviceFor(request, env); const url = new URL(request.url); const path = url.pathname; const method = request.method;
     // Auth comes before all API discovery and reads.
+    if (path === '/api/runtime-file' && method === 'GET') {
+      const name = z.string().regex(/^(?:\/runtime\/[A-Za-z0-9_./-]+|\/native-sandbox\.html)$/).parse(url.searchParams.get('path'));
+      if (name.includes('..') || name.includes('//')) throw new ApiError(400, 'UNSAFE_RUNTIME_PATH', 'Only packaged media runtime files are available.');
+      const offset = z.coerce.number().int().nonnegative().parse(url.searchParams.get('offset') ?? 0);
+      const length = z.coerce.number().int().positive().max(262144).parse(url.searchParams.get('length') ?? 262144);
+      const assets = env.ASSETS ?? env.UI; if (!assets) throw new ApiError(503, 'UI_UNAVAILABLE', 'Runtime static binding unavailable.');
+      const response = await assets.fetch(new Request(new URL(name, url), { headers: { range: `bytes=${offset}-${offset+length-1}` } }));
+      if (!response.ok) throw new ApiError(response.status, 'RUNTIME_UNAVAILABLE', 'Packaged runtime file unavailable.');
+      const raw = new Uint8Array(await response.arrayBuffer());
+      const totalBytes = response.status === 206 ? Number(response.headers.get('content-range')?.split('/').at(-1)) : raw.byteLength;
+      if (!Number.isSafeInteger(totalBytes) || offset >= totalBytes) throw new ApiError(416, 'RANGE_INVALID', 'Runtime range is invalid.');
+      const chunk = response.status === 206 ? raw : raw.subarray(offset,offset+length);
+      if (chunk.byteLength > length) throw new ApiError(502, 'RUNTIME_RANGE_INVALID', 'Runtime response exceeded its requested range.');
+      let binary=''; for(let i=0;i<chunk.length;i+=16384) binary+=String.fromCharCode(...chunk.subarray(i,i+16384));
+      return json({ base64:btoa(binary), mime:response.headers.get('content-type') ?? 'application/octet-stream', bytes:chunk.length, totalBytes, offset });
+    }
     if (path === '/api/settings') { if (method === 'GET') return json(await service.store.settings()); if (method === 'PATCH') return json(await updateSettings(service, await request.json())); }
     if (path === '/api/models' && method === 'GET') return json(models(url.searchParams.get('modality') ?? undefined));
     if (path === '/api/projects') { if (method === 'GET') return json(await service.list()); if (method === 'POST') return json(await service.create(await request.json()), 201); }

@@ -7,6 +7,7 @@ import { checkAbort } from './types.ts';
 import { buildSitePreview, inlineSiteAssets } from './compiler.ts';
 import { assertComponentSandbox } from './timeline.tsx';
 import { MediaSandboxClient } from './sandbox-client.tsx';
+import { loadMediaSandbox } from './runtime.ts';
 import { renderOpaqueSiteHtml } from './documents.ts';
 
 type MediaJob = { kind: string; input: Record<string, unknown> };
@@ -39,7 +40,7 @@ export async function executeMediaJob(job: MediaJob, context: MediaJobContext): 
   if (job.kind === 'screenshot_site') {
     if (!context.siteFiles) throw new Error('Website-Dateisnapshot fehlt'); const request = { files: await inlineSiteAssets(context.siteFiles, context.assets), options: { width: Number(input.width ?? 1440), height: Number(input.height ?? 900), framework: context.document.kind === 'site' ? context.document.framework : 'html' } };
     let blob: Blob; try { assertComponentSandbox(); blob = await renderSiteScreenshot(request.files, request.options as { width: number; height: number; framework: 'html' | 'vite-react' }); }
-    catch (error) { if ((error as Error).name !== 'BrowserCapabilityError') throw error; const iframe = document.createElement('iframe'); iframe.sandbox.add('allow-scripts'); iframe.style.cssText = `position:fixed;left:0;top:0;width:${request.options.width}px;height:${request.options.height}px;opacity:.001;pointer-events:none;border:0`;  const client = new MediaSandboxClient(iframe); iframe.src = new URL('/media-sandbox.html',document.baseURI).href; document.body.append(iframe); try { blob = await client.request<Blob>('site-screenshot', request,undefined,context.signal); } finally { client.dispose(); iframe.remove(); } }
+    catch (error) { if ((error as Error).name !== 'BrowserCapabilityError') throw error; const iframe = document.createElement('iframe'); iframe.sandbox.add('allow-scripts'); iframe.style.cssText = `position:fixed;left:0;top:0;width:${request.options.width}px;height:${request.options.height}px;opacity:.001;pointer-events:none;border:0`;  const client = new MediaSandboxClient(iframe); try { await loadMediaSandbox(iframe, undefined, context.signal); document.body.append(iframe); blob = await client.request<Blob>('site-screenshot', request,undefined,context.signal); } finally { client.dispose(); iframe.remove(); } }
     return { files: [{ filename: 'website.png', blob }], result: { width: request.options.width, height: request.options.height } };
   }
   if (job.kind === 'extract_rotoscope') return {files:[],result:{status:'handoff_required',hostAction:'Mit dem nativen Fal-Plugin Live-Schema und Preis ermitteln, Freigabe einholen, Maske/Pose/Tiefe/Konturen erzeugen und den tatsächlichen Beleg importieren. Es wurde keine Maske erzeugt.'}};

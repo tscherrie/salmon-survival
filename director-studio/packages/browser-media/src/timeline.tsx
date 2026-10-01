@@ -2,23 +2,23 @@ import React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
 import * as Remotion from 'remotion';
 import { canRenderMediaOnWeb, renderMediaOnWeb, renderStillOnWeb } from '@remotion/web-renderer';
-import { TimelineComposition, loadCompiledComponent, resolveFormat, type OverlayComponentProps, type AssetMedia } from '@studio/render/browser';
+import { TimelineComposition, resolveFormat, type OverlayComponentProps, type AssetMedia } from '@studio/render/browser';
 import type { Timeline, TimedWord } from '@studio/core';
 import { compileComponentSource } from './compiler.ts';
+import { loadBrowserComponent } from './component-runtime.ts';
+import { assertMediaSandboxRole } from './sandbox-role.ts';
 import { mixTimelineAudio } from './audio.ts';
 import { withFFmpeg } from './ffmpeg.ts';
 import { BrowserCapabilityError, MediaRepairError, type ExportRequest } from './types.ts';
 
 /** Static checks never establish trust: arbitrary component code runs only behind the opaque iframe boundary. */
 export function assertComponentSandbox(): void {
-  if (typeof window === 'undefined' || window === window.parent || window.origin !== 'null') throw new BrowserCapabilityError('component-sandbox', 'Generierte Komponenten benötigen die isolierte Medienvorschau.');
-  let canAccessParent = false; try { canAccessParent = !!window.parent.document; } catch { /* opaque-origin frame */ }
-  if (canAccessParent) throw new BrowserCapabilityError('component-sandbox', 'Komponenten dürfen nicht in einem Frame mit Zugriff auf den Editor laufen.');
+  assertMediaSandboxRole();
 }
 export async function loadSandboxComponents(codes: Record<string, string> = {}): Promise<Record<string, React.ComponentType<OverlayComponentProps>>> {
   if (Object.keys(codes).length) assertComponentSandbox();
   const out: Record<string, React.ComponentType<OverlayComponentProps>> = {};
-  for (const [id, code] of Object.entries(codes)) out[id] = loadCompiledComponent(await compileComponentSource(code), { React, jsxRuntime, remotion: Remotion });
+  for (const [id, code] of Object.entries(codes)) out[id] = loadBrowserComponent(await compileComponentSource(code), { React, jsxRuntime, remotion: Remotion });
   return out;
 }
 export async function timelineRenderProps(request: ExportRequest) {

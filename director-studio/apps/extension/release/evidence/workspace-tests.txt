@@ -5,37 +5,37 @@
 
  RUN  v5.0.3 /Users/jeremias/.codex/worktrees/27c0/AI Director Studio/director-studio
 
- ❯ |desktop-main| test-main/app-env.test.ts (16 tests | 1 failed) 640ms
+ ❯ |desktop-main| test-main/app-env.test.ts (16 tests | 1 failed) 616ms
    ❯ runChromiumWorker (3)
-     × echter Hilfsprozess: erster Versuch scheitert, der zweite (neuer Prozess) findet die Shell im Cache 505ms
- ❯ |desktop-main| test-main/integration-followups.test.ts (5 tests | 1 failed) 632ms
+     × echter Hilfsprozess: erster Versuch scheitert, der zweite (neuer Prozess) findet die Shell im Cache 503ms
+ ❯ |desktop-main| test-main/integration-followups.test.ts (5 tests | 1 failed) 560ms
    ❯ Snapshot: fehlende verknüpfte Dateien, Rückfrage-Lauf, Speicher-Warnungen (3)
-     × zeigt übersprungene Journalzeilen einmal als Systemhinweis (auch über mehrere Öffnungen) 83ms
+     × zeigt übersprungene Journalzeilen einmal als Systemhinweis (auch über mehrere Öffnungen) 71ms
 stderr | test-main/backend.test.ts > StudioBackend – Projekte und Director > runs a planning conversation with question, brief and checkpoint
 [media] ffmpeg und ffprobe wurden nicht gefunden. Director Studio braucht beide für Vorschaubilder, Ton, Lautheit und den Video-Export. Über die Paketverwaltung installieren, z. B. `sudo apt install ffmpeg`. Danach Director Studio neu starten. Alternativ den Pfad über die Umgebungsvariable `FFMPEG_PATH` oder als `ffmpegPath` in der `settings.json` im Datenordner angeben.
 
 stderr | test-main/backend.test.ts > StudioBackend – Medien, Vorschau, Export > exports decks (PDF + PPTX) and canvases (PNG)
 [media] ffmpeg und ffprobe wurden nicht gefunden. Director Studio braucht beide für Vorschaubilder, Ton, Lautheit und den Video-Export. Über die Paketverwaltung installieren, z. B. `sudo apt install ffmpeg`. Danach Director Studio neu starten. Alternativ den Pfad über die Umgebungsvariable `FFMPEG_PATH` oder als `ffmpegPath` in der `settings.json` im Datenordner angeben.
 
- ❯ |desktop-main| test-main/backend.test.ts (22 tests | 2 failed) 8969ms
+ ❯ |desktop-main| test-main/backend.test.ts (22 tests | 2 failed) 8026ms
    ❯ StudioBackend – Projekte und Director (4)
-     × runs a planning conversation with question, brief and checkpoint 644ms
+     × runs a planning conversation with question, brief and checkpoint 622ms
    ❯ StudioBackend – Medien, Vorschau, Export (9)
-     × exports decks (PDF + PPTX) and canvases (PNG) 376ms
- ❯ |media| test/toolkit-video.test.ts (15 tests | 1 failed) 5204ms
+     × exports decks (PDF + PPTX) and canvases (PNG) 389ms
+ ❯ |media| test/toolkit-video.test.ts (15 tests | 1 failed) 4725ms
    ❯ Bilder (5)
-     × contactSheet: Raster mit Zeitstempeln (und Rückfall ohne Beschriftung) 357ms
- ❯ |media| test/toolkit-audio.test.ts (15 tests | 1 failed) 8098ms
+     × contactSheet: Raster mit Zeitstempeln (und Rückfall ohne Beschriftung) 257ms
+ ❯ |media| test/toolkit-audio.test.ts (15 tests | 1 failed) 7292ms
    ❯ Fähigkeiten (1)
-     × ermittelt Version, Filter und Encoder einmalig 114ms
+     × ermittelt Version, Filter und Encoder einmalig 91ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  |desktop-main| test-main/app-env.test.ts > runChromiumWorker > echter Hilfsprozess: erster Versuch scheitert, der zweite (neuer Prozess) findet die Shell im Cache
 AssertionError: expected '/private/var/folders/00/z9gl46452nq9m…' to be '/var/folders/00/z9gl46452nq9mxpx32sl1…' // Object.is equality
 
-Expected: "/var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-appenv-pbpBkd/runtime/node_modules/.remotion/chrome-headless-shell/mac-arm64/chrome-headless-shell-mac-arm64/chrome-headless-shell"
-Received: "/private/var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-appenv-pbpBkd/runtime/node_modules/.remotion/chrome-headless-shell/mac-arm64/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+Expected: "/var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-appenv-69ApVw/runtime/node_modules/.remotion/chrome-headless-shell/mac-arm64/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+Received: "/private/var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-appenv-69ApVw/runtime/node_modules/.remotion/chrome-headless-shell/mac-arm64/chrome-headless-shell-mac-arm64/chrome-headless-shell"
 
  ❯ test-main/app-env.test.ts:228:46
     226|     const exe = await seedHeadlessShell(runtime);
@@ -95,7 +95,7 @@ AssertionError: expected 'Hinweis zum Projektspeicher: Unvollst…' to match /Ze
 /Zeile 1 .*messages\.jsonl.*übersprungen/
 
 + Received:
-"Hinweis zum Projektspeicher: Unvollständige letzte Zeile 2 in /var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-followups-gsOyKX/Kaputt.dstudio/conversation/messages.jsonl übersprungen (vermutlich Absturz beim Schreiben): Unterminated string in JSON at position 31 (line 1 column 32)"
+"Hinweis zum Projektspeicher: Unvollständige letzte Zeile 2 in /var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-followups-Z7Chyk/Kaputt.dstudio/conversation/messages.jsonl übersprungen (vermutlich Absturz beim Schreiben): Unterminated string in JSON at position 31 (line 1 column 32)"
 
  ❯ test-main/integration-followups.test.ts:182:32
     180|       const notices = reopened.messages.filter((m) => m.role === 'syst…
@@ -153,12 +153,20 @@ AssertionError: expected { …(7) } to match object { columns: 3, rows: 2, …(3
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
 
 
- Test Files  5 failed | 81 passed | 3 skipped (89)
-      Tests  6 failed | 1109 passed | 19 skipped (1134)
-   Start at  00:56:10
-   Duration  26.09s (tests 57%, transform 15%, environment 13%, import 12%, setup 4%)
+ Test Files  5 failed | 85 passed | 3 skipped (93)
+      Tests  6 failed | 1127 passed | 19 skipped (1152)
+   Start at  02:08:22
+   Duration  24.46s (tests 54%, transform 18%, import 13%, environment 12%, setup 3%)
 
-Environment  |desktop| jsdom was created 21 times · 21.63s total, 27% of tracked time
-             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
-             learn more: https://vitest.dev/guide/improving-performance#test-environments
+  Transform  |extension| transforming modules took 2.14s · 31% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+  Transform  |browser-media| transforming modules took 3.42s · 53% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+  Transform  |core| transforming modules took 3.83s · 78% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
 

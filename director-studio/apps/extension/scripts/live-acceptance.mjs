@@ -1,23 +1,60 @@
-// Owner-authorized live smoke. The Sites bearer arrives only on hidden stdin.
-import {readFile,writeFile} from 'node:fs/promises';
-const input=await new Promise((resolve,reject)=>{let value='';const terminal=process.stdin.isTTY;const finish=(error)=>{if(terminal)process.stdin.setRawMode(false);process.stdin.removeListener('data',onData);process.stdin.pause();error?reject(error):resolve(value);};const onData=chunk=>{value+=chunk;if(value.includes('\u0003'))finish(new Error('Canceled'));else if(value.length>65536)finish(new Error('Input too large'));else if(/[\r\n]/.test(value))finish();};if(terminal){process.stdin.setRawMode(true);process.stderr.write('Ready for live Sites JSON on hidden stdin.\n');}process.stdin.setEncoding('utf8');process.stdin.on('data',onData);process.stdin.resume();});
-const {origin,mcpUrl,token,output}=JSON.parse(input);if(new URL(origin).protocol!=='https:'||!token)throw Error('Expected verified HTTPS Site and bearer.');
-const headers={'OAI-Sites-Authorization':`Bearer ${token}`,'content-type':'application/json'};
-const report={origin,checks:[],passed:false};
-const call=async(name,args={})=>{const response=await fetch(mcpUrl,{method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}})});if(!response.ok)throw Error(`MCP HTTP ${response.status}`);const rpc=await response.json();if(rpc.error||rpc.result?.isError)throw Error(`MCP ${name}: ${rpc.error?.message??rpc.result?.structuredContent?.code}`);return rpc.result.structuredContent;};
+// Anonymous/static access diagnostics only. A Sites dispatch token is not an owner identity.
+// Usage: node live-acceptance.mjs https://site.chatgpt.site [report.json] [--token-stdin]
+import {writeFile} from 'node:fs/promises';
+
+const args=process.argv.slice(2),withToken=args.includes('--token-stdin');
+const [site,output]=args.filter(arg=>arg!=='--token-stdin');
+if(!site)throw Error('Provide an HTTPS Site origin; optionally add --token-stdin for the static health probe.');
+const url=new URL(site);
+if(url.protocol!=='https:'||url.username||url.password||url.pathname!=='/'||url.search||url.hash)throw Error('Expected an HTTPS Site origin without credentials or a path.');
+const origin=url.origin;
+
+async function hiddenToken(){
+ const terminal=process.stdin.isTTY;
+ if(terminal){process.stdin.setRawMode(true);process.stderr.write('Sites dispatch token (hidden; static health only): ');}
+ try{
+  return await new Promise((resolve,reject)=>{
+   let value='';
+   const finish=error=>{process.stdin.removeListener('data',onData);process.stdin.removeListener('end',onEnd);process.stdin.pause();error?reject(error):resolve(value.trim());};
+   const onData=chunk=>{value+=chunk;if(value.includes('\u0003'))finish(Error('Canceled'));else if(value.length>65536)finish(Error('Input too large'));else if(/[\r\n]/.test(value))finish();};
+   const onEnd=()=>finish();
+   process.stdin.setEncoding('utf8');process.stdin.on('data',onData);process.stdin.on('end',onEnd);process.stdin.resume();
+  });
+ }finally{if(terminal){process.stdin.setRawMode(false);process.stderr.write('\n');}}
+}
+
+const token=withToken?await hiddenToken():undefined;
+if(withToken&&!token)throw Error('Expected a token on hidden stdin.');
+const denied=status=>[302,303,307,308,401,403].includes(status);
+const report={origin,scope:'anonymous/static-access-diagnostic',checks:[],passed:false,
+ proof:{authenticatedMcp:false,d1:false,r2:false,nativeHostUi:false},
+ note:'Sites dispatch access does not establish an authenticated Director owner. Native OAuth MCP and storage evidence must be recorded separately.'};
+
+async function probe(path,headers){
+ const response=await fetch(`${origin}${path}`,{headers,redirect:'manual',signal:AbortSignal.timeout(15000)});
+ const result={status:response.status,mime:response.headers.get('content-type'),access:denied(response.status)?'access-denied':response.ok?'accessible':'unexpected-status'};
+ if(path==='/health'&&response.ok){
+  const body=await response.json();result.runtime=body.director;
+  if(body.director!=='native-host')throw Error('Unexpected static health runtime marker.');
+ }else await response.body?.cancel();
+ return result;
+}
+
 try{
- const anon=await fetch(`${origin}/api/projects`,{redirect:'manual'});report.anonymousStatus=anon.status;if(![302,303,401,403].includes(anon.status))throw Error('Anonymous private data was not denied');report.checks.push('Anonymous Site API is denied by production access boundary');
- const health=await fetch(`${origin}/health`,{headers});if(!health.ok)throw Error(`Health ${health.status}`);const healthBody=await health.json();if(healthBody.director!=='native-host')throw Error('Unexpected deployed runtime');report.checks.push('Production Worker health matches native-host/D1/R2 runtime');
- const init=await(await fetch(mcpUrl,{method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:2,method:'initialize',params:{protocolVersion:'2026-07-28'}})})).json();if(init.result?.serverInfo?.name!=='director-studio')throw Error('MCP initialize failed');report.checks.push('Production MCP initializes with native workflow instructions');
- const list=await(await fetch(mcpUrl,{method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:3,method:'tools/list'})})).json();report.toolCount=list.result?.tools?.length;if(!report.toolCount||report.toolCount<40)throw Error('MCP tool surface missing');
- const resource=await(await fetch(mcpUrl,{method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:4,method:'resources/read',params:{uri:'ui://director-studio/editor.html'}})})).json();const ui=resource.result?.contents?.[0];if(!ui?.text?.includes(`<base href="${origin}/">`)||!ui._meta?.ui?.csp?.baseUriDomains?.includes(origin))throw Error('Resource base/CSP missing');report.checks.push('MCP editor resource includes actual deployed assets, Site base URI and declared nested sandbox/CSP');
- const created=await call('create_project',{title:`Live Extension acceptance ${new Date().toISOString()}`,category:'graphic'}),projectId=created.manifest.id;
- const initial=await call('get_document',{projectId});const doc=initial.document;const head=initial.head??created.versions.at(-1).number;
- await call('apply_document_ops',{projectId,expectedHead:typeof head==='number'?head:head.number,ops:[{op:'update_canvas',patch:{background:'#173449'}}],note:'Live acceptance operation'});
- const reopened=await call('get_project',{projectId});if(reopened.document.background!=='#173449'||reopened.versions.length!==2)throw Error('Production D1 persistence failed');report.checks.push('Owner-authenticated project creation, expected-head edit and immutable version reopen persist in production D1');
- const bytes=new Uint8Array(await readFile(new URL('../plugin/assets/composer.png',import.meta.url))); const form=new FormData();form.append('file',new Blob([bytes],{type:'image/png'}),'live-storage-proof.png');const upload=await fetch(`${origin}/api/projects/${projectId}/assets`,{method:'POST',headers:{'OAI-Sites-Authorization':`Bearer ${token}`},body:form});if(!upload.ok)throw Error(`Owned R2 upload ${upload.status}`);const asset=await upload.json();const download=await fetch(`${origin}/api/projects/${projectId}/assets/${asset.id}`,{headers});const actual=new Uint8Array(await download.arrayBuffer());if(!download.ok||actual.length!==bytes.length||actual.some((v,i)=>v!==bytes[i]))throw Error('Production R2 bytes changed');report.checks.push('Production R2 stores and returns exact owner-scoped uploaded bytes (valid bundled icon bytes, no native image-render claim)');
- const job=await call('export_project',{projectId,input:{format:'png'}});await call('cancel_job',{projectId,jobId:job.id});const retried=await call('retry_job',{projectId,jobId:job.id});if(retried.input.retryOf!==job.id||retried.projectVersion!==job.projectVersion)throw Error('Production retry lost pinned version');report.checks.push('Production queued job cancellation and retry preserve original version and attempt lineage');
- report.runtimeAssets={};for(const pathname of ['/media-sandbox.html','/runtime/ffmpeg/worker.js','/runtime/esbuild.wasm','/privacy.html']){const response=await fetch(`${origin}${pathname}`,{headers});if(!response.ok)throw Error(`Runtime resource ${pathname} ${response.status}`);report.runtimeAssets[pathname]={status:response.status,mime:response.headers.get('content-type'),cors:response.headers.get('access-control-allow-origin')};if(pathname==='/media-sandbox.html'&&!response.headers.get('content-security-policy')?.includes("'wasm-unsafe-eval'"))throw Error('Sandbox CSP missing');}
- report.checks.push('Production static/runtime sandbox and draft policy resources are present');report.passed=true;
-}catch(error){report.error=error.message;}finally{await writeFile(output,JSON.stringify(report,null,2));}
-console.log(JSON.stringify(report,null,2));if(!report.passed)process.exitCode=1;
+ const paths=['/api/projects','/health','/media-sandbox.html','/runtime/ffmpeg/worker.js','/runtime/esbuild.wasm','/privacy.html'];
+ const results=await Promise.all(paths.map(path=>probe(path)));
+ report.anonymous=Object.fromEntries(paths.map((path,index)=>[path,results[index]]));
+ if(!denied(report.anonymous['/api/projects'].status))throw Error('Anonymous project API was not denied.');
+ report.checks.push('Anonymous project API access is denied.');
+ for(const path of paths.slice(1))if(report.anonymous[path].access==='unexpected-status')throw Error(`Anonymous static probe ${path}: HTTP ${report.anonymous[path].status}`);
+ report.checks.push('Anonymous health and static resources report either accessible content or a private access boundary.');
+ if(token){
+  report.dispatchHealth=await probe('/health',{'OAI-Sites-Authorization':`Bearer ${token}`});
+  if(report.dispatchHealth.access==='unexpected-status')throw Error(`Dispatch static health: HTTP ${report.dispatchHealth.status}`);
+  report.checks.push('Optional Sites dispatch token was used only for static health; no owner or MCP inference was made.');
+ }
+ report.passed=true;
+}catch(error){report.error=error.message;}
+if(output)await writeFile(output,JSON.stringify(report,null,2));
+console.log(JSON.stringify(report,null,2));
+if(!report.passed)process.exitCode=1;

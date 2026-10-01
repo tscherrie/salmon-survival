@@ -66,7 +66,7 @@ export const MCP_TOOLS: readonly Tool[] = tools;
 const argumentValidators = new Map(tools.map(tool => [tool.name, new Validator(tool.inputSchema as Schema, '2020-12')]));
 const actions: Record<string, string> = { set_brief: 'setBrief', ask_user: 'askUser', propose_checkpoint: 'proposeCheckpoint', merge_checkpoints: 'mergeCheckpoints', post_update: 'postUpdate', get_document: 'getDocument', apply_document_ops: 'applyDocumentOps', restore_version: 'restoreVersion', get_version: 'getVersion', search_assets: 'searchAssets', get_asset: 'getAsset', update_asset: 'updateAsset', reject_asset: 'rejectAsset', get_lineage: 'getLineage', create_text_asset: 'createTextAsset', import_url: 'importUrl', import_fal_result: 'importFalResult', write_component: 'writeComponent', read_component: 'readComponent', write_site_file: 'writeSiteFile', read_site_file: 'readSiteFile', list_site_files: 'listSiteFiles', prepare_generation: 'prepareGeneration', record_generation: 'recordGeneration', await_generations: 'awaitGenerations', cancel_generation: 'cancelGeneration', record_analysis: 'recordAnalysis', transcribe: 'requestTranscription', list_jobs: 'listJobs', cancel_job: 'cancelJob', retry_job: 'retryJob' };
 const capabilities = { tools: {}, resources: {}, extensions: { 'openai/settings': { readTool: 'settings.read', updateTool: 'settings.update' } } };
-function toolResult(value: unknown) { const structuredContent = value && typeof value === 'object' && !Array.isArray(value) ? value : { result: value ?? null }; return { content: [{ type: 'text', text: JSON.stringify(value ?? null) }], structuredContent }; }
+function toolResult(value: unknown, appOnly = false) { const structuredContent = value && typeof value === 'object' && !Array.isArray(value) ? value : { result: value ?? null }; return { content: appOnly ? [] : [{ type: 'text', text: JSON.stringify(value ?? null) }], structuredContent }; }
 export async function handleMcp(request: Request, env: WorkerEnv): Promise<Response> {
   let rpcId: unknown = null;
   try {
@@ -82,9 +82,11 @@ export async function handleMcp(request: Request, env: WorkerEnv): Promise<Respo
       case 'resources/read': {
         if (args.uri !== EDITOR_RESOURCE) throw new ApiError(404, 'RESOURCE_NOT_FOUND', 'Resource not found.');
         const staticBinding = env.ASSETS ?? env.UI; if (!staticBinding) throw new ApiError(503, 'UI_UNAVAILABLE', 'The deployed UI static binding is unavailable.');
-        const url = new URL(request.url); const response = await staticBinding.fetch(new Request(new URL('/index.html', url))); if (!response.ok) throw new ApiError(503, 'UI_UNAVAILABLE', 'The deployed editor HTML is unavailable.');
+        const url = new URL(request.url); const response = await staticBinding.fetch(new Request(new URL('/native.html', url))); if (!response.ok) throw new ApiError(503, 'UI_UNAVAILABLE', 'The deployed self-contained editor HTML is unavailable.');
+        // The base only resolves package paths; no boot asset is fetched from it.
         const html = (await response.text()).replace(/<head>/i, `<head><base href="${url.origin}/">`);
-        result = { contents: [{ uri: EDITOR_RESOURCE, mimeType: 'text/html;profile=mcp-app', text: html, _meta: { 'openai/ui': OpenAIUiResourceMetadataSchema.parse({ availableDisplayModes: ['fullscreen'], preferredDisplayMode: 'fullscreen' }), ui: { csp: { connectDomains: [url.origin,'https://esm.sh','blob:','data:'], resourceDomains: [url.origin,'https://esm.sh','blob:','data:'], frameDomains: [url.origin], baseUriDomains: [url.origin] } } } }] }; break;
+        console.info('director.ui.resource', {uri:EDITOR_RESOURCE,bytes:new TextEncoder().encode(html).byteLength,delivery:'self-contained'});
+        result = { contents: [{ uri: EDITOR_RESOURCE, mimeType: 'text/html;profile=mcp-app', text: html, _meta: { 'openai/ui': OpenAIUiResourceMetadataSchema.parse({ availableDisplayModes: ['fullscreen'], preferredDisplayMode: 'fullscreen' }), ui: { csp: { connectDomains: ['https://esm.sh'], resourceDomains: ['https://esm.sh'], frameDomains: [url.origin], baseUriDomains:[url.origin] } } } }] }; break;
       }
       case 'tools/call': {
         const name = z.string().parse(args.name); const params = z.record(z.string(),z.unknown()).parse(args.arguments ?? {});
@@ -116,7 +118,9 @@ export async function handleMcp(request: Request, env: WorkerEnv): Promise<Respo
           else if (name === 'settings.update') { const settings = await updateSettings(service, params.set); value = { values: { language: settings.language, defaultEffort: settings.defaultEffort } }; }
           else if (actions[name]) value = await service.action(z.string().parse(params.projectId), actions[name]!, params);
           else value = await service.action(z.string().parse(params.projectId), 'createJob', { kind: name, input: params.input ?? {} });
-          result = toolResult(value);
+          // The app reads structuredContent. Duplicating binary ranges in a text block
+          // doubles native runtime traffic without providing model-visible content.
+          result = toolResult(value, name === 'director_ui_request');
         } catch (error) { if (error instanceof ApiError && error.status === 401) throw error; result = { ...toolResult({ error: error instanceof Error ? error.message : 'Tool failed.', code: error instanceof ApiError ? error.code : 'INVALID_INPUT' }), isError: true }; }
         break;
       }

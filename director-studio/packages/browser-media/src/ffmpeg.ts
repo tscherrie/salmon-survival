@@ -1,7 +1,9 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { BrowserCapabilityError, checkAbort } from './types.ts';
+import { hasBrowserRuntimeReader, readRuntimeFile } from './runtime.ts';
+import { ClassicFFmpeg, type MediaProcessor } from './classic-ffmpeg.ts';
 
-let runtime = { coreURL: '/runtime/ffmpeg/ffmpeg-core.js', wasmURL: '/runtime/ffmpeg/ffmpeg-core.wasm.json', classWorkerURL: '/runtime/ffmpeg/worker.js' };
+let runtime = { coreURL: '/runtime/ffmpeg/ffmpeg-core.js', classicCoreURL: '/runtime/ffmpeg/ffmpeg-core-classic.js', wasmURL: '/runtime/ffmpeg/ffmpeg-core.wasm.json', classWorkerURL: '/runtime/ffmpeg/worker.js' };
 /** The app ships these runtime assets on its own origin. No credential or CDN dependency. */
 export function configureMediaRuntime(value: Partial<typeof runtime>): void { runtime = { ...runtime, ...value }; }
 interface WasmChunk { url: string; bytes: number; sha256: string }
@@ -25,13 +27,12 @@ function checkedManifest(raw: unknown): WasmManifest {
 /** Assemble the owned runtime, verifying every chunk and the complete binary before execution. */
 export async function loadWasmRuntime(manifestUrl: URL, signal?: AbortSignal): Promise<Blob> {
   checkAbort(signal);
-  const response = await fetch(manifestUrl, { credentials: 'omit', signal });
-  if (!response.ok) throw new Error(`WASM-Manifest HTTP ${response.status}`);
-  const manifest = checkedManifest(await response.json()), bytes = new Uint8Array(manifest.bytes); let offset = 0;
+  const response = await readRuntimeFile(manifestUrl, signal);
+  const manifest = checkedManifest(JSON.parse(new TextDecoder().decode(response.bytes))), bytes = new Uint8Array(manifest.bytes); let offset = 0;
   for (const chunk of manifest.chunks) {
     checkAbort(signal); const url = new URL(chunk.url, manifestUrl);
-    const part = await fetch(url, { credentials: 'omit', signal }); if (!part.ok) throw new Error(`WASM-Teilstück ${chunk.url}: HTTP ${part.status}`);
-    const content = new Uint8Array(await part.arrayBuffer()); checkAbort(signal);
+    const part = await readRuntimeFile(url, signal);
+    const content = part.bytes; checkAbort(signal);
     if (content.byteLength !== chunk.bytes) throw new Error(`WASM-Teilstück ${chunk.url}: Länge ${content.byteLength} statt ${chunk.bytes}`);
     if (await sha256(content) !== chunk.sha256.toLowerCase()) throw new Error(`WASM-Teilstück ${chunk.url}: SHA-256 stimmt nicht überein`);
     checkAbort(signal); bytes.set(content, offset); offset += content.byteLength;
@@ -40,24 +41,25 @@ export async function loadWasmRuntime(manifestUrl: URL, signal?: AbortSignal): P
   checkAbort(signal); return new Blob([bytes], { type: 'application/wasm' });
 }
 let queue: Promise<unknown> = Promise.resolve();
-export async function withFFmpeg<T>(task: (ffmpeg: FFmpeg) => Promise<T>, signal?: AbortSignal): Promise<T> {
+export async function withFFmpeg<T>(task: (ffmpeg: MediaProcessor) => Promise<T>, signal?: AbortSignal): Promise<T> {
   const previous = queue;
   let release!: () => void;
   queue = new Promise<void>((r) => { release = r; });
   await previous.catch(() => undefined);
-  const ff = new FFmpeg();
+  const classic = hasBrowserRuntimeReader() || window.origin === 'null';
+  const ff: MediaProcessor = classic ? new ClassicFFmpeg() : new FFmpeg();
   const abort = () => ff.terminate();
   signal?.addEventListener('abort', abort, { once: true });
   try {
     checkAbort(signal);
     // A blob URL permits the same single-thread runtime inside an opaque-origin sandbox.
     const urls: string[] = [];
-    const loadUrl = async (url: string, mime: string) => { const res = await fetch(new URL(url, document.baseURI), { credentials: 'omit', signal }); if (!res.ok) throw new Error(`Runtime ${res.status}`); const blob = new Blob([await res.arrayBuffer()], { type: mime }); const objectUrl = URL.createObjectURL(blob); urls.push(objectUrl); return objectUrl; };
+    const loadUrl = async (url: string, mime: string) => { const res = await readRuntimeFile(url, signal); const blob = new Blob([new Uint8Array(res.bytes)], { type: mime }); const objectUrl = URL.createObjectURL(blob); urls.push(objectUrl); return objectUrl; };
     let loadTimer: ReturnType<typeof setTimeout> | undefined;
-    const guardedLoad = (options: Parameters<FFmpeg['load']>[0]) => Promise.race([ff.load(options), new Promise<never>((_, reject) => { loadTimer = setTimeout(() => { ff.terminate(); reject(new Error('FFmpeg-Runtime konnte nach 30 Sekunden nicht starten (Worker-CSP, CORS oder WASM)')); }, 30000); })]);
+    const guardedLoad = (options: Parameters<FFmpeg['load']>[0]) => Promise.race([ff.load(options), new Promise<never>((_, reject) => { loadTimer = setTimeout(() => { reject(new Error('FFmpeg-Runtime konnte nach 30 Sekunden nicht starten (Worker-CSP, CORS oder WASM)')); ff.terminate(); }, 30000); })]);
     try {
       const wasmBlob = await loadWasmRuntime(new URL(runtime.wasmURL, document.baseURI), signal), wasmUrl = URL.createObjectURL(wasmBlob); urls.push(wasmUrl);
-      if (window.origin === 'null' || new URL(runtime.classWorkerURL, document.baseURI).origin !== location.origin) await guardedLoad({ classWorkerURL: await loadUrl(runtime.classWorkerURL, 'text/javascript'), coreURL: await loadUrl(runtime.coreURL, 'text/javascript'), wasmURL: wasmUrl });
+      if (classic || new URL(runtime.classWorkerURL, document.baseURI).origin !== location.origin) await guardedLoad({ classWorkerURL: await loadUrl(runtime.classWorkerURL, 'text/javascript'), coreURL: await loadUrl(classic ? runtime.classicCoreURL : runtime.coreURL, 'text/javascript'), wasmURL: wasmUrl });
       else await guardedLoad({ classWorkerURL: new URL(runtime.classWorkerURL, document.baseURI).href, coreURL: new URL(runtime.coreURL, document.baseURI).href, wasmURL: wasmUrl });
     }
     finally { clearTimeout(loadTimer); for (const url of urls) URL.revokeObjectURL(url); }

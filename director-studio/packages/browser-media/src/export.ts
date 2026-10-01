@@ -10,7 +10,7 @@ import { checkAbort, type ExportRequest, type ExportResult } from './types.ts';
 
 export const EXPORT_FORMATS = { timeline: ['mp4', 'mov', 'wav', 'mp3', 'm4a', 'flac', 'png', 'jpeg'], deck: ['pdf', 'pptx', 'png'], canvas: ['png', 'jpeg', 'pdf', 'svg'], site: ['zip'] } as const;
 export async function exportProject(raw: ExportRequest): Promise<ExportResult> {
-  if (raw.document.kind === 'timeline' && ['mp4', 'mov', 'png', 'jpeg', 'jpg'].includes(raw.format.toLowerCase()) && raw.components && Object.keys(raw.components).length) {
+  if (raw.document.kind === 'timeline' && ['mp4', 'mov', 'png', 'jpeg', 'jpg'].includes(raw.format.toLowerCase())) {
     try { assertComponentSandbox(); } catch { const { exportInSandbox } = await import('./sandbox-client.tsx'); return exportInSandbox(raw); }
   }
   checkAbort(raw.signal); const format = raw.format.toLowerCase().replace(/^jpg$/, 'jpeg');

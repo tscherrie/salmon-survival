@@ -1,0 +1,54 @@
+{
+  "scope": "actual built Worker and editor on loopback; synthetic owner only",
+  "testedAt": "2026-10-01T22:44:24.949Z",
+  "nativeHostProof": false,
+  "checks": [
+    "Physically absent bytes in a separate project produce actual server 409 ASSET_MISSING.",
+    "Actual PNG export fails and persists a failed job when required media bytes are absent.",
+    "Actual replacement file picker preserves asset ID, imported provenance metadata, and existing document reference.",
+    "Successful replacement clears the missing-file alert and repair banner.",
+    "Actual recovered UI export downloads a valid PNG and stores a completed export job."
+  ],
+  "passed": true,
+  "missingBytes": {
+    "status": 409,
+    "code": "ASSET_MISSING",
+    "message": "Asset bytes missing. Repair this asset before preview or export."
+  },
+  "missingUi": {
+    "repairBanner": "Fehlendes Material: bitte in der Materialansicht neu zuordnen. [test asset]",
+    "drawerAlert": "Datei nicht gefunden – wurde sie verschoben oder umbenannt? Erneut verknüpfen …",
+    "relinkButtons": [
+      "Datei fehlt · Neu zuordnen",
+      "Erneut verknüpfen …"
+    ]
+  },
+  "failedExport": {
+    "status": "failed",
+    "error": "Medien vor dem Export reparieren: [test asset]: HTTP 409",
+    "visibleError": [
+      "Medien vor dem Export reparieren: [test asset]: HTTP 409"
+    ]
+  },
+  "replacement": {
+    "assetIdPreserved": true,
+    "provenancePreserved": true,
+    "documentRefPreserved": true
+  },
+  "recoveredExport": {
+    "downloadBytes": 20223,
+    "width": 640,
+    "height": 360,
+    "pngSignature": [
+      137,
+      80,
+      78,
+      71,
+      13,
+      10,
+      26,
+      10
+    ],
+    "completedJobs": 1
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-10-01T22:14:21.506Z",
+  "site": "https://ai-director-studio.yearemia.chatgpt.site",
+  "transport": "Installed canonical native MCP tools using actual host OAuth, not synthetic request identity or SIWC bypass.",
+  "projectCreateAndReopen": true,
+  "nativeDirectorOpen": {
+    "successful": true,
+    "visualUIVerified": false
+  },
+  "graphic": {
+    "persistedCanvasEdit": true,
+    "headAfterEdit": 2,
+    "newerHeadAfterJobCancel": 3,
+    "textAssetBytes": 57,
+    "componentR2ExactReadback": true
+  },
+  "video": {
+    "falImport": {
+      "alreadyCompleted": true,
+      "newGenerationSubmitted": false,
+      "newPaymentApproval": false,
+      "newCharge": false,
+      "actualCostKnown": false,
+      "estimateUsd": 0.125,
+      "bytes": 1302229,
+      "sha256": "e200e4fb63b15927104a8103e32379702a537e0b22ddc4f372145a52a5a16399",
+      "duplicateImportRecognized": true,
+      "sameGeneration": true,
+      "sameAsset": true
+    },
+    "persistedClipCount": 1,
+    "durationFrames": 155,
+    "fps": 30,
+    "head": 2,
+    "staleHeadRejected": true,
+    "atomicInvalidBatchRejected": true,
+    "documentUnchangedAfterRejections": true,
+    "budgetUnchanged": true
+  },
+  "jobs": {
+    "cancelPersisted": true,
+    "retryCreatesNewAttempt": true,
+    "retryPinnedToOriginalVersion": true,
+    "currentHead": 3,
+    "originalJobVersion": 2,
+    "retryStatus": "queued",
+    "productionExportOutputCompleted": false
+  },
+  "limits": [
+    "No second real account available.",
+    "No native UI surface available; context attach/remove, fullscreen, model switching, native Library and file reopening remain unverified.",
+    "Production codec execution and output receipts need an open native editor. Actual browser outputs were verified separately on the built Worker loopback harness.",
+    "No new official Fal generation, quote, provider cancellation or legal/public-directory submission executed."
+  ]
+}

@@ -3,6 +3,7 @@ export * from './assets.ts';
 export * from './media.ts';
 export * from './audio.ts';
 export * from './ffmpeg.ts';
+export * from './runtime.ts';
 export * from './compiler.ts';
 export * from './documents.ts';
 export * from './timeline.tsx';

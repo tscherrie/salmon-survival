@@ -6,7 +6,10 @@ import { timelineRenderProps, assertComponentSandbox } from './timeline.tsx';
 import { exportProject } from './export.ts';
 import type { ExportRequest } from './types.ts';
 import { renderSiteScreenshot } from './jobs.ts';
+import { configureBrowserRuntime, ownedRuntimePath, type RuntimeFile } from './runtime.ts';
+import { activateMediaSandbox } from './sandbox-role.ts';
 
+activateMediaSandbox();
 assertComponentSandbox();
 // Remotion reads browser preferences even during a still render. Opaque frames have no browser
 // storage; give this disposable frame an in-memory Storage, never the editor/host storage.
@@ -26,7 +29,21 @@ window.addEventListener('message', (e) => {
 function event(name: string, frame?: number, message?: string) { port?.postMessage({ type: 'event', name, frame, message }); }
 window.addEventListener('message', (e) => {
   if (connected || e.source !== window.parent || e.data?.type !== 'director-media-connect' || !e.ports[0]) return;
-  connected = true; port = e.ports[0]; port.onmessage = async ({ data }) => {
+  connected = true; port = e.ports[0];
+  const runtimePending = new Map<string, { resolve: (file: RuntimeFile) => void; reject: (error: Error) => void }>();
+  if (e.data.runtimeBridge === true) configureBrowserRuntime((path, signal) => new Promise((resolve, reject) => {
+    ownedRuntimePath(path); const id = crypto.randomUUID();
+    const finish = () => { clearTimeout(timer); signal?.removeEventListener('abort', abort); runtimePending.delete(id); };
+    const abort = () => { finish(); reject(new DOMException('Abgebrochen', 'AbortError')); };
+    const timer = setTimeout(() => { finish(); reject(new Error('Native Runtime: Zeitlimit beim Laden')); }, 600000);
+    runtimePending.set(id, { resolve: (file) => { finish(); resolve(file); }, reject: (error) => { finish(); reject(error); } });
+    if (signal?.aborted) { abort(); return; } signal?.addEventListener('abort', abort, { once: true });
+    port?.postMessage({ type: 'runtime-file', id, path });
+  }));
+  port.onmessage = async ({ data }) => {
+    if (data?.type === 'runtime-file-result') {
+      const pending = runtimePending.get(data.id); if (pending) data.error ? pending.reject(new Error(data.error)) : pending.resolve({ bytes: data.bytes, mime: data.mime }); return;
+    }
     const { id, method, request } = data;
     try {
       if (method === 'export') { const value = await exportProject({ ...request, onProgress: (phase, progress) => port?.postMessage({ type: 'progress', id, phase, progress }) }); port?.postMessage({ type: 'result', id, value }); }

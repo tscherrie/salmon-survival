@@ -4,6 +4,7 @@ import { materializeAssets, blobToDataUrl } from './assets.ts';
 import { mixTimelineAudio } from './audio.ts';
 import { muxVideo } from './timeline.tsx';
 import { BrowserCapabilityError, checkAbort, type ExportRequest, type ExportResult } from './types.ts';
+import { hasBrowserRuntimeReader, loadMediaSandbox, ownedRuntimePath, readRuntimeFile } from './runtime.ts';
 
 type SerializableRequest = Omit<ExportRequest, 'onProgress' | 'signal'>;
 /** The MessagePort is a capability bound to one iframe. Window messages never trigger a render. */
@@ -15,8 +16,45 @@ export class MediaSandboxClient extends EventTarget {
   private ready: Promise<void>;
   private readyCleanup?: () => void;
   private readyReject?: (error: Error) => void;
+  private runtimeAbort = new AbortController();
   constructor(readonly iframe: HTMLIFrameElement) {
-    super(); this.ready = new Promise((resolve, reject) => { this.readyReject = reject; const timer = setTimeout(() => reject(new BrowserCapabilityError('media-sandbox', 'Isolierte Medienvorschau konnte nach 15 Sekunden nicht starten. Runtime-CSP, CORS und media-sandbox.html prüfen.')), 15000); const connect = () => { const channel = new MessageChannel(); this.port = channel.port1; this.port.onmessage = (event) => { const data = event.data; if (data?.type === 'ready') { clearTimeout(timer); resolve(); } else if (data?.type === 'event') { if (data.name === 'frameupdate' || data.name === 'seeked') this.frame = data.frame; if (data.name === 'play') this.playing = true; if (data.name === 'pause' || data.name === 'ended') this.playing = false; this.dispatchEvent(new CustomEvent(data.name, { detail: { frame: data.frame, message: data.message } })); } else if (data?.id && this.pending.has(data.id)) { const p = this.pending.get(data.id)!; if (data.type === 'progress') p.progress?.(data.phase, data.progress); else { this.pending.delete(data.id); data.type === 'error' ? p.reject(new Error(data.error)) : p.resolve(data.value); } } }; iframe.contentWindow!.postMessage({ type: 'director-media-connect' }, '*', [channel.port2]); }; iframe.addEventListener('load', connect, { once: true }); this.readyCleanup = () => { clearTimeout(timer); iframe.removeEventListener('load', connect); }; }); void this.ready.catch(() => undefined);
+    super();
+    this.ready = new Promise((resolve, reject) => {
+      this.readyReject = reject;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const timeout = () => reject(new BrowserCapabilityError('media-sandbox', 'Isolierte Medienvorschau konnte nach dem Laden der Laufzeit nicht starten. Native Host-Verbindung und Sandbox-CSP prüfen.'));
+      // Native transfer has its own bounded/abortable host requests; the boot deadline starts
+      // only when the complete srcdoc has loaded, independent of real host network latency.
+      if (!hasBrowserRuntimeReader()) timer = setTimeout(timeout, 15000);
+      const connect = () => {
+        if (hasBrowserRuntimeReader() ? !iframe.hasAttribute('srcdoc') : !iframe.getAttribute('src')) return;
+        iframe.removeEventListener('load', connect);
+        clearTimeout(timer); timer = setTimeout(timeout, 15000);
+        const channel = new MessageChannel(); this.port = channel.port1;
+        this.port.onmessage = (event) => {
+          const data = event.data;
+          if (data?.type === 'runtime-file' && hasBrowserRuntimeReader()) {
+            // A runtime-only capability: generated code never receives the editor's host bridge.
+            void (async () => {
+              try { const file = await readRuntimeFile(ownedRuntimePath(data.path), this.runtimeAbort.signal); const bytes = new Uint8Array(file.bytes); this.port?.postMessage({ type: 'runtime-file-result', id: data.id, bytes, mime: file.mime }, [bytes.buffer]); }
+              catch (error) { this.port?.postMessage({ type: 'runtime-file-result', id: data.id, error: error instanceof Error ? error.message : String(error) }); }
+            })();
+          } else if (data?.type === 'ready') { clearTimeout(timer); resolve(); }
+          else if (data?.type === 'event') {
+            if (data.name === 'frameupdate' || data.name === 'seeked') this.frame = data.frame;
+            if (data.name === 'play') this.playing = true;
+            if (data.name === 'pause' || data.name === 'ended') this.playing = false;
+            this.dispatchEvent(new CustomEvent(data.name, { detail: { frame: data.frame, message: data.message } }));
+          } else if (data?.id && this.pending.has(data.id)) {
+            const p = this.pending.get(data.id)!;
+            if (data.type === 'progress') p.progress?.(data.phase, data.progress);
+            else { this.pending.delete(data.id); data.type === 'error' ? p.reject(new Error(data.error)) : p.resolve(data.value); }
+          }
+        };
+        iframe.contentWindow!.postMessage({ type: 'director-media-connect', runtimeBridge: hasBrowserRuntimeReader() }, '*', [channel.port2]);
+      };
+      iframe.addEventListener('load', connect); this.readyCleanup = () => { clearTimeout(timer); iframe.removeEventListener('load', connect); };
+    }); void this.ready.catch(() => undefined);
   }
   async request<T>(method: string, request?: unknown, progress?: ExportRequest['onProgress'], signal?: AbortSignal): Promise<T> {
     checkAbort(signal);
@@ -50,14 +88,15 @@ export class MediaSandboxClient extends EventTarget {
   play() { this.control('play'); } pause() { this.control('pause'); } toggle() { this.playing ? this.pause() : this.play(); }
   seekTo(frame: number) { this.frame = frame; this.control('seek', frame); } getCurrentFrame() { return this.frame; } isPlaying() { return this.playing; }
   mute() { this.control('mute'); } unmute() { this.control('unmute'); }
-  dispose() { this.readyCleanup?.(); this.readyReject?.(new Error('Medienframe geschlossen')); this.port?.close(); for (const p of this.pending.values()) p.reject(new Error('Medienframe geschlossen')); this.pending.clear(); }
+  dispose() { this.runtimeAbort.abort(); this.readyCleanup?.(); this.readyReject?.(new Error('Medienframe geschlossen')); this.port?.close(); for (const p of this.pending.values()) p.reject(new Error('Medienframe geschlossen')); this.pending.clear(); }
 }
 export async function exportInSandbox(request: ExportRequest, sandboxUrl = '/media-sandbox.html'): Promise<ExportResult> {
   // Chromium suspends requestAnimationFrame for offscreen iframes. Remotion needs animation
   // ticks even for a still export; keep a tiny inert processing surface inside the viewport.
   const frame = document.createElement('iframe'); frame.sandbox.add('allow-scripts'); frame.style.cssText = 'position:fixed;width:2px;height:2px;left:0;top:0;border:0;opacity:0.001;pointer-events:none';
-  const client = new MediaSandboxClient(frame); frame.src = new URL(sandboxUrl, document.baseURI).href; document.body.append(frame);
+  const client = new MediaSandboxClient(frame);
   try {
+    await loadMediaSandbox(frame, sandboxUrl, request.signal); document.body.append(frame);
     if (request.document.kind === 'timeline' && (request.format === 'mp4' || request.format === 'mov')) {
       const audio = await mixTimelineAudio(request.document, request.assets, { normalizeLufs: request.options?.normalizeLufs ?? -14, sampleRate: request.options?.sampleRate, signal: request.signal, onProgress: request.onProgress });
       const visual = await client.export({ ...request, options: { ...request.options, visualOnly: true } });
@@ -69,7 +108,7 @@ export async function exportInSandbox(request: ExportRequest, sandboxUrl = '/med
 export const SandboxTimelinePreview = forwardRef<PlayerRef, { request: ExportRequest; sandboxUrl?: string; playbackRate?: number; style?: React.CSSProperties; onReady?: () => void; onError?: (error: Error) => void }>(function SandboxTimelinePreview({ request, sandboxUrl = '/media-sandbox.html', playbackRate = 1, style, onReady, onError }, ref) {
   const frame = useRef<HTMLIFrameElement>(null), client = useRef<MediaSandboxClient | null>(null), [ready, setReady] = useState(false);
   useImperativeHandle(ref, () => client.current as unknown as PlayerRef, [ready]);
-  useEffect(() => { const c = new MediaSandboxClient(frame.current!); client.current = c; frame.current!.src = new URL(sandboxUrl, document.baseURI).href; setReady(true); return () => { c.dispose(); client.current = null; }; }, [sandboxUrl]);
+  useEffect(() => { const c = new MediaSandboxClient(frame.current!); client.current = c; const abort = new AbortController(); let alive = true; void loadMediaSandbox(frame.current!, sandboxUrl, abort.signal).then(() => { if (alive) setReady(true); }).catch((error) => { if (alive) onError?.(error as Error); }); return () => { alive = false; abort.abort(); c.dispose(); client.current = null; setReady(false); }; }, [sandboxUrl]);
   useEffect(() => { if (!ready || !client.current) return; let alive = true; const abort = new AbortController(); const c = client.current; const fail = (event: Event) => { if (alive) onError?.(new Error((event as CustomEvent<{message?:string}>).detail?.message ?? 'Medium in der Vorschau nicht dekodierbar')); }; c.addEventListener('error', fail); void c.preview({ ...request, signal: abort.signal }, playbackRate).then(() => { if (alive) onReady?.(); }).catch((error) => { if (alive) onError?.(error as Error); }); return () => { alive = false; abort.abort(); c.removeEventListener('error', fail); }; }, [request, playbackRate, ready]);
   return <iframe ref={frame} title="Director media preview" sandbox="allow-scripts" allow="autoplay" style={{ border: 0, ...style }} />;
 });
