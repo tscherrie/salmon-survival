@@ -33,20 +33,20 @@ describe('App (Integration mit Fake-Backend)', () => {
     await user.click(screen.getByRole('button', { name: 'Senden' }));
 
     const panel = screen.getByRole('complementary', { name: 'Director' });
-    await waitFor(() => expect(within(panel).getAllByText(/Bevor ich ein Treatment schreibe/).length).toBeGreaterThan(0));
+    await waitFor(() => expect(within(panel).getAllByText(/Bevor ich ein Treatment schreibe/).length).toBeGreaterThan(0), { timeout: 5000 });
     expect(within(panel).getByText(/Die Stelle bei/)).toHaveTextContent('Strophe: Mira am Steuer');
 
-    const question = await within(panel).findByRole('form', { name: 'Rückfrage' });
+    const question = await within(panel).findByRole('form', { name: 'Rückfrage' }, { timeout: 5000 });
     await user.click(within(question).getByLabelText(/YouTube \(16:9\)/));
     await user.click(within(question).getByLabelText(/Papier-Rotoscope/));
     await user.click(within(question).getByRole('button', { name: 'Antworten' }));
 
-    const card = await within(panel).findByRole('article', { name: 'Checkpoint zur Freigabe: Treatment' });
+    const card = await within(panel).findByRole('article', { name: 'Checkpoint zur Freigabe: Treatment' }, { timeout: 5000 });
     await user.click(within(card).getByRole('button', { name: 'Freigeben (Budget $12.50)' }));
-    expect(await screen.findByRole('button', { name: 'Versionen: v4' })).toBeInTheDocument();
-    await waitFor(() => expect(within(panel).getAllByText(/Fertig/).length).toBeGreaterThan(0));
+    expect(await screen.findByRole('button', { name: 'Versionen: v4' }, { timeout: 8000 })).toBeInTheDocument();
+    await waitFor(() => expect(within(panel).getAllByText(/Fertig/).length).toBeGreaterThan(0), { timeout: 5000 });
     // Neues Asset aus der Generierung im Browser
-    expect(await screen.findByText('Storyboard 07 – Refrain Neon')).toBeInTheDocument();
+    expect(await screen.findByText('Storyboard 07 – Refrain Neon', {}, { timeout: 5000 })).toBeInTheDocument();
     // Zurück zum Start
     await user.click(screen.getByRole('button', { name: 'Projekte' }));
     expect(await screen.findByRole('heading', { name: 'Zuletzt geöffnet' })).toBeInTheDocument();

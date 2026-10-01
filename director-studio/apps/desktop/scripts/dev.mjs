@@ -18,7 +18,7 @@ await new Promise((resolve, reject) => {
   p.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`build-main exit ${code}`))));
 });
 
-const vite = run(process.execPath, [require.resolve('vite/bin/vite.js'), '--config', 'vite.renderer.config.ts', '--port', String(port), '--strictPort']);
+const vite = run(process.execPath, [join(dirname(require.resolve('vite/package.json')), 'bin/vite.js'), '--config', 'vite.renderer.config.ts', '--port', String(port), '--strictPort']);
 
 // Kurz warten, bis Vite lauscht.
 await new Promise((resolve) => setTimeout(resolve, 1500));

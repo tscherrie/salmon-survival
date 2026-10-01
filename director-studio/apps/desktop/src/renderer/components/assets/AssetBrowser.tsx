@@ -59,7 +59,7 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
       <div className="assets-toolbar" role="toolbar" aria-label={t('assets.label')}>
         <div className="search-box">
           <Icon name="search" size={14} />
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('assets.search')} aria-label={t('assets.search')} />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('assets.searchPlaceholder')} aria-label={t('assets.search')} />
         </div>
         <div className="kind-filters" role="group" aria-label={t('assets.kind')}>
           {presentKinds.map((kind) => (
@@ -73,7 +73,7 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
           <select value={status} onChange={(e) => setStatus(e.target.value as AssetUiStatus | 'all')} aria-label={t('assets.status')}>
             {STATUS_FILTERS.map((s) => (
               <option key={s} value={s}>
-                {s === 'all' ? t('common.all') : t(`assetStatus.${s}`)}
+                {s === 'all' ? t('assets.filterAll', { label: t('assets.status') }) : t(`assetStatus.${s}`)}
               </option>
             ))}
           </select>
@@ -81,7 +81,7 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
         <label className="select-label">
           <span>{t('assets.source')}</span>
           <select value={source} onChange={(e) => setSource(e.target.value as AssetSource | 'all')} aria-label={t('assets.source')}>
-            <option value="all">{t('common.all')}</option>
+            <option value="all">{t('assets.filterAll', { label: t('assets.source') })}</option>
             {ASSET_SOURCES.map((s) => (
               <option key={s} value={s}>
                 {t(`assetSource.${s}`)}
@@ -92,7 +92,7 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
         <label className="select-label">
           <span>{t('assets.model')}</span>
           <select value={model} onChange={(e) => setModel(e.target.value)} aria-label={t('assets.model')}>
-            <option value="all">{t('common.all')}</option>
+            <option value="all">{t('assets.filterAll', { label: t('assets.model') })}</option>
             {presentModels.map((m) => (
               <option key={m} value={m}>
                 {shortModelName(m, modelNames)}

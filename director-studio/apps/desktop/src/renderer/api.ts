@@ -1,5 +1,5 @@
 import type { StudioApi } from '@studio/core';
-import { FakeStudioApi } from './fake/FakeStudioApi.ts';
+import type { FakeStudioApi } from './fake/FakeStudioApi.ts';
 
 declare global {
   interface Window {
@@ -12,20 +12,25 @@ declare global {
 
 export type ApiMode = 'electron' | 'fake';
 
-let fallback: FakeStudioApi | null = null;
+let fallback: Promise<StudioApi> | null = null;
 
-/** Liefert `window.studio` (Electron) oder ein In-Memory-Fake für Browser-Dev, Tests und E2E. */
-export function getStudioApi(): StudioApi {
-  if (typeof window !== 'undefined' && window.studio) return window.studio;
-  if (!fallback) {
+/**
+ * Liefert `window.studio` (Electron) oder – nur im Browser-Dev-Modus, in Tests und E2E – ein
+ * In-Memory-Fake. Das Fake wird dynamisch geladen und landet so nicht im Electron-Startpfad.
+ */
+export function getStudioApi(): Promise<StudioApi> {
+  if (typeof window !== 'undefined' && window.studio) return Promise.resolve(window.studio);
+  fallback ??= import('./fake/FakeStudioApi.ts').then(({ FakeStudioApi }) => {
     // `?large=1` legt zusätzlich ein 5-Minuten-Stresstest-Projekt an (Performance der Timeline).
     const large = typeof location !== 'undefined' && new URLSearchParams(location.search).has('large');
-    fallback = new FakeStudioApi({ largeDemo: large });
-    if (typeof window !== 'undefined') window.__studioFake = fallback;
-  }
+    const fake = new FakeStudioApi({ largeDemo: large });
+    if (typeof window !== 'undefined') window.__studioFake = fake;
+    return fake;
+  });
   return fallback;
 }
 
+/** Fake-Backend erkennt man an seinem `debug`-Griff (kein `instanceof`, damit das Fake optional bleibt). */
 export function apiModeOf(api: StudioApi): ApiMode {
-  return api instanceof FakeStudioApi ? 'fake' : 'electron';
+  return (api as { isFake?: boolean }).isFake === true ? 'fake' : 'electron';
 }

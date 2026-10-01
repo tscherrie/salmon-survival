@@ -59,7 +59,8 @@ import {
 import { DEMO_MODELS } from './demoModels.ts';
 import { DEMO_ROOT, DEMO_VIDEO_ID, DEMO_VIDEO_PATH, buildDemoProjects, type DemoProjectSeed, type MediaSpec } from './demoProjects.ts';
 import { makePeaks, makeWavDataUri, placeholderGlyph, placeholderImage, textDataUri } from './placeholders.ts';
-import { PICK_MESSAGE, demoSiteUrl, type PickMessage } from './sitePreview.ts';
+import { PICK_MESSAGE, type PickMessage } from '../lib/previewMessages.ts';
+import { demoSiteUrl } from './sitePreview.ts';
 
 /**
  * Vollständige In-Memory-Implementierung von `StudioApi` für Browser-Dev, Tests und E2E.
@@ -150,6 +151,8 @@ export interface FakeDebug {
 }
 
 export class FakeStudioApi implements StudioApi {
+  /** Markierung für `apiModeOf` (Browser-/Testmodus). */
+  readonly isFake = true;
   readonly debug: FakeDebug;
   private readonly listeners = new Set<(event: StudioEvent) => void>();
   private readonly projects = new Map<string, FakeProject>();

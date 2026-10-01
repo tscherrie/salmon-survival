@@ -59,5 +59,7 @@ export default defineConfig({
     emptyOutDir: true,
     target: 'chrome140',
     sourcemap: true,
+    // Lokale Desktop-App: große Chunks (Remotion-Player) sind unkritisch
+    chunkSizeWarningLimit: 2000,
   },
 });

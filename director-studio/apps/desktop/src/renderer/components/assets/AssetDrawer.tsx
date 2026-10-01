@@ -26,7 +26,7 @@ export function AssetDrawer({ asset, onClose, onSelect }: { asset: Asset; onClos
   if (asset.modelId) rows.push([t('assets.model'), asset.modelId]);
   if (asset.costUsd !== undefined) rows.push([t('assets.cost'), formatUsd(asset.costUsd)]);
   if (asset.durationMs !== undefined) rows.push([t('assets.duration'), formatDurationMs(asset.durationMs)]);
-  if (asset.width && asset.height) rows.push(['Pixel', `${asset.width}×${asset.height}${asset.fps ? ` @ ${asset.fps} fps` : ''}`]);
+  if (asset.width && asset.height) rows.push([t('assets.pixels'), `${asset.width}×${asset.height}${asset.fps ? ` @ ${asset.fps} fps` : ''}`]);
   if (asset.bytes !== undefined) rows.push([t('assets.size'), formatBytes(asset.bytes)]);
   if (asset.path) rows.push([t('assets.path'), asset.path]);
   if (asset.sourceUrl) rows.push(['URL', asset.sourceUrl]);
@@ -104,11 +104,11 @@ export function AssetDrawer({ asset, onClose, onSelect }: { asset: Asset; onClos
               <dd>{generation.endpointId}</dd>
             </div>
             <div>
-              <dt>Status</dt>
+              <dt>{t('assets.status')}</dt>
               <dd>{t(`director.gen.${generation.status}`)}</dd>
             </div>
             <div>
-              <dt>Zweck</dt>
+              <dt>{t('assets.purpose')}</dt>
               <dd>{generation.purpose}</dd>
             </div>
             <div>

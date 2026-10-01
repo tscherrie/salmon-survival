@@ -21,7 +21,8 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     viewport: { width: 1440, height: 900 },
-    trace: 'retain-on-failure',
+    // Tracing injiziert Skripte in sandboxed srcdoc-iframes (Folien/Leinwand) → Konsolenfehler. Nur bei Bedarf.
+    trace: process.env.STUDIO_E2E_TRACE ? 'retain-on-failure' : 'off',
     screenshot: 'only-on-failure',
     launchOptions: {
       executablePath: process.env.STUDIO_CHROME ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',

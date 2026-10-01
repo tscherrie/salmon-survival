@@ -4,17 +4,7 @@
  * an die App (Selektor, Box, `data-src`-Quelle) – im Electron-Betrieb übernimmt das die WebContentsView.
  */
 
-export const PICK_MODE_MESSAGE = 'studio-pick-mode';
-export const PICK_MESSAGE = 'studio-pick';
-
-export interface PickMessage {
-  type: typeof PICK_MESSAGE;
-  page: string;
-  selector: string;
-  source?: string | undefined;
-  text?: string | undefined;
-  bbox: { x: number; y: number; width: number; height: number };
-}
+import { PICK_MESSAGE, PICK_MODE_MESSAGE } from '../lib/previewMessages.ts';
 
 export function demoSiteHtml(title: string): string {
   const pickScript = `
@@ -51,7 +41,6 @@ export function demoSiteHtml(title: string): string {
     box.style.display = 'block'; box.style.left = r.left + 'px'; box.style.top = r.top + 'px'; box.style.width = r.width + 'px'; box.style.height = r.height + 'px';
   });
   document.addEventListener('click', function(e){
-    var link = e.target.closest('a[href^="#/"]');
     if (!pick) { return; }
     e.preventDefault(); e.stopPropagation();
     var el = e.target.closest('[data-src]') || e.target;

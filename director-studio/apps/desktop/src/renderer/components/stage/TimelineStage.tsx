@@ -207,6 +207,8 @@ export function TimelineStage({ timeline, audioProject = false }: { timeline: Ti
   const [view, setView] = useState({ left: 0, width: 0 });
   const [selection, setSelection] = useState<{ from: number; to: number; trackId?: string | undefined } | null>(null);
   const fitted = useRef(false);
+  /** Hat der Nutzer selbst gezoomt? Sonst wird bei wachsender Dauer neu eingepasst. */
+  const userZoomed = useRef(false);
   const anchor = useRef<{ frame: number; offset: number } | null>(null);
   const raf = useRef(0);
 
@@ -245,8 +247,13 @@ export function TimelineStage({ timeline, audioProject = false }: { timeline: Ti
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Dauer geändert (z. B. Director verlängert die Timeline) → neu einpassen, solange nicht manuell gezoomt
+  useEffect(() => {
+    const w = scrollRef.current?.clientWidth ?? 0;
+    if (!userZoomed.current && fitted.current && w > 0) setPps(fitZoom({ durationFrames: total, fps }, w));
+  }, [total, fps]);
 
   // Zoom um einen Ankerpunkt (Mausposition bzw. Mitte)
   useLayoutEffect(() => {
@@ -262,11 +269,13 @@ export function TimelineStage({ timeline, audioProject = false }: { timeline: Ti
     const rect = el?.getBoundingClientRect();
     const offset = clientX !== undefined && rect ? clientX - rect.left : (el?.clientWidth ?? 0) / 2;
     anchor.current = { frame: xToFrame((el?.scrollLeft ?? 0) + offset, fps, pps), offset };
+    userZoomed.current = true;
     setPps((p) => clampZoom(p * factor));
   };
   const zoomFit = () => {
     const w = scrollRef.current?.clientWidth ?? 0;
     anchor.current = { frame: 0, offset: 0 };
+    userZoomed.current = false;
     setPps(w > 0 ? fitZoom(timeline, w) : DEFAULT_PX_PER_SECOND);
   };
 

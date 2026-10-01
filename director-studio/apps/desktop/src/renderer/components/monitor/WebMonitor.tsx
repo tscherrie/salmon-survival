@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { VIEWPORTS, type PreviewViewport, type Rect, type Site } from '@studio/core';
-import { PICK_MODE_MESSAGE } from '../../fake/sitePreview.ts';
+import { PICK_MODE_MESSAGE } from '../../lib/previewMessages.ts';
 import { useT } from '../../i18n.ts';
 import { useElementSize } from '../../lib/hooks.ts';
 import { useActions, useApi, useApiMode, useStudio } from '../../state/context.tsx';

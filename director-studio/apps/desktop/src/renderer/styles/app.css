@@ -1235,6 +1235,10 @@ select {
 .marker-flag span {
   color: var(--text);
 }
+/* Symbol-Marker (Checkpoint/QA/Notiz) unter den Section-Beschriftungen, damit nichts überlappt */
+.marker-flag:not(.marker-section) {
+  top: 10px;
+}
 .marker-flag:hover {
   background: color-mix(in srgb, currentColor 40%, var(--bg-elev-2));
 }
@@ -1866,7 +1870,7 @@ select {
   height: 26px;
   font-size: 12px;
 }
-@media (max-width: 1560px) {
+@media (max-width: 1800px) {
   .select-label > span {
     display: none;
   }

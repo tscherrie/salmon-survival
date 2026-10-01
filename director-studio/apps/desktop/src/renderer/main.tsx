@@ -9,8 +9,11 @@ applyThemeMode(readThemeMode());
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root fehlt');
-createRoot(container).render(
-  <StrictMode>
-    <App api={getStudioApi()} />
-  </StrictMode>,
+const root = createRoot(container);
+void getStudioApi().then((api) =>
+  root.render(
+    <StrictMode>
+      <App api={api} />
+    </StrictMode>,
+  ),
 );

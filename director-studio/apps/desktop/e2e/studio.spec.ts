@@ -1,10 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Sammelt Konsolen- und Seitenfehler (Warnungen sind erlaubt). */
+/**
+ * Sammelt Konsolen- und Seitenfehler (Warnungen sind erlaubt). Ausgenommen: Meldungen, die Playwrights
+ * eigener Trace-Recorder in sandboxed `srcdoc`-iframes auslöst (kein Fehler der App).
+ */
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on('console', (message) => {
-    if (message.type() === 'error') errors.push(message.text());
+    if (message.type() !== 'error') return;
+    const location = message.location().url;
+    if (location === 'about:srcdoc' && message.text().startsWith('Blocked script execution')) return;
+    errors.push(`${message.text()} @ ${location}:${message.location().lineNumber}`);
   });
   page.on('pageerror', (error) => errors.push(error.message));
   return errors;
