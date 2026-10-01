@@ -1,4 +1,5 @@
 import {
+  activeBudgetCheckpoint,
   composerToDisplayText,
   decideCheckpoint,
   defaultIdGenerator,
@@ -249,8 +250,13 @@ export class DirectorSession {
     return this.deps.options?.effort ?? this.deps.project.manifest.director.effort ?? 'xhigh';
   }
 
+  /**
+   * Bucht Director-Nutzung als Ist-Kosten – auf den aktiven (zuletzt freigegebenen) Checkpoint, damit die
+   * Restfreigabe dieses Checkpoints sinkt; ohne Freigabe projektweit (zählt dann nur in der Gesamtprüfung).
+   */
   private async recordUsage(runId: string, usd: number, note: string): Promise<void> {
-    await this.deps.project.budgetRecordUsage(runId, usd, 'director', note);
+    const checkpointId = activeBudgetCheckpoint(this.deps.project.manifest.checkpoints)?.id;
+    await this.deps.project.budgetRecordUsage(runId, usd, 'director', note, checkpointId);
     emitBudget(this.deps.project, this.projectId, this.deps.ui);
   }
 
