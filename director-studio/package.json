@@ -9,10 +9,14 @@
     "apps/*"
   ],
   "scripts": {
+    "app": "node apps/desktop/scripts/dev.mjs",
+    "demo": "npm run -w @studio/desktop dev:web",
+    "build": "node apps/desktop/scripts/build-main.mjs && npm run -w @studio/desktop build:renderer",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "npm run -w @studio/desktop test:e2e"
+    "test:e2e": "npm run -w @studio/desktop test:e2e",
+    "test:electron": "cd apps/desktop && playwright test -c e2e-electron/playwright.config.ts"
   },
   "engines": {
     "node": ">=22.13"
