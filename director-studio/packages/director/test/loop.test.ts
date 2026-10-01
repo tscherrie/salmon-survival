@@ -282,6 +282,15 @@ describe('DirectorLoop', () => {
     expect(r2.costUsd).toBe(6);
   });
 
+  it('stellt die Anfrage nach unverarbeitbarer Antwort (eager JSON) begrenzt erneut', async () => {
+    const retryable = Object.assign(new Error('Unexpected end of JSON input'), { retryable: true });
+    const { loop } = makeLoop(new FakeTransport([{ error: retryable }, fakeText('zweiter Versuch')]), []);
+    const ok = await loop.runTurn({ content: 'x', runId: 'r', signal: new AbortController().signal });
+    expect(ok).toMatchObject({ stopReason: 'end_turn', text: 'zweiter Versuch', iterations: 2 });
+    const { loop: loop2 } = makeLoop(new FakeTransport([{ error: retryable }, { error: retryable }, { error: retryable }]), []);
+    expect((await loop2.runTurn({ content: 'x', runId: 'r', signal: new AbortController().signal })).stopReason).toBe('error');
+  });
+
   it('Transportfehler beenden den Turn mit error', async () => {
     const { loop } = makeLoop(new FakeTransport([{ error: new Error('529 overloaded') }]), []);
     const result = await loop.runTurn({ content: 'x', runId: 'r', signal: new AbortController().signal });

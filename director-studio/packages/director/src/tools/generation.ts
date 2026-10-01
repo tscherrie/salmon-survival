@@ -384,14 +384,13 @@ export async function preflightGenerate(input: unknown, ctx: ToolContext): Promi
 
 // ───────────────────────── Tools ─────────────────────────
 
-function describeOutcome(ctx: ToolContext, gen: Generation, assets: Asset[]): string {
+function describeOutcome(gen: Generation, assets: Asset[]): string {
   if (gen.status === 'completed') {
     const list = assets.map((a) => `  - ${a.id} ${a.kind}${a.durationMs ? ` ${formatSec(a.durationMs / 1000)}` : ''}${a.width ? ` ${a.width}×${a.height}` : ''} „${a.title}“`).join('\n');
     return `${gen.id}: fertig (${gen.endpointId}, gebucht ${formatUsd(gen.costUsd ?? gen.estimateUsd)}).\n${list || '  (keine Ausgaben)'}\nPrüfe das Ergebnis (get_asset/frames/contact_sheet), bevor du es verwendest.`;
   }
   if (gen.status === 'failed') return `${gen.id}: FEHLGESCHLAGEN (${gen.endpointId}): ${gen.error ?? 'unbekannter Fehler'}. Reservierung freigegeben.`;
   if (gen.status === 'canceled') return `${gen.id}: abgebrochen. Reservierung freigegeben.`;
-  void ctx;
   return `${gen.id}: ${gen.status === 'queued' ? `in der Warteschlange${gen.queuePosition !== undefined ? ` (Position ${gen.queuePosition})` : ''}` : 'läuft'} (${gen.endpointId}).`;
 }
 
@@ -461,7 +460,7 @@ export const generateTool = defineTool({
     try {
       const outcome = await ctx.jobs.wait(id, 30 * 60_000, ctx.signal);
       if (!outcome) return textResult(`${head}\nNoch nicht fertig (Zeitlimit). Später mit await_generations(["${id}"]) abholen.`);
-      const result = describeOutcome(ctx, outcome.generation, outcome.assets);
+      const result = describeOutcome(outcome.generation, outcome.assets);
       return outcome.generation.status === 'completed' ? textResult(`${head}\n${result}`) : errorResult(`${head}\n${result}`);
     } catch (error) {
       if (isAbortError(error)) return textResult(`${head}\nWarten unterbrochen; die Generierung läuft im Hintergrund weiter.`);
@@ -499,10 +498,10 @@ export const awaitGenerationsTool = defineTool({
         lines.push(`${r.id}: ${r.error}`);
       } else if (!r.outcome) {
         const gen = ctx.project.getGeneration(r.id);
-        lines.push(gen ? describeOutcome(ctx, gen, []) : `${r.id}: unbekannt`);
+        lines.push(gen ? describeOutcome(gen, []) : `${r.id}: unbekannt`);
       } else {
         if (r.outcome.generation.status !== 'completed') anyFailed = true;
-        lines.push(describeOutcome(ctx, r.outcome.generation, r.outcome.assets));
+        lines.push(describeOutcome(r.outcome.generation, r.outcome.assets));
       }
     }
     return { content: [{ type: 'text', text: lines.join('\n') }], ...(anyFailed && results.length === 1 ? { isError: true } : {}) };

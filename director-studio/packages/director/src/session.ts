@@ -1,6 +1,9 @@
 import {
   composerToDisplayText,
+  decideCheckpoint,
   defaultIdGenerator,
+  formatUsd,
+  type CheckpointDecision,
   type ChatMessage,
   type ComposerMessage,
   type DirectorEffort,
@@ -148,6 +151,33 @@ export class DirectorSession {
    */
   notify(text: string): Promise<void> {
     return this.enqueue({ kind: 'notify', text });
+  }
+
+  /**
+   * Entscheidung des Nutzers über einen Checkpoint (Freigabekarte): aktualisiert das Manifest, bucht bei
+   * Freigabe das Budget im Ledger, meldet `checkpoints`/`manifest`/`budget` und informiert – sofern
+   * `notify` nicht `false` ist – den Director mit einem Operator-Ereignis (startet einen Turn).
+   */
+  async decideCheckpoint(checkpointId: string, decision: CheckpointDecision, options: { notify?: boolean } = {}): Promise<void> {
+    const { project } = this.deps;
+    const manifest = await project.updateManifest((m) => {
+      m.checkpoints = decideCheckpoint(m.checkpoints, checkpointId, decision, this.clock());
+    });
+    const checkpoint = manifest.checkpoints.find((c) => c.id === checkpointId)!;
+    if (decision.decision === 'approve' && (checkpoint.budgetApprovedUsd ?? 0) > 0) {
+      await project.approveBudget(checkpointId, checkpoint.budgetApprovedUsd!, `Checkpoint „${checkpoint.title}“`);
+    }
+    this.emit({ type: 'checkpoints', projectId: this.projectId, checkpoints: manifest.checkpoints });
+    this.emit({ type: 'manifest', projectId: this.projectId, manifest: project.manifest });
+    emitBudget(project, this.projectId, this.deps.ui);
+    if (options.notify === false) return;
+    const text =
+      decision.decision === 'approve'
+        ? `Der Nutzer hat den Checkpoint „${checkpoint.title}“ (${checkpointId}) freigegeben${checkpoint.budgetApprovedUsd ? ` – Budget ${formatUsd(checkpoint.budgetApprovedUsd)}` : ''}. Arbeite die nächste Phase innerhalb dieses Budgets ab.`
+        : decision.decision === 'request_changes'
+          ? `Der Nutzer wünscht Änderungen am Checkpoint „${checkpoint.title}“ (${checkpointId}): ${decision.feedback}`
+          : `Der Nutzer hat den Checkpoint „${checkpoint.title}“ (${checkpointId}) übersprungen.`;
+    await this.notify(text);
   }
 
   /** Bricht den laufenden Turn ab (eingereihte Nachrichten laufen danach weiter). */
@@ -400,6 +430,8 @@ export class DirectorSession {
       const changed = this.tracker.diff(blocks);
       const context = changed.length ? renderContextBlocks(changed) : undefined;
       result = await runtime.runTurn({ content, context, runId, signal: controller.signal });
+      // Turn scheiterte, bevor etwas angehängt wurde → Kontext beim nächsten Mal vollständig senden.
+      if (result.stopReason === 'error' && result.iterations === 0) this.tracker.reset();
       if (result.text.trim()) {
         const message: ChatMessage = { id: this.streamMessageId, role: 'director', text: result.text, createdAt: this.clock(), runId };
         await this.deps.project.appendMessage(message);
@@ -419,6 +451,7 @@ export class DirectorSession {
           this.setState('idle');
       }
     } catch (error) {
+      this.tracker.reset();
       if (controller.signal.aborted) this.setState('interrupted');
       else {
         this.setState('failed', errorMessage(error));

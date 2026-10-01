@@ -192,6 +192,7 @@ body { background: ${opts.pageBackground ? sanitizeCssValue(opts.pageBackground)
 .role-caption { color: var(--muted); line-height: 1.35; }
 .role-kicker { text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; color: var(--accent); }
 ${roles}
+.el-image, .el-video { overflow: hidden; }
 .el-image img, .el-video video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .el-shape svg, .el-chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .el-html { overflow: hidden; contain: layout paint; }

@@ -45,6 +45,7 @@ export interface DirectorLoopOptions {
 }
 
 const MAX_TOKEN_CONTINUATIONS = 3;
+const MAX_TRANSPORT_RETRIES = 2;
 
 /**
  * Eigener Tool-Loop im Format der Anthropic Messages API. Das Transkript wird nur angehängt (Prompt-
@@ -109,6 +110,7 @@ export class DirectorLoop implements DirectorRuntime {
     let stopReason: TurnStopReason = 'end_turn';
     let error: string | undefined;
     let continuations = 0;
+    let retries = 0;
 
     try {
       if (this.options.compaction && !transport.caps.serverCompaction && estimateTokens(this.messages) > this.options.compaction.thresholdTokens) {
@@ -151,12 +153,17 @@ export class DirectorLoop implements DirectorRuntime {
         } catch (e) {
           if (isAbortError(e) || signal.aborted) {
             stopReason = 'interrupted';
+          } else if ((e as { retryable?: boolean }).retryable && retries < MAX_TRANSPORT_RETRIES) {
+            retries += 1;
+            this.emit({ type: 'progress', text: `Antwort war nicht verarbeitbar – neuer Versuch (${retries}/${MAX_TRANSPORT_RETRIES}).` });
+            continue;
           } else {
             stopReason = 'error';
             error = errorMessage(e);
           }
           break;
         }
+        retries = 0;
         const cost = response.costUsd ?? tokenCostUsd(this.options.model, response.usage);
         costUsd += cost;
         this.emit({ type: 'usage', usage: response.usage, costUsd: cost, model: response.model ?? this.options.model });

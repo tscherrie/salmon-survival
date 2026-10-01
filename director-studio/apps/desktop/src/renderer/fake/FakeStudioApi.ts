@@ -301,6 +301,14 @@ export class FakeStudioApi implements StudioApi {
     for (const [id, spec] of Object.entries(seed.peaks)) p.peakSpecs.set(id, spec);
     p.messages = clone(seed.messages);
     p.generations = clone(seed.generations);
+    // Laufende/wartende Demo-Jobs „jetzt“ starten lassen (sonst zeigt die Warteschlange Tage an)
+    p.generations.forEach((g, i) => {
+      if (g.status === 'running' || g.status === 'queued') {
+        const at = new Date(Date.now() - (40 + i * 5) * 1000).toISOString();
+        g.createdAt = at;
+        if (g.submittedAt) g.submittedAt = at;
+      }
+    });
     p.ledger = new BudgetLedger(clone(seed.ledger), () => this.now(), () => this.ids('led'));
     if (seed.initialDocument) {
       p.commitTime = seed.manifest.createdAt;

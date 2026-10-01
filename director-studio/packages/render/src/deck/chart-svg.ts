@@ -89,7 +89,7 @@ export function chartToSvg(chart: ChartSpec, opts: ChartSvgOptions): string {
     legendItems.forEach((name, i) => {
       parts.push(`<rect x="${round(x)}" y="${round(y - fs * 0.62)}" width="${round(fs * 0.75)}" height="${round(fs * 0.75)}" rx="${round(fs * 0.15)}" fill="${escapeHtml(color(i))}"/>`);
       parts.push(`<text x="${round(x + fs * 1.05)}" y="${round(y)}" fill="${escapeHtml(muted)}">${escapeHtml(name)}</text>`);
-      x += fs * 1.6 + estimateTextWidth(name, fs);
+      x += fs * 2.2 + estimateTextWidth(name, fs);
     });
     top = fs * 2.2;
   }
@@ -227,7 +227,7 @@ function renderPie(chart: ChartSpec, o: { W: number; H: number; fs: number; colo
 
 /** Grobe Textbreite (Durchschnittsbreite ~0,55 em). */
 export function estimateTextWidth(value: string, fontSize: number): number {
-  return value.length * fontSize * 0.55;
+  return value.length * fontSize * 0.6;
 }
 
 function truncate(value: string, max: number): string {

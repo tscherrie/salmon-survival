@@ -165,6 +165,9 @@ export class AnthropicTransport implements ModelTransport {
       message = await stream.finalMessage();
     } catch (error) {
       if (error instanceof Anthropic.APIUserAbortError || req.signal?.aborted) throw abortError();
+      // Mit eager_input_streaming kann das SDK beim Materialisieren einer Tool-Eingabe an ungültigem JSON
+      // scheitern (kein tool_use_id zum Antworten) → Anfrage erneut stellen (Loop begrenzt die Versuche).
+      if (!(error instanceof Anthropic.APIError)) throw new RetryableTransportError(`Antwort nicht verarbeitbar: ${(error as Error).message}`);
       throw error;
     }
     const usage = message.usage;
@@ -180,6 +183,15 @@ export class AnthropicTransport implements ModelTransport {
       model: message.model,
       stopDetails: message.stop_details ? { category: message.stop_details.category, explanation: message.stop_details.explanation ?? null } : null,
     };
+  }
+}
+
+/** Fehler, nach dem der Loop dieselbe Anfrage erneut stellen darf (z. B. unparsebares Tool-JSON). */
+export class RetryableTransportError extends Error {
+  readonly retryable = true;
+  constructor(message: string) {
+    super(message);
+    this.name = 'RetryableTransportError';
   }
 }
 

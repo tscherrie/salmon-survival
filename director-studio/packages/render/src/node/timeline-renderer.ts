@@ -81,6 +81,8 @@ export interface RenderVideoInput extends RenderInputBase {
   frameRange?: [number, number];
   /** Qualität (CRF) für h264/h265. */
   crf?: number;
+  /** Pixel-Faktor (z. B. 0.5 für schnelle Vorschau-Renderings). */
+  scale?: number;
 }
 
 type RendererModule = typeof import('@remotion/renderer');
@@ -323,6 +325,7 @@ export class TimelineRenderer {
         ...(codec === 'prores' ? { proResProfile: 'hq' as const } : {}),
         ...(input.crf !== undefined && codec !== 'prores' ? { crf: input.crf } : {}),
         ...(input.frameRange ? { frameRange: input.frameRange } : {}),
+        ...(input.scale ? { scale: input.scale } : {}),
         ...(this.opts.concurrency ? { concurrency: this.opts.concurrency } : {}),
         browserExecutable: this.browserExecutable,
         chromiumOptions: this.chromiumOptions,

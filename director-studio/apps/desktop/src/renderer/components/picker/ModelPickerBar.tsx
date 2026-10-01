@@ -38,7 +38,19 @@ function shortPrice(model: ModelInfo | undefined): string {
   return model?.price ? formatPrice(model.price) : '';
 }
 
-function ModelPicker({ modality, models, selection, onSelect }: { modality: Modality; models: ModelInfo[]; selection: PickerSelection; onSelect: (s: PickerSelection) => void }) {
+function ModelPicker({
+  modality,
+  models,
+  selection,
+  onSelect,
+  align,
+}: {
+  modality: Modality;
+  models: ModelInfo[];
+  selection: PickerSelection;
+  onSelect: (s: PickerSelection) => void;
+  align: 'start' | 'end';
+}) {
   const t = useT();
   const listId = useId();
   const [open, setOpen] = useState(false);
@@ -92,6 +104,7 @@ function ModelPicker({ modality, models, selection, onSelect }: { modality: Moda
       open={open}
       onClose={() => setOpen(false)}
       placement="top"
+      align={align}
       label={modalityLabel(modality)}
       className="picker-popover"
       anchor={
@@ -217,10 +230,11 @@ export function ModelPickerBar() {
 
   return (
     <section className="picker-bar" aria-label={t('picker.label')}>
-      {MODALITIES.map((modality) => (
+      {MODALITIES.map((modality, index) => (
         <div key={modality} className="picker-slot">
           <ModelPicker
             modality={modality}
+            align={index >= 5 ? 'end' : 'start'}
             models={byModality.get(modality) ?? []}
             selection={selectionFor(pickers ?? {}, modality)}
             onSelect={(selection) => void actions.setPicker(modality, selection)}
@@ -231,7 +245,7 @@ export function ModelPickerBar() {
               <select value={effort} onChange={(e) => void actions.setEffort(e.target.value as DirectorEffort)} aria-label={t('effort.label')} title={t('effort.label')}>
                 {DIRECTOR_EFFORTS.map((e) => (
                   <option key={e} value={e}>
-                    {t('effort.label')}: {t(`effort.${e}`)}
+                    {t(`effort.${e}`)}
                   </option>
                 ))}
               </select>

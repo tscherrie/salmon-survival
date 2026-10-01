@@ -13,7 +13,7 @@ import { Header } from './Header.tsx';
 const LAYOUT_KEY = 'director-studio.layout';
 
 function readLayout(): { top: number; panel: number } {
-  const fallback = { top: typeof window !== 'undefined' ? Math.round(Math.min(640, Math.max(220, window.innerHeight * 0.36))) : 300, panel: 380 };
+  const fallback = { top: typeof window !== 'undefined' ? Math.round(Math.min(640, Math.max(240, window.innerHeight * 0.4))) : 300, panel: 380 };
   try {
     const raw = localStorage.getItem(LAYOUT_KEY);
     if (raw) return { ...fallback, ...(JSON.parse(raw) as Partial<typeof fallback>) };

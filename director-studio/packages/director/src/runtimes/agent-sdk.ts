@@ -32,7 +32,7 @@ export interface AgentSdkRuntimeOptions {
 }
 
 /** Eingebaute Claude-Code-Tools, die im Studio nie laufen (keine Shell, Dateizugriff nur über Studio-Tools). */
-export const AGENT_SDK_DISALLOWED_TOOLS = ['Bash', 'BashOutput', 'KillShell', 'KillBash', 'Read', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Glob', 'Grep', 'Task', 'Agent', 'ExitPlanMode', 'Skill'];
+export const AGENT_SDK_DISALLOWED_TOOLS = ['Bash', 'BashOutput', 'KillShell', 'KillBash', 'Read', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Glob', 'Grep', 'Task', 'Agent', 'ExitPlanMode', 'Skill', 'AskUserQuestion'];
 const WEB_TOOLS = ['WebSearch', 'WebFetch'];
 
 async function defaultLoadSdk(): Promise<AgentSdkModule> {

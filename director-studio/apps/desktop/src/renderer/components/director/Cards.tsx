@@ -260,11 +260,16 @@ export function GenerationQueue({ generations }: { generations: Generation[] }) 
   }, [active.length, active]);
   if (active.length === 0) return null;
   const nameOf = (id: string) => models?.find((m) => m.id === id)?.displayName ?? id.split('/').slice(-2).join('/');
+  const first = active.find((g) => g.status === 'running') ?? active[0]!;
   return (
-    <section className="gen-queue" aria-label={t('director.queue')}>
-      <h3 className="panel-subtitle">
-        <Icon name="queue" size={13} /> {t('director.queue')} ({active.length})
-      </h3>
+    <details className="gen-queue" aria-label={t('director.queue')}>
+      <summary>
+        <span className={`gen-status${first.status === 'running' ? ' is-running' : ''}`} aria-hidden="true" />
+        <span>
+          {t('director.queue')} ({active.length})
+        </span>
+        <span className="gen-queue-first">{first.purpose}</span>
+      </summary>
       <ul>
         {active.map((g) => (
           <li key={g.id} className={`gen gen-${g.status}`}>
@@ -284,6 +289,6 @@ export function GenerationQueue({ generations }: { generations: Generation[] }) 
           </li>
         ))}
       </ul>
-    </section>
+    </details>
   );
 }

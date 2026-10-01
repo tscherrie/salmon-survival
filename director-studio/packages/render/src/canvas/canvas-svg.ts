@@ -425,7 +425,8 @@ function buildFilter(id: string, layer: Layer, box: { x: number; y: number; w: n
       }
       case 'halftone': {
         const size = Math.max(2, p(effect, 'size', 8));
-        const ink = hexToRgb01(pc(effect, 'color', '#000000'));
+        // Ohne `color`: Punkte in der Farbe der Quelle; mit `color`: einfarbige Druckfarbe.
+        const inkColor = typeof effect.params.color === 'string' ? hexToRgb01(pc(effect, 'color', '#000000')) : undefined;
         const tile = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><defs><radialGradient id='g'><stop offset='0' stop-color='black'/><stop offset='1' stop-color='white'/></radialGradient></defs><rect width='${size}' height='${size}' fill='url(#g)'/></svg>`;
         const href = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(tile)}`;
         prims.push(
@@ -434,8 +435,11 @@ function buildFilter(id: string, layer: Layer, box: { x: number; y: number; w: n
           `<feTile in="${r}t" result="${r}d"/>`,
           `<feComposite in="${r}g" in2="${r}d" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="${r}s"/>`,
           `<feComponentTransfer in="${r}s" result="${r}w"><feFuncR type="discrete" tableValues="0 1"/><feFuncG type="discrete" tableValues="0 1"/><feFuncB type="discrete" tableValues="0 1"/></feComponentTransfer>`,
-          `<feColorMatrix in="${r}w" type="matrix" values="0 0 0 0 ${ink.r} 0 0 0 0 ${ink.g} 0 0 0 0 ${ink.b} -1 0 0 0 1" result="${r}i"/>`,
-          `<feComposite in="${r}i" in2="${cur}" operator="in" result="${r}"/>`,
+          // Maske: Deckkraft = 1 − Helligkeit (Punkt = deckend)
+          `<feColorMatrix in="${r}w" type="matrix" values="0 0 0 0 ${inkColor?.r ?? 0} 0 0 0 0 ${inkColor?.g ?? 0} 0 0 0 0 ${inkColor?.b ?? 0} -1 0 0 0 1" result="${r}i"/>`,
+          inkColor
+            ? `<feComposite in="${r}i" in2="${cur}" operator="in" result="${r}"/>`
+            : `<feComposite in="${cur}" in2="${r}i" operator="in" result="${r}"/>`,
         );
         break;
       }

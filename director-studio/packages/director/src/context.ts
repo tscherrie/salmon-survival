@@ -57,6 +57,8 @@ recommendation first). When you can make a strong proposal, call set_brief (sett
 is still open), then prepare and present the first checkpoint with propose_checkpoint. Do not spend
 money in this phase except for tiny, clearly announced tests.`;
 
+const STYLE_BIBLE_SUBTYPES = ['character-sheet', 'style-sheet', 'set', 'set-plate', 'palette', 'typography', 'style-frame'];
+
 const PRODUCTION_PHASE = `Phase: PRODUCTION – the brief is set. Work through the checkpoints; within an approved budget act
 without asking, before exceeding it stop and ask.`;
 
@@ -130,6 +132,18 @@ export async function buildContextBlockList(project: ProjectStore, catalog: Mode
   blocks.push({
     name: 'document_summary',
     content: head ? `v${head.number} · ${head.note}\n${truncate(summarizeDocument(head.document, assetNames(project)), 12000)}` : 'Noch kein Dokument.',
+  });
+
+  // Style Bible: Referenz-Assets (Tag „style-bible“ oder typische Subtypen) mit IDs für Generierungen.
+  const styleAssets = project
+    .listAssets({ limit: 200 })
+    .filter((a) => a.tags.includes('style-bible') || STYLE_BIBLE_SUBTYPES.includes(a.subtype ?? ''))
+    .slice(0, 30);
+  blocks.push({
+    name: 'style_bible',
+    content: styleAssets.length
+      ? `${styleAssets.map((a) => describeAssetLine(a)).join('\n')}\nGib diese Referenzen jeder Generierung mit, die Referenzen annimmt.`
+      : 'Noch keine Style-Bible-Assets (Tag „style-bible“ oder Subtyp character-sheet/style-sheet/set/palette/typography).',
   });
 
   const used = head ? await project.usedAssetIds() : new Set<string>();
