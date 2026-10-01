@@ -13,8 +13,10 @@ const plugin = resolve(extension, 'plugin');
 const releasePaths = ['director-studio', 'docs/director-studio', '.openai/hosting.example.json', 'drizzle'];
 if (execFileSync('git', ['status', '--porcelain', '--untracked-files=all', '--', ...releasePaths], { cwd: repo, encoding: 'utf8' }).trim()) throw new Error('Commit all release source inputs before packaging.');
 const manifest = JSON.parse(await readFile(resolve(plugin, 'plugin.json'), 'utf8'));
+const openai = manifest.extensions?.['com.openai'];
+if (!openai) throw new Error('OpenAI Extension metadata is required.');
 const mcp = JSON.parse(await readFile(resolve(plugin, 'mcp.json'), 'utf8'));
-if (manifest.extensions.com.openai.interface.shortDescription.length > 30) throw new Error('Listing subtitle exceeds 30 characters.');
+if (openai.interface.shortDescription.length > 30) throw new Error('Listing subtitle exceeds 30 characters.');
 if (Object.keys(mcp.mcpServers ?? {}).length !== 1) throw new Error('Expected one verified Director MCP server.');
 for (const server of Object.values(mcp.mcpServers)) if (server.type !== 'streamable-http' || new URL(server.url).protocol !== 'https:') throw new Error('A verified HTTPS MCP endpoint is required.');
 const files = {};
@@ -28,8 +30,8 @@ async function collect(dir) {
   }
 }
 await collect(plugin);
-if (manifest.extensions.com.openai.apps != null || manifest.apps != null) throw new Error('App bindings are not portable public upload fields.');
-if (manifest.lifecycleHooks != null || manifest.extensions.com.openai.lifecycleHooks != null) throw new Error('Lifecycle hooks are excluded from the public preparation package.');
+if (openai.apps != null || manifest.apps != null) throw new Error('App bindings are not portable public upload fields.');
+if (manifest.lifecycleHooks != null || openai.lifecycleHooks != null) throw new Error('Lifecycle hooks are excluded from the public preparation package.');
 const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim();
 files[`${manifest.name}/SOURCE-CHECKPOINT.txt`] = strToU8(`${head}\nThis package is preparation material. It does not complete Portal promotion, public policy URLs, reviewer access or native demo verification. Publisher Verified is user-reported; no legal attestation is made. Sites owns the existing canonical private plugin; do not upload this as a duplicate private plugin.\n`);
 await mkdir(output, { recursive: true });
