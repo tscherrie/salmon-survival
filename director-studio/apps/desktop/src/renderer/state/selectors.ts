@@ -52,8 +52,3 @@ export function selectUserMarkers(s: StudioData): UserMarker[] {
   lastMarkers = computeUserMarkers(s);
   return lastMarkers;
 }
-
-/** Nummer einer Referenz (über ihren Schlüssel); `undefined` bei Assets, Versionen und nicht vorhandenen Refs. */
-export function selectRefNumber(s: StudioData, key: string): number | undefined {
-  return s.refNumbers[key];
-}
