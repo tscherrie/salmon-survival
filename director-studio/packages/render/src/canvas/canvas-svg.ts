@@ -4,6 +4,9 @@ import { PICKER_SCRIPT } from '../picker/picker-script.ts';
 import { cssFontFamily, escapeAttr, escapeHtml, escapeScriptContent, normalizeBlendMode, round, safeId, sanitizeCssValue } from '../util/html.ts';
 import { markdownToHtml, markdownToPlain } from '../util/markdown.ts';
 import { isDangerousUrl } from '../util/sanitize.ts';
+import { hyphenateDe, hyphenateHtmlDe, isGermanLang } from '../text/hyphenate-de.ts';
+import { fitFontSizeToWords, isBoldWeight, wrapTextLines } from '../text/measure.ts';
+import { cssBackgroundToSvg } from './css-gradient.ts';
 
 /**
  * Leinwand (Collage/Grafik) → geschichtetes SVG. Jede Ebene ist eine `<g data-sid="<layerId>">`.
@@ -13,6 +16,18 @@ import { isDangerousUrl } from '../util/sanitize.ts';
  * Effekte werden als SVG-Filter angenähert: `shadow` (feDropShadow), `blur`, `outline`
  * (feMorphology), `grain` (feTurbulence + overlay), `paper` (Relief-Licht + multiply), `halftone`
  * (Punktraster per feImage/feTile + Schwellwert), `tear` (verschobene Alpha-Kante).
+ *
+ * Hintergrund (`canvas.background`): jede CSS-Farbe oder ein CSS-Verlauf (`linear-gradient(…)`,
+ * `radial-gradient(…)`) – Verläufe werden zu SVG-Verläufen übersetzt.
+ *
+ * Text (`type: 'text'`): Umbruch NUR an Leerzeichen und Trennstellen, nie mitten im Wort. Deutsche Texte
+ * (`lang`, Standard `de`) bekommen bedingte Trennstriche (`hyphenateDe`). Stilangaben:
+ * - `role`: `display`|`title`|`headline`|`heading`|`hero`|`stat` = Displaytext – wird NICHT getrennt;
+ *   passt das längste Wort nicht in die Breite, wird die Schrift verkleinert (`textFit: 'shrink'`).
+ * - `textFit`: `shrink` (Schrift verkleinern, bis jedes Wort passt) | `overflow` (überragen lassen;
+ *   Standard für Fließtext).
+ * - `hyphens`: `auto` (Standard; bei Displaytext erzwingt es die Trennung) | `manual` | `none`.
+ * - `lang`: Sprache der Ebene (überschreibt die Option `lang`).
  */
 
 export interface CanvasSvgOptions {
@@ -28,6 +43,8 @@ export interface CanvasSvgOptions {
   idPrefix?: string;
   /** Größenangabe des SVG-Elements: in Leinwand-Einheit (Standard) oder explizit (z. B. Pixel beim Rendern). */
   size?: { width: number | string; height: number | string };
+  /** Sprache der Texte (Standard `de`; deutsche Texte werden silbengetrennt). */
+  lang?: string;
 }
 
 interface Ctx {
@@ -67,7 +84,7 @@ export function canvasToSvg(canvas: Canvas, opts: CanvasSvgOptions): string {
   const width = opts.size ? String(opts.size.width) : `${round(vbW)}${unit}`;
   const height = opts.size ? String(opts.size.height) : `${round(vbH)}${unit}`;
   const layers = canvas.layers.map((l) => renderLayer(ctx, l)).join('\n');
-  const background = `<rect data-sid="__background" x="${round(-b)}" y="${round(-b)}" width="${round(vbW)}" height="${round(vbH)}" fill="${escapeAttr(sanitizeCssValue(canvas.background))}"/>`;
+  const background = cssBackgroundToSvg(canvas.background, { x: -b, y: -b, width: vbW, height: vbH }, { id: `${ctx.prefix}-bg`, defs: ctx.defs, attrs: 'data-sid="__background"', foreignObject: (opts.textMode ?? 'foreignObject') === 'foreignObject' });
   const defs = ctx.defs.length ? `<defs>\n${ctx.defs.join('\n')}\n</defs>\n` : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-sid="__canvas" width="${escapeAttr(width)}" height="${escapeAttr(height)}" viewBox="${round(-b)} ${round(-b)} ${round(vbW)} ${round(vbH)}" style="isolation: isolate">
 ${defs}${background}
@@ -94,7 +111,7 @@ export function canvasToHtml(canvas: Canvas, opts: CanvasHtmlOptions): string {
   const csp = opts.csp === false ? '' : `<meta http-equiv="Content-Security-Policy" content="script-src ${nonce ? `'nonce-${nonce}'` : "'none'"}; object-src 'none'; base-uri 'none'">`;
   const page = opts.pageSize ? `@page { size: ${opts.pageSize.width}px ${opts.pageSize.height}px; margin: 0; }` : '';
   return `<!doctype html>
-<html lang="de">
+<html lang="${escapeAttr(opts.lang ?? 'de')}">
 <head>
 <meta charset="utf-8">
 ${csp}
@@ -232,9 +249,12 @@ function fontFamilyOf(layer: Layer): string {
   return cssFontFamily(str(layer.style, 'fontFamily') ?? str(layer.style, 'font') ?? 'Inter', 'system-ui, sans-serif');
 }
 
+/** Rollen für große Displaytexte (keine Silbentrennung, Schrift schrumpft bei zu langen Wörtern). */
+const DISPLAY_ROLES = new Set(['display', 'title', 'headline', 'heading', 'hero', 'stat']);
+
 function textContent(ctx: Ctx, layer: Layer): string {
   const s = layer.style;
-  const fontSize = num(s, 'fontSize') ?? Math.max(8, Math.round(Math.min(layer.height, layer.width) * 0.2));
+  const baseFontSize = num(s, 'fontSize') ?? Math.max(8, Math.round(Math.min(layer.height, layer.width) * 0.2));
   const color = sanitizeCssValue(str(s, 'color') ?? '#111111');
   const weight = sanitizeCssValue(str(s, 'fontWeight') ?? '400');
   const italic = str(s, 'fontStyle') === 'italic';
@@ -249,9 +269,24 @@ function textContent(ctx: Ctx, layer: Layer): string {
   const strokeWidth = num(s, 'strokeWidth') ?? 0;
   const family = fontFamilyOf(layer);
   const text = layer.text ?? '';
+  const role = str(s, 'role')?.trim().toLowerCase();
+  const display = role !== undefined && DISPLAY_ROLES.has(role);
+  const hyphensStyle = str(s, 'hyphens')?.trim().toLowerCase();
+  const lang = str(s, 'lang') ?? ctx.opts.lang ?? 'de';
+  const hyphenate = isGermanLang(lang) && hyphensStyle !== 'none' && hyphensStyle !== 'manual' && (!display || hyphensStyle === 'auto');
+  const textFit = str(s, 'textFit')?.trim().toLowerCase() ?? (display ? 'shrink' : 'overflow');
+  const bold = isBoldWeight(weight);
+  const avail = Math.max(1, layer.width - 2 * padding);
+  // Klartext (wie er erscheint) für Messung und tspan-Umbruch.
+  const plain = markdownToPlain(text);
+  const transformed = transform === 'uppercase' ? plain.toLocaleUpperCase('de-DE') : transform === 'lowercase' ? plain.toLocaleLowerCase('de-DE') : plain;
+  const prepared = hyphenate ? hyphenateDe(transformed) : transformed;
+  const fontSize =
+    textFit === 'shrink' ? fitFontSizeToWords(prepared, avail, baseFontSize, { ...(letterSpacing !== undefined ? { letterSpacing } : {}), bold, allowHyphens: hyphenate }) : baseFontSize;
   const bg = background ? `<rect width="${round(layer.width)}" height="${round(layer.height)}" fill="${escapeAttr(sanitizeCssValue(background))}" rx="${round(num(s, 'radius') ?? 0)}"/>` : '';
   if ((ctx.opts.textMode ?? 'foreignObject') === 'foreignObject') {
     const justify = valign === 'middle' || valign === 'center' ? 'center' : valign === 'bottom' ? 'flex-end' : 'flex-start';
+    const hyphensCss = hyphensStyle === 'auto' || hyphensStyle === 'manual' || hyphensStyle === 'none' ? hyphensStyle : display ? 'manual' : 'auto';
     const css = [
       'width: 100%',
       'height: 100%',
@@ -267,22 +302,23 @@ function textContent(ctx: Ctx, layer: Layer): string {
       `line-height: ${lineHeight}`,
       `color: ${color}`,
       `text-align: ${sanitizeCssValue(align)}`,
-      'hyphens: auto',
-      '-webkit-hyphens: auto',
-      'overflow-wrap: break-word',
+      `hyphens: ${hyphensCss}`,
+      `-webkit-hyphens: ${hyphensCss}`,
+      // Nur an Leerzeichen/Trennstellen umbrechen – kein Notbruch mitten im Wort.
+      'overflow-wrap: normal',
+      'word-break: normal',
       'text-wrap: pretty',
       'overflow: visible',
       ...(letterSpacing !== undefined ? [`letter-spacing: ${round(letterSpacing)}px`] : []),
       ...(transform ? [`text-transform: ${sanitizeCssValue(transform)}`] : []),
       ...(stroke && strokeWidth ? [`-webkit-text-stroke: ${round(strokeWidth)}px ${sanitizeCssValue(stroke)}`, 'paint-order: stroke fill'] : []),
     ].join('; ');
-    const html = markdownToHtml(text).replace(/<br>/g, '<br/>').replace(/<p>/g, '<p style="margin: 0 0 0.35em">');
-    return `${bg}<foreignObject x="0" y="0" width="${round(layer.width)}" height="${round(layer.height)}" overflow="visible"><div xmlns="http://www.w3.org/1999/xhtml" lang="de" style="${escapeAttr(css)}">${html}</div></foreignObject>`;
+    let html = markdownToHtml(text).replace(/<br>/g, '<br/>').replace(/<p>/g, '<p style="margin: 0 0 0.35em">');
+    if (hyphenate) html = hyphenateHtmlDe(html);
+    return `${bg}<foreignObject x="0" y="0" width="${round(layer.width)}" height="${round(layer.height)}" overflow="visible"><div xmlns="http://www.w3.org/1999/xhtml" lang="${escapeAttr(lang)}" style="${escapeAttr(css)}">${html}</div></foreignObject>`;
   }
-  // Reines SVG: Zeilen nach geschätzter Breite umbrechen.
-  const plain = markdownToPlain(text);
-  const transformed = transform === 'uppercase' ? plain.toLocaleUpperCase('de-DE') : transform === 'lowercase' ? plain.toLocaleLowerCase('de-DE') : plain;
-  const lines = wrapText(transformed, Math.max(1, layer.width - 2 * padding), fontSize, letterSpacing ?? 0);
+  // Reines SVG: Zeilen nach geschätzter Breite umbrechen (nur an Leerzeichen/Trennstellen).
+  const lines = wrapTextLines(prepared, avail, fontSize, { ...(letterSpacing !== undefined ? { letterSpacing } : {}), bold });
   const lh = fontSize * lineHeight;
   const blockH = lines.length * lh;
   const top = valign === 'middle' || valign === 'center' ? (layer.height - blockH) / 2 : valign === 'bottom' ? layer.height - padding - blockH : padding;
@@ -295,29 +331,12 @@ function textContent(ctx: Ctx, layer: Layer): string {
   return `${bg}<text font-family="${escapeAttr(family)}" font-size="${round(fontSize)}" font-weight="${escapeAttr(weight)}"${italic ? ' font-style="italic"' : ''} fill="${escapeAttr(color)}" text-anchor="${anchor}"${letterSpacing !== undefined ? ` letter-spacing="${round(letterSpacing)}"` : ''}${strokeAttrs} xml:space="preserve">${tspans}</text>`;
 }
 
-/** Greedy-Umbruch nach geschätzter Zeichenbreite (0,55 em). */
+/**
+ * Umbruch nach geschätzter Zeichenbreite – nur an Leerzeichen und bedingten Trennstrichen (U+00AD),
+ * nie mitten im Wort (zu lange Wörter ragen über). Siehe `wrapTextLines`.
+ */
 export function wrapText(text: string, width: number, fontSize: number, letterSpacing = 0): string[] {
-  const charW = fontSize * 0.55 + letterSpacing;
-  const maxChars = Math.max(1, Math.floor(width / charW));
-  const out: string[] = [];
-  for (const para of text.split('\n')) {
-    const words = para.split(/\s+/).filter(Boolean);
-    let line = '';
-    for (const word of words) {
-      if (!line) line = word;
-      else if ((line + ' ' + word).length <= maxChars) line += ` ${word}`;
-      else {
-        out.push(line);
-        line = word;
-      }
-      while (line.length > maxChars) {
-        out.push(`${line.slice(0, maxChars - 1)}-`);
-        line = line.slice(maxChars - 1);
-      }
-    }
-    out.push(line);
-  }
-  return out;
+  return wrapTextLines(text, width, fontSize, { letterSpacing });
 }
 
 function shapeContent(layer: Layer): string {

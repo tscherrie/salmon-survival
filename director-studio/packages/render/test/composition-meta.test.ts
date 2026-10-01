@@ -143,7 +143,8 @@ describe('Spurplanung, Ebenen und Ton', () => {
     const music = tl.tracks[1]!;
     expect(duckingDb(tl, music, 10, 30)).toBe(0);
     expect(duckingDb(tl, music, 45, 30)).toBe(-12);
-    expect(duckingDb(tl, music, 37, 30)).toBeCloseTo(-6, 5);
+    // Standard wie im Export-Mix: 150 ms Vorlauf (4,5 Frames), 200 ms Attack (6 Frames) → bei Frame 37 ein Viertel.
+    expect(duckingDb(tl, music, 37, 30)).toBeCloseTo(-3, 5);
     expect(computeClipVolume(tl, music, music.clips[0]!, 10)).toBeCloseTo(10 ** (-6 / 20), 5);
     expect(computeClipVolume(tl, music, music.clips[0]!, 45)).toBeCloseTo(10 ** (-18 / 20), 5);
   });

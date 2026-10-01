@@ -555,7 +555,19 @@ function slidesProject(): DemoProjectSeed {
     versions: [{ ops, note: 'Gliederung und Theme umgesetzt', author: 'director', createdAt: '2026-09-21T16:30:00.000Z' }],
     assets: [
       asset({ id: 'ast_deck_hero', kind: 'image', title: 'Produktbild', source: 'generated', modelId: 'fal-ai/flux-2/pro', costUsd: 0.06, prompt: 'Produktfoto Laptop auf Holztisch, Morgenlicht', width: 960, height: 1080, createdAt: '2026-09-21T15:00:00.000Z' }),
-      asset({ id: 'ast_deck_logo', kind: 'image', subtype: 'logo', title: 'Firmenlogo', source: 'linked', path: '/Users/demo/Material/logo.svg', width: 320, height: 240, createdAt: '2026-09-20T08:10:00.000Z' }),
+      // Verknüpfte Datei, deren Ordner verschoben wurde: zeigt „Erneut verknüpfen …“ im Detail-Drawer.
+      asset({
+        id: 'ast_deck_logo',
+        kind: 'image',
+        subtype: 'logo',
+        title: 'Firmenlogo',
+        source: 'linked',
+        path: '/Users/demo/Material/logo.svg',
+        width: 320,
+        height: 240,
+        createdAt: '2026-09-20T08:10:00.000Z',
+        metadata: { missing: true },
+      }),
     ],
     media: {
       ast_deck_hero: { type: 'image', title: 'Produkt', hue: 28, motif: 'frame', width: 480, height: 540 },

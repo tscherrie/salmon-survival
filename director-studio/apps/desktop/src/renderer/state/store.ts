@@ -4,7 +4,6 @@ import {
   insertRefAt,
   isComposerEmpty,
   normalizeRef,
-  refLabel,
   type AppSettings,
   type CheckpointDecision,
   type ComposerMessage,
@@ -23,7 +22,7 @@ import {
 } from '@studio/core';
 import { setLanguage, t } from '../i18n.ts';
 import { insertSegmentsAt, trimSegments } from '../lib/composerOps.ts';
-import { labelContextFor } from '../lib/labels.ts';
+import { labelContextFor, refChipLabel } from '../lib/labels.ts';
 import { reduceEvent } from './reducer.ts';
 import { initialData, initialVoice, type StudioData, type Toast, type Transport } from './types.ts';
 
@@ -94,6 +93,8 @@ export interface StudioActions {
   importFiles(mode: 'link' | 'import'): Promise<void>;
   importDroppedFiles(files: File[]): Promise<void>;
   revealAsset(assetId: string): Promise<void>;
+  /** Verknüpfte Datei neu zuordnen: Datei wählen (`chooseFiles`) → `relinkAsset`. `true` bei Erfolg. */
+  relinkAsset(assetId: string): Promise<boolean>;
 
   // Sprache
   startVoice(startedAt: number): void;
@@ -183,7 +184,7 @@ export function createStudioStore(api: StudioApi): StudioStore {
             break;
           case 'preview_pick': {
             const doc = viewDocument(get());
-            get().announce(t('stage.refAdded', { label: event.label ?? refLabel(event.ref, labelContextFor(doc, get().assets)) }));
+            get().announce(t('stage.refAdded', { label: event.label ?? refChipLabel(event.ref, labelContextFor(doc, get().assets)) }));
             break;
           }
           default:
@@ -238,7 +239,7 @@ export function createStudioStore(api: StudioApi): StudioStore {
       },
 
       loadSnapshot(snapshot) {
-        const doc = (snapshot.document as StudioDocument | null) ?? null;
+        const doc = snapshot.document;
         const head = snapshot.versions.reduce((max, v) => Math.max(max, v.number), 0);
         const formats = doc?.kind === 'timeline' ? doc.formats : [];
         set({
@@ -263,7 +264,9 @@ export function createStudioStore(api: StudioApi): StudioStore {
           messages: snapshot.messages,
           generations: snapshot.generations,
           runState: snapshot.runState,
-          question: snapshot.pendingQuestion ? { ...snapshot.pendingQuestion, runId: null } : null,
+          question: snapshot.pendingQuestion
+            ? { questionId: snapshot.pendingQuestion.questionId, questions: snapshot.pendingQuestion.questions, runId: snapshot.pendingQuestion.runId || null }
+            : null,
           approvals: snapshot.pendingApprovals,
           activities: snapshot.activities,
           formatId: formats[0]?.id ?? null,
@@ -331,7 +334,7 @@ export function createStudioStore(api: StudioApi): StudioStore {
         } else {
           set({ composer: insertRefAt(state.composer, state.caret, ref), caret: state.caret + 1, composerRevision: state.composerRevision + 1 });
         }
-        get().announce(t('stage.refAdded', { label: refLabel(ref, labelContextFor(viewDocument(get()), get().assets)) }));
+        get().announce(t('stage.refAdded', { label: refChipLabel(ref, labelContextFor(viewDocument(get()), get().assets)) }));
       },
 
       insertSegments(segments) {
@@ -541,6 +544,24 @@ export function createStudioStore(api: StudioApi): StudioStore {
 
       async revealAsset(assetId) {
         await guarded(() => api.revealAsset(projectId(), assetId));
+      },
+
+      async relinkAsset(assetId) {
+        const id = get().projectId;
+        if (!id) return false;
+        const paths = await guarded(() => api.chooseFiles());
+        const path = paths?.[0];
+        if (!path) return false;
+        try {
+          const asset = await api.relinkAsset(id, assetId, path);
+          if (get().projectId !== id) return false;
+          set((s) => ({ assets: s.assets.some((a) => a.id === asset.id) ? s.assets.map((a) => (a.id === asset.id ? asset : a)) : [...s.assets, asset] }));
+          get().toast('success', t('assets.relinked', { title: asset.title }));
+          return true;
+        } catch (error) {
+          get().toast('error', t('assets.relinkFailed', { error: errorText(error) }));
+          return false;
+        }
       },
 
       // ───────────── Sprache ─────────────

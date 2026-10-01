@@ -14,8 +14,9 @@ description: Präsentationen im Deck-Dokument – Storyline, Theme, Folienlayout
 ## Theme (Checkpoint „Theme & Beispielfolien“)
 
 `apply_document_ops` mit `update_theme`: Farben (bg, fg, accent, muted), Fonts (heading/body), ggf.
-`css`. Dann 3 Beispielfolien (Titel, Inhalt, Daten) mit `add_slide` und `render_still` (target
-"document", slideId) zeigen.
+`css`. Eigene Schriften als Font-Assets über `fontAssets` (Familie → Asset-ID) einbetten – die Vorschau
+hat kein externes Netz, Google Fonts laden dort nicht. Dann 3 Beispielfolien (Titel, Inhalt, Daten) mit
+`add_slide` und `render_still` (target "document", slideId) zeigen.
 
 ## Layout-Regeln (1920×1080 Raster)
 
@@ -24,6 +25,10 @@ description: Präsentationen im Deck-Dokument – Storyline, Theme, Folienlayout
 - Elemente: `text` (Markdown-light), `image` (assetId), `shape`, `chart` (Daten des Nutzers!),
   `html` (für Sonderfälle), `video`. Jedes Element mit sprechender `id` (z. B. `s3_title`) – der Nutzer
   referenziert sie.
+- Textrollen über `style.role` (title|subtitle|body|caption|kicker|quote|stat) statt Einzelwerten – Größe,
+  Schrift und Farbe kommen dann aus dem Theme.
+- Deutsche Texte bekommen automatisch Trennstellen (lange Komposita brechen an Silbengrenzen);
+  `style.hyphens: "none"` oder `"manual"` schaltet das je Element ab (z. B. für Markennamen).
 - Bilder für Folien mit dem Bildmodell im Theme-Stil generieren (Seitenverhältnis passend zum Platz).
 - `build` für schrittweises Einblenden in der Präsentation, sparsam.
 

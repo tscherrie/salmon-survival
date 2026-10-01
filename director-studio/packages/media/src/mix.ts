@@ -1,14 +1,17 @@
-import type { Clip, Timeline, Track } from '@studio/core';
+import { DUCK_DEFAULTS, type Clip, type DuckMode, type Timeline, type Track } from '@studio/core';
 import { filterValue, num } from './ffmpeg-syntax.ts';
 
 /**
  * Übersetzt eine Timeline in einen ffmpeg-`filter_complex`-Graphen für den Audiomix
  * („render-to-preview“: Vorschau und Export hören dasselbe).
  *
+ * Tonquellen: alle Clips auf Audiospuren sowie Clips auf Videospuren mit `includeSourceAudio`
+ * (Originalton des Videos; gleiche Behandlung von Ausschnitt, Tempo, Gain und Fades).
  * Pro Clip: Eingabe mit `-ss`/`-t` (Quell-Ausschnitt ab `clip.in`), Resampling auf Stereo,
- * Tempo per `atempo`-Kette, Gain (Clip + Spur), Fades (`afade`), samplegenauer Zuschnitt,
- * Verzögerung auf die Timeline-Position (`adelay`). Pro Spur: Summe der Clips (`amix`,
- * `normalize=0`). Ducking per `sidechaincompress`. Master: `amix` + `alimiter`.
+ * Tempo per `atempo`-Kette, Gain (Clip + Spur), Fades (`afade`, Kurve laut `clip.fadeCurve`),
+ * samplegenauer Zuschnitt, Verzögerung auf die Timeline-Position (`adelay`). Pro Spur: Summe der
+ * Clips (`amix`, `normalize=0`). Ducking per `sidechaincompress` (Parameter je Spur aus `track.duck`).
+ * Master: `amix` + `alimiter`.
  */
 
 export interface AudioMixInput {
@@ -41,27 +44,36 @@ export interface AudioMixOptions {
   fromFrame?: number;
   toFrame?: number;
   /**
-   * `clips` (Standard): Spur wird um genau `duck.db` abgesenkt, solange auf der Schlüsselspur
+   * Standard-Modus für Spuren ohne eigenes `duck.mode` (sonst `clips`):
+   * `clips`: Spur wird um genau `duck.db` abgesenkt, solange auf der Schlüsselspur
    * Clips liegen (Schlüsselsignal aus den Clip-Bereichen, deterministisch).
-   * `signal`: der tatsächliche Pegel der Schlüsselspur steuert den Kompressor (Absenkung ≈ `duck.db`).
+   * `signal`: der tatsächliche Pegel der Schlüsselspur (Summe ihrer Clips) steuert den Kompressor
+   * (Absenkung ≈ `duck.db`).
    */
-  ducking?: 'clips' | 'signal';
+  ducking?: DuckMode;
   /** Dateien ohne Audiospur; ihre Clips werden übersprungen. */
   silentPaths?: ReadonlySet<string>;
   /** Abschließender Limiter (Standard true, −1 dBFS). */
   limiter?: boolean;
 }
 
-/** Ducking-Parameter (Engineering-Defaults). */
+/** Ducking-Parameter (Engineering-Defaults; `track.duck.attackMs`/`releaseMs`/`leadMs` überschreiben sie je Spur). */
 export const DUCKING = {
   /** Ratio des Kompressors (Maximum von sidechaincompress). */
   ratio: 20,
-  /** Absenkung beginnt so viel vor dem Clip der Schlüsselspur (s). */
-  leadSec: 0.15,
+  /** Modus `clips`: Absenkung beginnt so viel vor dem Clip der Schlüsselspur (s). */
+  leadSec: DUCK_DEFAULTS.clips.leadMs / 1000,
   /** Lücken unter dieser Dauer (s) werden überbrückt, damit die Musik nicht „pumpt“. */
-  mergeGapSec: 0.5,
-  attackMs: 200,
-  releaseMs: 1200,
+  mergeGapSec: DUCK_DEFAULTS.mergeGapMs / 1000,
+  /** Modus `clips`: Rampen beim Absenken/Zurückkehren (ms). */
+  attackMs: DUCK_DEFAULTS.clips.attackMs,
+  releaseMs: DUCK_DEFAULTS.clips.releaseMs,
+  /** Modus `signal`: Rampen (ms); Standard ohne Vorlauf. */
+  signalAttackMs: DUCK_DEFAULTS.signal.attackMs,
+  signalReleaseMs: DUCK_DEFAULTS.signal.releaseMs,
+  /** Wertebereiche von sidechaincompress (ms). */
+  attackRangeMs: [0.01, 2000],
+  releaseRangeMs: [0.01, 9000],
   /** Annahme für den Pegel einer Stimme im Modus `signal` (dBFS RMS). */
   assumedKeyLevelDb: -20,
   /** Größte erreichbare Absenkung (Schwellwert-Untergrenze von sidechaincompress). */
@@ -103,10 +115,11 @@ export function buildAudioMixGraph(
   const buses: Bus[] = [];
 
   timeline.tracks.forEach((track, trackIndex) => {
-    if (track.kind !== 'audio') return;
     if (track.muted) return;
     const clipLabels: string[] = [];
-    const clips = [...track.clips].sort((a, b) => a.start - b.start || a.id.localeCompare(b.id));
+    const clips = track.clips
+      .filter((c) => clipContributesAudio(track, c))
+      .sort((a, b) => a.start - b.start || a.id.localeCompare(b.id));
     for (const clip of clips) {
       const clipEnd = clip.start + clip.duration;
       if (clipEnd <= from || clip.start >= to) continue;
@@ -132,14 +145,15 @@ export function buildAudioMixGraph(
       const plan = planClip(clip, fps, sr, visStart, lenSamples, track.gainDb);
       const inputIndex = inputs.length;
       inputs.push({ path, seekSec: plan.seekSec, durationSec: plan.readSec, clipId: clip.id, trackId: track.id });
+      const curve = plan.curve ? `:curve=${plan.curve}` : '';
       const filters = [
         `aresample=${sr}`,
         'aformat=sample_fmts=fltp:channel_layouts=stereo',
         ...atempoChain(plan.speed).map((f) => `atempo=${num(f)}`),
         ...(plan.gainDb !== 0 ? [`volume=${num(plan.gainDb, 3)}dB`] : []),
         `apad=whole_len=${plan.preSamples + lenSamples}`,
-        ...(plan.fadeIn ? [`afade=t=in:st=${num(plan.fadeIn.st)}:d=${num(plan.fadeIn.d)}`] : []),
-        ...(plan.fadeOut ? [`afade=t=out:st=${num(plan.fadeOut.st)}:d=${num(plan.fadeOut.d)}`] : []),
+        ...(plan.fadeIn ? [`afade=t=in:st=${num(plan.fadeIn.st)}:d=${num(plan.fadeIn.d)}${curve}`] : []),
+        ...(plan.fadeOut ? [`afade=t=out:st=${num(plan.fadeOut.st)}:d=${num(plan.fadeOut.d)}${curve}`] : []),
         `atrim=start_sample=${plan.preSamples}:end_sample=${plan.preSamples + lenSamples}`,
         'asetpts=PTS-STARTPTS',
         ...(outStart > 0 ? [`adelay=delays=${outStart}S:all=1`] : []),
@@ -157,10 +171,19 @@ export function buildAudioMixGraph(
   });
 
   // ── Ducking ──
-  const mode = opts.ducking ?? 'clips';
+  const defaultMode: DuckMode = opts.ducking ?? 'clips';
   const finalLabels = new Map<Track, string>(buses.map((b) => [b.track, b.label]));
-  const signalKeys = new Map<string, Array<{ ducked: Track }>>();
-  const duckPlans: Array<{ bus: Bus; keyTrack: Track; db: number; viaSignal: boolean }> = [];
+  interface DuckPlan {
+    bus: Bus;
+    keyTrack: Track;
+    db: number;
+    viaSignal: boolean;
+    leadSec: number;
+    attackMs: number;
+    releaseMs: number;
+  }
+  const signalKeys = new Map<Track, DuckPlan[]>();
+  const duckPlans: DuckPlan[] = [];
   for (const bus of buses) {
     const duck = bus.track.duck;
     if (!duck || !(duck.db < 0)) continue;
@@ -171,27 +194,47 @@ export function buildAudioMixGraph(
     }
     if (keyTrack === bus.track || keyTrack.muted) continue;
     const db = Math.max(-DUCKING.maxDb, duck.db);
+    const mode = duck.mode ?? defaultMode;
     const keyBus = buses.find((b) => b.track === keyTrack);
     const viaSignal = mode === 'signal' && !!keyBus;
     if (mode === 'signal' && !keyBus) {
       warnings.push(`Ducking von Spur "${bus.track.id}": Spur "${keyTrack.id}" liefert kein Audio – Clip-Bereiche als Schlüssel verwendet.`);
     }
+    const plan: DuckPlan = {
+      bus,
+      keyTrack,
+      db,
+      viaSignal,
+      leadSec: msToSec(duck.leadMs) ?? (viaSignal ? DUCK_DEFAULTS.signal.leadMs / 1000 : DUCKING.leadSec),
+      attackMs: clampNum(duck.attackMs ?? (viaSignal ? DUCKING.signalAttackMs : DUCKING.attackMs), ...DUCKING.attackRangeMs),
+      releaseMs: clampNum(duck.releaseMs ?? (viaSignal ? DUCKING.signalReleaseMs : DUCKING.releaseMs), ...DUCKING.releaseRangeMs),
+    };
     if (viaSignal) {
-      const list = signalKeys.get(keyTrack.id) ?? [];
-      list.push({ ducked: bus.track });
-      signalKeys.set(keyTrack.id, list);
+      const list = signalKeys.get(keyTrack) ?? [];
+      list.push(plan);
+      signalKeys.set(keyTrack, list);
     }
-    duckPlans.push({ bus, keyTrack, db, viaSignal });
+    duckPlans.push(plan);
   }
 
   // Schlüsselspuren im Modus `signal` aufteilen (eine Kopie für den Mix, je eine pro geduckter Spur).
+  // Vorlauf (`leadMs`) = Schlüsselkopie um so viele Samples nach vorn ziehen (Look-ahead).
   const signalKeyLabels = new Map<Track, string>();
-  for (const [keyId, users] of signalKeys) {
-    const keyBus = buses.find((b) => b.track.id === keyId)!;
+  for (const [keyTrack, users] of signalKeys) {
+    const keyBus = buses.find((b) => b.track === keyTrack)!;
     const outs = [`${keyBus.label}m`, ...users.map((_, i) => `${keyBus.label}k${i}`)];
     chains.push(`[${keyBus.label}]asplit=${outs.length}${outs.map((o) => `[${o}]`).join('')}`);
     finalLabels.set(keyBus.track, outs[0]!);
-    users.forEach((u, i) => signalKeyLabels.set(u.ducked, outs[i + 1]!));
+    users.forEach((u, i) => {
+      const copy = outs[i + 1]!;
+      const leadSamples = Math.min(Math.round(u.leadSec * sr), Math.max(0, totalSamples - 1));
+      if (leadSamples > 0) {
+        chains.push(`[${copy}]atrim=start_sample=${leadSamples},asetpts=PTS-STARTPTS,apad=whole_len=${totalSamples}[${copy}l]`);
+        signalKeyLabels.set(u.bus.track, `${copy}l`);
+      } else {
+        signalKeyLabels.set(u.bus.track, copy);
+      }
+    });
   }
 
   for (const plan of duckPlans) {
@@ -203,8 +246,13 @@ export function buildAudioMixGraph(
       keyLabel = signalKeyLabels.get(bus.track)!;
       keyLevelDb = DUCKING.assumedKeyLevelDb;
     } else {
-      const ranges = keyRanges(keyTrack, from, to, fps, durationSec);
-      if (ranges.length === 0) continue;
+      const ranges = keyRanges(keyTrack, from, to, fps, durationSec, { leadSec: plan.leadSec });
+      if (ranges.length === 0) {
+        if (keyTrack.kind === 'video' && keyTrack.clips.length > 0 && !keyTrack.clips.some((c) => c.includeSourceAudio)) {
+          warnings.push(`Ducking von Spur "${bus.track.id}": Videospur "${keyTrack.id}" hat keine Clips mit Originalton (includeSourceAudio) – kein Ducking.`);
+        }
+        continue;
+      }
       const expr = ranges.map(([a, b]) => `between(t,${num(a)},${num(b)})`).join('+');
       keyLabel = `k${trackIndex}`;
       keyLevelDb = 0; // Schlüssel = Gleichspannung 1,0 (0 dBFS RMS)
@@ -213,11 +261,9 @@ export function buildAudioMixGraph(
     // Absenkung = (Pegel − Schwelle)·(1 − 1/ratio) → Schwelle so wählen, dass genau |db| herauskommt.
     const thresholdDb = keyLevelDb + db / (1 - 1 / DUCKING.ratio);
     const threshold = Math.max(0.000976563, Math.min(1, 10 ** (thresholdDb / 20)));
-    const attack = viaSignal ? 20 : DUCKING.attackMs;
-    const release = viaSignal ? 400 : DUCKING.releaseMs;
     const out = `d${trackIndex}`;
     chains.push(
-      `[${finalLabels.get(bus.track)!}][${keyLabel}]sidechaincompress=threshold=${num(threshold)}:ratio=${DUCKING.ratio}:attack=${attack}:release=${release}:knee=1:detection=rms:link=maximum:makeup=1[${out}]`,
+      `[${finalLabels.get(bus.track)!}][${keyLabel}]sidechaincompress=threshold=${num(threshold)}:ratio=${DUCKING.ratio}:attack=${num(plan.attackMs, 2)}:release=${num(plan.releaseMs, 2)}:knee=1:detection=rms:link=maximum:makeup=1[${out}]`,
     );
     finalLabels.set(bus.track, out);
   }
@@ -249,6 +295,8 @@ interface ClipPlan {
   preSamples: number;
   fadeIn?: { st: number; d: number };
   fadeOut?: { st: number; d: number };
+  /** `afade`-Kurve (fehlt = linear/`tri`, der Standard von afade). */
+  curve?: 'qsin';
 }
 
 /**
@@ -276,6 +324,10 @@ function planClip(clip: Clip, fps: number, sr: number, visStartFrame: number, le
   };
   if (fi > 0 && a === 0) plan.fadeIn = { st: 0, d: fi };
   if (fo > 0 && skip + visSec > L - fo) plan.fadeOut = { st: Math.max(0, L - fo - a), d: fo };
+  // Equal-Power: Ein- und Ausblendung mit Viertelsinus. afade spiegelt die Kurve beim Ausblenden
+  // (Gain sin(π/2·t) beim Einblenden, cos(π/2·t) beim Ausblenden) → sin² + cos² = 1, konstante Leistung
+  // bei Überblendungen; `ipar`/`par` wären dagegen nicht leistungserhaltend.
+  if ((plan.fadeIn || plan.fadeOut) && clip.fadeCurve === 'equal-power') plan.curve = 'qsin';
   return plan;
 }
 
@@ -297,11 +349,23 @@ export function atempoChain(speed: number): number[] {
   return out;
 }
 
-/** Bereiche (s, relativ zum Renderbeginn), in denen die Schlüsselspur Clips hat – mit Vorlauf, Lücken überbrückt. */
-export function keyRanges(keyTrack: Track, from: number, to: number, fps: number, durationSec: number): Array<[number, number]> {
+/**
+ * Bereiche (s, relativ zum Renderbeginn), in denen die Schlüsselspur Ton liefert – mit Vorlauf, Lücken überbrückt.
+ * Auf Videospuren zählen nur Clips mit `includeSourceAudio`. Clips vor dem Renderbereich werden mitbetrachtet,
+ * damit überbrückte Lücken in Teilrenderings genauso klingen wie im ganzen Mix.
+ */
+export function keyRanges(
+  keyTrack: Track,
+  from: number,
+  to: number,
+  fps: number,
+  durationSec: number,
+  opts: { leadSec?: number } = {},
+): Array<[number, number]> {
+  const lead = Math.max(0, opts.leadSec ?? DUCKING.leadSec);
   const raw = keyTrack.clips
-    .filter((c) => c.start < to && c.start + c.duration > from)
-    .map((c) => [(c.start - from) / fps - DUCKING.leadSec, (c.start + c.duration - from) / fps] as [number, number])
+    .filter((c) => isKeyClip(keyTrack, c) && (c.start - to) / fps < lead)
+    .map((c) => [(c.start - from) / fps - lead, (c.start + c.duration - from) / fps] as [number, number])
     .sort((x, y) => x[0] - y[0]);
   const merged: Array<[number, number]> = [];
   for (const [a, b] of raw) {
@@ -313,6 +377,25 @@ export function keyRanges(keyTrack: Track, from: number, to: number, fps: number
     .map(([a, b]) => [Math.max(0, a), Math.min(durationSec, b)] as [number, number])
     .filter(([a, b]) => b > a)
     .map(([a, b]) => [round6(a), round6(b)]);
+}
+
+/** Trägt der Clip zum Audiomix bei? Audiospuren immer, Videospuren nur mit `includeSourceAudio`. */
+export function clipContributesAudio(track: Pick<Track, 'kind'>, clip: Pick<Clip, 'includeSourceAudio'>): boolean {
+  return track.kind === 'audio' || (track.kind === 'video' && clip.includeSourceAudio === true);
+}
+
+/** Hat die Timeline (ohne stumme Spuren) überhaupt Clips mit Ton für den Audiomix? */
+export function timelineHasMixAudio(timeline: Pick<Timeline, 'tracks'>): boolean {
+  return timeline.tracks.some((t) => !t.muted && t.clips.some((c) => clipContributesAudio(t, c)));
+}
+
+/** Schlüssel-Clips im Modus `clips`: Videospuren nur mit Originalton, andere Spurarten alle Clips. */
+function isKeyClip(track: Track, clip: Clip): boolean {
+  return track.kind === 'video' ? clip.includeSourceAudio === true : true;
+}
+
+function msToSec(ms: number | undefined): number | undefined {
+  return ms === undefined || !Number.isFinite(ms) ? undefined : Math.max(0, ms) / 1000;
 }
 
 function clampNum(v: number, lo: number, hi: number): number {

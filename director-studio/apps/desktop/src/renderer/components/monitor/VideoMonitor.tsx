@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { Player, type PlayerRef } from '@remotion/player';
-import { formatTimecode, type Asset, type FormatSpec, type Timeline } from '@studio/core';
-import type { AssetMedia } from '@studio/render/browser';
+import { clipAssetIds, formatTimecode, type Asset, type FormatSpec, type Timeline } from '@studio/core';
+import type { AssetMedia, MediaErrorInfo } from '@studio/render/browser';
 import { useT } from '../../i18n.ts';
 import { useElementSize } from '../../lib/hooks.ts';
 import { useRenderModule } from '../../lib/renderAdapter.ts';
@@ -30,9 +30,15 @@ function fitBox(format: FormatSpec, size: { width: number; height: number }): { 
   return { width: Math.floor(format.width * scale), height: Math.floor(format.height * scale) };
 }
 
-function buildMedia(timeline: Timeline, assets: readonly Asset[], assetUrl: (id: string, v?: 'original' | 'proxy' | 'thumb') => string): Record<string, AssetMedia> {
+export function buildMedia(
+  timeline: Timeline,
+  assets: readonly Asset[],
+  assetUrl: (id: string, v?: 'original' | 'proxy' | 'thumb') => string,
+  missingLabel = 'Datei fehlt',
+): Record<string, AssetMedia> {
   const used = new Set<string>();
-  for (const track of timeline.tracks) for (const clip of track.clips) if (clip.assetId) used.add(clip.assetId);
+  // Auch Assets aus Clip-Props (`rotoscope`, `…Asset`, `…AssetId`) – Komponenten brauchen sie in der Vorschau.
+  for (const track of timeline.tracks) for (const clip of track.clips) for (const id of clipAssetIds(clip)) used.add(id);
   const out: Record<string, AssetMedia> = {};
   for (const asset of assets) {
     if (!used.has(asset.id)) continue;
@@ -44,9 +50,20 @@ function buildMedia(timeline: Timeline, assets: readonly Asset[], assetUrl: (id:
       height: asset.height,
       durationMs: asset.durationMs,
       fps: asset.fps,
+      // Bekannt fehlende verknüpfte Datei: gar nicht erst laden, Platzhalter zeigen.
+      ...(asset.metadata?.missing === true ? { error: missingLabel } : {}),
     };
   }
   return out;
+}
+
+/** Ausgelassene Medien, die noch zum aktuellen Schnitt gehören (Clip existiert und nutzt das Asset noch). */
+export function currentMediaIssues(issues: readonly MediaErrorInfo[], timeline: Timeline): MediaErrorInfo[] {
+  const clips = new Map(timeline.tracks.flatMap((t) => t.clips).map((c) => [c.id, c]));
+  return issues.filter((i) => {
+    const clip = clips.get(i.clipId);
+    return !!clip && (!i.assetId || clipAssetIds(clip).includes(i.assetId));
+  });
 }
 
 function PlayheadClock({ fps }: { fps: number }) {
@@ -72,8 +89,15 @@ export function VideoMonitor({ timeline, audioOnly }: { timeline: Timeline; audi
   const formats = timeline.formats.length ? timeline.formats : [{ id: 'base', width: timeline.width, height: timeline.height }];
   const format = formats.find((f) => f.id === formatId) ?? formats[0]!;
   const box = fitBox(format, size);
-  const media = useMemo(() => buildMedia(timeline, assets, assetUrl), [timeline, assets, assetUrl]);
-  const inputProps = useMemo(() => ({ timeline, assets: media, includeAudio: true, formatId: format.id }), [timeline, media, format.id]);
+  const missingLabel = t('monitor.mediaMissingFile');
+  const media = useMemo(() => buildMedia(timeline, assets, assetUrl, missingLabel), [timeline, assets, assetUrl, missingLabel]);
+  // Fehlende/defekte Medien meldet die Komposition (je Clip und Medium einmal) – als Hinweis im Monitor.
+  const [mediaIssues, setMediaIssues] = useState<MediaErrorInfo[]>([]);
+  const onMediaError = useCallback((info: MediaErrorInfo) => {
+    setMediaIssues((list) => (list.some((i) => i.clipId === info.clipId && i.assetId === info.assetId) ? list : [...list, info]));
+  }, []);
+  const visibleIssues = useMemo(() => currentMediaIssues(mediaIssues, timeline), [mediaIssues, timeline]);
+  const inputProps = useMemo(() => ({ timeline, assets: media, includeAudio: true, formatId: format.id, onMediaError }), [timeline, media, format.id, onMediaError]);
   const hasContent = timeline.durationFrames > 0;
   const Composition = mod?.TimelineComposition;
 
@@ -132,6 +156,16 @@ export function VideoMonitor({ timeline, audioOnly }: { timeline: Timeline; audi
           </>
         )}
         <span className="spacer" />
+        {visibleIssues.length > 0 && (
+          <span
+            className="badge badge-warn"
+            role="status"
+            data-testid="monitor-media-issues"
+            title={visibleIssues.map((i) => `${i.clipId}: ${i.message}`).join('\n')}
+          >
+            <Icon name="warning" size={12} /> {t('monitor.mediaIssues', { n: visibleIssues.length })}
+          </span>
+        )}
         <PlayheadClock fps={timeline.fps} />
       </div>
       <div className="monitor-stage" ref={stageRef}>

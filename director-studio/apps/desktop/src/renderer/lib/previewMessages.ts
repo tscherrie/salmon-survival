@@ -10,6 +10,9 @@ export interface PickMessage {
   page: string;
   selector: string;
   source?: string | undefined;
+  /** Sichtbarer Text des Elements (gekürzt). */
   text?: string | undefined;
+  /** Tag-Name in Kleinbuchstaben, z. B. `h1`. */
+  tag?: string | undefined;
   bbox: { x: number; y: number; width: number; height: number };
 }

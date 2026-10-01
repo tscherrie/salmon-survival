@@ -61,7 +61,41 @@ describe('Startbildschirm', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Projekt anlegen' }));
     expect(create.mock.calls[0]![0]).toMatchObject({ title: 'Idee', category: null });
     expect(await screen.findByText('Kategorie offen')).toBeInTheDocument();
-    expect(screen.getAllByText('Noch kein Dokument – die Kategorie wird im Planungsgespräch geklärt.').length).toBeGreaterThan(0);
+    // Ohne Dokument: Bühne zeigt den Planungs-Platzhalter, Monitor einen Hinweis, das Planungsgespräch ist bedienbar.
+    const stage = screen.getByRole('region', { name: 'Bühne (nur lesbar)' });
+    expect(within(stage).getByTestId('stage-planning')).toHaveTextContent('Kategorie wird im Planungsgespräch festgelegt');
+    expect(within(screen.getByRole('region', { name: 'Monitor' })).getByText('Noch kein Dokument – die Kategorie wird im Planungsgespräch festgelegt.')).toBeInTheDocument();
+    const panel = screen.getByRole('complementary', { name: 'Director' });
+    expect(within(panel).getByText(/Er beginnt mit einem kurzen Planungsgespräch/)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Nachricht an den Director' })).toBeInTheDocument();
+  });
+
+  it('Projekt ohne Kategorie: Planungsgespräch legt die Kategorie fest, danach erscheint die Bühne', async () => {
+    const api = setup();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Neues Projekt' }));
+    const dialog = screen.getByRole('dialog', { name: 'Neues Projekt' });
+    await user.type(within(dialog).getByLabelText('Titel'), 'Sommeridee');
+    await user.click(within(dialog).getByLabelText('Noch offen – im Gespräch klären'));
+    await user.click(within(dialog).getByRole('button', { name: 'Projekt anlegen' }));
+    expect(await screen.findByTestId('stage-planning')).toBeInTheDocument();
+    const editor = screen.getByTestId('composer-editor');
+    await user.click(editor);
+    await user.keyboard('Etwas für den Sommer');
+    await user.click(screen.getByRole('button', { name: 'Senden' }));
+    const panel = screen.getByRole('complementary', { name: 'Director' });
+    const question = await within(panel).findByRole('form', { name: 'Rückfrage' }, { timeout: 5000 });
+    await user.click(within(question).getByLabelText(/Präsentation/));
+    await user.click(within(question).getByLabelText(/Beides/));
+    await user.click(within(question).getByLabelText(/Analogfilm/));
+    await user.click(within(question).getByRole('button', { name: 'Antworten' }));
+    // Nach `set_category` lädt die UI den Snapshot neu: Folienbühne statt Platzhalter
+    await waitFor(() => expect(screen.queryByTestId('stage-planning')).toBeNull(), { timeout: 5000 });
+    const stage = screen.getByRole('region', { name: 'Bühne (nur lesbar)' });
+    await waitFor(() => expect(stage.querySelector('.slide-strip, .stage-empty')).not.toBeNull(), { timeout: 5000 });
+    expect(stage).not.toHaveTextContent('Kategorie wird im Planungsgespräch festgelegt');
+    expect(screen.getByText('Präsentation', { selector: '.badge-category' })).toBeInTheDocument();
+    expect(api.debug.calls.some((c) => c.method === 'getSnapshot')).toBe(true);
   });
 
   it('„Projekt öffnen …“ nutzt chooseDirectory; Fehler erscheinen als Meldung', async () => {

@@ -3,12 +3,18 @@ import { PICKER_SCRIPT } from '../picker/picker-script.ts';
 import { cssFontFamily, escapeAttr, escapeHtml, escapeScriptContent, escapeStyleContent, kebabCase, round, sanitizeCssValue } from '../util/html.ts';
 import { markdownToHtml } from '../util/markdown.ts';
 import { isDangerousUrl, sanitizeHtml, scopeStyleBlocks } from '../util/sanitize.ts';
+import { hyphenateHtmlDe, isGermanLang } from '../text/hyphenate-de.ts';
 import { chartToSvg, DEFAULT_CHART_COLORS } from './chart-svg.ts';
 
 /**
  * Deck → eigenständiges HTML-Dokument (Bühne, PNG, PDF). Jede Folie ist eine
  * `<section class="slide" data-sid="<slideId>">` in Deckgröße, Elemente sind absolut positioniert und
  * tragen `data-sid="<elementId>"`. Sprechernotizen werden nie ausgegeben.
+ *
+ * Schriften: `theme.fontAssets` (Familie → Font-Asset) wird zu `@font-face` mit `assetUrl(assetId)`;
+ * explizite `fontFaces` haben Vorrang. Texte in deutschen Decks (`lang`, Standard `de`) bekommen bedingte
+ * Trennstriche (`hyphenateDe`), damit lange Komposita an Silbengrenzen statt mitten im Wort umbrechen;
+ * `style.hyphens: 'none'|'manual'` schaltet das je Element ab.
  */
 
 export interface DeckFontFace {
@@ -34,6 +40,10 @@ export interface DeckHtmlOptions {
   fontFaces?: DeckFontFace[];
   /** Hintergrund außerhalb der Folien (Standard: transparent). */
   pageBackground?: string;
+  /** Dokumentsprache (Standard `de`). */
+  lang?: string;
+  /** Deutsche Texte silbentrennen (bedingte Trennstriche). Standard: true. */
+  hyphenate?: boolean;
 }
 
 const ROLE_SIZES: Record<string, number> = { title: 0.074, subtitle: 0.044, body: 0.033, caption: 0.022, kicker: 0.02, quote: 0.05, stat: 0.13 };
@@ -72,7 +82,7 @@ export function deckToHtml(deck: Deck, opts: DeckHtmlOptions): string {
   const picker = nonce ? `<script nonce="${nonce}">${escapeScriptContent(PICKER_SCRIPT)}</script>` : '';
   const title = escapeHtml(deck.theme.name ?? 'Präsentation');
   return `<!doctype html>
-<html lang="de">
+<html lang="${escapeAttr(opts.lang ?? 'de')}">
 <head>
 <meta charset="utf-8">
 ${csp}
@@ -155,9 +165,13 @@ function buildCss(deck: Deck, opts: DeckHtmlOptions): string {
   vars.push('--slide-fg: var(--color-text, var(--color-foreground, #141414))');
   vars.push('--accent: var(--color-accent, var(--color-primary, #2a78d6))');
   vars.push('--muted: var(--color-muted, #5b5b57)');
-  const fontFaces = (opts.fontFaces ?? [])
-    .filter((f) => !isDangerousUrl(f.src))
-    .map((f) => `@font-face { font-family: "${f.family.replace(/["\\;{}<>]/g, '')}"; src: url("${cssUrl(f.src)}"); font-weight: ${sanitizeCssValue(f.weight ?? 'normal')}; font-style: ${f.style ?? 'normal'}; font-display: block; }`)
+  const fontFaces = deckFontFaces(deck, opts)
+    .map((f) => {
+      const descriptors = [`font-family: "${fontFamilyName(f.family)}"`, `src: url("${cssUrl(f.src)}")`];
+      if (f.weight !== undefined) descriptors.push(`font-weight: ${sanitizeCssValue(f.weight)}`);
+      descriptors.push(`font-style: ${f.style === 'italic' ? 'italic' : 'normal'}`, 'font-display: block');
+      return `@font-face { ${descriptors.join('; ')}; }`;
+    })
     .join('\n');
   const base = Math.round(H * ROLE_SIZES.body!);
   const roles = Object.entries(ROLE_SIZES)
@@ -201,12 +215,35 @@ ${exportCss}
 ${themeCss}`;
 }
 
+function fontFamilyName(family: string): string {
+  return family.replace(/["'\\;{}<>]/g, '').trim();
+}
+
+/**
+ * Schriften des Decks: explizite `fontFaces` plus `theme.fontAssets` (Familie → Asset-URL über
+ * `assetUrl`). Familien aus `fontFaces` haben Vorrang; gefährliche/fehlende URLs entfallen.
+ */
+export function deckFontFaces(deck: Deck, opts: Pick<DeckHtmlOptions, 'fontFaces' | 'assetUrl'>): DeckFontFace[] {
+  const explicit = (opts.fontFaces ?? []).filter((f) => f.src && !isDangerousUrl(f.src) && fontFamilyName(f.family));
+  const taken = new Set(explicit.map((f) => fontFamilyName(f.family).toLowerCase()));
+  const fromTheme: DeckFontFace[] = [];
+  for (const [family, assetId] of Object.entries(deck.theme.fontAssets ?? {})) {
+    const name = fontFamilyName(family);
+    if (!name || !assetId || taken.has(name.toLowerCase())) continue;
+    const src = safeAssetUrl(opts, assetId);
+    if (!src) continue;
+    taken.add(name.toLowerCase());
+    fromTheme.push({ family: name, src });
+  }
+  return [...explicit, ...fromTheme];
+}
+
 /** URL für `url("…")` in CSS (Anführungszeichen/Zeilenumbrüche maskiert). */
 export function cssUrl(url: string): string {
   return url.replace(/["\\\n\r]/g, (ch) => `\\${ch === '\n' ? 'a ' : ch === '\r' ? 'd ' : ch}`);
 }
 
-function safeAssetUrl(opts: DeckHtmlOptions, assetId: string): string | undefined {
+function safeAssetUrl(opts: Pick<DeckHtmlOptions, 'assetUrl'>, assetId: string): string | undefined {
   try {
     const url = opts.assetUrl(assetId);
     if (!url || isDangerousUrl(url)) return undefined;
@@ -297,8 +334,10 @@ function renderElement(deck: Deck, el: DeckElement, opts: DeckHtmlOptions): stri
   const style = [...geometry(el), ...elementCss(deck, el)];
   const open = (extraClass = '') => `<div class="${classes.join(' ')}${extraClass}" ${data.join(' ')} style="${escapeAttr(style.join('; '))}">`;
   switch (el.type) {
-    case 'text':
-      return `${open()}${markdownToHtml(el.text ?? '')}</div>`;
+    case 'text': {
+      const html = markdownToHtml(el.text ?? '');
+      return `${open()}${shouldHyphenate(el, opts) ? hyphenateHtmlDe(html) : html}</div>`;
+    }
     case 'image': {
       const url = el.assetId ? safeAssetUrl(opts, el.assetId) : undefined;
       if (!url) return `${open(' el-missing')}Bild fehlt</div>`;
@@ -337,6 +376,12 @@ function renderElement(deck: Deck, el: DeckElement, opts: DeckHtmlOptions): stri
       return `${open()}${safe}</div>`;
     }
   }
+}
+
+function shouldHyphenate(el: DeckElement, opts: DeckHtmlOptions): boolean {
+  if (opts.hyphenate === false || !isGermanLang(opts.lang ?? 'de')) return false;
+  const h = el.style?.hyphens;
+  return h !== 'none' && h !== 'manual';
 }
 
 function shapeSvg(deck: Deck, el: DeckElement): string {

@@ -22,6 +22,9 @@ description: Webdesign von Sitemap über Mockups zur lauffähigen Site (Vite + R
 - `data-sid="<stabile-id>"` an Sektionen, Karten, Hero, Navigation – der Nutzer zeigt darauf, IDs
   überleben Umbauten.
 - Keine Schlüssel, Tokens oder `.env` im Projekt; keine externen Tracker; Assets lokal einbinden.
+- Die Vorschau im Studio hat kein externes Netz (nur der eigene Dev-Server ist erreichbar): Schriften
+  (`@font-face` mit Dateien unter `site/`), Icons und Bibliotheken lokal bzw. als npm-Paket – keine
+  CDNs, kein Google Fonts, keine externen Bild-URLs.
 - Semantisches HTML (header/nav/main/section/footer, eine h1), Alt-Texte, Fokus-Stile, Kontrast ≥ 4.5:1.
 - Responsiv mobile-first; Typo mit clamp(); Bilder mit width/height und `loading="lazy"` unter dem Fold.
 

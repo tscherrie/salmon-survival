@@ -110,10 +110,25 @@ export interface MediaPort {
 export type SiteViewport = 'mobile' | 'tablet' | 'desktop';
 
 /** Implementiert vom Render-Worker; der Integrator bindet aktuelles Projekt und Dokument. */
+/** Medium, das beim Rendern fehlte oder defekt war (wird ausgelassen; das Rendern läuft weiter). */
+export interface RenderMediaIssue {
+  clipId: string;
+  assetId: string;
+  /** Deutsche Fehlerbeschreibung. */
+  message: string;
+}
+
 export interface RenderPort {
   compileComponent(source: string, opts: { fileName: string }): Promise<{ ok: boolean; code?: string; errors: string[]; warnings: string[] }>;
-  renderTimelineStill(input: { frame: number; formatId?: string; out: string }): Promise<string>;
-  renderTimelinePreview?(input: { fromFrame: number; toFrame: number; formatId?: string; out: string; scale?: number }): Promise<string>;
+  renderTimelineStill(input: { frame: number; formatId?: string; out: string; onMediaError?: (issue: RenderMediaIssue) => void }): Promise<string>;
+  renderTimelinePreview?(input: {
+    fromFrame: number;
+    toFrame: number;
+    formatId?: string;
+    out: string;
+    scale?: number;
+    onMediaError?: (issue: RenderMediaIssue) => void;
+  }): Promise<string>;
   renderDocumentPng(input: { slideId?: string; out: string }): Promise<string>;
   screenshotSite(input: { viewports: SiteViewport[]; outDir: string; path?: string }): Promise<{
     shots: Array<{ viewport: string; path: string }>;

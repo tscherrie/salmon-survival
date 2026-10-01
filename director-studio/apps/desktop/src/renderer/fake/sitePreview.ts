@@ -46,7 +46,7 @@ export function demoSiteHtml(title: string): string {
     var el = e.target.closest('[data-src]') || e.target;
     var r = el.getBoundingClientRect();
     parent.postMessage({ type: '${PICK_MESSAGE}', page: page(), selector: selectorOf(el), source: el.getAttribute('data-src') || undefined,
-      text: (el.textContent || '').trim().slice(0, 60), bbox: { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height } }, '*');
+      text: (el.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 120), tag: el.tagName.toLowerCase(), bbox: { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height } }, '*');
   }, true);
 })();`;
   return `<!doctype html>

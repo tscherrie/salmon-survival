@@ -32,7 +32,8 @@ export interface ProjectSnapshot {
   messages: ChatMessage[];
   generations: Generation[];
   runState: RunState;
-  pendingQuestion: { questionId: string; questions: DirectorQuestion[] } | null;
+  /** Offene Rückfrage des Directors samt Lauf, aus dem sie stammt (`runId` fehlt bei älteren Backends). */
+  pendingQuestion: { questionId: string; questions: DirectorQuestion[]; runId?: string | undefined } | null;
   pendingApprovals: ApprovalRequest[];
   activities: ToolActivity[];
 }

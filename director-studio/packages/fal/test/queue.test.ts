@@ -237,6 +237,17 @@ describe('FalQueueClient.resume / cancel / status', () => {
     expect(fake.requests.at(-1)!.url).toBe('https://queue.fal.run/minimax/h3-max/requests/r%209');
   });
 
+  it('resumeWithMeta() liefert auch die abgerechneten Einheiten (exakte Ist-Kosten nach Neustart)', async () => {
+    const fake = queueFake({
+      app: 'minimax/h3-max',
+      statuses: [json({ status: 'COMPLETED' })],
+      result: () => json({ video: { url: 'u' } }, { headers: { 'x-fal-billable-units': '6' } }),
+    });
+    const queue = new FalQueueClient({ apiKey: API_KEY, fetch: fake.fetch });
+    const result = await queue.resumeWithMeta({ endpointId: 'minimax/h3-max/text-to-video', requestId: 'r1' }, fast);
+    expect(result).toEqual({ output: { video: { url: 'u' } }, billableUnits: 6 });
+  });
+
   it('cancel() treats "already completed" as success but reports real errors', async () => {
     const handle = queueHandleFor('fal-ai/flux/dev', 'x');
     const done = createFakeFetch(() => json({ status: 'ALREADY_COMPLETED' }, { status: 400 }));

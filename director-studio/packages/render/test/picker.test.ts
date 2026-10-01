@@ -97,7 +97,25 @@ describe.skipIf(!HAS_CHROMIUM)('PICKER_SCRIPT in Chromium', () => {
       expect(picks.length).toBe(5);
 
       const ref = pickPayloadToRef(p, 'site');
-      expect(ref).toEqual({ kind: 'element', doc: 'site', page: 'blank', selector: p.selector, elementId: 'hero', source: { file: 'src/Hero.tsx', line: 12, column: 7 }, bbox: p.bbox });
+      // Vertrag (B): Element-Referenzen tragen sichtbaren Text und Tag.
+      expect(ref).toEqual({ kind: 'element', doc: 'site', page: 'blank', selector: p.selector, elementId: 'hero', source: { file: 'src/Hero.tsx', line: 12, column: 7 }, bbox: p.bbox, text: 'Willkommen bei uns', tag: 'h1' });
+    });
+  });
+
+  it('synthetische Klicks von Seiten-Skripten lösen keinen Pick aus, bleiben aber blockiert', async () => {
+    await pool.withPage({ width: 800, height: 600 }, async (page) => {
+      const { picks, consolePicks } = await setup(page, SITE);
+      await page.evaluate(() => (window as unknown as { __studioPicker: { enable(): void } }).__studioPicker.enable());
+      await page.evaluate(() => {
+        (document.querySelector('button.cta') as HTMLButtonElement).click();
+        document.querySelector('h1')!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      });
+      // Ein echter Klick danach kommt an – die synthetischen davor nicht.
+      await page.click('h1');
+      await expect.poll(() => picks.length).toBe(1);
+      expect(picks[0]!.tag).toBe('h1');
+      expect(consolePicks.length).toBe(1);
+      expect(await page.evaluate(() => (window as unknown as { __clicked?: boolean }).__clicked ?? false)).toBe(false);
     });
   });
 

@@ -11,6 +11,9 @@ export const STUDIO_MECHANICS = `# Studio mechanics
 - Tools are your only way to act. Documents (timeline, deck, canvas, site map) change only through
   apply_document_ops; every batch is validated and becomes one immutable version with your note.
   Site source files change through write_site_file, animation code through write_component.
+- The producer's site preview has no outside network: it reaches only its own dev server. Put fonts,
+  icons, images and libraries into site/ (or install them as npm packages), never load them from
+  CDNs, Google Fonts or other external URLs.
 - References: composer messages contain <ref id="r1" type="..." .../> tags. Each is followed by a
   <ref_context id="r1"> block describing what is at that place, often with rendered images. Times
   appear as mm:ss.mmm and as frames; document operations use integer frames at the timeline fps.

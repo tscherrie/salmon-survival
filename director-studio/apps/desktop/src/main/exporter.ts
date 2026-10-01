@@ -2,8 +2,9 @@ import { copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { ExportOptions, Timeline } from '@studio/core';
-import type { MediaToolkit } from '@studio/media';
+import { timelineHasMixAudio, type MediaToolkit } from '@studio/media';
 import { safeFileName, writeFileAtomic, type ProjectStore } from '@studio/project';
+import type { MediaErrorInfo } from '@studio/render/browser';
 import { assetFileUrl, type RenderService } from './services.ts';
 
 export interface ExportDeps {
@@ -11,6 +12,8 @@ export interface ExportDeps {
   render: RenderService;
   siteUrl: () => Promise<string>;
   now?: () => Date;
+  /** Beim Rendern ausgelassene (fehlende/defekte) Medien; das Video entsteht trotzdem. */
+  onMediaError?: ((info: MediaErrorInfo) => void) | undefined;
 }
 
 /** Erlaubte Export-Ziele je Dokumenttyp. */
@@ -51,7 +54,7 @@ export async function exportProject(store: ProjectStore, options: ExportOptions,
         }
         assertTarget(target, 'timeline-video');
         const silent = join(work, 'picture.mp4');
-        await deps.render.renderTimelineVideo(store, { out: silent, formatId: options.format });
+        await deps.render.renderTimelineVideo(store, { out: silent, formatId: options.format, onMediaError: deps.onMediaError });
         const mix = await renderMix(store, doc, deps.media, work);
         if (!mix) {
           await copyFile(silent, out);
@@ -109,8 +112,8 @@ function assertTarget(target: string, kind: keyof typeof EXPORT_TARGETS): void {
 }
 
 async function renderMix(store: ProjectStore, timeline: Timeline, media: MediaToolkit, work: string): Promise<string | null> {
-  const hasAudio = timeline.tracks.some((t) => t.kind === 'audio' && !t.muted && t.clips.length > 0);
-  if (!hasAudio) return null;
+  // Auch Originalton von Videoclips (`includeSourceAudio`) zählt – sonst wären solche Exporte stumm.
+  if (!timelineHasMixAudio(timeline)) return null;
   const out = join(work, 'mix.wav');
   await media.renderAudioMix(
     timeline,

@@ -403,6 +403,10 @@ a {
   color: var(--ref-text);
   background: var(--ref-bg);
 }
+.status-missing {
+  color: var(--warn);
+  background: var(--warn-bg);
+}
 .text-input,
 select {
   height: 30px;
@@ -747,6 +751,32 @@ select {
 .auth-active.is-missing {
   color: var(--warn);
 }
+.auth-anthropic {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+.auth-anthropic li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.auth-anthropic .is-available {
+  color: var(--success);
+}
+.auth-anthropic .is-unavailable {
+  color: var(--text-faint);
+}
+.auth-anthropic li span {
+  color: var(--text);
+}
+.auth-anthropic .auth-anthropic-hint {
+  color: var(--text-muted);
+}
 .auth-runtimes {
   list-style: none;
   margin: 4px 0 0;
@@ -970,6 +1000,13 @@ select {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
+.monitor-page-select {
+  height: 24px;
+  max-width: 180px;
+  min-width: 0;
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
 .monitor-clock {
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -1099,6 +1136,27 @@ select {
 .stage-empty {
   padding: 18px;
   color: var(--text-muted);
+}
+.stage-planning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 640px;
+  margin: 18px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-l);
+  color: var(--accent);
+}
+.stage-planning-title {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+}
+.stage-planning-hint {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
 }
 .version-banner {
   position: sticky;
@@ -2122,6 +2180,28 @@ select {
 .lineage-list code {
   color: var(--text-faint);
   margin-left: 4px;
+}
+.lineage-relation {
+  margin-left: 6px;
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+.asset-missing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-m);
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 12px;
+}
+.asset-missing span {
+  flex: 1;
+  min-width: 140px;
+  color: var(--text);
 }
 
 /* 11. Director-Panel ------------------------------------------------------- */

@@ -50,6 +50,12 @@ beforeAll(async () => {
     ff(['-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=mono', '-t', '3', p('silence.wav')]),
     ff(['-f', 'lavfi', '-i', 'anoisesrc=color=pink:amplitude=0.25:sample_rate=48000:duration=3:seed=7', p('voice.wav')]),
     ff(['-f', 'lavfi', '-i', 'testsrc2=size=64x48:rate=25:duration=2', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', p('stumm.mp4')]),
+    // Video mit Originalton (440 Hz, Amplitude 0,3)
+    ff([
+      '-f', 'lavfi', '-i', 'testsrc2=size=64x48:rate=25:duration=3',
+      '-f', 'lavfi', '-i', 'aevalsrc=exprs=0.3*sin(2*PI*440*t):s=48000:d=3',
+      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-shortest', p('mit ton.mp4'),
+    ]),
     writeWav(p('click 120.wav'), clickTrackPcm({ bpm: 120, durationSec: 12, sampleRate: 44100, offsetSec: 0.25, accentIndex: 2, noise: 0.003 }), 44100),
   ]);
 }, 60_000);
@@ -165,7 +171,7 @@ describe('Bearbeitung', () => {
 describe('renderAudioMix', () => {
   const paths: Record<string, string> = {};
   beforeAll(() => {
-    Object.assign(paths, { music: p('music.wav'), silence: p('silence.wav'), voice: p('voice.wav'), stumm: p('stumm.mp4'), fehlt: p('gibt es nicht.wav') });
+    Object.assign(paths, { music: p('music.wav'), silence: p('silence.wav'), voice: p('voice.wav'), stumm: p('stumm.mp4'), video: p('mit ton.mp4'), fehlt: p('gibt es nicht.wav') });
   });
   const resolve = (id: string) => paths[id];
   const make = (input: Partial<TimelineInput> & { tracks: TimelineInput['tracks'] }) =>
@@ -248,5 +254,66 @@ describe('renderAudioMix', () => {
     const empty = make({ durationFrames: 60, tracks: [] });
     const silent = await tk.renderAudioMix(empty, resolve, p('mix/leer.wav'));
     expect(Math.abs((await tk.probe(silent)).durationMs - 2000)).toBeLessThanOrEqual(1);
+  });
+  it('mischt den Originalton von Videoclips mit includeSourceAudio; Videos ohne Ton werden gemeldet', async () => {
+    const tl = make({
+      durationFrames: 150,
+      tracks: [
+        {
+          id: 'V1',
+          kind: 'video',
+          clips: [
+            { id: 'ohne-flag', assetId: 'video', start: 0, duration: 30 },
+            { id: 'o-ton', assetId: 'video', start: 30, duration: 60, in: 15, gainDb: -6, includeSourceAudio: true },
+            { id: 'stummes-video', assetId: 'stumm', start: 90, duration: 30, includeSourceAudio: true },
+          ],
+        },
+        { id: 'A1', kind: 'audio', clips: [] },
+      ],
+    });
+    const warnings: string[] = [];
+    const out = await tk.renderAudioMix(tl, resolve, p('mix/originalton.wav'), { onWarning: (w) => warnings.push(w) });
+    expect(warnings).toEqual([expect.stringMatching(/"stummes-video".*keine Audiospur/)]);
+    expect(Math.abs((await tk.probe(out)).durationMs - 5000)).toBeLessThanOrEqual(1);
+    const env = await tk.envelope(out, { rateHz: 100 });
+    expect(rms(env.values, 5, 95)).toBeLessThan(0.002); // Videoclip ohne includeSourceAudio bleibt stumm
+    expect(rms(env.values, 110, 290)).toBeCloseTo(0.15 / Math.SQRT2, 2); // 0,3 bei −6 dB
+    expect(rms(env.values, 305, 500)).toBeLessThan(0.002);
+  });
+
+  it('equal-power-Fade: Mitte des Fade-ins bei ≈ −3 dB (linear: −6 dB)', async () => {
+    const build = (fadeCurve: 'linear' | 'equal-power') =>
+      make({ durationFrames: 120, tracks: [{ id: 'A1', kind: 'audio', clips: [{ id: 'm', assetId: 'music', start: 0, duration: 120, fadeInFrames: 60, fadeCurve }] }] });
+    const ratioAtMid = async (fadeCurve: 'linear' | 'equal-power') => {
+      const out = await tk.renderAudioMix(build(fadeCurve), resolve, p(`mix/fade ${fadeCurve}.wav`));
+      const env = await tk.envelope(out, { rateHz: 100 });
+      return rms(env.values, 98, 102) / rms(env.values, 300, 380);
+    };
+    const [lin, ep] = await Promise.all([ratioAtMid('linear'), ratioAtMid('equal-power')]);
+    expect(lin).toBeCloseTo(0.5, 1);
+    expect(ep).toBeCloseTo(Math.SQRT1_2, 1);
+    expect(ep - lin).toBeGreaterThan(0.15);
+  });
+
+  it('track.duck: releaseMs verkürzt die Rückkehr, leadMs duckt im Modus signal schon vor der Stimme', async () => {
+    const musicTrack = (duck: Record<string, unknown>) => ({ id: 'A2', kind: 'audio' as const, role: 'music' as const, duck: { byTrackId: 'A1', db: -12, ...duck }, clips: [{ id: 'bett', assetId: 'music', start: 0, duration: 240 }] });
+    /** Absenkung (dB) im Hüllkurvenbereich [a, b) (20 Hz) gegenüber 1,0–2,5 s. */
+    const reduction = async (name: string, keyAsset: string, duck: Record<string, unknown>, [a, b]: [number, number]) => {
+      const tl = make({ tracks: [{ id: 'A1', kind: 'audio', clips: [{ id: 'key', assetId: keyAsset, start: 90, duration: 60 }] }, musicTrack(duck)] });
+      const out = await tk.renderAudioMix(tl, resolve, p(`mix/${name}.wav`));
+      const env = await tk.envelope(out, { rateHz: 20 });
+      const ref = rms(env.values, 20, 50); // 1,0–2,5 s: ungeduckt
+      return 20 * Math.log10(ref / rms(env.values, a, b));
+    };
+    // Stiller Schlüssel 3–5 s (Modus clips): 5,3–5,8 s nach dem Ende
+    const fastRelease = await reduction('release kurz', 'silence', { releaseMs: 40 }, [106, 116]);
+    const slowRelease = await reduction('release standard', 'silence', {}, [106, 116]);
+    expect(fastRelease).toBeLessThan(0.75);
+    expect(slowRelease).toBeGreaterThan(2);
+    // Stimme ab 3 s (Modus signal): 2,6–2,9 s davor nur mit Vorlauf abgesenkt
+    const withLead = await reduction('signal vorlauf', 'voice', { mode: 'signal', leadMs: 500, attackMs: 5 }, [52, 58]);
+    const noLead = await reduction('signal ohne vorlauf', 'voice', { mode: 'signal', attackMs: 5 }, [52, 58]);
+    expect(withLead).toBeGreaterThan(4);
+    expect(Math.abs(noLead)).toBeLessThan(0.75);
   });
 });

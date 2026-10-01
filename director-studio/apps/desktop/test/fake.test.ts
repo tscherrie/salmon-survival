@@ -15,7 +15,7 @@ describe('FakeStudioApi', () => {
     const recent = await api.listRecentProjects();
     expect(recent.map((r) => r.category).sort()).toEqual(['audio', 'graphic', 'slides', 'video', 'web']);
     const snap = await api.openProject(DEMO_VIDEO_PATH);
-    expect(snap.document.kind).toBe('timeline');
+    expect(snap.document?.kind).toBe('timeline');
     expect(snap.versions.map((v) => v.number)).toEqual([1, 2, 3]);
     expect(snap.usedAssetIds).toContain('ast_song');
     expect(snap.assets.map((a) => a.kind)).toEqual(expect.arrayContaining(['image', 'video', 'audio', 'text', 'code', 'data', 'font', 'web']));
@@ -111,7 +111,7 @@ describe('FakeStudioApi', () => {
     await api.debug.whenIdle(id);
     const after = await api.getSnapshot(id);
     expect(after.manifest.category).toBe('slides');
-    expect(after.document.kind).toBe('deck');
+    expect(after.document?.kind).toBe('deck');
   });
 
   it('Versionen wiederherstellen, Dateien importieren, Transkription, Anmeldestatus', async () => {
@@ -141,10 +141,11 @@ describe('FakeStudioApi', () => {
     const api = new FakeStudioApi({ delayMs: 0, seed: false });
     const path = await api.debug.createLargeProject();
     const snap = await api.openProject(path);
-    expect(snap.document.kind).toBe('timeline');
-    if (snap.document.kind !== 'timeline') return;
-    expect(snap.document.durationFrames).toBe(9000);
-    expect(snap.document.tracks.reduce((n, t) => n + t.clips.length, 0)).toBe(201);
-    expect(snap.document.markers.filter((m) => m.kind === 'beat' || m.kind === 'downbeat').length).toBe(640);
+    const doc = snap.document;
+    expect(doc?.kind).toBe('timeline');
+    if (doc?.kind !== 'timeline') return;
+    expect(doc.durationFrames).toBe(9000);
+    expect(doc.tracks.reduce((n, t) => n + t.clips.length, 0)).toBe(201);
+    expect(doc.markers.filter((m) => m.kind === 'beat' || m.kind === 'downbeat').length).toBe(640);
   });
 });

@@ -108,7 +108,7 @@ export const SEED_MODELS: ModelInfo[] = [
     description: 'Schnellere, halb so teure H3-Max-Variante für Entwürfe und Animatics. Je Sekunde: 480P $0.025, 768P $0.04, 1080P $0.08.',
     price: { unitPrice: 0.04, unit: 'seconds', currency: 'USD' },
     capabilities: { ...H3_CAPS, aspectRatios: H3_RATIOS },
-    tags: ['h3-max', 'familie:h3-max-turbo'],
+    tags: ['h3-max', 'familie:h3-max'],
   }),
   seed({
     id: 'minimax/h3-max-turbo/image-to-video',
@@ -119,7 +119,7 @@ export const SEED_MODELS: ModelInfo[] = [
     description: 'Turbo-Variante mit Startbild (`image_url`, optional `end_image_url`).',
     price: { unitPrice: 0.04, unit: 'seconds', currency: 'USD' },
     capabilities: { ...H3_CAPS, imageInput: true },
-    tags: ['h3-max', 'familie:h3-max-turbo'],
+    tags: ['h3-max', 'familie:h3-max'],
   }),
   seed({
     id: 'fal-ai/veo3.1',

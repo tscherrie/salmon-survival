@@ -141,6 +141,10 @@ export interface RenderDeckOptions extends HtmlRenderBase {
   fontFaces?: DeckFontFace[];
   /** Dateiname des PDFs (Standard `deck.pdf`). */
   pdfName?: string;
+  /** Dokumentsprache (Standard `de`; deutsche Texte werden silbengetrennt). */
+  lang?: string;
+  /** Silbentrennung abschalten (`false`). */
+  hyphenate?: boolean;
 }
 
 /** Rendert ein Deck: ein PNG je Folie (`slide-01-<id>.png`) und/oder ein PDF mit einer Seite je Folie. */
@@ -148,7 +152,13 @@ export async function renderDeck(deck: Deck, opts: RenderDeckOptions): Promise<{
   await mkdir(opts.outDir, { recursive: true });
   const pool = opts.pool ?? getDefaultBrowserPool();
   const result: { pngs: string[]; pdf?: string } = { pngs: [] };
-  const common = { assetUrl: opts.assetUrl, ...(opts.slideIds ? { slideIds: opts.slideIds } : {}), ...(opts.fontFaces ? { fontFaces: opts.fontFaces } : {}) };
+  const common = {
+    assetUrl: opts.assetUrl,
+    ...(opts.slideIds ? { slideIds: opts.slideIds } : {}),
+    ...(opts.fontFaces ? { fontFaces: opts.fontFaces } : {}),
+    ...(opts.lang ? { lang: opts.lang } : {}),
+    ...(opts.hyphenate !== undefined ? { hyphenate: opts.hyphenate } : {}),
+  };
   if (opts.formats.includes('png')) {
     const slides = selectSlides(deck, { mode: 'export', ...(opts.slideIds ? { slideIds: opts.slideIds } : {}) });
     const html = deckToHtml(deck, { ...common, mode: 'stage', slideIds: slides.map((s) => s.id) });

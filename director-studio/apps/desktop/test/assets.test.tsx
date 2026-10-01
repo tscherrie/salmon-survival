@@ -117,10 +117,10 @@ describe('Asset-Browser', () => {
     const drawer = screen.getByRole('complementary', { name: 'Details: Storyboard 02 – Mira' });
     expect(drawer).toHaveTextContent('Mira am Steuer');
     expect(drawer).toHaveTextContent('fal-ai/nano-banana-pro');
-    // Eltern-Asset (Eingabe der Generierung) anklickbar
-    await user.click(within(drawer).getByRole('button', { name: /Mira – Charakterblatt v3/ }));
+    // Eltern-Asset (Eingabe der Generierung) anklickbar – Herkunft kommt asynchron über api.getLineage
+    await user.click(await within(drawer).findByRole('button', { name: /Mira – Charakterblatt v3/ }));
     const parentDrawer = screen.getByRole('complementary', { name: 'Details: Mira – Charakterblatt v3' });
-    expect(within(parentDrawer).getAllByRole('button', { name: /Storyboard 0\d/ }).length).toBe(6);
+    expect((await within(parentDrawer).findAllByRole('button', { name: /Storyboard 0\d/ })).length).toBe(6);
     await user.click(within(parentDrawer).getByRole('button', { name: /Im Ordner zeigen/ }));
     expect(reveal).toHaveBeenCalledWith(DEMO_VIDEO_ID, 'ast_char_mira');
   });

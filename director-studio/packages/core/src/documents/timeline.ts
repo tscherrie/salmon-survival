@@ -80,7 +80,14 @@ export const clipSchema = z.object({
   componentId: z.string().optional(),
   text: z.string().optional(),
   style: z.string().optional(),
-  props: z.record(z.string(), z.unknown()).optional(),
+  /**
+   * Freie Props (Komponenten-Props, Text-Optionen). Textclips: `hyphens` (`auto` | `manual` | `none`) und `lang`
+   * (Sprache, Standard `de`; Silbentrennung nur für Deutsch). Asset-Referenzen siehe {@link isAssetPropKey}.
+   */
+  props: z
+    .record(z.string(), z.unknown())
+    .optional()
+    .describe('Freie Props; Textclips: hyphens (auto|manual|none), lang (Standard de); Schlüssel auf …Asset/…AssetId/rotoscope = Asset-ID'),
   name: z.string().optional(),
   speed: z.number().positive().default(1),
   gainDb: z.number().optional(),
@@ -103,17 +110,33 @@ export const DUCK_MODES = ['clips', 'signal'] as const;
 export type DuckMode = (typeof DUCK_MODES)[number];
 
 /**
- * Ducking: die Spur wird um `db` abgesenkt, solange die Schlüsselspur `byTrackId` aktiv ist.
+ * Standardwerte des Duckings je Modus (ms). Export-Mix (`@studio/media`) und Vorschau (`@studio/render`)
+ * nutzen dieselben Werte, damit die Vorschau so klingt wie der Export.
+ */
+export const DUCK_DEFAULTS = {
+  clips: { leadMs: 150, attackMs: 200, releaseMs: 1200 },
+  signal: { leadMs: 0, attackMs: 20, releaseMs: 400 },
+  /** Lücken der Schlüsselspur unter dieser Dauer werden überbrückt (Modus `clips`), damit die Musik nicht „pumpt“. */
+  mergeGapMs: 500,
+} as const;
+
+/**
+ * Ducking: die Spur wird um `db` (negativ, z. B. −12) abgesenkt, solange die Schlüsselspur `byTrackId` Ton liefert
+ * (Audiospur: alle Clips; Videospur: nur Clips mit `includeSourceAudio`).
  * `mode` `clips` (Standard) nimmt die Clip-Bereiche der Schlüsselspur, `signal` deren Audiosignal (Sidechain).
- * `attackMs`/`releaseMs` sind die Rampen beim Absenken bzw. Zurückkehren, `leadMs` lässt die Absenkung so viele
- * Millisekunden vor dem Schlüssel beginnen (nur sinnvoll im Modus `clips`).
+ * `attackMs`/`releaseMs` sind die Rampen beim Absenken bzw. Zurückkehren; die Absenkung beginnt `leadMs` vor dem
+ * Schlüssel (clips: vor dem Clip; signal: Look-ahead). Standardwerte: {@link DUCK_DEFAULTS}.
  */
 export const trackDuckSchema = z.object({
   byTrackId: z.string(),
   db: z.number(),
-  attackMs: z.number().nonnegative().optional().describe('Rampe beim Absenken (ms)'),
-  releaseMs: z.number().nonnegative().optional().describe('Rampe beim Zurückkehren (ms)'),
-  leadMs: z.number().nonnegative().optional().describe('Absenkung beginnt so viele ms vor dem Schlüssel (Modus clips)'),
+  attackMs: z.number().nonnegative().optional().describe('Rampe beim Absenken (ms; Standard clips 200, signal 20)'),
+  releaseMs: z.number().nonnegative().optional().describe('Rampe beim Zurückkehren (ms; Standard clips 1200, signal 400)'),
+  leadMs: z
+    .number()
+    .nonnegative()
+    .optional()
+    .describe('Absenkung beginnt so viele ms vor dem Schlüssel (clips: Standard 150 ms vor dem Clip; signal: Look-ahead, Standard 0)'),
   mode: z.enum(DUCK_MODES).optional().describe('clips = Clip-Bereiche der Schlüsselspur (Standard), signal = deren Audiosignal'),
 });
 export type TrackDuck = z.infer<typeof trackDuckSchema>;

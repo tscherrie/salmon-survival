@@ -3,11 +3,13 @@ import { homedir, platform } from 'node:os';
 import { basename, join } from 'node:path';
 import {
   clampRefText,
+  defaultIdGenerator,
   initialPickers,
   type AppSettings,
   type Asset,
   type AssetQuery,
   type AuthStatus,
+  type ChatMessage,
   type CheckpointDecision,
   type ComposerMessage,
   type CreateProjectInput,
@@ -39,15 +41,18 @@ import {
   isAgentSdkAvailable,
   selectRuntime,
   SkillLibrary,
+  type WebPort,
 } from '@studio/director';
 import { defaultMediaToolkit, type MediaToolkit } from '@studio/media';
 import { ProjectStore, RecentProjects } from '@studio/project';
+import type { MediaErrorInfo } from '@studio/render/browser';
 import { buildAssetUrl, type AssetVariant, type ResolvedAssetFile } from './asset-protocol.ts';
 import { exportProject as runExport } from './exporter.ts';
 import { SecretStore, type SecretCipher, type SecretName } from './secrets.ts';
 import { resolvePreviewPath, validatePickPayload } from './security.ts';
 import { CombinedCatalog, DerivedMedia, FalHub, renderPortFor, RenderService } from './services.ts';
 import { defaultSettings, SettingsStore } from './settings.ts';
+import { createWebPort } from './web.ts';
 
 /** Elektron-spezifische Fähigkeiten, die das Backend braucht (in Tests ersetzbar). */
 export interface PreviewPort {
@@ -81,6 +86,7 @@ export interface BackendDeps {
     homedir?: string;
     platform?: NodeJS.Platform;
     skillsDir?: string;
+    web?: WebPort;
   };
 }
 
@@ -93,6 +99,8 @@ export interface OpenProject {
   runState: RunState;
   activities: ToolActivity[];
   site: { url: string; stop(): Promise<void> } | null;
+  /** Bereits gezeigte Systemhinweise (Text), damit derselbe Hinweis nicht mehrfach erscheint. */
+  notices: Set<string>;
 }
 
 const MAX_ACTIVITIES = 60;
@@ -243,8 +251,11 @@ export class StudioBackend implements StudioApi {
       if (open.store.dir === path) return this.snapshot(open);
     }
     if (!(await ProjectStore.isProject(path))) throw new Error(`Kein Director-Studio-Projekt: ${path}`);
-    const store = await ProjectStore.open(path);
+    const warnings = this.storeWarnings();
+    const store = await ProjectStore.open(path, { onWarning: warnings.onWarning });
     const open = this.register(store);
+    // Übersprungene Journalzeilen u. Ä. stehen als Systemhinweis im Panel (und damit schon im Snapshot).
+    await warnings.attach(open);
     await this.touchRecent(open);
     // Absturz-Wiederaufnahme laufender Generierungen (braucht fal-Key und eine Session).
     void this.resumeGenerations(open);
@@ -274,9 +285,47 @@ export class StudioBackend implements StudioApi {
       runState: 'idle',
       activities: [],
       site: null,
+      notices: new Set(),
     };
     this.projects.set(id, open);
     return open;
+  }
+
+  /**
+   * Warnungen des Projektspeichers (z. B. beschädigte Journalzeilen, die übersprungen wurden): in die Konsole und
+   * einmal je Text als Systemhinweis ins Panel. Vor `attach` (während `ProjectStore.open`) werden sie gesammelt.
+   */
+  private storeWarnings(): { onWarning: (message: string) => void; attach: (open: OpenProject) => Promise<void> } {
+    const pending: string[] = [];
+    let target: OpenProject | null = null;
+    const notice = (message: string) => `Hinweis zum Projektspeicher: ${message}`;
+    return {
+      onWarning: (message) => {
+        console.warn(message);
+        if (target) void this.postNotice(target, notice(message), { once: true }).catch(() => undefined);
+        else pending.push(message);
+      },
+      attach: async (open) => {
+        // Hinweise früherer Sitzungen nicht wiederholen (die beschädigte Zeile bleibt ja bestehen).
+        for (const m of await open.store.listMessages().catch(() => [])) if (m.role === 'system') open.notices.add(m.text);
+        target = open;
+        for (const message of pending.splice(0)) await this.postNotice(open, notice(message), { once: true }).catch(() => undefined);
+      },
+    };
+  }
+
+  /**
+   * Hinweis der App (nicht des Directors) im Panel – gespeichert, damit er nach dem Neuladen sichtbar bleibt.
+   * Mit `once` erscheint derselbe Text nur einmal.
+   */
+  private async postNotice(open: OpenProject, text: string, options: { once?: boolean } = {}): Promise<void> {
+    if (options.once) {
+      if (open.notices.has(text)) return;
+      open.notices.add(text);
+    }
+    const message: ChatMessage = { id: defaultIdGenerator('msg'), role: 'system', text, createdAt: new Date().toISOString() };
+    await open.store.appendMessage(message);
+    this.emit({ type: 'message', projectId: open.id, message });
   }
 
   private project(projectId: string): OpenProject {
@@ -300,14 +349,16 @@ export class StudioBackend implements StudioApi {
       // Projekte ohne Kategorie haben bis zum Planungsergebnis kein Dokument; die UI zeigt dann den Chat.
       document: head?.document ?? null,
       versions: await store.listVersions(),
-      assets: store.allAssets(),
+      assets: await withLinkState(store, store.allAssets()),
       usedAssetIds: [...(await store.usedAssetIds())],
       budget: store.budgetSummary(),
       checkpoints: store.manifest.checkpoints,
       messages: await store.listMessages(),
       generations: store.listGenerations(),
       runState: open.runState,
-      pendingQuestion: pendingQuestion ? { questionId: pendingQuestion.questionId, questions: pendingQuestion.questions } : null,
+      pendingQuestion: pendingQuestion
+        ? { questionId: pendingQuestion.questionId, questions: pendingQuestion.questions, ...(pendingQuestion.runId ? { runId: pendingQuestion.runId } : {}) }
+        : null,
       pendingApprovals: open.ui.pendingApprovals?.() ?? [],
       activities: [...open.activities],
     };
@@ -342,6 +393,8 @@ export class StudioBackend implements StudioApi {
         exportProject: (target) => this.exportProject(open.id, { target }),
       }),
       transcribe: this.fal.transcribePort(),
+      // `import_url`: Download mit Schutz vor lokalen/privaten Zielen und Größenlimit.
+      web: this.deps.overrides?.web ?? createWebPort(),
       ui: open.ui,
       runtimeId: runtime,
       ...(skills ? { options: { skills } } : {}),
@@ -639,11 +692,19 @@ export class StudioBackend implements StudioApi {
 
   async exportProject(projectId: string, options: ExportOptions): Promise<{ path: string }> {
     const open = this.project(projectId);
-    return runExport(open.store, options, {
-      media: this.media,
-      render: this.render,
-      siteUrl: () => this.ensureSite(open),
-    });
+    const missing = new Map<string, MediaErrorInfo>();
+    try {
+      return await runExport(open.store, options, {
+        media: this.media,
+        render: this.render,
+        siteUrl: () => this.ensureSite(open),
+        onMediaError: (info) => {
+          if (!missing.has(`${info.clipId}\u0000${info.assetId}`)) missing.set(`${info.clipId}\u0000${info.assetId}`, info);
+        },
+      });
+    } finally {
+      if (missing.size > 0) await this.postNotice(open, mediaErrorNotice(open.store, `Export (${options.target})`, [...missing.values()])).catch(() => undefined);
+    }
   }
 
   openExternal(url: string): Promise<void> {
@@ -688,12 +749,40 @@ export class StudioBackend implements StudioApi {
   }
 }
 
+/** Systemhinweis über beim Rendern ausgelassene Medien (fehlende/defekte Dateien). */
+export function mediaErrorNotice(store: Pick<ProjectStore, 'getAsset'>, context: string, infos: readonly MediaErrorInfo[]): string {
+  const lines = infos.slice(0, 12).map((info) => {
+    const title = store.getAsset(info.assetId)?.title;
+    return `- Clip \`${info.clipId}\`: ${title ? `„${title}“ (${info.assetId})` : info.assetId} – ${info.message}`;
+  });
+  if (infos.length > 12) lines.push(`- … und ${infos.length - 12} weitere`);
+  const count = infos.length === 1 ? 'Ein Medium fehlte oder war defekt und wurde' : `${infos.length} Medien fehlten oder waren defekt und wurden`;
+  return `**${context}:** ${count} ausgelassen. Bitte die Datei(en) erneut verknüpfen oder den Director bitten, sie zu ersetzen.\n${lines.join('\n')}`;
+}
+
 function sameOrigin(a: string, b: string): boolean {
   try {
     return new URL(a).origin === new URL(b).origin;
   } catch {
     return false;
   }
+}
+
+/**
+ * Verknüpfte Dateien, die nicht mehr am gespeicherten Ort liegen, bekommen `metadata.missing = true` (nur in der
+ * Sicht für die UI, nicht gespeichert) – die Asset-Karte zeigt dann „Datei fehlt“ und bietet „Erneut verknüpfen“.
+ */
+export async function withLinkState(store: Pick<ProjectStore, 'assetFilePath'>, assets: Asset[]): Promise<Asset[]> {
+  return Promise.all(
+    assets.map(async (asset) => {
+      if (asset.source !== 'linked') return asset;
+      const path = store.assetFilePath(asset);
+      const missing = !path || !(await hasFile(path));
+      if (missing === (asset.metadata?.missing === true)) return asset;
+      const { missing: _missing, ...rest } = asset.metadata ?? {};
+      return { ...asset, metadata: missing ? { ...rest, missing: true } : rest };
+    }),
+  );
 }
 
 async function hasFile(path: string): Promise<boolean> {

@@ -104,13 +104,21 @@ export const getDocumentTool = defineTool({
     const version = args.version ? await ctx.project.getVersion(args.version) : await ctx.project.head();
     if (!version) return errorResult(args.version ? `Version ${args.version} existiert nicht.` : 'Das Projekt hat noch kein Dokument (Kategorie offen – set_brief).');
     const doc = version.document;
-    if (mode === 'ops_schema') return textResult(truncate(stableJson(opsSchemaFor(doc.kind), 1), 30000));
+    if (mode === 'ops_schema') {
+      // Eingerückt, solange es passt; sonst kompakt – ein abgeschnittenes Schema wäre kein gültiges JSON mehr.
+      const schema = opsSchemaFor(doc.kind);
+      const pretty = stableJson(schema, 1);
+      return textResult(pretty.length <= OPS_SCHEMA_LIMIT ? pretty : truncate(stableJson(schema), OPS_SCHEMA_LIMIT));
+    }
     if (mode === 'json') {
       return textResult(`v${version.number} (${doc.kind}):\n${truncate(JSON.stringify(portion(doc, args), null, 1), 40000, '\n… [gekürzt – Ausschnitt mit fromSec/toSec/trackId/slideId/layerId/pageId anfordern]')}`);
     }
     return textResult(`v${version.number} · ${version.note}\n${summarizeDocument(doc, assetNames(ctx.project))}`);
   },
 });
+
+/** Höchstlänge der `ops_schema`-Antwort (Zeichen). */
+export const OPS_SCHEMA_LIMIT = 30000;
 
 const OPS_HELP: Record<DocumentKind, string> = {
   timeline: 'add_track, remove_track, update_track, insert_clip, remove_clip, move_clip, trim_clip, update_clip, add_marker, remove_marker, update_timeline, register_component, unregister_component',
@@ -125,6 +133,7 @@ export const applyDocumentOpsTool = defineTool({
     'Ändert das Projektdokument – der EINZIGE Weg, Timeline, Folien, Leinwand oder Seitenkarte zu bearbeiten. Alle Operationen einer Charge werden validiert (Überlappungen, Grenzen, existierende Assets/Komponenten) und ergeben genau eine neue, unveränderliche Version mit deiner Notiz.',
     'Zeiten in Frames (Ganzzahlen, Timeline-fps). Vor dem Platzieren über das Ende: update_timeline.durationFrames setzen. Code-Komponenten erst mit register_component registrieren.',
     `Operationen – Timeline: ${OPS_HELP.timeline}. Deck: ${OPS_HELP.deck}. Canvas: ${OPS_HELP.canvas}. Site: ${OPS_HELP.site}. Exakte Felder: get_document mode "ops_schema".`,
+    'update_*-Patches: fehlende Felder bleiben unverändert, null löscht ein optionales Feld (Felder mit Standardwert fallen auf ihn zurück); props, transform, reframe, duck, style, colors, fonts, fontAssets und mockups werden schlüsselweise gemergt.',
     'expectedHead (aktuelle Versionsnummer) schützt vor parallelen Änderungen. Prüfe das Ergebnis danach visuell (frames / render_still).',
   ].join(' '),
   input: z.object({

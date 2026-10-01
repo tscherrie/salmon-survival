@@ -66,7 +66,9 @@ export default function LyricSlam({ clip, frame, fps, width, height, words, prop
 - Lesezeit: jedes Wort ≥ 6–8 Frames sichtbar (bei 30 fps), Zeilen ≥ Wörter/3 s.
 - Safe Areas: Positionen relativ zu `width/height`; in 9:16 unteres Fünftel und rechten Rand frei.
 - Text nie über unruhigen Hintergrund ohne Lösung (Freiraum im Shot, Plate, Schatten, Mischmodus).
-- Deutsche Komposita: Silbentrennung manuell (`props.lines`) oder Wortgrößen anpassen.
+- Deutsche Komposita: Eingebaute Textclips trennen deutsche Wörter automatisch an Silbengrenzen
+  (`props.hyphens`: `auto` | `manual` | `none`, `props.lang` Standard `de`). In eigenen Komponenten
+  Silbentrennung manuell (`props.lines`) oder Wortgrößen anpassen.
 
 ## Ablauf
 

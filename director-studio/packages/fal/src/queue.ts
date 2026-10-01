@@ -279,8 +279,12 @@ export class FalQueueClient {
 
   /** Absturz-Wiederaufnahme: pollt eine bereits eingereichte Anfrage weiter (fehlende URLs werden rekonstruiert). */
   async resume(h: Pick<QueueHandle, 'endpointId' | 'requestId'> & Partial<QueueHandle>, opts: ResumeOptions = {}): Promise<unknown> {
-    const handle = this.normalize(h);
-    return (await this.waitAndFetch(handle, opts)).output;
+    return (await this.resumeWithMeta(h, opts)).output;
+  }
+
+  /** Wie {@link resume}, liefert zusätzlich die abgerechneten Einheiten (`x-fal-billable-units`) für exakte Ist-Kosten. */
+  async resumeWithMeta(h: Pick<QueueHandle, 'endpointId' | 'requestId'> & Partial<QueueHandle>, opts: ResumeOptions = {}): Promise<{ output: unknown; billableUnits?: number }> {
+    return this.waitAndFetch(this.normalize(h), opts);
   }
 
   private async waitAndFetch(handle: QueueHandle, opts: ResumeOptions): Promise<{ output: unknown; billableUnits?: number }> {

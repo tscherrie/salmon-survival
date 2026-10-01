@@ -50,11 +50,12 @@ export const deckElementSchema = z.object({
   /**
    * CSS-ähnliche Stilangaben (color, fontSize, fontWeight, fontFamily, background, align, …).
    * `role` ist eine der {@link DECK_TEXT_ROLES} (title|subtitle|body|caption|kicker|quote|stat).
+   * `hyphens`: `auto` (Standard; deutsche Texte bekommen Trennstellen) | `manual` | `none`.
    */
   style: z
     .record(z.string(), z.union([z.string(), z.number()]))
     .optional()
-    .describe('CSS-ähnliche Stilangaben; role: title|subtitle|body|caption|kicker|quote|stat'),
+    .describe('CSS-ähnliche Stilangaben; role: title|subtitle|body|caption|kicker|quote|stat; hyphens: auto|manual|none'),
   /** Einblendung in der Präsentation (Reihenfolge). */
   build: z.number().int().nonnegative().optional(),
 });

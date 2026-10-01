@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { formatSeconds, formatTimecode, secondsToFrames, type DocumentOp, type Version } from '@studio/core';
 import { framePaths, normalizeBeats, normalizeLoudness, normalizeSync, pathOf } from '../normalize.ts';
 import { PREVIEW_WIDTH } from '../preview.ts';
-import { errorMessage, projectTempDir, readImageBlock, truncate, wrapUntrusted } from '../util.ts';
+import { errorMessage, mediaIssueCollector, projectTempDir, readImageBlock, truncate, wrapUntrusted } from '../util.ts';
 import { defineTool, errorResult, textResult, type ToolContent, type ToolContext } from './registry.ts';
 
 export function emitVersion(ctx: ToolContext, version: Version): void {
@@ -52,14 +52,22 @@ export const framesTool = defineTool({
         if (!ctx.render) return errorResult('Renderer ist nicht verfügbar.');
         const fps = await timelineFps(ctx);
         const dir = await projectTempDir(ctx.projectDir, 'frames');
+        const issues = mediaIssueCollector();
         for (const [i, t] of args.timesSec.entries()) {
           const frame = secondsToFrames(t, fps);
-          const out = await ctx.render.renderTimelineStill({ frame, out: join(dir, `frame-${i}.png`), ...(args.formatId ? { formatId: args.formatId } : {}) });
+          const out = await ctx.render.renderTimelineStill({
+            frame,
+            out: join(dir, `frame-${i}.png`),
+            onMediaError: issues.onMediaError,
+            ...(args.formatId ? { formatId: args.formatId } : {}),
+          });
           const image = await readImageBlock(out);
           if (!image) continue;
           content.push({ type: 'text', text: `Timeline ${formatTimecode(frame, fps)} (Frame ${frame}${args.formatId ? `, ${args.formatId}` : ''}):` }, image);
           labels.push(formatTimecode(frame, fps));
         }
+        const warning = issues.summary();
+        if (warning) content.push({ type: 'text', text: warning });
       } else {
         if (!args.assetId) return errorResult('assetId fehlt (source "asset").');
         const media = requireMedia(ctx);

@@ -26,7 +26,19 @@ export function Stage() {
       content = <SiteStage site={doc} />;
       break;
     default:
-      content = <div className="stage-empty">{t('monitor.noDocument')}</div>;
+      content =
+        category === null ? (
+          // Projekt ohne Kategorie: Der Director klärt sie im Planungsgespräch (Director-Panel), danach erscheint die Bühne.
+          <div className="stage-empty stage-planning" role="status" data-testid="stage-planning">
+            <Icon name="director" size={18} />
+            <div>
+              <strong className="stage-planning-title">{t('stage.planningTitle')}</strong>
+              <p className="stage-planning-hint">{t('stage.planningHint')}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="stage-empty">{t('stage.preparing')}</div>
+        );
   }
   return (
     <section className={`stage${viewing ? ' is-viewing-old' : ''}`} aria-label={t('stage.label')}>

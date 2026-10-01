@@ -1,6 +1,6 @@
 import { createTextAssetTool, getAssetTool, importUrlTool, rejectAssetTool, searchAssetsTool, updateAssetTool } from './assets.ts';
 import { exportProjectTool, listSiteFilesTool, readSiteFileTool, renderStillTool, screenshotSiteTool, writeComponentTool, writeSiteFileTool } from './code.ts';
-import { askUserTool, postUpdateTool, proposeCheckpointTool, setBriefTool } from './communication.ts';
+import { askUserTool, mergeCheckpointsTool, postUpdateTool, proposeCheckpointTool, setBriefTool } from './communication.ts';
 import { applyDocumentOpsTool, getDocumentTool, restoreVersionTool } from './documents.ts';
 import { awaitGenerationsTool, cancelGenerationTool, generateTool } from './generation.ts';
 import { delegateTool, loadSkillTool, webFetchTool, webSearchTool } from './misc.ts';
@@ -33,6 +33,7 @@ export function buildDirectorTools(options: ToolsetOptions = {}): AnyDirectorToo
     // Kommunikation
     askUserTool,
     proposeCheckpointTool,
+    mergeCheckpointsTool,
     postUpdateTool,
     setBriefTool,
     // Modelle

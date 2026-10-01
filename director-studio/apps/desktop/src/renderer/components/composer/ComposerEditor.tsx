@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { isComposerEmpty, refLabel, removeSegment, type ComposerSegment } from '@studio/core';
+import { isComposerEmpty, removeSegment, type ComposerSegment } from '@studio/core';
 import { useT } from '../../i18n.ts';
 import { segmentIndexAt } from '../../lib/composerOps.ts';
+import { refChipLabel } from '../../lib/labels.ts';
 import { REF_MIME, hasDragType, readRefDragData } from '../../lib/dnd.ts';
 import { useActions, useLabelContext, useStudio, useStudioStore } from '../../state/context.tsx';
 import { getCaretPosition, insertTextAtSelection, isChip, parseDom, positionOf, renderSegments, setCaretPosition } from './editorDom.ts';
@@ -23,7 +24,7 @@ export function ComposerEditor({ onSubmit, disabled }: { onSubmit: () => void; d
   const [dragOver, setDragOver] = useState(false);
   const empty = isComposerEmpty(segments);
 
-  const labelsKey = segments.map((s) => (s.type === 'ref' ? refLabel(s.ref, ctx) : '')).join('|');
+  const labelsKey = segments.map((s) => (s.type === 'ref' ? refChipLabel(s.ref, ctx) : '')).join('|');
 
   // DOM neu aufbauen, wenn sich der Inhalt von außen geändert hat (oder Chip-Beschriftungen).
   useLayoutEffect(() => {
@@ -54,7 +55,7 @@ export function ComposerEditor({ onSubmit, disabled }: { onSubmit: () => void; d
     if (!el) return;
     const next = parseDom(el);
     const caret = getCaretPosition(el) ?? store.getState().caret;
-    rendered.current = { revision: store.getState().composerRevision, json: JSON.stringify(next), labels: next.map((s) => (s.type === 'ref' ? refLabel(s.ref, ctx) : '')).join('|') };
+    rendered.current = { revision: store.getState().composerRevision, json: JSON.stringify(next), labels: next.map((s) => (s.type === 'ref' ? refChipLabel(s.ref, ctx) : '')).join('|') };
     actions.setComposer(next, caret);
   };
 

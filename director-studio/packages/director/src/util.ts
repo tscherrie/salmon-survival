@@ -166,3 +166,21 @@ export function sniffImageMediaType(bytes: Uint8Array): ImageMediaType | undefin
   if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45) return 'image/webp';
   return undefined;
 }
+
+/**
+ * Sammelt beim Rendern ausgelassene Medien (fehlende/defekte Dateien) und fasst sie für das Tool-Ergebnis
+ * zusammen – damit der Director nicht ein Bild beurteilt, dem stillschweigend ein Clip fehlt.
+ */
+export function mediaIssueCollector(): { onMediaError: (issue: { clipId: string; assetId: string; message: string }) => void; summary: () => string | undefined } {
+  const seen = new Map<string, string>();
+  return {
+    onMediaError: (issue) => {
+      const key = `${issue.clipId}\u0000${issue.assetId}`;
+      if (!seen.has(key)) seen.set(key, `Clip ${issue.clipId} (Asset ${issue.assetId}): ${truncate(issue.message, 300)}`);
+    },
+    summary: () =>
+      seen.size === 0
+        ? undefined
+        : `Achtung – ${seen.size === 1 ? 'ein Medium fehlte oder war defekt und ist' : `${seen.size} Medien fehlten oder waren defekt und sind`} im Bild nicht zu sehen:\n${[...seen.values()].map((l) => `- ${l}`).join('\n')}`,
+  };
+}

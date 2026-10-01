@@ -1,11 +1,19 @@
-import { parseDataSrc, type Ref } from '@studio/core';
+import { clampRefText, parseDataSrc, type Ref } from '@studio/core';
 import type { PickPayload } from './picker-script.ts';
+
+/** Sichtbarer Text und Tag eines Picks für die Referenz (ohne bedingte Trennstriche, gekürzt). */
+function textAndTag(payload: PickPayload): { text?: string; tag?: string } {
+  const text = clampRefText((payload.text ?? '').replace(/\u00AD/g, ''));
+  const tag = (payload.tag ?? '').trim().toLowerCase();
+  return { ...(text ? { text } : {}), ...(tag ? { tag } : {}) };
+}
 
 /**
  * Wandelt einen Pick in eine Referenz (`@studio/core` Ref) um.
  * - `deck`: Klick auf ein Element → `element` mit `slideId` + `elementId`; Klick auf den Folienhintergrund → `slide`.
  * - `canvas`: `element` mit `elementId` = Ebenen-ID (nächstes `data-sid`).
  * - `site`: `element` mit Seite, Selektor, Quelle (`data-src`/`data-loc`) und Box.
+ * Element-Referenzen tragen zusätzlich den sichtbaren Text (≤ 120 Zeichen) und das Tag des Elements.
  */
 export function pickPayloadToRef(payload: PickPayload, doc: 'site' | 'deck' | 'canvas'): Ref {
   const bbox = {
@@ -25,6 +33,7 @@ export function pickPayloadToRef(payload: PickPayload, doc: 'site' | 'deck' | 'c
       ...(elementId ? { elementId } : {}),
       ...(payload.selector ? { selector: payload.selector } : {}),
       bbox,
+      ...textAndTag(payload),
     };
   }
   if (doc === 'canvas') {
@@ -35,6 +44,7 @@ export function pickPayloadToRef(payload: PickPayload, doc: 'site' | 'deck' | 'c
       ...(elementId ? { elementId } : {}),
       ...(!elementId && payload.selector ? { selector: payload.selector } : {}),
       bbox,
+      ...textAndTag(payload),
     };
   }
   const source = payload.dataSrc ? parseDataSrc(payload.dataSrc) : undefined;
@@ -46,5 +56,6 @@ export function pickPayloadToRef(payload: PickPayload, doc: 'site' | 'deck' | 'c
     ...(payload.dataSid ? { elementId: payload.dataSid } : {}),
     ...(source && source.line > 0 ? { source: { file: source.file, line: source.line, ...(source.column && source.column > 0 ? { column: source.column } : {}) } } : {}),
     bbox,
+    ...textAndTag(payload),
   };
 }

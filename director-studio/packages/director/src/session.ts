@@ -196,7 +196,7 @@ export class DirectorSession {
   }
 
   /** Absturz-Wiederaufnahme journalisierter Generierungen. */
-  resumePendingGenerations(): Promise<{ resumed: string[]; failed: string[] }> {
+  resumePendingGenerations(): Promise<{ resumed: string[]; failed: string[]; recovered?: string[] }> {
     return this.jobs.resumePending();
   }
 

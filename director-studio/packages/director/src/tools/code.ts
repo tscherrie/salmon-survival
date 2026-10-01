@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, realpath, stat, writeFile } from 'node:fs/pro
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import { formatTimecode, secondsToFrames, VIEWPORTS } from '@studio/core';
-import { errorMessage, projectTempDir, readImageBlock, truncate, wrapUntrusted } from '../util.ts';
+import { errorMessage, mediaIssueCollector, projectTempDir, readImageBlock, truncate, wrapUntrusted } from '../util.ts';
 import { emitVersion } from './perception.ts';
 import { defineTool, errorResult, textResult, type ToolContent, type ToolContext } from './registry.ts';
 
@@ -57,8 +57,8 @@ export async function assertInsideReal(siteDir: string, abs: string): Promise<vo
 async function snapshotSite(ctx: ToolContext, note: string): Promise<string> {
   const doc = await ctx.project.getDocument();
   if (!doc || doc.kind !== 'site') return '';
-  const files = await ctx.project.snapshotSiteFiles();
-  const version = await ctx.project.commitOps([{ op: 'snapshot_files', files }], { note, author: 'director', runId: ctx.runId });
+  // Snapshot und Commit unter einer Sperre: Eine Wiederherstellung kann sich nicht dazwischenschieben.
+  const { version, files } = await ctx.project.commitSiteSnapshot({ note, author: 'director', runId: ctx.runId });
   emitVersion(ctx, version);
   return ` → v${version.number} (Snapshot ${Object.keys(files).length} Dateien)`;
 }
@@ -68,6 +68,7 @@ export const writeSiteFileTool = defineTool({
   description: [
     'Schreibt eine oder mehrere Dateien des Web-Projekts unter site/ (Pfade relativ zu site/, z. B. "src/App.tsx", "index.html"). Ganze Dateien, kein Patch – lies vorher mit read_site_file.',
     'Nach dem Schreiben wird der Quellbaum als neue Version des Site-Dokuments gesichert. Nicht erlaubt: absolute Pfade, "..", node_modules/, dist/, .git/, .env-Dateien.',
+    'Die Vorschau hat kein externes Netz: Schriften, Icons, Bilder und Bibliotheken unter site/ ablegen oder per npm einbinden, nie von CDNs/Google Fonts laden.',
     'Gib Elementen, auf die der Nutzer zeigen könnte (Sektionen, Karten, Hero), ein stabiles data-sid-Attribut. Prüfe danach mit screenshot_site.',
   ].join(' '),
   input: z.object({
@@ -223,11 +224,12 @@ export const renderStillTool = defineTool({
       const out = join(dir, 'still.png');
       let label: string;
       let path: string;
+      const issues = mediaIssueCollector();
       if (args.target === 'timeline') {
         const doc = await ctx.project.getDocument();
         if (!doc || doc.kind !== 'timeline') return errorResult('Das Projekt hat keine Timeline.');
         const frame = args.frame ?? secondsToFrames(args.timeSec ?? 0, doc.fps);
-        path = await ctx.render.renderTimelineStill({ frame, out, ...(args.formatId ? { formatId: args.formatId } : {}) });
+        path = await ctx.render.renderTimelineStill({ frame, out, onMediaError: issues.onMediaError, ...(args.formatId ? { formatId: args.formatId } : {}) });
         label = `Timeline ${formatTimecode(frame, doc.fps)} (Frame ${frame}${args.formatId ? `, ${args.formatId}` : ''})`;
       } else {
         path = await ctx.render.renderDocumentPng({ out, ...(args.slideId ? { slideId: args.slideId } : {}) });
@@ -235,7 +237,8 @@ export const renderStillTool = defineTool({
       }
       const image = await readImageBlock(path);
       if (!image) return errorResult('Bild konnte nicht gelesen werden (Format/Größe).');
-      return { content: [{ type: 'text', text: `${label}:` }, image] };
+      const warning = issues.summary();
+      return { content: [{ type: 'text', text: `${label}:` }, image, ...(warning ? [{ type: 'text' as const, text: warning }] : [])] };
     } catch (error) {
       return errorResult(errorMessage(error));
     }

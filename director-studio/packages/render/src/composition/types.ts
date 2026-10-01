@@ -1,5 +1,8 @@
 import type { ComponentType, ReactNode } from 'react';
-import type { AssetKind, Clip, Timeline } from '@studio/core';
+import type { AssetKind, Clip, TimedWord, Timeline } from '@studio/core';
+
+/** Wortzeitstempel (Sekunden, absolut auf der Timeline) für kinetische Typografie – Typ aus `@studio/core`. */
+export type { TimedWord } from '@studio/core';
 
 /**
  * VERTRAG zwischen UI (Remotion Player im Renderer) und Render-Worker (renderStill/renderMedia).
@@ -15,13 +18,22 @@ export interface AssetMedia {
   height?: number | undefined;
   durationMs?: number | undefined;
   fps?: number | undefined;
+  /**
+   * Bekannter Ladefehler (z. B. Datei fehlt, falsches Format – vom Render-Worker vorab geprüft). Die
+   * Komposition lädt das Medium dann gar nicht erst: Platzhalter in der Vorschau, beim Rendern ausgelassen.
+   */
+  error?: string | undefined;
 }
 
-/** Wortzeitstempel (Sekunden, absolut auf der Timeline) für kinetische Typografie. */
-export interface TimedWord {
-  text: string;
-  start: number;
-  end: number;
+/** Ein Medium (Bild/Video/Audio) eines Clips ließ sich nicht laden oder dekodieren. */
+export interface MediaErrorInfo {
+  clipId: string;
+  assetId: string;
+  /** Art laut Asset (`unknown`, wenn das Asset fehlt). */
+  kind: AssetKind | 'unknown';
+  url: string;
+  /** Deutsche Fehlerbeschreibung. */
+  message: string;
 }
 
 /** Props, die jede Overlay-/Text-/Übergangskomponente (vom Director geschrieben) bekommt. */
@@ -75,4 +87,13 @@ export interface TimelineCompositionProps {
   showPlaceholders?: boolean | undefined;
   /** Wird aufgerufen, wenn eine Director-Komponente beim Rendern einen Fehler wirft. */
   onComponentError?: ((info: { componentId: string; clipId: string; message: string }) => void) | undefined;
+  /**
+   * Wird (je Clip und Medium höchstens einmal) aufgerufen, wenn ein Medium fehlt, nicht ladbar ist (404) oder
+   * sich nicht dekodieren lässt (z. B. Bild-URL an einem Video-Asset). Die Komposition stürzt dabei nie ab:
+   * Vorschau zeigt einen Platzhalter, beim Rendern wird das Medium ausgelassen. Zusätzlich erscheint eine
+   * Konsolenwarnung `[studio:media-error] {…}` (der Render-Worker liest sie aus den Browser-Logs).
+   */
+  onMediaError?: ((info: MediaErrorInfo) => void) | undefined;
+  /** Sprache der Texte (Standard `de`; deutsche Texte bekommen bedingte Trennstriche). */
+  lang?: string | undefined;
 }

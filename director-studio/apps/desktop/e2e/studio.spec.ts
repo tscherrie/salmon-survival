@@ -121,3 +121,42 @@ test('Neues Projekt anlegen und Präsentation: Folienklick erzeugt Folien-Chip',
   await expect(page.getByTestId('composer-editor').locator('.chip-slide')).toContainText('Folie 2');
   expect(errors).toEqual([]);
 });
+
+test('Projekt ohne Kategorie: Planungs-Platzhalter → Kategorie im Gespräch; fehlende Datei erneut verknüpfen', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Neues Projekt' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neues Projekt' });
+  await dialog.getByLabel('Titel').fill('Offene Idee');
+  await dialog.getByLabel('Noch offen – im Gespräch klären').check();
+  await dialog.getByRole('button', { name: 'Projekt anlegen' }).click();
+
+  // Ohne Dokument: Platzhalter auf der Bühne, Planungsgespräch im Director-Panel
+  const stage = page.getByRole('region', { name: 'Bühne (nur lesbar)' });
+  await expect(stage.getByTestId('stage-planning')).toContainText('Kategorie wird im Planungsgespräch festgelegt');
+  await page.getByTestId('composer-editor').click();
+  await page.keyboard.type('Etwas für den Sommer');
+  await page.getByRole('button', { name: 'Senden', exact: true }).click();
+  const question = page.getByRole('complementary', { name: 'Director' }).getByRole('form', { name: 'Rückfrage' });
+  await expect(question).toBeVisible();
+  await question.getByLabel('Präsentation').check();
+  await question.getByLabel('Beides').check();
+  await question.getByLabel('Analogfilm').check();
+  await question.getByRole('button', { name: 'Antworten' }).click();
+  await expect(stage.getByTestId('stage-planning')).toHaveCount(0, { timeout: 15_000 });
+  await expect(page.locator('.badge-category')).toHaveText('Präsentation');
+
+  // Demo-Deck: verknüpftes Logo fehlt → „Erneut verknüpfen …“ (Dateiauswahl des Fakes)
+  await page.getByRole('button', { name: 'Projekte' }).click();
+  await page.getByRole('button', { name: /Pitch-Deck Q4/ }).click();
+  const logo = page.locator('[data-asset-id="ast_deck_logo"]');
+  await expect(logo).toContainText('Datei fehlt');
+  await logo.getByRole('button', { name: 'Firmenlogo – Details' }).click();
+  const drawer = page.getByRole('complementary', { name: 'Details: Firmenlogo' });
+  await expect(drawer.getByRole('alert')).toContainText('Datei nicht gefunden');
+  await drawer.getByRole('button', { name: 'Erneut verknüpfen …' }).click();
+  await expect(drawer.getByRole('alert')).toHaveCount(0);
+  await expect(drawer).toContainText('/Users/demo/Material/Referenz Nachtfahrt.jpg');
+  await expect(logo).not.toContainText('Datei fehlt');
+  expect(errors).toEqual([]);
+});

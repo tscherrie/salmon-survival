@@ -38,6 +38,8 @@ export interface ApprovalRequest {
   detail: string;
   amountUsd?: number | undefined;
   createdAt: string;
+  /** Director-Lauf, aus dem die Freigabe stammt (fehlt bei Anfragen außerhalb eines Laufs). */
+  runId?: string | undefined;
 }
 
 export type RunState = 'idle' | 'running' | 'waiting_user' | 'failed' | 'interrupted';

@@ -11,7 +11,8 @@ const VIEWPORT_IDS: PreviewViewport[] = ['mobile', 'tablet', 'desktop'];
 
 /**
  * Web-Vorschau. Electron: eingebettete `WebContentsView` (Main-Prozess) – hier nur ein Platzhalter,
- * dessen Position per `previewSetBounds` gemeldet wird. Browser/Fake: `<iframe sandbox="allow-scripts">`.
+ * dessen Position per `previewSetBounds` gemeldet wird; die Seitenwahl navigiert sie per `previewNavigate`.
+ * Browser/Fake: `<iframe sandbox="allow-scripts">`, die Seite steht im Hash der iframe-URL.
  * Element-Picks kommen in beiden Fällen als `preview_pick`-Ereignis und landen als Chip im Composer.
  */
 export function WebMonitor({ site }: { site: Site }) {
@@ -25,12 +26,16 @@ export function WebMonitor({ site }: { site: Site }) {
   const overlays = useStudio((s) => s.overlays);
   const preview = useStudio((s) => s.preview);
   const [url, setUrl] = useState<string | null>(null);
+  /** Zählt abgeschlossene `previewOpen`-Aufrufe (jeder lädt die Startseite der Site). */
+  const [openCount, setOpenCount] = useState(0);
+  const justOpened = useRef(false);
   const [pickMode, setPickMode] = useState(false);
   const [regionMode, setRegionMode] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const size = useElementSize(hostRef);
   const page = site.pages.find((p) => p.id === selectedPageId) ?? site.pages[0];
+  const pagePath = page?.path ?? '/';
   const vp = VIEWPORTS[viewport];
 
   // Vorschau öffnen (je Viewport)
@@ -40,9 +45,16 @@ export function WebMonitor({ site }: { site: Site }) {
     api
       .previewOpen(projectId, { viewport })
       .then((result) => {
-        if (alive) setUrl(result.url);
+        if (!alive) return;
+        setUrl(result.url);
+        justOpened.current = true;
+        setOpenCount((n) => n + 1);
       })
-      .catch((error: unknown) => actions.toast('error', t('monitor.previewError', { error: error instanceof Error ? error.message : String(error) })));
+      .catch((error: unknown) => {
+        // Veraltete Anfrage (Viewport gewechselt, Projekt geschlossen): kein Fehler-Toast.
+        if (!alive) return;
+        actions.toast('error', t('monitor.previewError', { error: error instanceof Error ? error.message : String(error) }));
+      });
     return () => {
       alive = false;
     };
@@ -75,6 +87,16 @@ export function WebMonitor({ site }: { site: Site }) {
     };
   }, [mode, api, projectId]);
 
+  // Electron: Seitenwahl (Seitenkarte der Bühne oder Auswahl im Monitor) navigiert die native Vorschau.
+  useEffect(() => {
+    if (mode !== 'electron' || !projectId || openCount === 0) return;
+    const fresh = justOpened.current;
+    justOpened.current = false;
+    // Direkt nach dem Öffnen steht die Vorschau bereits auf der Startseite.
+    if (fresh && pagePath === '/') return;
+    api.previewNavigate(projectId, pagePath).catch((error: unknown) => actions.toast('error', t('monitor.previewError', { error: error instanceof Error ? error.message : String(error) })));
+  }, [mode, api, projectId, openCount, pagePath, actions, t]);
+
   // Picker-Modus
   useEffect(() => {
     if (!projectId) return;
@@ -84,7 +106,7 @@ export function WebMonitor({ site }: { site: Site }) {
 
   const scale = size.width > 0 ? Math.min(1, (size.width - 16) / vp.width) : 0.5;
   const frameHeight = size.height > 0 ? Math.round((size.height - 16) / scale) : vp.height;
-  const src = url ? `${url}#${page?.path ?? '/'}` : null;
+  const src = url ? `${url}#${pagePath}` : null;
 
   const onRegion = (rect: Rect) => actions.insertRef({ kind: 'region', doc: 'site', ...(page ? { page: page.path } : {}), rect });
 
@@ -107,7 +129,17 @@ export function WebMonitor({ site }: { site: Site }) {
           </button>
         )}
         <span className="spacer" />
-        <span className="monitor-caption">{page?.path}</span>
+        {site.pages.length > 1 ? (
+          <select className="monitor-page-select" aria-label={t('monitor.page')} value={page?.id ?? ''} onChange={(e) => actions.selectPage(e.target.value)}>
+            {site.pages.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title} · {p.path}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="monitor-caption">{pagePath}</span>
+        )}
         <button type="button" className="button button-small" onClick={() => projectId && void api.previewOpenExternal(projectId)}>
           <Icon name="external" size={14} /> {t('monitor.openExternal')}
         </button>

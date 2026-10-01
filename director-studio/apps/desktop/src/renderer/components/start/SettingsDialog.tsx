@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import { DIRECTOR_EFFORTS, type AppSettings, type DirectorEffort, type DirectorRuntimeId } from '@studio/core';
+import { DIRECTOR_EFFORTS, type AppSettings, type AuthStatus, type DirectorEffort, type DirectorRuntimeId } from '@studio/core';
 import { useT, type Language } from '../../i18n.ts';
 import { useActions, useStudio } from '../../state/context.tsx';
 import { Dialog } from '../common/Dialog.tsx';
@@ -83,7 +83,8 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     onClose();
   };
 
-  const anthropicAvailable = auth ? (auth.runtimes.find((r) => r.id === 'anthropic')?.available ?? false) : null;
+  // Status des Schlüsselfelds: nur der hinterlegte API-Key zählt (ein Login-Profil zeigt das Anmeldepanel).
+  const anthropicKeyStored = auth ? ((auth.anthropic as AuthStatus['anthropic'] | undefined)?.apiKey ?? false) : null;
 
   return (
     <Dialog
@@ -108,7 +109,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       <section className="settings-section">
         <h3>{t('settings.keys')}</h3>
         <p className="hint">{t('settings.keysHint')}</p>
-        <SecretField name="anthropic" label={t('settings.anthropicKey')} configured={anthropicAvailable} />
+        <SecretField name="anthropic" label={t('settings.anthropicKey')} configured={anthropicKeyStored} />
         <SecretField name="fal" label={t('settings.falKey')} configured={auth ? auth.falConfigured : null} />
       </section>
       {draft && (

@@ -5,6 +5,7 @@
 export * from './browser.ts';
 export { compileComponent, checkComponentSource, blankCommentsAndStrings, isCompiledComponent, type CompileResult, type CompileOptions } from './node/compile.ts';
 export { TimelineRenderer, COMPOSITION_ID, type TimelineRendererOptions, type RenderStillInput, type RenderVideoInput, type RenderInputBase } from './node/timeline-renderer.ts';
+export { probeMedia, sniffMediaType, checkSniffedKind, type SniffedMediaType, type ProbeOptions } from './node/media-probe.ts';
 export { BrowserPool, getDefaultBrowserPool, closeDefaultBrowserPool, resolveChromiumExecutable, CHROMIUM_ENV_VAR, type BrowserPoolOptions, type PageOptions } from './node/chromium.ts';
 export {
   renderHtmlToPng,

@@ -14,6 +14,7 @@ import {
   type RenderPort,
   type ToolContext,
   type UiPort,
+  type UiRequestMeta,
 } from '../src/index.ts';
 
 /** Kleinstes gültiges PNG (1×1). */
@@ -290,12 +291,17 @@ export class RecordingUi implements UiPort {
   emit(event: StudioEvent): void {
     this.events.push(event);
   }
-  async askUser(questions: DirectorQuestion[]): Promise<Record<string, string>> {
+  /** Mitgegebene Zusatzangaben (Lauf-ID) je Rückfrage bzw. Freigabe. */
+  questionMeta: Array<UiRequestMeta | undefined> = [];
+  approvalMeta: Array<UiRequestMeta | undefined> = [];
+  async askUser(questions: DirectorQuestion[], _signal?: AbortSignal, meta?: UiRequestMeta): Promise<Record<string, string>> {
     this.questions.push(questions);
+    this.questionMeta.push(meta);
     return this.answer(questions);
   }
-  async requestApproval(req: Omit<ApprovalRequest, 'id' | 'createdAt'>): Promise<boolean> {
+  async requestApproval(req: Omit<ApprovalRequest, 'id' | 'createdAt'>, _signal?: AbortSignal, meta?: UiRequestMeta): Promise<boolean> {
     this.approvals.push(req);
+    this.approvalMeta.push(meta);
     return typeof this.approve === 'function' ? this.approve(req) : this.approve;
   }
   ofType<T extends StudioEvent['type']>(type: T): Array<Extract<StudioEvent, { type: T }>> {

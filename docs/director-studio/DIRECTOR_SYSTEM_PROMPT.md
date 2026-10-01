@@ -194,3 +194,12 @@ Later change requests don't need a new checkpoint unless they exceed the budget 
 Mechanik: auf der Anthropic-API als Mid-Conversation-System-Message (`role: "system"` im
 `messages`-Array). Über einen OpenAI-kompatiblen Router (z. B. fal/OpenRouter) als `<system-reminder>`-Textblock
 im User-Turn. In beiden Fällen gilt: **nur anhängen, nie frühere Nachrichten editieren**.
+
+## Studio-Mechanik (statischer Anhang)
+
+Hinter den Text oben hängt die Plattform einen zweiten, ebenfalls statischen und englischen Abschnitt
+an (`STUDIO_MECHANICS` in `packages/director/src/prompt.ts`). Er beschreibt die Bedienung der Studio-Tools:
+Dokumente nur über `apply_document_ops`, Asset-Referenzen als `asset:<id>`, asynchrone Generierungen,
+Gates, Kontextblöcke, `<untrusted_data>` und Checkpoints. Dazu gehört auch: Die Web-Vorschau im Studio hat
+kein externes Netz. Schriften, Icons, Bilder und Bibliotheken liegen deshalb unter `site/` oder kommen als
+npm-Paket, nie von CDNs oder Google Fonts.

@@ -16,7 +16,7 @@ import {
   imageCodecArgs,
   num,
 } from './ffmpeg-syntax.ts';
-import { buildAudioMixGraph, type AudioMixOptions } from './mix.ts';
+import { buildAudioMixGraph, clipContributesAudio, type AudioMixOptions } from './mix.ts';
 import { parseProbeJson } from './probe.ts';
 import { Float32StreamDecoder, runProcess, type RunOptions } from './process.ts';
 import type { AvSyncResult, BeatAnalysis, MediaInfo, Roi } from './types.ts';
@@ -553,8 +553,9 @@ export class MediaToolkit {
   }
 
   /**
-   * Rendert den Audiomix einer Timeline (WAV/AAC/… nach Endung). Assets ohne Tonspur
-   * werden übersprungen; fehlende Dateien führen zu einem Fehler.
+   * Rendert den Audiomix einer Timeline (WAV/AAC/… nach Endung): Audiospuren plus Originalton von
+   * Videoclips mit `includeSourceAudio`. Assets ohne Tonspur werden übersprungen (Warnung);
+   * fehlende Dateien führen zu einem Fehler.
    */
   async renderAudioMix(
     timeline: Timeline,
@@ -576,8 +577,9 @@ export class MediaToolkit {
     const rangeTo = Math.min(opts.toFrame ?? endFrame, endFrame);
     const resolved = new Map<string, string | undefined>();
     for (const track of timeline.tracks) {
-      if (track.kind !== 'audio' || track.muted) continue;
+      if (track.muted) continue;
       for (const clip of track.clips) {
+        if (!clipContributesAudio(track, clip)) continue;
         if (clip.start >= rangeTo || clip.start + clip.duration <= rangeFrom) continue;
         if (clip.assetId && !resolved.has(clip.assetId)) {
           const p = resolveAssetPath(clip.assetId);

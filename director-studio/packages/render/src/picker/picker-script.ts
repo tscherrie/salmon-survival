@@ -7,7 +7,7 @@
  * API im Fenster:
  * - `window.__studioPicker.enable()` / `.disable()` / `.isEnabled()` / `.describe(element)`
  * - Bei aktivem Picker: Hover hebt das Element hervor (Rahmen + Beschriftung in einem Shadow-Root),
- *   Klick verhindert Navigation/Aktionen und meldet ein `PickPayload`:
+ *   Klick verhindert Navigation/Aktionen und meldet (nur bei echten Nutzerklicks, `isTrusted`) ein `PickPayload`:
  *   `window.__studioPickerReport?.(payload)` UND `console.debug('__STUDIO_PICK__' + JSON.stringify(payload))`
  *   (Electron-Main hört auf Konsolenmeldungen). `Alt`+Klick wählt die übergeordnete Komponente
  *   (nächster Vorfahre mit `data-sid`/`data-src`/`data-loc`). `Esc` deaktiviert den Picker.
@@ -106,7 +106,8 @@ export const PICKER_SCRIPT = String.raw`(function () {
   }
   function textOf(el) {
     var t = (el.innerText !== undefined && el.innerText !== null ? el.innerText : el.textContent) || '';
-    t = t.replace(/\s+/g, ' ').trim();
+    // Bedingte Trennstriche (Silbentrennung) gehören nicht zum Text.
+    t = t.replace(/\u00AD/g, '').replace(/\s+/g, ' ').trim();
     return t.length > 120 ? t.slice(0, 119) + '…' : t;
   }
   function describe(el) {
@@ -189,6 +190,9 @@ export const PICKER_SCRIPT = String.raw`(function () {
   function onClick(ev) {
     if (!enabled) return;
     block(ev);
+    // Nur echte Nutzerklicks melden: synthetische Klicks (el.click(), dispatchEvent) von Seiten-Skripten
+    // werden blockiert, lösen aber keinen Pick aus.
+    if (ev.isTrusted === false) return;
     var el = resolveTarget(ev);
     if (!el) return;
     highlight(el);

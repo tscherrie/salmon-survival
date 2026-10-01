@@ -1,4 +1,5 @@
-import { normalizeSegments, refLabel, type ComposerSegment, type Ref, type RefLabelContext } from '@studio/core';
+import { normalizeSegments, type ComposerSegment, type Ref, type RefLabelContext } from '@studio/core';
+import { refChipLabel, refChipTitle } from '../../lib/labels.ts';
 
 /**
  * DOM-Hilfen für den contenteditable-Composer. Chips sind `<span contenteditable="false" data-ref="…">`.
@@ -22,10 +23,11 @@ function visibleLength(text: string): number {
 }
 
 export function createChip(ref: Ref, ctx: RefLabelContext, removeLabel: (label: string) => string): HTMLElement {
-  const label = refLabel(ref, ctx);
+  const label = refChipLabel(ref, ctx);
   const chip = document.createElement('span');
   chip.className = `chip chip-${ref.kind}`;
   chip.contentEditable = 'false';
+  chip.title = refChipTitle(ref, ctx);
   chip.dataset.ref = JSON.stringify(ref);
   const text = document.createElement('span');
   text.className = 'chip-label';

@@ -37,6 +37,9 @@ export interface Layer {
   /**
    * CSS-ähnliche Stilangaben (color, fontSize, fontFamily, fill, stroke, …).
    * `maskMode` ist `alpha` oder `luminance` (Standard) und bestimmt, wie `maskAssetId` angewendet wird.
+   * Textebenen: `role` (`display`|`title`|`headline`|`heading`|`hero`|`stat` = Displaytext, wird nicht getrennt),
+   * `textFit` (`shrink` = Schrift verkleinern, bis jedes Wort passt – Standard bei Displaytext; `overflow`),
+   * `hyphens` (`auto` | `manual` | `none`) und `lang` (Sprache, Standard `de`; Silbentrennung nur für Deutsch).
    */
   style?: Record<string, string | number> | undefined;
   effects?: Array<z.infer<typeof layerEffectSchema>> | undefined;
@@ -65,7 +68,9 @@ export const layerSchema: z.ZodType<Layer> = z.lazy(() =>
     style: z
       .record(z.string(), z.union([z.string(), z.number()]))
       .optional()
-      .describe('CSS-ähnliche Stilangaben; maskMode: alpha|luminance (Standard luminance)'),
+      .describe(
+        'CSS-ähnliche Stilangaben; maskMode: alpha|luminance (Standard luminance). Text: role (display|title|headline|heading|hero|stat = nicht trennen), textFit: shrink|overflow, hyphens: auto|manual|none, lang (Standard de)',
+      ),
     effects: z.array(layerEffectSchema).optional(),
     children: z.array(layerSchema).optional(),
   }),

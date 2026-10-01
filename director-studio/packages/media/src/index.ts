@@ -6,7 +6,18 @@
 export { MediaToolkit, defaultMediaToolkit, parseLoudnormJson, type MediaConfig, type FfmpegCapabilities } from './toolkit.ts';
 export { MediaError, type MediaErrorCode } from './errors.ts';
 export type { MediaInfo, BeatAnalysis, AvSyncResult, Roi } from './types.ts';
-export { buildAudioMixGraph, atempoChain, keyRanges, DUCKING, type AudioMixGraph, type AudioMixInput, type AudioMixOptions } from './mix.ts';
+export {
+  buildAudioMixGraph,
+  atempoChain,
+  keyRanges,
+  clipContributesAudio,
+  timelineHasMixAudio,
+  DUCKING,
+  type AudioMixGraph,
+  type AudioMixInput,
+  type AudioMixOptions,
+} from './mix.ts';
+export { beatMarkers, type BeatMarkerOptions } from './markers.ts';
 export { estimateOffset, type OffsetEstimate } from './dsp/xcorr.ts';
 export { detectBeatsFromPcm, onsetEnvelope, type OnsetEnvelope } from './dsp/beats.ts';
 export { FFT, hannWindow, nextPowerOfTwo } from './dsp/fft.ts';

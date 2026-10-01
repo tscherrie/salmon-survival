@@ -1,6 +1,6 @@
 import { deckSchema, type Deck, type DeckInput } from '@studio/core';
 import { describe, expect, it } from 'vitest';
-import { chartToSvg, deckToHtml, markdownToHtml, niceTicks, sanitizeHtml, slideToHtml } from '../src/browser.ts';
+import { chartToSvg, deckFontFaces, deckToHtml, markdownToHtml, niceTicks, sanitizeHtml, slideToHtml } from '../src/browser.ts';
 
 function deck(input: Partial<DeckInput> = {}): Deck {
   return deckSchema.parse({
@@ -113,5 +113,49 @@ describe('deckToHtml', () => {
     const html = deckToHtml(d, { assetUrl, mode: 'stage' });
     expect(html).toContain('@scope (.slide) {');
     expect(html).not.toContain('</style><script>');
+  });
+});
+
+describe('deckToHtml: Schrift-Assets und Silbentrennung', () => {
+  const SHY = '\u00AD';
+
+  it('theme.fontAssets → @font-face über assetUrl; explizite fontFaces haben Vorrang; gefährliche URLs entfallen', () => {
+    const d = deck({ theme: { colors: {}, fonts: { heading: 'Fraunces', body: 'Inter' }, fontAssets: { Fraunces: 'ast_font_f', Inter: 'ast_font_i', Böse: 'ast_evil' } } });
+    const urls: Record<string, string> = { ast_font_f: 'file:///fonts/Fraunces.woff2', ast_font_i: 'file:///fonts/Inter.ttf', ast_evil: 'javascript:alert(1)' };
+    const html = deckToHtml(d, { assetUrl: (id) => urls[id] ?? '', mode: 'stage' });
+    expect(html).toContain('@font-face { font-family: "Fraunces"; src: url("file:///fonts/Fraunces.woff2"); font-style: normal; font-display: block; }');
+    expect(html).toContain('src: url("file:///fonts/Inter.ttf")');
+    expect(html).not.toContain('javascript:');
+    expect(html).not.toContain('"Böse"');
+    const explicit = deckToHtml(d, { assetUrl: (id) => urls[id] ?? '', mode: 'stage', fontFaces: [{ family: 'Inter', src: 'file:///fonts/Inter-Bold.woff2', weight: 700 }] });
+    expect(explicit).toContain('src: url("file:///fonts/Inter-Bold.woff2"); font-weight: 700');
+    expect(explicit).not.toContain('Inter.ttf');
+    expect(explicit).toContain('Fraunces.woff2');
+    expect(deckFontFaces(d, { assetUrl: () => { throw new Error('kein Asset'); } })).toEqual([]);
+  });
+
+  it('deutsche Texte bekommen bedingte Trennstriche (nur im Text, nicht in Attributen); abschaltbar', () => {
+    const d = deck({
+      slides: [
+        {
+          id: 's1',
+          title: 'Geschwindigkeitsbegrenzung',
+          elements: [
+            { id: 'a', type: 'text', x: 0, y: 0, width: 300, height: 200, name: 'Geschwindigkeitsbegrenzung', text: '**Geschwindigkeitsbegrenzung** im Morgengrauen', style: { role: 'title' } },
+            { id: 'b', type: 'text', x: 0, y: 300, width: 300, height: 200, text: 'Lichterkette', style: { hyphens: 'none' } },
+          ],
+        },
+      ],
+    });
+    const html = deckToHtml(d, { assetUrl, mode: 'stage' });
+    expect(html).toContain(`<strong>Ge${SHY}schwin${SHY}dig${SHY}keits${SHY}be${SHY}gren${SHY}zung</strong> im Mor${SHY}gen${SHY}grau${SHY}en`);
+    expect(html).toContain('aria-label="Geschwindigkeitsbegrenzung"');
+    expect(html).toContain('data-name="Geschwindigkeitsbegrenzung"');
+    const b = html.slice(html.indexOf('data-sid="b"'));
+    expect(b.slice(0, b.indexOf('</div>'))).toContain('>Lichterkette');
+    const en = deckToHtml(d, { assetUrl, mode: 'stage', lang: 'en' });
+    expect(en).toContain('<html lang="en">');
+    expect(en).not.toContain(SHY);
+    expect(deckToHtml(d, { assetUrl, mode: 'stage', hyphenate: false })).not.toContain(SHY);
   });
 });

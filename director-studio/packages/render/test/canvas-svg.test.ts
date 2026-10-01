@@ -1,6 +1,6 @@
 import { canvasSchema, type Canvas, type CanvasInput } from '@studio/core';
 import { describe, expect, it } from 'vitest';
-import { canvasPixelSize, canvasToHtml, canvasToSvg, wrapText } from '../src/browser.ts';
+import { canvasPixelSize, canvasToHtml, canvasToSvg, estimateTextWidth, fitFontSizeToWords, hyphenationPoints, wrapText, wrapTextLines } from '../src/browser.ts';
 
 function canvas(input: Partial<CanvasInput> = {}): Canvas {
   return canvasSchema.parse({
@@ -112,5 +112,104 @@ describe('canvasToSvg', () => {
     expect(html.startsWith('<!doctype html>')).toBe(true);
     expect(html).toContain('width="1080" height="1350" viewBox="0 0 1080 1350"');
     expect(html).toContain(`script-src 'none'`);
+  });
+});
+
+describe('Leinwand-Text: Umbruch nur an Leerzeichen/Trennstellen, Displaytexte schrumpfen', () => {
+  const SHY = '\u00AD';
+  function textCanvas(style: Record<string, string | number>, text: string, width = 400): Canvas {
+    return canvasSchema.parse({ kind: 'canvas', width: 1000, height: 600, layers: [{ id: 't', type: 'text', x: 0, y: 0, width, height: 300, text, style }] });
+  }
+  const fontSizeOf = (svg: string) => Number(/font-size: ([\d.]+)px/.exec(svg)?.[1] ?? /font-size="([\d.]+)"/.exec(svg)?.[1]);
+
+  it('Fließtext (de): bedingte Trennstriche, kein Notbruch mitten im Wort', () => {
+    const svg = canvasToSvg(textCanvas({ fontSize: 48 }, 'Die Geschwindigkeitsbegrenzung gilt'), { assetUrl });
+    expect(svg).toContain(`Ge${SHY}schwin${SHY}dig${SHY}keits${SHY}be${SHY}gren${SHY}zung`);
+    expect(svg).toContain('overflow-wrap: normal');
+    expect(svg).not.toContain('break-word');
+    expect(svg).toContain('hyphens: auto');
+    expect(fontSizeOf(svg)).toBe(48);
+  });
+
+  it('Displaytext (role title): keine Trennung, Schrift wird verkleinert, bis das längste Wort passt', () => {
+    const svg = canvasToSvg(textCanvas({ fontSize: 120, role: 'title', fontWeight: 800 }, 'Geschwindigkeitsbegrenzung'), { assetUrl });
+    expect(svg).not.toContain(SHY);
+    expect(svg).toContain('hyphens: manual');
+    const size = fontSizeOf(svg);
+    expect(size).toBeLessThan(120);
+    expect(size).toBeGreaterThan(20);
+    expect(estimateTextWidth('Geschwindigkeitsbegrenzung', size, { bold: true })).toBeLessThanOrEqual(400);
+    // textFit overflow: Größe bleibt, Wort ragt über
+    const overflow = canvasToSvg(textCanvas({ fontSize: 120, role: 'title', textFit: 'overflow' }, 'Geschwindigkeitsbegrenzung'), { assetUrl });
+    expect(fontSizeOf(overflow)).toBe(120);
+    // hyphens auto erzwingt Trennung auch bei Displaytext
+    const hyph = canvasToSvg(textCanvas({ fontSize: 120, role: 'title', hyphens: 'auto' }, 'Geschwindigkeitsbegrenzung'), { assetUrl });
+    expect(hyph).toContain(SHY);
+  });
+
+  it('Sprache: lang en (Option oder Ebene) trennt nicht; hyphens none schaltet ab', () => {
+    expect(canvasToSvg(textCanvas({ fontSize: 48 }, 'Geschwindigkeitsbegrenzung'), { assetUrl, lang: 'en' })).not.toContain(SHY);
+    expect(canvasToSvg(textCanvas({ fontSize: 48, lang: 'en' }, 'Geschwindigkeitsbegrenzung'), { assetUrl })).not.toContain(SHY);
+    expect(canvasToSvg(textCanvas({ fontSize: 48, hyphens: 'none' }, 'Geschwindigkeitsbegrenzung'), { assetUrl })).not.toContain(SHY);
+    expect(canvasToHtml(textCanvas({}, 'x'), { assetUrl, lang: 'en' })).toContain('<html lang="en">');
+  });
+
+  it('tspan-Modus: Zeilen brechen nur an Leerzeichen bzw. mit sichtbarem Trennstrich an Silbengrenzen', () => {
+    const svg = canvasToSvg(textCanvas({ fontSize: 40 }, 'Die Geschwindigkeitsbegrenzung im Morgengrauen', 300), { assetUrl, textMode: 'tspan' });
+    const lines = Array.from(svg.matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g), (m) => m[1]!);
+    expect(lines.length).toBeGreaterThan(1);
+    expect(svg).not.toContain(SHY);
+    // Wieder zusammensetzen: Trennstrich am Zeilenende = Silbenfuge, sonst Leerzeichen.
+    let joined = '';
+    const breaks: number[] = [];
+    lines.forEach((line, i) => {
+      if (line.endsWith('-')) {
+        joined += line.slice(0, -1);
+        breaks.push(joined.length);
+      } else joined += line + (i < lines.length - 1 ? ' ' : '');
+    });
+    expect(joined).toBe('Die Geschwindigkeitsbegrenzung im Morgengrauen');
+    expect(breaks.length).toBeGreaterThan(0);
+    for (const b of breaks) {
+      const wordStart = joined.lastIndexOf(' ', b) + 1;
+      const word = joined.slice(wordStart).split(' ')[0]!;
+      expect(hyphenationPoints(word), `${word} bei ${b - wordStart}`).toContain(b - wordStart);
+    }
+    // Display-Rolle im tspan-Modus: verkleinert statt zu trennen
+    const display = canvasToSvg(textCanvas({ fontSize: 120, role: 'display' }, 'Lichterkette', 300), { assetUrl, textMode: 'tspan' });
+    expect(Array.from(display.matchAll(/<tspan/g)).length).toBe(1);
+    expect(fontSizeOf(display)).toBeLessThan(120);
+  });
+
+  it('wrapText/wrapTextLines: nie mitten im Wort; zu lange Stücke ragen über', () => {
+    expect(wrapText('Donaudampfschifffahrt', 50, 20)).toEqual(['Donaudampfschifffahrt']);
+    expect(wrapTextLines(`Lich${SHY}ter${SHY}ket${SHY}te`, 70, 20)).toEqual(['Lichter-', 'kette']);
+    expect(wrapTextLines('eins zwei\ndrei', 1000, 20)).toEqual(['eins zwei', 'drei']);
+    expect(fitFontSizeToWords('kurz', 1000, 50)).toBe(50);
+    expect(fitFontSizeToWords('Geschwindigkeitsbegrenzung', 200, 50)).toBeLessThan(20);
+  });
+});
+
+describe('Leinwand-Hintergrund: CSS-Farbe oder -Verlauf', () => {
+  it('linear-gradient → SVG-Verlauf mit Winkel und Stopps', () => {
+    const svg = canvasToSvg(canvas({ background: 'linear-gradient(90deg, #ff0000 0%, rgb(0, 0, 255) 100%)', layers: [] }), { assetUrl });
+    expect(svg).toContain('<linearGradient id="c-bg" gradientUnits="userSpaceOnUse" x1="0" y1="675" x2="1080" y2="675">');
+    expect(svg).toContain('<stop offset="0" stop-color="#ff0000"/><stop offset="1" stop-color="rgb(0, 0, 255)"/>');
+    expect(svg).toContain('<rect data-sid="__background" x="0" y="0" width="1080" height="1350" fill="url(#c-bg)"/>');
+    const toBottom = canvasToSvg(canvas({ background: 'linear-gradient(#fff, #000)', layers: [] }), { assetUrl });
+    expect(toBottom).toContain('x1="540" y1="0" x2="540" y2="1350"');
+    const corner = canvasToSvg(canvas({ background: 'linear-gradient(to top right, red, blue 80%)', layers: [] }), { assetUrl });
+    expect(corner).toContain('<stop offset="0.8" stop-color="blue"/>');
+  });
+
+  it('radial-gradient → radialGradient; Unbekanntes als HTML-Fläche bzw. erste Farbe (tspan)', () => {
+    const radial = canvasToSvg(canvas({ background: 'radial-gradient(circle at 25% 50%, #fff, #000)', layers: [] }), { assetUrl });
+    expect(radial).toMatch(/<radialGradient id="c-bg" gradientUnits="userSpaceOnUse" cx="270" cy="675" r="[\d.]+">/);
+    const conic = canvasToSvg(canvas({ background: 'conic-gradient(#f00, #00f)', layers: [] }), { assetUrl });
+    expect(conic).toContain('<foreignObject data-sid="__background"');
+    expect(conic).toContain('background: conic-gradient(#f00, #00f)');
+    const plain = canvasToSvg(canvas({ background: 'conic-gradient(#f00, #00f)', layers: [] }), { assetUrl, textMode: 'tspan' });
+    expect(plain).toContain('fill="#f00"');
+    expect(canvasToSvg(canvas({ background: 'transparent', layers: [] }), { assetUrl })).toContain('fill="transparent"');
   });
 });

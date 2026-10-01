@@ -1,4 +1,4 @@
-import { slideNumbers, type Asset, type Clip, type Layer, type RefLabelContext, type StudioDocument } from '@studio/core';
+import { refLabel, slideNumbers, type Asset, type Clip, type Layer, type Ref, type RefLabelContext, type StudioDocument } from '@studio/core';
 
 /** Anzeigename eines Clips: Name → Text → Asset-Titel → ID. */
 export function clipDisplayName(clip: Clip, assetTitles: ReadonlyMap<string, string> | Record<string, string>): string {
@@ -49,4 +49,28 @@ export function labelContextFor(doc: StudioDocument | null, assets: readonly Ass
       break;
   }
   return { names, fps, ...(numbers ? { slideNumbers: numbers } : {}) };
+}
+
+/**
+ * Chip-Beschriftung: wie `refLabel`, aber Element-Referenzen, deren `elementId` im Kontext keinen Namen hat
+ * (z. B. `data-sid` aus der Web-Vorschau), zeigen stattdessen Tag und sichtbaren Text („h1 „Guten Morgen““).
+ */
+export function refChipLabel(ref: Ref, ctx: RefLabelContext): string {
+  if (ref.kind === 'element' && ref.elementId && !ctx.names?.[ref.elementId] && ref.text) {
+    const { elementId: _unnamed, ...rest } = ref;
+    return refLabel(rest, ctx);
+  }
+  return refLabel(ref, ctx);
+}
+
+/** Tooltip eines Chips: Beschriftung plus (bei Elementen) Tag, voller Text, Selektor und Quelle. */
+export function refChipTitle(ref: Ref, ctx: RefLabelContext): string {
+  const label = refChipLabel(ref, ctx);
+  if (ref.kind !== 'element') return label;
+  const parts = [label];
+  const what = [ref.tag ? `<${ref.tag}>` : '', ref.text ? `„${ref.text}“` : ''].filter(Boolean).join(' ');
+  if (what) parts.push(what);
+  if (ref.selector) parts.push(ref.selector);
+  if (ref.source) parts.push(`${ref.source.file}:${ref.source.line}${ref.source.column ? `:${ref.source.column}` : ''}`);
+  return parts.join('\n');
 }

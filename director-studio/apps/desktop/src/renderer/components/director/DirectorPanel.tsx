@@ -1,6 +1,7 @@
 import { memo, useLayoutEffect, useMemo, useRef } from 'react';
-import { refLabel, type ChatMessage, type RefLabelContext, type ToolActivity } from '@studio/core';
+import type { ChatMessage, RefLabelContext, ToolActivity } from '@studio/core';
 import { formatDateTime, useT } from '../../i18n.ts';
+import { refChipLabel, refChipTitle } from '../../lib/labels.ts';
 import type { ProgressNote } from '../../state/types.ts';
 import { useActions, useLabelContext, useStudio } from '../../state/context.tsx';
 import { Icon } from '../common/Icon.tsx';
@@ -21,8 +22,8 @@ const UserMessage = memo(function UserMessage({ message, ctx }: { message: ChatM
         seg.type === 'text' ? (
           <span key={i}>{seg.text}</span>
         ) : (
-          <span key={i} className={`chip chip-static chip-${seg.ref.kind}`}>
-            {refLabel(seg.ref, ctx)}
+          <span key={i} className={`chip chip-static chip-${seg.ref.kind}`} title={refChipTitle(seg.ref, ctx)}>
+            {refChipLabel(seg.ref, ctx)}
           </span>
         ),
       )}

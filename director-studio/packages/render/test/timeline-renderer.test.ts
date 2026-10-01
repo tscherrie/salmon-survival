@@ -4,7 +4,7 @@ import { readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { compileComponent, TimelineRenderer } from '../src/index.ts';
+import { compileComponent, TimelineRenderer, type MediaErrorInfo } from '../src/index.ts';
 import { decodePng, HAS_CHROMIUM, solidPng, testChromiumPath, timeline, tmpDir } from './helpers.ts';
 
 /**
@@ -146,5 +146,76 @@ describe.skipIf(!HAS_CHROMIUM)('TimelineRenderer (Remotion)', () => {
     const controller = new AbortController();
     controller.abort();
     await expect(rendererProps.renderVideo({ timeline: tl, assets: media, componentCodes: { corner: CORNER }, out: path.join(dir, 'abgebrochen.mp4'), signal: controller.signal })).rejects.toThrow('Rendern abgebrochen');
+  }, 180000);
+
+  it('kaputte Medien: Vorabprüfung lässt sie aus, Rendern läuft weiter, onMediaError meldet', async () => {
+    const brokenVideo = path.join(dir, 'bild-statt-video.mp4');
+    await writeFile(brokenVideo, solidPng(32, 32, [255, 0, 255]));
+    const tl = timeline({
+      width: 320,
+      height: 180,
+      durationFrames: 10,
+      formats: [{ id: '16:9', width: 320, height: 180 }],
+      tracks: [
+        { id: 'V1', kind: 'video', clips: [{ id: 'bg', start: 0, duration: 10, assetId: 'bild' }] },
+        { id: 'V2', kind: 'video', clips: [{ id: 'weg', start: 0, duration: 10, assetId: 'fehlt' }] },
+        { id: 'V3', kind: 'video', clips: [{ id: 'falsch', start: 0, duration: 10, assetId: 'video' }] },
+        { id: 'O1', kind: 'overlay', clips: [{ id: 'logo', start: 0, duration: 10, componentId: 'corner', props: { size: 10, logoAsset: 'logo' } }] },
+      ],
+      components: { corner: { assetId: 'code_corner', name: 'Corner' } },
+    });
+    const media = {
+      ...assets(),
+      fehlt: { id: 'fehlt', kind: 'image' as const, url: path.join(dir, 'gibtsnicht.png') },
+      video: { id: 'video', kind: 'video' as const, url: pathToFileURL(brokenVideo).href, durationMs: 2000 },
+      logo: { id: 'logo', kind: 'image' as const, url: path.join(dir, 'logo-fehlt.png') },
+    };
+    const errors: MediaErrorInfo[] = [];
+    const out = path.join(dir, 'kaputt.png');
+    await rendererProps.renderStill({ timeline: tl, assets: media, componentCodes: { corner: CORNER }, frame: 3, out, onMediaError: (e) => errors.push(e) });
+    const px = decodePng(await readFile(out)).pixel(160, 90);
+    expect(Math.abs(px[0] - 20) + Math.abs(px[1] - 160) + Math.abs(px[2] - 140)).toBeLessThan(6);
+    const byClip = Object.fromEntries(errors.map((e) => [e.clipId, e.message]));
+    expect(byClip.weg).toContain('Datei fehlt');
+    expect(byClip.falsch).toContain('Datei ist ein Bild (png), kein Video');
+    expect(byClip.logo).toBe('props.logoAsset: Datei fehlt');
+    expect(errors.length).toBe(3);
+  }, 180000);
+
+  it('ohne Vorabprüfung: Dekodierfehler von OffthreadVideo/Img hängen das Rendern nicht auf', async () => {
+    const brokenVideo = path.join(dir, 'bild-statt-video-2.mp4');
+    await writeFile(brokenVideo, solidPng(32, 32, [255, 0, 255]));
+    const brokenImage = path.join(dir, 'text-statt-bild.png');
+    await writeFile(brokenImage, 'kein Bild');
+    const renderer = new TimelineRenderer({ workDir: path.join(dir, 'work'), browserExecutable: testChromiumPath(), componentMode: 'inputProps', probeMedia: false, timeoutMs: 20000 });
+    try {
+      const tl = timeline({
+        width: 320,
+        height: 180,
+        durationFrames: 10,
+        formats: [{ id: '16:9', width: 320, height: 180 }],
+        tracks: [
+          { id: 'V1', kind: 'video', clips: [{ id: 'bg', start: 0, duration: 10, assetId: 'bild' }] },
+          { id: 'V2', kind: 'video', clips: [{ id: 'vid', start: 0, duration: 10, assetId: 'video' }] },
+          { id: 'V3', kind: 'video', clips: [{ id: 'img', start: 0, duration: 10, assetId: 'kaputt' }] },
+        ],
+      });
+      const media = {
+        ...assets(),
+        video: { id: 'video', kind: 'video' as const, url: brokenVideo, durationMs: 2000 },
+        kaputt: { id: 'kaputt', kind: 'image' as const, url: brokenImage },
+      };
+      const errors: MediaErrorInfo[] = [];
+      const out = path.join(dir, 'kaputt-ohne-probe.png');
+      const t0 = Date.now();
+      await renderer.renderStill({ timeline: tl, assets: media, frame: 2, out, onMediaError: (e) => errors.push(e) });
+      expect(Date.now() - t0).toBeLessThan(60000);
+      const px = decodePng(await readFile(out)).pixel(160, 90);
+      expect(Math.abs(px[0] - 20) + Math.abs(px[1] - 160) + Math.abs(px[2] - 140)).toBeLessThan(6);
+      expect(errors.map((e) => e.clipId).sort()).toEqual(['img', 'vid']);
+      expect(errors.find((e) => e.clipId === 'vid')?.message).toContain('Video nicht ladbar');
+    } finally {
+      await renderer.close();
+    }
   }, 180000);
 });

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   CATEGORY_LABELS,
   formatUsd,
+  mergeCheckpoints,
   PROJECT_CATEGORIES,
   projectBriefSchema,
   proposeCheckpoint,
@@ -94,6 +95,34 @@ export const proposeCheckpointTool = defineTool({
       return textResult(
         `Checkpoint „${cp.title}“ vorgelegt${args.budgetRequestedUsd !== undefined ? ` mit Budgetantrag ${formatUsd(args.budgetRequestedUsd)}` : ''}. Die Freigabe erfolgt durch den Nutzer; bis dahin keine kostenpflichtigen Schritte für die nächste Phase.`,
       );
+    } catch (error) {
+      return errorResult(errorMessage(error));
+    }
+  },
+});
+
+export const mergeCheckpointsTool = defineTool({
+  name: 'merge_checkpoints',
+  description: [
+    'Legt mehrere noch offene Checkpoints (Status pending oder changes_requested) zu einem zusammen, z. B. Treatment und Style Bible bei kleinen Projekten.',
+    'Der zusammengelegte Checkpoint behält ID und Position des in der Reihenfolge ersten und bekommt den neuen Titel; die übrigen entfallen.',
+    'Bereits vorgelegte, freigegebene oder übersprungene Checkpoints lassen sich nicht zusammenlegen. Danach mit propose_checkpoint vorlegen.',
+  ].join(' '),
+  input: z.object({
+    ids: z.array(z.string()).min(2).describe('IDs aus <checkpoints>, mindestens zwei.'),
+    title: z.string().min(1).describe('Titel des zusammengelegten Checkpoints, z. B. "Treatment & Style Bible".'),
+  }),
+  sideEffect: 'local',
+  async run(args, ctx) {
+    try {
+      const manifest = await ctx.project.updateManifest((m) => {
+        m.checkpoints = mergeCheckpoints(m.checkpoints, args.ids, args.title);
+      });
+      ctx.ui.emit({ type: 'checkpoints', projectId: ctx.projectId, checkpoints: manifest.checkpoints });
+      ctx.ui.emit({ type: 'manifest', projectId: ctx.projectId, manifest });
+      const merged = manifest.checkpoints.find((c) => args.ids.includes(c.id));
+      const cps = manifest.checkpoints.map((c) => `${c.id} (${c.title}, ${c.status})`).join(', ');
+      return textResult(`Checkpoints zusammengelegt${merged ? ` zu ${merged.id} „${merged.title}“` : ''}.\nCheckpoints: ${cps}`);
     } catch (error) {
       return errorResult(errorMessage(error));
     }

@@ -37,6 +37,7 @@ import {
   type ExportOptions,
   type Generation,
   type IdGenerator,
+  type LineageEdge,
   type Modality,
   type ModelInfo,
   type PickerSelection,
@@ -59,6 +60,7 @@ import {
 import { DEMO_MODELS } from './demoModels.ts';
 import { DEMO_ROOT, DEMO_VIDEO_ID, DEMO_VIDEO_PATH, buildDemoProjects, type DemoProjectSeed, type MediaSpec } from './demoProjects.ts';
 import { makePeaks, makeWavDataUri, placeholderGlyph, placeholderImage, textDataUri } from './placeholders.ts';
+import { lineageEdgesOf } from '../lib/assets.ts';
 import { PICK_MESSAGE, type PickMessage } from '../lib/previewMessages.ts';
 import { demoSiteUrl } from './sitePreview.ts';
 
@@ -141,6 +143,10 @@ export interface FakeDebug {
   setNextDirectory(path: string | null): void;
   setNextFiles(paths: string[]): void;
   setDelay(ms: number): void;
+  /** Simuliert ein Anthropic-Login-Profil (`ant auth login`). */
+  setAnthropicProfile(present: boolean): void;
+  /** Markiert die Datei eines verknüpften Assets als fehlend (`metadata.missing`) bzw. wieder vorhanden. */
+  setLinkedMissing(projectId: string, assetId: string, missing?: boolean): Asset;
   triggerApproval(projectId: string, request?: Partial<ApprovalRequest>): ApprovalRequest;
   triggerQuestion(projectId: string, questions?: DirectorQuestion[]): string;
   proposeCheckpoint(projectId: string, checkpointId?: string, budgetUsd?: number): Promise<Checkpoint>;
@@ -169,6 +175,8 @@ export class FakeStudioApi implements StudioApi {
   };
   /** Nur „gesetzt / nicht gesetzt“ – die Werte selbst werden nie gespeichert oder zurückgegeben. */
   private readonly secrets = { anthropic: true, fal: false };
+  /** Simuliertes OAuth-Profil aus `ant auth login`. */
+  private anthropicProfile = false;
   private transcript = defaultTranscript();
   private nextDirectory: string | null = null;
   private nextFiles: string[] | null = null;
@@ -202,6 +210,23 @@ export class FakeStudioApi implements StudioApi {
       },
       setDelay: (ms) => {
         this.delayMs = ms;
+      },
+      setAnthropicProfile: (present) => {
+        this.anthropicProfile = present;
+      },
+      setLinkedMissing: (projectId, assetId, missing = true) => {
+        const p = this.project(projectId);
+        const index = p.assets.findIndex((a) => a.id === assetId);
+        const current = p.assets[index];
+        if (!current || current.source !== 'linked') throw new Error(`Asset "${assetId}" ist keine verknüpfte Datei`);
+        const { missing: _old, ...rest } = current.metadata ?? {};
+        const metadata = missing ? { ...rest, missing: true } : rest;
+        const next: Asset = { ...current };
+        if (Object.keys(metadata).length) next.metadata = metadata;
+        else delete next.metadata;
+        p.assets[index] = next;
+        this.emit({ type: 'asset', projectId, asset: next });
+        return clone(next);
       },
       triggerApproval: (projectId, request) => {
         const p = this.project(projectId);
@@ -339,8 +364,8 @@ export class FakeStudioApi implements StudioApi {
     return clone({
       path: p.path,
       manifest: p.manifest,
-      // Projekte ohne Kategorie haben noch kein Dokument (siehe Bericht: Vertrag sollte `| null` erlauben).
-      document: document as StudioDocument,
+      // Projekte ohne Kategorie haben noch kein Dokument (`null`, bis der Director sie festlegt).
+      document,
       versions: await p.versions.list(),
       assets: p.assets,
       usedAssetIds: document ? [...documentAssetIds(document)] : [],
@@ -349,7 +374,7 @@ export class FakeStudioApi implements StudioApi {
       messages: p.messages,
       generations: p.generations,
       runState: p.runState,
-      pendingQuestion: p.pendingQuestion ? { questionId: p.pendingQuestion.questionId, questions: p.pendingQuestion.questions } : null,
+      pendingQuestion: p.pendingQuestion ? { questionId: p.pendingQuestion.questionId, questions: p.pendingQuestion.questions, runId: p.pendingQuestion.runId } : null,
       pendingApprovals: p.pendingApprovals,
       activities: p.activities,
     });
@@ -539,12 +564,16 @@ export class FakeStudioApi implements StudioApi {
     const data = event.data as Partial<PickMessage> | null;
     if (!data || data.type !== PICK_MESSAGE || !this.previewProjectId || !data.bbox || !data.selector) return;
     const source = data.source ? parseDataSrc(data.source) : undefined;
+    const text = typeof data.text === 'string' ? data.text.replace(/\s+/g, ' ').trim() : '';
+    const tag = typeof data.tag === 'string' ? data.tag.trim().toLowerCase() : '';
     const parsed = refSchema.safeParse({
       kind: 'element',
       doc: 'site',
       page: data.page ?? '/',
       selector: data.selector,
       ...(source ? { source } : {}),
+      ...(text ? { text } : {}),
+      ...(tag ? { tag } : {}),
       bbox: {
         x: Math.round(data.bbox.x),
         y: Math.round(data.bbox.y),
@@ -553,7 +582,7 @@ export class FakeStudioApi implements StudioApi {
       },
     });
     if (!parsed.success) return;
-    this.emit({ type: 'preview_pick', projectId: this.previewProjectId, ref: parsed.data, ...(data.text ? { label: data.text } : {}) });
+    this.emit({ type: 'preview_pick', projectId: this.previewProjectId, ref: parsed.data });
   }
 
   // ───────────────────────── Director-Skripte ─────────────────────────
@@ -777,11 +806,13 @@ export class FakeStudioApi implements StudioApi {
 
   async getAuthStatus(): Promise<AuthStatus> {
     this.log('getAuthStatus', []);
+    const apiKey = this.secrets.anthropic;
+    const oauthProfile = this.anthropicProfile;
     const runtimes: AuthStatus['runtimes'] = [
       {
         id: 'anthropic',
-        available: this.secrets.anthropic,
-        detail: this.secrets.anthropic ? 'API-Key im Schlüsselbund (Demo)' : 'Kein API-Key und kein Login gefunden',
+        available: apiKey || oauthProfile,
+        detail: apiKey ? 'API-Key im Schlüsselbund (Demo)' : oauthProfile ? 'Anthropic-Login (ant auth login, Demo)' : 'Kein API-Key und kein Login gefunden',
       },
       {
         id: 'agent-sdk',
@@ -793,7 +824,7 @@ export class FakeStudioApi implements StudioApi {
     const pref = this.settings.preferredRuntime;
     const preferred = pref !== 'auto' ? runtimes.find((r) => r.id === pref && r.available) : undefined;
     const active = preferred?.id ?? runtimes.find((r) => r.available)?.id ?? null;
-    return { runtimes, active, falConfigured: this.secrets.fal };
+    return { runtimes, active, falConfigured: this.secrets.fal, anthropic: { apiKey, oauthProfile } };
   }
 
   // ───────────────────────── Projekte ─────────────────────────
@@ -1070,6 +1101,8 @@ export class FakeStudioApi implements StudioApi {
   assetUrl(projectId: string, assetId: string, variant: 'original' | 'proxy' | 'thumb' = 'original'): string {
     const p = this.projects.get(projectId);
     if (!p) return placeholderGlyph('?', 0);
+    // Fehlende verknüpfte Datei: Warnsymbol statt Inhalt (nicht zwischengespeichert, damit „Erneut verknüpfen“ wirkt).
+    if (p.assets.find((a) => a.id === assetId)?.metadata?.missing === true) return placeholderGlyph('!', 8);
     const key = `${assetId}:${variant === 'thumb' ? 'thumb' : 'original'}`;
     const cached = p.mediaCache.get(key);
     if (cached) return cached;
@@ -1093,6 +1126,35 @@ export class FakeStudioApi implements StudioApi {
 
   async revealAsset(projectId: string, assetId: string): Promise<void> {
     this.log('revealAsset', [projectId, assetId]);
+  }
+
+  async getLineage(projectId: string, assetId: string): Promise<{ parents: LineageEdge[]; children: LineageEdge[] }> {
+    await this.ready;
+    this.log('getLineage', [projectId, assetId]);
+    const p = this.project(projectId);
+    const asset = p.assets.find((a) => a.id === assetId);
+    if (!asset) throw new Error(`Unbekanntes Asset: ${assetId}`);
+    return clone(lineageEdgesOf(asset, p.assets, p.generations));
+  }
+
+  async relinkAsset(projectId: string, assetId: string, newPath: string): Promise<Asset> {
+    await this.ready;
+    this.log('relinkAsset', [projectId, assetId, newPath]);
+    const p = this.project(projectId);
+    const index = p.assets.findIndex((a) => a.id === assetId);
+    const current = p.assets[index];
+    if (!current || current.source !== 'linked') throw new Error(`Asset "${assetId}" ist keine verknüpfte Datei`);
+    if (typeof newPath !== 'string' || !newPath.trim()) throw new Error('Kein Dateipfad angegeben');
+    // Simulation der Inhaltsprüfung (echtes Backend: SHA-256): eine Datei anderer Art (Bild ↔ Audio …) gilt als anderer Inhalt.
+    if (assetKindFromMime(mimeFromExtension(baseName(newPath))) !== current.kind) throw new Error('Die neue Datei hat einen anderen Inhalt');
+    const { missing: _missing, ...metadata } = current.metadata ?? {};
+    const next: Asset = { ...current, path: newPath.trim() };
+    if (Object.keys(metadata).length) next.metadata = metadata;
+    else delete next.metadata;
+    p.assets[index] = next;
+    this.touch(p);
+    this.emit({ type: 'asset', projectId, asset: next });
+    return clone(next);
   }
 
   async assetPeaks(projectId: string, assetId: string): Promise<{ peaks: number[]; durationMs: number } | null> {
@@ -1158,6 +1220,14 @@ export class FakeStudioApi implements StudioApi {
 
   async previewOpenExternal(projectId: string): Promise<void> {
     this.log('previewOpenExternal', [projectId]);
+  }
+
+  async previewNavigate(projectId: string, path: string): Promise<void> {
+    await this.ready;
+    this.log('previewNavigate', [projectId, path]);
+    this.project(projectId);
+    // Wie das echte Backend: nur Seitenpfade der Site (kein Schema, kein fremder Host).
+    if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) throw new Error(`Ungültiger Seitenpfad: ${String(path)}`);
   }
 
   // ───────────────────────── Export ─────────────────────────

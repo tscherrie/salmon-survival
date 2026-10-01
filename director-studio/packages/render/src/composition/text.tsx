@@ -1,15 +1,18 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { interpolate, spring } from 'remotion';
 import type { Clip } from '@studio/core';
+import { hyphenateDe, isGermanLang } from '../text/hyphenate-de.ts';
 import { getSafeArea } from './meta.ts';
 import type { TimedWord } from './types.ts';
 
 /**
  * Eingebaute Text-Stile der Textspur. Saubere typografische Standards, deutsche Silbentrennung
- * (`lang="de"` + `hyphens: auto`), Safe-Area-bewusst. Anpassbar über `clip.props`:
+ * (`lang="de"` + `hyphens: auto` + bedingte Trennstriche aus `hyphenateDe`, damit Vorschau und Export
+ * auch ohne Trennwörterbuch des Browsers gleich umbrechen), Safe-Area-bewusst. Anpassbar über `clip.props`:
  * `color`, `fontFamily`, `fontWeight`, `fontSize` (≤ 1 = Anteil der kurzen Bildkante, sonst px),
  * `position` (`top`|`center`|`bottom`), `align` (`left`|`center`|`right`), `background`
- * (`none` = ohne Kasten), `highlightColor`, `uppercase`, `letterSpacing`, `lineHeight`.
+ * (`none` = ohne Kasten), `highlightColor`, `uppercase`, `letterSpacing`, `lineHeight`,
+ * `hyphens` (`none`/`manual` = keine automatischen Trennstellen), `lang` (Sprache des Clips).
  */
 
 export const TEXT_STYLE_IDS = ['subtitle', 'hero', 'title', 'caption', 'karaoke', 'word-by-word'] as const;
@@ -27,6 +30,8 @@ export interface TextClipViewProps {
   height: number;
   /** Alle Wortzeitstempel (absolut); gefiltert wird hier. */
   words: TimedWord[];
+  /** Sprache (Standard `de`; `clip.props.lang` hat Vorrang). */
+  lang?: string | undefined;
 }
 
 interface TextOptions {
@@ -41,6 +46,8 @@ interface TextOptions {
   uppercase: boolean;
   letterSpacing?: string | undefined;
   lineHeight?: number | undefined;
+  hyphens?: string | undefined;
+  lang?: string | undefined;
 }
 
 function readOptions(clip: Clip): TextOptions {
@@ -61,6 +68,8 @@ function readOptions(clip: Clip): TextOptions {
     uppercase: p.uppercase === true,
     letterSpacing: str('letterSpacing'),
     lineHeight: num('lineHeight'),
+    hyphens: str('hyphens'),
+    lang: str('lang'),
   };
 }
 
@@ -105,6 +114,12 @@ function longestWord(text: string): number {
   return text.split(/\s+/).reduce((m, w) => Math.max(m, w.length), 1);
 }
 
+/** Bedingte Trennstriche einfügen, wenn die Sprache Deutsch ist und `hyphens` nicht abgeschaltet wurde. */
+function hyphenator(opts: TextOptions, lang: string): (text: string) => string {
+  if (!isGermanLang(lang) || opts.hyphens === 'none' || opts.hyphens === 'manual') return (t) => t;
+  return (t) => hyphenateDe(t);
+}
+
 function container(opts: TextOptions, padding: string, justify: CSSProperties['justifyContent'], alignItems: CSSProperties['alignItems']): CSSProperties {
   return {
     position: 'absolute',
@@ -133,16 +148,20 @@ const alignFor = (align: TextOptions['align'], fallback: 'left' | 'center' | 'ri
   ({ left: 'flex-start', center: 'center', right: 'flex-end' })[align ?? fallback] as CSSProperties['alignItems'];
 
 /** Rendert einen Text-Clip im gewünschten Stil (unbekannte Stile → `subtitle`). */
-export function TextClipView({ clip, frame, fps, width, height, words }: TextClipViewProps): ReactNode {
+export function TextClipView({ clip, frame, fps, width, height, words, lang: langProp }: TextClipViewProps): ReactNode {
   const style = (clip.style ?? 'subtitle') as TextStyleId;
   const opts = readOptions(clip);
+  const lang = opts.lang ?? langProp ?? 'de';
+  const hyph = hyphenator(opts, lang);
   const text = opts.uppercase ? (clip.text ?? '').toLocaleUpperCase('de-DE') : (clip.text ?? '');
+  // Angezeigter Text mit Trennstellen; Größenberechnungen nutzen weiter `text` (ohne U+00AD).
+  const shown = hyph(text);
   const minSide = Math.min(width, height);
   const sa = getSafeArea(width, height);
   const padding = `${sa.top}px ${sa.right}px ${sa.bottom}px ${sa.left}px`;
   const safeWidth = width - sa.left - sa.right;
   const d = clip.duration;
-  const common = { lang: 'de', 'data-text-style': style, 'data-clip-id': clip.id } as const;
+  const common = { lang, 'data-text-style': style, 'data-clip-id': clip.id } as const;
 
   switch (style) {
     case 'hero': {
@@ -169,7 +188,7 @@ export function TextClipView({ clip, frame, fps, width, height, words }: TextCli
               textShadow: '0 0.04em 0.18em rgba(0,0,0,0.35)',
             }}
           >
-            {text}
+            {shown}
           </div>
         </div>
       );
@@ -195,7 +214,7 @@ export function TextClipView({ clip, frame, fps, width, height, words }: TextCli
               textShadow: '0 0.03em 0.15em rgba(0,0,0,0.3)',
             }}
           >
-            {text}
+            {shown}
           </div>
         </div>
       );
@@ -218,7 +237,7 @@ export function TextClipView({ clip, frame, fps, width, height, words }: TextCli
               padding: '0.35em 0.7em',
             }}
           >
-            {text}
+            {shown}
           </div>
         </div>
       );
@@ -247,7 +266,7 @@ export function TextClipView({ clip, frame, fps, width, height, words }: TextCli
             {list.map((w, i) => {
               const state = t >= w.end ? 'past' : t >= w.start ? 'current' : 'future';
               const local = w.end > w.start ? Math.min(1, Math.max(0, (t - w.start) / (w.end - w.start))) : 1;
-              const label = opts.uppercase ? w.text.toLocaleUpperCase('de-DE') : w.text;
+              const label = hyph(opts.uppercase ? w.text.toLocaleUpperCase('de-DE') : w.text);
               return (
                 <span key={`${i}-${w.start}`}>
                   <span
@@ -332,7 +351,7 @@ export function TextClipView({ clip, frame, fps, width, height, words }: TextCli
                   : undefined
               }
             >
-              {text}
+              {shown}
             </span>
           </div>
         </div>

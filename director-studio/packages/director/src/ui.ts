@@ -76,7 +76,7 @@ export class InteractiveUi implements UiPort {
 
   requestApproval(req: Omit<ApprovalRequest, 'id' | 'createdAt'>, signal: AbortSignal, meta?: UiRequestMeta): Promise<boolean> {
     if (signal.aborted) return Promise.reject(abortError());
-    const request: ApprovalRequest = { ...req, id: this.ids('apr'), createdAt: this.clock() };
+    const request: ApprovalRequest = { ...req, id: this.ids('apr'), createdAt: this.clock(), ...(meta?.runId ? { runId: meta.runId } : {}) };
     return new Promise<boolean>((resolve, reject) => {
       const onAbort = () => {
         if (!this.approvals.delete(request.id)) return;

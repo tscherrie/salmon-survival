@@ -1,15 +1,16 @@
 import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { mkdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ChromiumOptions } from '@remotion/renderer';
-import type { Timeline } from '@studio/core';
+import { clipPropAssetRefs, type Timeline } from '@studio/core';
 import { computeCompositionMeta } from '../composition/meta.ts';
-import type { AssetMedia, TimedWord } from '../composition/types.ts';
+import type { AssetMedia, MediaErrorInfo, TimedWord } from '../composition/types.ts';
 import { resolveChromiumExecutable } from './chromium.ts';
 import { compileComponent, isCompiledComponent } from './compile.ts';
+import { localPathOf, probeMedia } from './media-probe.ts';
 import { AssetFileServer } from './static-server.ts';
 
 /**
@@ -28,10 +29,17 @@ import { AssetFileServer } from './static-server.ts';
  * `http(s)://`-URLs bleiben unverändert. Kein Kopieren in Remotions `public/`.
  *
  * Ton: Videos werden STUMM gerendert (`muted`); ffmpeg mischt den Ton separat.
+ *
+ * Kaputte Medien: Bild-/Video-Assets sichtbarer Clips werden vorab geprüft (`probeMedia`: Datei da,
+ * Signatur passt zur Art, MP4 vollständig mit Videospur). Defekte bekommen `error` und werden von der
+ * Komposition ausgelassen; Laufzeitfehler fängt die Komposition selbst ab. Beides meldet `onMediaError`
+ * (aus den Browser-Logs `[studio:media-error]`) – das Rendern läuft weiter.
  */
 
 export const COMPOSITION_ID = 'StudioTimeline';
-const RENDER_PACKAGE_VERSION = '0.1.0';
+const RENDER_PACKAGE_VERSION = '0.1.1';
+const MEDIA_ERROR_PREFIX = '[studio:media-error]';
+const COMPONENT_ERROR_PREFIX = '[studio:component-error]';
 
 export interface TimelineRendererOptions {
   /** Chromium-Headless-Shell (sonst `STUDIO_CHROMIUM_PATH`, sonst Remotions eigener Download). */
@@ -60,6 +68,8 @@ export interface TimelineRendererOptions {
    * (z. B. Electron-Main) eingebettet ist und `import.meta.url` nicht mehr auf die Paketquellen zeigt.
    */
   browserEntry?: string;
+  /** Bild-/Video-Assets vor dem Rendern prüfen und defekte auslassen (Standard: true). */
+  probeMedia?: boolean;
 }
 
 export interface RenderInputBase {
@@ -69,6 +79,13 @@ export interface RenderInputBase {
   componentCodes?: Record<string, string>;
   formatId?: string;
   words?: TimedWord[];
+  /** Sprache der Texte (Standard `de`). */
+  lang?: string;
+  /**
+   * Fehlende/defekte Medien (je Clip und Medium einmal). Das Medium wird ausgelassen, das Rendern läuft
+   * weiter. Wird während des Renderns aufgerufen.
+   */
+  onMediaError?: (info: MediaErrorInfo) => void;
 }
 
 export interface RenderStillInput extends RenderInputBase {
@@ -98,6 +115,83 @@ type HeadlessBrowser = Awaited<ReturnType<RendererModule['openBrowser']>>;
 const require = createRequire(import.meta.url);
 const SRC_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+const fingerprints = new Map<string, string>();
+
+/**
+ * Fingerabdruck der Browser-Quellen (alle `.ts`/`.tsx` neben `browser.ts`, ohne `node/`): Ändert sich die
+ * Komposition, wird neu gebündelt statt ein veraltetes Bündel aus dem Cache zu nehmen.
+ */
+function sourceFingerprint(entry: string): string {
+  const dir = path.dirname(entry);
+  const cached = fingerprints.get(dir);
+  if (cached) return cached;
+  const hash = createHash('sha256');
+  const walk = (d: string) => {
+    let names: string[];
+    try {
+      names = readdirSync(d).sort();
+    } catch {
+      return;
+    }
+    for (const name of names) {
+      const full = path.join(d, name);
+      let st;
+      try {
+        st = statSync(full);
+      } catch {
+        continue;
+      }
+      if (st.isDirectory()) {
+        if (name !== 'node' && name !== 'node_modules') walk(full);
+      } else if (/\.(?:ts|tsx)$/.test(name)) {
+        hash.update(path.relative(dir, full)).update('\0');
+        try {
+          hash.update(readFileSync(full));
+        } catch {
+          // nicht lesbar: nur der Name zählt
+        }
+      }
+    }
+  };
+  walk(dir);
+  const value = hash.digest('hex').slice(0, 16);
+  fingerprints.set(dir, value);
+  return value;
+}
+
+/** Sammelt Komponenten- und Medienfehler aus den Browser-Logs eines Render-Laufs. */
+class LogCollector {
+  readonly componentErrors: string[] = [];
+  private readonly seenMedia = new Set<string>();
+
+  constructor(private readonly onMediaError: ((info: MediaErrorInfo) => void) | undefined) {}
+
+  readonly onBrowserLog = (log: { text: string; type: string }) => {
+    const c = log.text.indexOf(COMPONENT_ERROR_PREFIX);
+    if (c >= 0) {
+      try {
+        const info = JSON.parse(log.text.slice(c + COMPONENT_ERROR_PREFIX.length).trim()) as { componentId: string; clipId: string; message: string };
+        this.componentErrors.push(`Komponente „${info.componentId}“ (Clip ${info.clipId}): ${info.message}`);
+      } catch {
+        this.componentErrors.push(log.text);
+      }
+      return;
+    }
+    const m = log.text.indexOf(MEDIA_ERROR_PREFIX);
+    if (m >= 0) {
+      try {
+        const info = JSON.parse(log.text.slice(m + MEDIA_ERROR_PREFIX.length).trim()) as MediaErrorInfo;
+        const key = `${info.clipId}\0${info.assetId}\0${info.message}`;
+        if (this.seenMedia.has(key)) return;
+        this.seenMedia.add(key);
+        this.onMediaError?.(info);
+      } catch {
+        // unlesbare Meldung ignorieren
+      }
+    }
+  };
+}
+
 /** node_modules-Verzeichnis, in dem `remotion` liegt (für die Modulauflösung des Bündels). */
 function remotionNodeModules(): string {
   const pkg = require.resolve('remotion/package.json');
@@ -109,7 +203,7 @@ export class TimelineRenderer {
   private readonly bundles = new Map<string, Promise<string>>();
   private assetServer: Promise<AssetFileServer> | undefined;
   private browser: Promise<HeadlessBrowser> | undefined;
-  private componentErrors: string[] = [];
+  private readonly probeCache = new Map<string, Promise<string | undefined>>();
 
   constructor(opts: TimelineRendererOptions) {
     this.opts = opts;
@@ -142,7 +236,7 @@ export class TimelineRenderer {
   async bundle(componentCodes: Record<string, string> = {}): Promise<string> {
     const compiled = await this.compileAll(componentCodes);
     const hash = createHash('sha256')
-      .update(JSON.stringify({ v: RENDER_PACKAGE_VERSION, remotion: require('remotion/package.json').version, compiled }))
+      .update(JSON.stringify({ v: RENDER_PACKAGE_VERSION, src: sourceFingerprint(this.browserEntry()), remotion: require('remotion/package.json').version, compiled }))
       .digest('hex')
       .slice(0, 20);
     const cached = this.bundles.get(hash);
@@ -196,16 +290,50 @@ export class TimelineRenderer {
     return this.assetServer;
   }
 
-  /** Lokale Asset-URLs (Pfad/`file://`) → HTTP-URLs des Asset-Servers. */
-  async prepareAssets(assets: Record<string, AssetMedia>): Promise<Record<string, AssetMedia>> {
+  /**
+   * Prüft ein Medium (gecacht je Datei-Stand bzw. URL); `undefined` = ladbar/unbekannt, sonst Fehlertext.
+   */
+  async probeAsset(asset: AssetMedia): Promise<string | undefined> {
+    const local = localPathOf(asset.url);
+    let key = `${asset.kind}\0${asset.url}`;
+    if (local) {
+      const st = await stat(local).catch(() => undefined);
+      key += st ? `\0${st.size}\0${st.mtimeMs}` : '\0fehlt';
+    }
+    let result = this.probeCache.get(key);
+    if (!result) {
+      result = probeMedia(asset.url, asset.kind).catch(() => undefined);
+      this.probeCache.set(key, result);
+      // Entfernte URLs nicht dauerhaft cachen (Netzwerkfehler können vorübergehend sein).
+      if (!local) setTimeout(() => this.probeCache.delete(key), 60_000).unref?.();
+    }
+    return result;
+  }
+
+  /**
+   * Lokale Asset-URLs (Pfad/`file://`) → HTTP-URLs des Asset-Servers. Mit `probeIds` werden diese
+   * Bild-/Video-Assets vorab geprüft; defekte bekommen `error` (die Komposition lässt sie aus).
+   */
+  async prepareAssets(assets: Record<string, AssetMedia>, probeIds?: ReadonlySet<string>): Promise<Record<string, AssetMedia>> {
     const out: Record<string, AssetMedia> = {};
-    for (const [id, asset] of Object.entries(assets)) {
+    const probes = new Map<string, Promise<string | undefined>>();
+    if (probeIds && this.opts.probeMedia !== false) {
+      for (const id of probeIds) {
+        const asset = assets[id];
+        if (asset && !asset.error && (asset.kind === 'image' || asset.kind === 'video')) probes.set(id, this.probeAsset(asset));
+      }
+    }
+    for (const [id, original] of Object.entries(assets)) {
+      const problem = await probes.get(id);
+      const asset = problem ? { ...original, error: problem } : original;
       const url = asset.url;
       if (/^https?:\/\//i.test(url) || url.startsWith('data:')) {
         out[id] = asset;
       } else if (url.startsWith('file:') || path.isAbsolute(url)) {
         const server = await this.getAssetServer();
         out[id] = { ...asset, url: server.register(url) };
+      } else if (asset.error || !url) {
+        out[id] = asset.error ? asset : { ...asset, error: 'keine Datei angegeben' };
       } else {
         throw new Error(`Asset „${id}“: URL „${url}“ ist im Render-Worker nicht ladbar (erwartet Dateipfad, file:// oder http(s)://)`);
       }
@@ -228,25 +356,21 @@ export class TimelineRenderer {
     return this.browser;
   }
 
-  private onBrowserLog = (log: { text: string; type: string }) => {
-    const idx = log.text.indexOf('[studio:component-error]');
-    if (idx >= 0) {
-      try {
-        const info = JSON.parse(log.text.slice(idx + '[studio:component-error]'.length).trim()) as { componentId: string; clipId: string; message: string };
-        this.componentErrors.push(`Komponente „${info.componentId}“ (Clip ${info.clipId}): ${info.message}`);
-      } catch {
-        this.componentErrors.push(log.text);
-      }
-    }
-  };
-
   private async prepare(input: RenderInputBase) {
     const used = new Set<string>();
+    const visualAssets = new Set<string>();
+    // Asset-Referenzen in Clip-Props (`rotoscope`, `…Asset`, `…AssetId`) – für Director-Komponenten.
+    const propRefs: Array<{ clipId: string; assetId: string; path: string }> = [];
     for (const t of input.timeline.tracks) {
       if (t.hidden) continue;
       for (const c of t.clips) {
         if (c.componentId) used.add(c.componentId);
         if (c.transitionIn?.componentId) used.add(c.transitionIn.componentId);
+        if (t.kind !== 'audio' && c.assetId && !c.componentId && c.text === undefined) visualAssets.add(c.assetId);
+        for (const ref of clipPropAssetRefs(c)) {
+          propRefs.push({ clipId: c.id, ...ref });
+          visualAssets.add(ref.assetId);
+        }
       }
     }
     const codes = input.componentCodes ?? {};
@@ -255,12 +379,23 @@ export class TimelineRenderer {
     const mode = this.opts.componentMode ?? 'bundle';
     const compiled = mode === 'inputProps' ? await this.compileAll(codes) : undefined;
     const serveUrl = await this.bundle(mode === 'bundle' ? codes : {});
-    const assets = await this.prepareAssets(input.assets);
+    const assets = await this.prepareAssets(input.assets, visualAssets);
+    // Defekte Prop-Assets meldet die Komposition nicht selbst (Komponenten sehen `assets[id].error`).
+    for (const ref of propRefs) {
+      const asset = assets[ref.assetId];
+      if (!asset?.error) continue;
+      try {
+        input.onMediaError?.({ clipId: ref.clipId, assetId: ref.assetId, kind: asset.kind, url: input.assets[ref.assetId]?.url ?? '', message: `${ref.path}: ${asset.error}` });
+      } catch {
+        // Fehler im Melde-Callback ignorieren
+      }
+    }
     const inputProps: Record<string, unknown> = {
       timeline: input.timeline,
       assets,
       ...(input.formatId ? { formatId: input.formatId } : {}),
       ...(input.words ? { words: input.words } : {}),
+      ...(input.lang ? { lang: input.lang } : {}),
       ...(compiled ? { componentCodes: compiled } : {}),
     };
     const renderer = (await import('@remotion/renderer')) as RendererModule;
@@ -278,9 +413,8 @@ export class TimelineRenderer {
     return { renderer, serveUrl, inputProps, composition, puppeteerInstance };
   }
 
-  private checkComponentErrors(): void {
-    const errors = this.componentErrors;
-    this.componentErrors = [];
+  private checkComponentErrors(collector: LogCollector): void {
+    const errors = collector.componentErrors;
     if (errors.length && this.opts.failOnComponentError !== false) {
       throw new Error(`Fehler in Director-Komponenten:\n${[...new Set(errors)].join('\n')}`);
     }
@@ -293,7 +427,7 @@ export class TimelineRenderer {
       throw new Error(`Frame ${input.frame} liegt außerhalb der Timeline (0–${composition.durationInFrames - 1})`);
     }
     await mkdir(path.dirname(path.resolve(input.out)), { recursive: true });
-    this.componentErrors = [];
+    const logs = new LogCollector(input.onMediaError);
     await renderer.renderStill({
       composition,
       serveUrl,
@@ -308,9 +442,9 @@ export class TimelineRenderer {
       overwrite: true,
       logLevel: this.opts.logLevel ?? 'error',
       timeoutInMilliseconds: this.opts.timeoutMs ?? 30000,
-      onBrowserLog: this.onBrowserLog,
+      onBrowserLog: logs.onBrowserLog,
     });
-    this.checkComponentErrors();
+    this.checkComponentErrors(logs);
     return input.out;
   }
 
@@ -323,7 +457,7 @@ export class TimelineRenderer {
     if (input.signal?.aborted) throw new Error('Rendern abgebrochen');
     input.signal?.addEventListener('abort', onAbort, { once: true });
     const codec = input.codec ?? 'h264';
-    this.componentErrors = [];
+    const logs = new LogCollector(input.onMediaError);
     try {
       await renderer.renderMedia({
         composition,
@@ -344,7 +478,7 @@ export class TimelineRenderer {
         cancelSignal,
         logLevel: this.opts.logLevel ?? 'error',
         timeoutInMilliseconds: this.opts.timeoutMs ?? 30000,
-        onBrowserLog: this.onBrowserLog,
+        onBrowserLog: logs.onBrowserLog,
         onProgress: ({ progress }) => input.onProgress?.(progress),
       });
     } catch (error) {
@@ -353,7 +487,7 @@ export class TimelineRenderer {
     } finally {
       input.signal?.removeEventListener('abort', onAbort);
     }
-    this.checkComponentErrors();
+    this.checkComponentErrors(logs);
     return input.out;
   }
 
@@ -394,7 +528,7 @@ function load(codes: Record<string, string>) {
 
 const Main: React.FC<any> = (props) => {
   const components = React.useMemo(() => load({ ...COMPONENT_CODES, ...(props.componentCodes ?? {}) }), [props.componentCodes]);
-  return <TimelineComposition timeline={props.timeline} assets={props.assets ?? {}} formatId={props.formatId} words={props.words} components={components} includeAudio={false} videoComponent="offthread" showPlaceholders={false} />;
+  return <TimelineComposition timeline={props.timeline} assets={props.assets ?? {}} formatId={props.formatId} words={props.words} lang={props.lang} components={components} includeAudio={false} videoComponent="offthread" showPlaceholders={false} />;
 };
 
 const Root: React.FC = () => (

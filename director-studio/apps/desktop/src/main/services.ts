@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
+  clipAssetIds,
   CLAUDE_MODELS,
   modelMatchesModality,
   type Asset,
@@ -15,7 +16,7 @@ import type { CostEstimate, GenerationPort, MediaPort, ModelCatalogPort, RenderP
 import { createFalServices, downloadToFile, extractMediaOutputs, normalizeTranscript, type FalServices } from '@studio/fal';
 import type { MediaToolkit } from '@studio/media';
 import type { ProjectStore } from '@studio/project';
-import type { AssetMedia } from '@studio/render/browser';
+import type { AssetMedia, MediaErrorInfo } from '@studio/render/browser';
 
 /** Standard-Modell für Push-to-Talk und das `transcribe`-Tool (Wortzeitstempel, Deutsch). */
 export const DEFAULT_STT_ENDPOINT = 'fal-ai/elevenlabs/speech-to-text/scribe-v2';
@@ -121,7 +122,9 @@ export class FalHub {
       },
       async resume(handle, opts) {
         const { queue } = hub.requireKey();
-        return { output: await queue.resume(handle, opts) };
+        // Mit abgerechneten Einheiten, damit auch wiederaufgenommene Jobs zu exakten Kosten gebucht werden.
+        const result = await queue.resumeWithMeta(handle, opts);
+        return { output: result.output, ...(result.billableUnits !== undefined ? { billableUnits: result.billableUnits } : {}) };
       },
       uploadFile(path, contentType) {
         return hub.requireKey().storage.uploadFile(path, contentType);
@@ -195,11 +198,8 @@ export class RenderService {
   timelineAssets(store: ProjectStore, timeline: Timeline): Record<string, AssetMedia> {
     const out: Record<string, AssetMedia> = {};
     const ids = new Set<string>();
-    for (const track of timeline.tracks) for (const clip of track.clips) if (clip.assetId) ids.add(clip.assetId);
-    for (const clip of timeline.tracks.flatMap((t) => t.clips)) {
-      const asset = typeof clip.props?.rotoscope === 'string' ? store.getAsset(clip.props.rotoscope) : undefined;
-      if (asset) ids.add(asset.id);
-    }
+    // `assetId` plus Asset-Referenzen in den Props (`rotoscope`, `…Asset`, `…AssetId`, auch im Übergang).
+    for (const track of timeline.tracks) for (const clip of track.clips) for (const id of clipAssetIds(clip)) ids.add(id);
     for (const id of ids) {
       const asset = store.getAsset(id);
       const file = asset && store.assetFilePath(asset);
@@ -222,7 +222,13 @@ export class RenderService {
     return out;
   }
 
-  async renderTimelineStill(store: ProjectStore, input: { frame: number; formatId?: string | undefined; out: string; scale?: number }): Promise<string> {
+  /**
+   * Fehlende oder defekte Medien lässt der Renderer aus und meldet sie über `onMediaError` (das Rendern läuft weiter).
+   */
+  async renderTimelineStill(
+    store: ProjectStore,
+    input: { frame: number; formatId?: string | undefined; out: string; scale?: number; onMediaError?: ((info: MediaErrorInfo) => void) | undefined },
+  ): Promise<string> {
     const doc = await requireDocument(store, 'timeline');
     const renderer = await this.timelineRenderer();
     await mkdir(dirname(input.out), { recursive: true });
@@ -234,12 +240,21 @@ export class RenderService {
       out: input.out,
       ...(input.formatId ? { formatId: input.formatId } : {}),
       ...(input.scale ? { scale: input.scale } : {}),
+      ...(input.onMediaError ? { onMediaError: input.onMediaError } : {}),
     });
   }
 
   async renderTimelineVideo(
     store: ProjectStore,
-    input: { out: string; formatId?: string | undefined; frameRange?: [number, number]; scale?: number; signal?: AbortSignal; onProgress?: (p: number) => void },
+    input: {
+      out: string;
+      formatId?: string | undefined;
+      frameRange?: [number, number];
+      scale?: number;
+      signal?: AbortSignal;
+      onProgress?: (p: number) => void;
+      onMediaError?: ((info: MediaErrorInfo) => void) | undefined;
+    },
   ): Promise<string> {
     const doc = await requireDocument(store, 'timeline');
     const renderer = await this.timelineRenderer();
@@ -254,6 +269,7 @@ export class RenderService {
       ...(input.scale ? { scale: input.scale } : {}),
       ...(input.signal ? { signal: input.signal } : {}),
       ...(input.onProgress ? { onProgress: input.onProgress } : {}),
+      ...(input.onMediaError ? { onMediaError: input.onMediaError } : {}),
     });
   }
 
@@ -421,9 +437,16 @@ export function renderPortFor(
       const mod = await render.load();
       return mod.compileComponent(source, opts);
     },
+    // Ausgelassene Medien gehen an das Tool zurück (es nennt sie im Ergebnis), nicht nur ins Log.
     renderTimelineStill: (input) => render.renderTimelineStill(store, input),
     renderTimelinePreview: (input) =>
-      render.renderTimelineVideo(store, { out: input.out, formatId: input.formatId, frameRange: [input.fromFrame, input.toFrame], scale: input.scale ?? 0.5 }),
+      render.renderTimelineVideo(store, {
+        out: input.out,
+        formatId: input.formatId,
+        frameRange: [input.fromFrame, input.toFrame],
+        scale: input.scale ?? 0.5,
+        onMediaError: input.onMediaError,
+      }),
     renderDocumentPng: (input) => render.renderDocumentPng(store, input),
     screenshotSite: async (input) => render.screenshotSite(await options.siteUrl(), input),
     exportProject: (target) => options.exportProject(target),

@@ -198,12 +198,32 @@ export class GenerationManager {
    * `GenerationPort.resume` weiter gepollt; Einträge ohne request_id (vor dem Absenden abgestürzt)
    * oder ohne Resume-Unterstützung werden als fehlgeschlagen markiert und ihre Reservierung freigegeben.
    */
-  async resumePending(): Promise<{ resumed: string[]; failed: string[] }> {
+  async resumePending(): Promise<{ resumed: string[]; failed: string[]; recovered?: string[] }> {
     const { project } = this.deps;
     const resumed: string[] = [];
     const failed: string[] = [];
+    const recovered: string[] = [];
     for (const gen of project.listGenerations(['queued', 'running']) as JournaledGeneration[]) {
       if (this.jobs.has(gen.id)) continue;
+      // Absturz nach Ingest und Ist-Buchung, aber vor dem Journal-Abschluss: Die Ergebnisse liegen schon im
+      // Projekt – nicht erneut abholen und ablegen (sonst doppelte Assets), nur das Journal abschließen.
+      const settled = project.ledgerEntries().find((e) => e.refId === gen.id && e.kind === 'actual');
+      if (settled) {
+        const outputs = project.allAssets().filter((a) => a.generationId === gen.id);
+        const next: JournaledGeneration = {
+          ...gen,
+          status: 'completed',
+          outputAssetIds: outputs.map((a) => a.id),
+          costUsd: settled.amountUsd,
+          finishedAt: gen.finishedAt ?? this.deps.clock(),
+          queuePosition: undefined,
+          etaSec: undefined,
+        };
+        await this.saveJournal(next);
+        this.emitGeneration(next);
+        recovered.push(gen.id);
+        continue;
+      }
       const resume = this.deps.generation.resume?.bind(this.deps.generation);
       const handle = resumeHandleOf(gen);
       if (handle && resume) {
@@ -223,8 +243,8 @@ export class GenerationManager {
         failed.push(gen.id);
       }
     }
-    if (failed.length) emitBudget(project, this.deps.projectId, { emit: this.deps.emit });
-    return { resumed, failed };
+    if (failed.length || recovered.length) emitBudget(project, this.deps.projectId, { emit: this.deps.emit });
+    return { resumed, failed, ...(recovered.length ? { recovered } : {}) };
   }
 
   private start(gen: JournaledGeneration, runner: Runner): void {
@@ -262,7 +282,8 @@ export class GenerationManager {
           const etaSec = status.etaSec !== undefined && Number.isFinite(status.etaSec) && status.etaSec >= 0 ? status.etaSec : undefined;
           const changed = nextStatus !== current.status || status.queuePosition !== current.queuePosition || etaSec !== current.etaSec;
           if (changed) {
-            void save({ status: nextStatus, queuePosition: status.queuePosition, etaSec, logs: status.logs.slice(-20) });
+            // Fehler beim Schreiben landen über `await chain` im catch-Zweig; hier nur nicht unbehandelt lassen.
+            save({ status: nextStatus, queuePosition: status.queuePosition, etaSec, logs: status.logs.slice(-20) }).catch(() => undefined);
           }
         },
       });
@@ -291,10 +312,23 @@ export class GenerationManager {
     } catch (error) {
       await chain.catch(() => undefined);
       const canceled = signal.aborted || isAbortError(error);
-      await project.budgetRelease(current.id);
-      await save({ status: canceled ? 'canceled' : 'failed', error: canceled ? 'Abgebrochen' : truncate(errorMessage(error), 2000), finishedAt: clock(), queuePosition: undefined, etaSec: undefined });
-      await chain.catch(() => undefined);
-      emitBudget(project, this.deps.projectId, { emit: this.deps.emit });
+      const patch: Partial<JournaledGeneration> = {
+        status: canceled ? 'canceled' : 'failed',
+        error: canceled ? 'Abgebrochen' : truncate(errorMessage(error), 2000),
+        finishedAt: clock(),
+        queuePosition: undefined,
+        etaSec: undefined,
+      };
+      try {
+        await project.budgetRelease(current.id);
+        await save(patch);
+        await chain;
+        emitBudget(project, this.deps.projectId, { emit: this.deps.emit });
+      } catch {
+        // Projekt inzwischen geschlossen („Projekt ist geschlossen“): Journal und Reservierung bleiben offen und
+        // werden beim nächsten Öffnen über resumePending() aufgeräumt. Kein unbehandelter Fehler im Hintergrund.
+        current = { ...current, ...patch };
+      }
       return { generation: publicGeneration(current), assets: [] };
     }
   }

@@ -27,6 +27,12 @@ description: Grafikdesign und Collagen im Canvas-Dokument – Konzept/Moodboard,
 - Dichte bewusst steuern: Collagen leben von Kontrast zwischen vollen und leeren Zonen.
 - Typo als Bildelement: groß, angeschnitten, mit Material (ausgeschnitten, gestempelt) – Lesbarkeit der
   Kernbotschaft behalten.
+- Textebenen: `style.role` (`display`, `title`, `headline`, `heading`, `hero`, `stat`) markiert Displaytext –
+  er wird nie mitten im Wort getrennt; passt das längste Wort nicht, verkleinert `textFit: "shrink"` (dort
+  Standard) die Schrift. Fließtext bricht nur an Leerzeichen und Trennstellen; `hyphens` (`auto`, `manual`,
+  `none`) und `lang` (Standard `de`) steuern die Silbentrennung, `textFit: "overflow"` lässt überragen.
+- Hintergrund (`update_canvas` `background`) darf jede CSS-Farbe oder ein CSS-Verlauf sein
+  (`linear-gradient(…)`, `radial-gradient(…)`); Masken: `style.maskMode` `alpha` oder `luminance`.
 
 ## Druck
 
