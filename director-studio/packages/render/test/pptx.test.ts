@@ -90,7 +90,7 @@ describe('deckToPptx', () => {
     const notes = (await Promise.all(zip.names.filter((n) => n.startsWith('ppt/notesSlides/notesSlide')).map((n) => zip.read(n)))).join('\n');
     expect(notes).toContain('Begrüßung und Agenda');
     const pres = await zip.read('ppt/presentation.xml');
-    expect(pres).toMatch(/<p:sldSz cx="12191695" cy="6858000"/);
+    expect(pres).toMatch(/<p:sldSz cx="12192000" cy="6858000"/);
     const s3 = await zip.read('ppt/slides/slide3.xml');
     expect(s3).toContain('show="0"');
     expect(s3).toContain('Hallo HTML');

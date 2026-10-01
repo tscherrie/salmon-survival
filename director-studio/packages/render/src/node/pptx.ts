@@ -25,7 +25,7 @@ export interface DeckToPptxOptions {
   rasterizeHtml?: boolean;
   /** Browser-Pool für `rasterizeHtml`. */
   pool?: BrowserPool;
-  /** Foliebreite in Zoll (Standard 13,333). */
+  /** Folienbreite in Zoll (Standard 13,333 = PowerPoint-Breitbild). */
   slideWidthInches?: number;
 }
 
@@ -95,10 +95,11 @@ function fontFace(deck: Deck, el: DeckElement): string {
 
 export async function deckToPptx(deck: Deck, opts: DeckToPptxOptions): Promise<Uint8Array> {
   const pptx = new PptxGenJS();
-  const slideW = opts.slideWidthInches ?? 13.333;
+  // 12 192 000 EMU = Standardbreite von PowerPoint (16:9 → 13,333 × 7,5 Zoll)
+  const slideW = opts.slideWidthInches ?? 12192000 / 914400;
   const inPerPx = slideW / deck.width;
   const ptPerPx = inPerPx * 72;
-  pptx.defineLayout({ name: 'STUDIO', width: slideW, height: round(deck.height * inPerPx) });
+  pptx.defineLayout({ name: 'STUDIO', width: slideW, height: round(deck.height * inPerPx, 6) });
   pptx.layout = 'STUDIO';
   pptx.author = 'Director Studio';
   pptx.company = 'Director Studio';
