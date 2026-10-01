@@ -6,8 +6,8 @@ import {
   Img,
   OffthreadVideo,
   Sequence,
-  getRemotionEnvironment,
   useCurrentFrame,
+  useRemotionEnvironment,
   useVideoConfig,
 } from 'remotion';
 import type { Clip, Timeline, Track } from '@studio/core';
@@ -28,7 +28,7 @@ import type { AssetMedia, OverlayComponentProps, TimedWord, TimelineCompositionP
 export function TimelineComposition(props: TimelineCompositionProps) {
   const { timeline, assets, components, formatId, includeAudio = false, words } = props;
   const { width, height } = useVideoConfig();
-  const isRendering = getRemotionEnvironment().isRendering;
+  const isRendering = useRemotionEnvironment().isRendering;
   const formatKey = useMemo(() => {
     try {
       return resolveFormat(timeline, formatId).id;
@@ -389,7 +389,7 @@ export function duckingDb(timeline: Pick<Timeline, 'tracks'>, track: Pick<Track,
     else if (absoluteFrame >= end && absoluteFrame < end + ramp) w = 1 - (absoluteFrame - end + 1) / ramp;
     amount = Math.max(amount, w);
   }
-  return -Math.abs(track.duck.db) * amount;
+  return amount > 0 ? -Math.abs(track.duck.db) * amount : 0;
 }
 
 /** Lautstärke (linear, 0..1) eines Audio-Clips zum Frame relativ zum Clip-Start. */

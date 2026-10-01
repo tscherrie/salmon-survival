@@ -18,16 +18,17 @@ export interface TextBlock {
   lines: TextRun[][];
 }
 
-/** Zerlegt eine Zeile in Läufe mit fett/kursiv. */
+/** Zerlegt eine Zeile in Läufe mit fett/kursiv (Öffner vor Nicht-Leerzeichen, Schließer danach). */
 export function parseInline(line: string): TextRun[] {
   const runs: TextRun[] = [];
   let bold = false;
-  let italic = false;
+  let italic: string | undefined;
   let buffer = '';
   const flush = () => {
     if (buffer) runs.push({ text: buffer, ...(bold ? { bold: true } : {}), ...(italic ? { italic: true } : {}) });
     buffer = '';
   };
+  const isSpace = (c: string | undefined) => c === undefined || /\s/.test(c);
   for (let i = 0; i < line.length; i++) {
     const ch = line[i]!;
     if (ch === '\\' && (line[i + 1] === '*' || line[i + 1] === '_' || line[i + 1] === '\\')) {
@@ -36,19 +37,31 @@ export function parseInline(line: string): TextRun[] {
       continue;
     }
     if (ch === '*' && line[i + 1] === '*') {
-      // nur umschalten, wenn ein Gegenstück existiert (sonst wörtlich)
-      if (bold || line.indexOf('**', i + 2) >= 0) {
+      if (bold && !isSpace(line[i - 1])) {
         flush();
-        bold = !bold;
+        bold = false;
+        i++;
+        continue;
+      }
+      if (!bold && !isSpace(line[i + 2]) && findCloser(line, '**', i + 2) >= 0) {
+        flush();
+        bold = true;
         i++;
         continue;
       }
     } else if (ch === '*' || ch === '_') {
-      const isWordInner = ch === '_' && /\w/.test(line[i - 1] ?? '') && /\w/.test(line[i + 1] ?? '');
-      if (!isWordInner && (italic || hasClosing(line, i + 1, ch))) {
-        flush();
-        italic = !italic;
-        continue;
+      const wordInner = ch === '_' && /\w/.test(line[i - 1] ?? '') && /\w/.test(line[i + 1] ?? '');
+      if (!wordInner) {
+        if (italic === ch && !isSpace(line[i - 1])) {
+          flush();
+          italic = undefined;
+          continue;
+        }
+        if (!italic && !isSpace(line[i + 1]) && findCloser(line, ch, i + 1) >= 0) {
+          flush();
+          italic = ch;
+          continue;
+        }
       }
     }
     buffer += ch;
@@ -57,11 +70,15 @@ export function parseInline(line: string): TextRun[] {
   return runs;
 }
 
-function hasClosing(line: string, from: number, ch: string): boolean {
+/** Position eines schließenden Markers (vor ihm kein Leerzeichen), sonst −1. */
+function findCloser(line: string, token: string, from: number): number {
   for (let j = from; j < line.length; j++) {
-    if (line[j] === ch && !(ch === '*' && line[j + 1] === '*')) return true;
+    if (!line.startsWith(token, j) || /\s/.test(line[j - 1] ?? ' ')) continue;
+    if (token === '*' && (line[j + 1] === '*' || line[j - 1] === '*')) continue;
+    if (token === '_' && /\w/.test(line[j + 1] ?? '')) continue;
+    return j;
   }
-  return false;
+  return -1;
 }
 
 const BULLET_RE = /^\s*(?:[-•–]|\*(?!\*))\s+/;

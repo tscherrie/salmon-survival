@@ -351,6 +351,37 @@ export function replaceAssetRefs<T>(value: T, urls: Record<string, string>): T {
   return value;
 }
 
+// ───────────────────────── Vorabprüfung (auch für den Agent-SDK-Hook) ─────────────────────────
+
+export const generateInputSchema = z.object({
+  endpointId: z.string().describe('fal endpoint_id, z. B. "minimax/h3-max/text-to-video".'),
+  input: z.record(z.string(), z.unknown()).describe('Modelleingabe exakt nach dem Schema von get_model_schema. Lokale Dateien als "asset:<id>".'),
+  purpose: z.string().describe('Zweck in einem Satz (Panel, Asset-Beschreibung), z. B. "Shot 07: Mira rennt durch den Regen, Test 768p".'),
+  outputTitle: z.string().optional().describe('Titel des Ergebnis-Assets (sonst aus dem Zweck).'),
+  tags: z.array(z.string()).optional().describe('Tags für das Ergebnis, z. B. ["shot-07","mira","test"].'),
+  inputAssetIds: z.array(z.string()).optional().describe('Weitere Assets, die als Vorlage dienten (nur Lineage, kein Upload).'),
+  wait: z.boolean().optional().describe('true = auf das Ergebnis warten (Standard false).'),
+});
+
+/**
+ * Picker- und Budget-Gate für eine geplante Generierung, ohne etwas auszuführen. Fordert bei Bedarf die
+ * Budgetfreigabe an (und bucht sie). Wird vom `canUseTool`-Hook des Agent SDK genutzt; das Tool selbst
+ * prüft beim Ausführen erneut (dann ohne erneute Rückfrage, da die Freigabe schon gebucht ist).
+ */
+export async function preflightGenerate(input: unknown, ctx: ToolContext): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const parsed = generateInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, reason: `Ungültige Eingabe: ${parsed.error.issues.map((i) => i.message).join('; ')}` };
+  const args = parsed.data;
+  const model = ctx.catalog.get(args.endpointId);
+  const gate = pickerGate(ctx.project, model, args.endpointId);
+  if (!gate.ok) return gate;
+  const refIds = [...collectAssetRefs(args.input)];
+  const probeInput = replaceAssetRefs(args.input, Object.fromEntries(refIds.map((id) => [id, `https://upload.pending.invalid/${id}`])));
+  const estimate = await ctx.catalog.estimate(args.endpointId, probeInput);
+  const budget = await budgetGate(ctx, estimate.usd, `${args.purpose} (${args.endpointId}, ≈ ${formatUsd(estimate.usd)})`);
+  return budget.ok ? { ok: true } : budget;
+}
+
 // ───────────────────────── Tools ─────────────────────────
 
 function describeOutcome(ctx: ToolContext, gen: Generation, assets: Asset[]): string {
@@ -374,15 +405,7 @@ export const generateTool = defineTool({
     'Läuft im Hintergrund: Du bekommst sofort die Generierungs-ID und arbeitest weiter; Ergebnisse holst du mit await_generations. Mit wait=true wartet das Tool selbst (nur für einzelne, kurze Jobs).',
     'Jede Ausgabe wird als Asset mit Lineage (Eingabe-Assets), Prompt, Modell und Kostenanteil gespeichert.',
   ].join(' '),
-  input: z.object({
-    endpointId: z.string().describe('fal endpoint_id, z. B. "minimax/h3-max/text-to-video".'),
-    input: z.record(z.string(), z.unknown()).describe('Modelleingabe exakt nach dem Schema von get_model_schema. Lokale Dateien als "asset:<id>".'),
-    purpose: z.string().describe('Zweck in einem Satz (Panel, Asset-Beschreibung), z. B. "Shot 07: Mira rennt durch den Regen, Test 768p".'),
-    outputTitle: z.string().optional().describe('Titel des Ergebnis-Assets (sonst aus dem Zweck).'),
-    tags: z.array(z.string()).optional().describe('Tags für das Ergebnis, z. B. ["shot-07","mira","test"].'),
-    inputAssetIds: z.array(z.string()).optional().describe('Weitere Assets, die als Vorlage dienten (nur Lineage, kein Upload).'),
-    wait: z.boolean().optional().describe('true = auf das Ergebnis warten (Standard false).'),
-  }),
+  input: generateInputSchema,
   sideEffect: 'paid',
   async run(args, ctx) {
     const model = ctx.catalog.get(args.endpointId);

@@ -42,13 +42,14 @@ export class PeakAccumulator {
   private curMax = Number.NEGATIVE_INFINITY;
   private inBlock = 0;
   private pending = 0;
+  private readonly channels: number;
+  private readonly blockFrames: number;
   frames = 0;
 
-  constructor(
-    private readonly channels: number,
-    private readonly blockFrames: number,
-  ) {
+  constructor(channels: number, blockFrames: number) {
     if (channels < 1 || blockFrames < 1) throw new Error('PeakAccumulator: ungültige Parameter');
+    this.channels = channels;
+    this.blockFrames = blockFrames;
   }
 
   push(samples: Float32Array): void {
@@ -115,12 +116,13 @@ export class RmsEnvelopeAccumulator {
   private index = 0;
   private nextBoundary: number;
   private sample = 0;
+  private readonly sampleRate: number;
+  private readonly rateHz: number;
 
-  constructor(
-    private readonly sampleRate: number,
-    private readonly rateHz: number,
-  ) {
+  constructor(sampleRate: number, rateHz: number) {
     if (!(sampleRate > 0) || !(rateHz > 0)) throw new Error('RmsEnvelopeAccumulator: ungültige Raten');
+    this.sampleRate = sampleRate;
+    this.rateHz = rateHz;
     this.nextBoundary = this.boundary(1);
   }
 

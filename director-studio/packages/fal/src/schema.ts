@@ -131,7 +131,12 @@ export function extractInputSchema(openapi: unknown, endpointId: string): JsonSc
     const schemas = isPlainObject(doc.components) && isPlainObject(doc.components.schemas) ? doc.components.schemas : {};
     const inputNames = Object.keys(schemas).filter((name) => /input$/i.test(name));
     const compact = normalized.replace(/[^a-z0-9]/gi, '').toLowerCase();
-    const best = inputNames.find((name) => name.toLowerCase().replace(/input$/, '') === compact.slice(-name.length + 5)) ?? inputNames[0];
+    // z. B. `FluxDevInput` passt zu `fal-ai/flux/dev` (kompakt `falaifluxdev` endet auf `fluxdev`).
+    const best =
+      inputNames.find((name) => {
+        const stem = name.toLowerCase().replace(/input$/, '');
+        return stem.length > 0 && compact.endsWith(stem);
+      }) ?? inputNames[0];
     if (best) schema = { $ref: `#/components/schemas/${best}` };
   }
   if (schema === undefined) throw new Error(`Kein Eingabeschema im OpenAPI-Dokument von „${endpointId}“ gefunden`);
@@ -322,7 +327,9 @@ export function describeSchema(schema: JsonSchema, opts: { maxDescription?: numb
     const range = rangeLabel(info);
     if (range) meta.push(range);
     if (info.nullable && !required.has(name)) meta.push('optional');
-    const description = info.description ?? info.title;
+    // Pydantic-Titel wie „Num Images“ wiederholen nur den Feldnamen → weglassen.
+    const titleIsName = info.title !== undefined && info.title.toLowerCase().replace(/[\s-]+/g, '_') === name.toLowerCase();
+    const description = info.description ?? (titleIsName ? undefined : info.title);
     const desc = description ? `: ${oneLine(description, maxDescription)}` : '';
     lines.push(`- ${name}${required.has(name) ? '*' : ''} (${meta.join('; ')})${desc}`);
   }

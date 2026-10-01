@@ -154,8 +154,11 @@ function safeCall(fn: () => void): void {
  */
 export class Float32StreamDecoder {
   private rest: Buffer = Buffer.alloc(0);
+  private readonly frameBytes: number;
   /** `frameBytes`: Bytes je Frame (4 × Kanäle), damit Blöcke nie Kanäle zerreißen. */
-  constructor(private readonly frameBytes = 4) {}
+  constructor(frameBytes = 4) {
+    this.frameBytes = frameBytes;
+  }
 
   push(chunk: Buffer): Float32Array {
     const data = this.rest.length ? Buffer.concat([this.rest, chunk]) : chunk;

@@ -39,6 +39,8 @@ export class FFT {
     const n = this.size;
     if (re.length !== n || im.length !== n) throw new Error('FFT: Arraylänge passt nicht zur Größe');
     const rev = this.rev;
+    const cosT = this.cos;
+    const sinT = this.sin;
     for (let i = 0; i < n; i++) {
       const j = rev[i]!;
       if (j > i) {
@@ -51,28 +53,32 @@ export class FFT {
       }
     }
     const sign = inverse ? 1 : -1;
-    for (let len = 2; len <= n; len *= 2) {
-      const half = len / 2;
+    for (let len = 2; len <= n; len <<= 1) {
+      const half = len >> 1;
       const step = n / len;
-      for (let start = 0; start < n; start += len) {
-        for (let k = 0; k < half; k++) {
-          const wr = this.cos[k * step]!;
-          const wi = sign * this.sin[k * step]!;
-          const a = start + k;
+      for (let k = 0; k < half; k++) {
+        const wr = cosT[k * step]!;
+        const wi = sign * sinT[k * step]!;
+        for (let a = k; a < n; a += len) {
           const b = a + half;
-          const xr = re[b]! * wr - im[b]! * wi;
-          const xi = re[b]! * wi + im[b]! * wr;
-          re[b] = re[a]! - xr;
-          im[b] = im[a]! - xi;
-          re[a] = re[a]! + xr;
-          im[a] = im[a]! + xi;
+          const rb = re[b]!;
+          const ib = im[b]!;
+          const xr = rb * wr - ib * wi;
+          const xi = rb * wi + ib * wr;
+          const ra = re[a]!;
+          const ia = im[a]!;
+          re[b] = ra - xr;
+          im[b] = ia - xi;
+          re[a] = ra + xr;
+          im[a] = ia + xi;
         }
       }
     }
     if (inverse) {
+      const inv = 1 / n;
       for (let i = 0; i < n; i++) {
-        re[i] = re[i]! / n;
-        im[i] = im[i]! / n;
+        re[i] = re[i]! * inv;
+        im[i] = im[i]! * inv;
       }
     }
   }

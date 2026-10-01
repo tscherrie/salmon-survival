@@ -99,7 +99,7 @@ export function parseToolInput(tool: AnyDirectorTool, input: unknown): { ok: tru
   }
   const parsed = tool.input.safeParse(input ?? {});
   if (parsed.success) return { ok: true, value: parsed.data };
-  const issues = parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`).join('; ');
+  const issues = (parsed.error.issues as Array<{ path: PropertyKey[]; message: string }>).map((i) => `${i.path.map(String).join('.') || '(root)'}: ${i.message}`).join('; ');
   return { ok: false, error: `Ungültige Eingabe für ${tool.name}: ${issues}` };
 }
 
