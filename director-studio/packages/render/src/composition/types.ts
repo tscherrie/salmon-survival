@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import type { AssetKind, Clip, Timeline } from '@studio/core';
 
 /**
@@ -40,6 +40,16 @@ export interface OverlayComponentProps {
   words: TimedWord[];
   /** Deterministischer Zufall (Seed aus Clip-ID + Frame). */
   random: (salt?: string | number) => number;
+  /**
+   * Nur bei Übergangskomponenten (`transitionIn.type = 'component'`): Fortschritt 0..1 über die
+   * Übergangsdauer. Bei normalen Overlays nicht gesetzt.
+   */
+  progress?: number | undefined;
+  /**
+   * Nur bei Übergangskomponenten: der eingehende Clip (fertig gerendert). Die Komponente MUSS
+   * `children` rendern (z. B. mit `clipPath`/Maske), sonst ist der Clip während des Übergangs unsichtbar.
+   */
+  children?: ReactNode;
 }
 
 export interface TimelineCompositionProps {
@@ -53,4 +63,16 @@ export interface TimelineCompositionProps {
   includeAudio?: boolean | undefined;
   /** Wortzeitstempel für Text-Stile wie `karaoke`/`word-by-word`. */
   words?: TimedWord[] | undefined;
+  /**
+   * Videokomponente: `auto` (Standard) nimmt beim Rendern `<OffthreadVideo>` (framegenau, über den
+   * Compositor) und im Player `<Html5Video>`; `offthread`/`html5` erzwingen eine Variante.
+   */
+  videoComponent?: 'auto' | 'offthread' | 'html5' | undefined;
+  /**
+   * Platzhalter für fehlende Assets/Komponenten zeigen (gestrichelter Rahmen mit Hinweis).
+   * Standard: nur in der Vorschau (nicht beim Rendern).
+   */
+  showPlaceholders?: boolean | undefined;
+  /** Wird aufgerufen, wenn eine Director-Komponente beim Rendern einen Fehler wirft. */
+  onComponentError?: ((info: { componentId: string; clipId: string; message: string }) => void) | undefined;
 }
