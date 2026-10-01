@@ -13,14 +13,14 @@
 
 - **Eine App, fünf Kategorien:** Video (Musikvideo, Kurzfilm, Social Shorts/Ads, Explainer), Audio-Schnitt,
   Präsentations-Slides, Grafikdesign (Collagen) und Webdesign (Mockup → lauffähige Site).
-- **Bedienprinzip:** Die Bühne (Timeline, Folienstreifen, Leinwand oder Web-Vorschau) ist **nur lesbar**. Ein Klick
-  erzeugt eine **Referenz**: Zeitpunkt, Zeitspanne, Clip, Folie, Element, Bildregion oder DOM-Knoten. Sie landet als
-  Chip im **Composer**. Darunter liegt ein **Asset-Browser** in voller Breite, über dem Composer sitzen die
-  **Modell-Picker** je Modalität. Rechts neben der Vorschau zeigt das **Director-Panel** Gespräch, Plan, Fortschritt,
-  Kosten und Freigaben.
-- **Director:** Claude Opus 5.5 auf Effort `xhigh`. Er läuft lokal im **Claude Agent SDK** und hat damit den vollen
-  Claude-Code-Harness: Dateien, Skills, Subagenten, Hooks und Kompaktierung. Die Anmeldung wird der Reihe nach
-  versucht: Claude-Login (nur für die Eigennutzung) → Anthropic-API-Login bzw. API-Key → fal-Router als Fallback.
+- **Bedienprinzip:** Die Bühne (Timeline, Folienstreifen, Leinwand oder Web-Vorschau) ist **nur lesbar**. Klicks
+  erzeugen **Referenzen**: Zeitpunkt (als Marker), Clip, Folie, Element, Bildregion oder DOM-Knoten. Sie landen als
+  Chip im **Composer**. Links liegt die **Asset-Seitenleiste**, rechts neben der Vorschau das **Director-Panel**
+  (Gespräch, Plan, Fortschritt, Freigaben). Der Composer schließt bündig an das Panel an, darin stecken kompakt
+  die **Modell-Picker** je Modalität. Die Timeline liegt unten in voller Breite.
+- **Director:** Claude Opus 5.5 auf Effort `xhigh`, in einem eigenen Tool-Loop (Messages-API-Format) mit
+  austauschbarem Transport (§7.1). Die Anmeldung wird der Reihe nach versucht: Login mit Anthropic (OAuth-Profil
+  oder API-Key) → optional Claude-Abo über das Agent SDK (nur Eigennutzung) → fal-Router als Fallback.
 - **Modelle:** Alle Medienmodelle (Video, Bild, Lipsync, Stimme, Musik, Sound, Werkzeuge) laufen über **fal.ai**.
   Der Katalog kommt live aus der fal-Plattform-API, mit Beschreibung, Preis und Fähigkeiten, die aus dem
   Eingabeschema abgeleitet werden. Den Picker gibt es für jede Modalität: „verbindlich“ oder „Auto“.
@@ -95,35 +95,65 @@ Verfügung, etwa für Voice-over in Slides oder Musik in Webseiten-Hero-Videos.
 ## 4. UI-Layout und Interaktion
 
 ```
-┌───────────────────────────────────────────────────────┬──────────────────────────────┐
-│ MONITOR                                               │ DIRECTOR-PANEL               │
-│ Remotion-Player / Folie / Leinwand / Web-Vorschau     │ Gespräch · Plan · Fortschritt│
-│ Format-Umschalter 16:9 | 9:16 | 1:1 | 4:5, Safe Areas │ Checkpoint-Karten (Freigabe) │
-│ Viewport-Umschalter (Web), „Im Browser öffnen“        │ Rückfragen mit Optionen      │
-│                                                       │ Kosten: verbraucht/freigeg.  │
-├───────────────────────────────────────────────────────┴──────────────────────────────┤
-│ BÜHNE (read-only): Timeline | Folienstreifen | Ebenenliste | Seitenkarte             │
-│  Lineal + Marker (Beats, Sections, Wörter, Checkpoints) · Versionen v23 ▾ (ansehen,  │
-│  vergleichen, wiederherstellen)                                                      │
-├──────────────────────────────────────────────────────────────────────────────────────┤
-│ MODELL-PICKER: Director ▾ | Text ▾ | Bild ▾ | Video ▾ h3-max | Lipsync ▾ | Stimme ▾ |  │
-│                Musik ▾ | Sound ▾ | Werkzeuge ▾        (Name · Kurzbeschreibung · Preis)│
-├──────────────────────────────────────────────────────────────────────────────────────┤
-│ COMPOSER: [🎙 halten] „Mach [⏱ 00:12.4–00:18.0] dunkler, nimm [🖼 Mira v3] …“ [Senden] │
-├──────────────────────────────────────────────────────────────────────────────────────┤
-│ ASSET-BROWSER (volle Breite): Filter Typ · Modell · Szene · Charakter · Status · Quelle│
-│ [Bild][Clip][Audio][Stimme][Musik][SFX][Code][Text][Daten][Upload] … → in Composer   │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────┐
+│ KOPFZEILE: Projekt · Checkpoints · Budget · Version v23 ▾ · Exportieren            │
+├─────────────┬──────────────────────────────────────────┬───────────────────────────┤
+│ ASSETS      │ MONITOR                                  │ DIRECTOR (Chat)           │
+│ Suche,      │ Player / Folie / Leinwand / Web          │ Gespräch, Plan,           │
+│ Typ-Filter, │ Format 16:9 | 9:16 | 1:1 | 4:5           │ Fortschritt,              │
+│ Gruppen,    │ Safe Areas, Timecode, Transport          │ Werkzeugschritte          │
+│ Karten mit  │ Web: Viewport, „Im Browser öffnen“       │ ── angedockt: ──          │
+│ Vorschau    │                                          │ Freigaben, Rückfragen     │
+│             ├──────────────────────────────────────────┴───────────────────────────┤
+│ Drag →      │ COMPOSER (bündig unter dem Chat, ein Element mit ihm)                │
+│ Composer    │ „Mach den Übergang bei [1 00:12:10] weicher, nimm [Mira v3] …“       │
+│             │ [+] Marker · Opus 5.5 · h3-max · 6× Auto · [Mikro] [Senden]          │
+├─────────────┴──────────────────────────────────────────────────────────────────────┤
+│ BÜHNE (volle Breite): Timeline | Folienstreifen | Ebenenliste | Seitenkarte        │
+│ ▔▔ Markerleiste, schmal, ganz oben: Klick = Marker setzen ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│ Lineal · Abschnitte/Beats · Spuren V1 V2 T1 A1 A2 A3 (≈95 % der Höhe: Spulen)      │
+└────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+- **Assets** liegen in einer Seitenleiste links, der **Director-Chat** rechts vom Monitor. Beide Seitenleisten sind
+  in der Breite verstellbar und einklappbar; die Breite der Asset-Leiste entspricht der Spurkopf-Spalte der
+  Timeline, damit die Spalten übereinander fluchten.
+- Der **Composer** sitzt direkt unter Monitor und Chat und schließt bündig an den unteren Rand des Chats an:
+  Chat und Composer lesen sich als ein Element („hier spreche ich mit dem Director“).
+- Die **Modell-Picker** stecken kompakt in der Werkzeugleiste des Composers (Director-Modell + Effort, die
+  verbindlich gesetzten Modelle, Zusammenfassung „n× Auto“). Ein Klick öffnet die volle Liste je Modalität.
+- Die **Bühne** (Timeline usw.) nimmt unten die volle Breite ein.
+- Gestaltung: dunkle, ruhige „Grading Suite“ (warmer Tungsten-Akzent, Zeitcodes in Mono-Schrift); helles Theme
+  als Alternative. Details: `director-studio/apps/desktop/DESIGN.md`.
 
 ### 4.1 Bühne: Interaktionen (alle Kategorien)
 
-| Geste | Video/Audio-Timeline | Slides | Leinwand | Web |
-|---|---|---|---|---|
-| Klick | Zeitpunkt (framegenau, Snap auf Beat mit `Shift`) | Folie | Element unter Cursor | Element (Picker-Overlay) |
-| Ziehen | Zeitspanne; innerhalb einer Spur → spurgebunden | Region auf der Folie | Region | Region (Screenshot-Ausschnitt) |
-| Klick auf Clip/Element mit `Alt` | Clip als Entität | Element | Ebene | übergeordnete Komponente |
-| Navigieren | Abspielen (Leertaste), J/K/L, Zoom, Scroll | Blättern | Zoom/Pan | Scrollen, Links folgen, Viewport |
+**Video/Audio-Timeline.** Die Timeline wird nie bearbeitet, sie dient zum Ansehen und Zeigen:
+
+| Geste | Wirkung |
+|---|---|
+| Klick oder Ziehen in der Hauptfläche (≈95 % der Höhe) | Abspielkopf springen/spulen (framegenau; mit `Shift` Snap auf Beats). Keine Bereichsauswahl. |
+| Klick in die **Markerleiste** (schmaler Streifen ganz oben) | Marker an dieser Stelle setzen; sein Zeitpunkt landet als nummerierter Chip im Composer. |
+| `Enter` (Fokus nicht im Textfeld) | Marker am Abspielkopf setzen; erscheint ebenso in der Markerleiste und als Chip. |
+| Klick auf einen Marker | Abspielkopf springt dorthin. |
+| `Alt` + Klick auf einen Clip | Clip als Entität in den Composer. |
+| Leertaste, J/K/L, ←/→, Zoom, Scroll | Abspielen und Navigieren. |
+
+- Marker und Composer-Chips sind verknüpft und gleich nummeriert (①, ②, …). Entfernst du einen Chip, verschwindet
+  auch sein Marker. Nach dem Senden werden die Marker geleert.
+- **Zeitspannen** entstehen aus zwei Markern und Text: „von ① bis ② dunkler“. Der Director liest Spannen aus
+  Chips plus Wortlaut.
+- Während Push-to-Talk werden Marker-Klicks und `Enter` mit ihrem Zeitpunkt protokolliert und hinter dem gerade
+  gesprochenen Wort eingefügt (§15).
+
+**Andere Bühnen:**
+
+| Geste | Slides | Leinwand | Web |
+|---|---|---|---|
+| Klick | Folie | Element unter Cursor | Element (Picker-Overlay) |
+| Ziehen | Region auf der Folie | Region | Region (Screenshot-Ausschnitt) |
+| `Alt` + Klick | Element | Ebene | übergeordnete Komponente |
+| Navigieren | Blättern | Zoom/Pan | Scrollen, Links folgen, Viewport |
 
 Verschieben, Trimmen und Löschen gibt es nicht. Der Cursor zeigt den Referenzmodus. **Versionen:** Jede
 Director-Änderung erzeugt eine neue Version mit Notiz. Du kannst ältere Versionen ansehen. „Wiederherstellen“ legt
@@ -132,12 +162,14 @@ eine neue Version als Kopie an. Das ist keine inhaltliche Bearbeitung.
 ### 4.2 Composer
 
 - Rich-Text mit Chips (`time`, `range`, `clip`, `asset`, `slide`, `element`, `region`, `marker`, `version`).
-- Drag & Drop aus dem Asset-Browser. Dateien vom Desktop werden **verknüpft** (kein Upload) und erscheinen als
+- Zeit-Chips kommen aus Markern (§4.1); sie tragen die Nummer ihres Markers.
+- Drag & Drop aus der Asset-Seitenleiste. Dateien vom Desktop werden **verknüpft** (kein Upload) und erscheinen als
   Asset.
 - **Push-to-Talk:** Halten von `Strg/⌘ + Leertaste` oder des Mikrofon-Buttons → Aufnahme → Transkription mit
   Wortzeitstempeln. Timeline-Klicks während der Aufnahme werden mit ihrem Zeitpunkt protokolliert und hinter dem Wort
   eingefügt, das zu diesem Zeitpunkt gerade gesprochen wurde.
-- Senden (`Strg/⌘ + Enter`), Stopp/Unterbrechen, Nachrichten während der Arbeit werden eingereiht.
+- Senden (`Strg/⌘ + Enter`), Stopp/Unterbrechen. Während der Director arbeitet, heißt der Button „Einreihen“:
+  die Nachricht wird nach dem laufenden Schritt zugestellt.
 - Serialisierung an den Director:
   ```xml
   Mach <ref id="r1" type="range" from="00:12.400" to="00:18.000"/> dunkler, nimm <ref id="r2" type="asset" asset="ast_8f2"/>.
@@ -159,8 +191,10 @@ eine neue Version als Kopie an. Das ist keine inhaltliche Bearbeitung.
 - **Durchsetzung:** Das `generate`-Tool lehnt Modelle einer Modalität ab, wenn der Picker dort auf ein anderes
   Modell gesetzt ist.
 
-### 4.4 Asset-Browser
+### 4.4 Asset-Seitenleiste
 
+- Seitenleiste links, verstellbar und einklappbar. Oben Suche und Typ-Filter, darunter Gruppen („Zuletzt
+  verwendet“, Szenen/Shots). Dateien vom Desktop lassen sich hineinziehen; sie werden verknüpft, nicht hochgeladen.
 - Karten mit Vorschau: Hover-Scrub bei Video, Wellenform bei Audio, Textausschnitt bei Text/Code. Dazu Typ,
   Modell-Badge, Kosten und Status (*im Dokument*, *ungenutzt*, *verworfen*, *Upload/verknüpft*).
 - Filter und Volltextsuche über Titel, Tags und Prompts. Gruppierung nach Szene/Shot, Typ, Charakter oder Batch.
@@ -173,6 +207,8 @@ eine neue Version als Kopie an. Das ist keine inhaltliche Bearbeitung.
 - **Checkpoint-Karten:** Inhalt (Treatment-Text, Style-Bible-Assets, Shotliste), beantragtes Budget, Buttons
   *Freigeben* / *Ändern…*.
 - **Rückfragen** als Optionen-Karte (wie hier im Chat), dazu Freitext.
+- Offene Freigaben, Rückfragen und Checkpoints docken unten im Panel an, direkt über dem Composer. So bleiben sie
+  sichtbar, auch wenn der Verlauf weiterscrollt.
 - Kostenleiste: verbraucht / reserviert / freigegeben. Aufschlüsselung nach Modellen und Director-Nutzung.
 
 ---
@@ -482,7 +518,7 @@ mit Seed) → Basis ausblenden oder mischen → QA per Stills.
 ## 15. Sprache (Push-to-Talk)
 
 - Aufnahme im Renderer (MediaRecorder) → Datei → Transkription über fal (STT mit Wortzeitstempeln; Deutsch).
-- Die Klick-Zeitpunkte relativ zum Aufnahmestart werden auf die Wortgrenzen abgebildet (`alignClicksToWords`),
+- Die Zeitpunkte von Marker-Klicks und `Enter` relativ zum Aufnahmestart werden auf die Wortgrenzen abgebildet (`alignClicksToWords`),
   die Chips an diesen Stellen eingefügt. Das Transkript bleibt editierbar, bevor du sendest.
 
 ## 16. Kosten und Budget

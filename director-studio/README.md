@@ -33,8 +33,11 @@ npm run demo
 Öffne <http://localhost:5199>. Die Oberfläche läuft dann gegen ein simuliertes Backend: Demo-Projekte aller fünf
 Kategorien, ein geskripteter Director, Beispielmodelle mit Preisen. So kannst du die Bedienung durchspielen:
 
-1. In die Timeline klicken oder ziehen, dann sendet der Composer die Referenz mit.
-2. Assets in den Composer ziehen.
+1. In der Timeline klicken oder ziehen, um den Abspielkopf zu bewegen. Ein Klick in die schmale Markerleiste
+   ganz oben setzt einen Marker, `Enter` setzt einen am Abspielkopf. Jeder Marker landet als nummerierter
+   Zeit-Chip im Composer, Spannen schreibst du mit zwei Markern („von ① bis ②“). `Alt`+Klick auf einen Clip
+   referenziert den Clip.
+2. Assets aus der linken Seitenleiste in den Composer ziehen.
 3. Rückfragen und Checkpoints im Director-Panel beantworten.
 4. Versionen wiederherstellen.
 
