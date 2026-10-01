@@ -117,7 +117,7 @@ export const AssetCard = memo(function AssetCard({
         {linked && status !== 'linked' && <span className="status-chip status-linked">{t('assetStatus.linked')}</span>}
         {linked && asset.metadata?.missing === true && <span className="status-chip status-missing">{t('assetStatus.missing')}</span>}
       </div>
-      <button type="button" className="asset-insert button button-small" onClick={() => onInsert(asset.id)}>
+      <button type="button" className="asset-insert btn sm" onClick={() => onInsert(asset.id)}>
         {t('assets.toComposer')}
       </button>
     </div>

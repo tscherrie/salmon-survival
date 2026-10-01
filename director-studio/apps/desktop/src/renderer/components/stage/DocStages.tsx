@@ -106,7 +106,7 @@ export function SiteStage({ site }: { site: Site }) {
           </button>
           <button
             type="button"
-            className="button button-small"
+            className="btn sm"
             onClick={() => actions.insertRef({ kind: 'element', doc: 'site', page: page.path, selector: 'body', ...(page.sourceFile ? { source: { file: page.sourceFile, line: 1 } } : {}) })}
           >
             {t('stage.referencePage')}

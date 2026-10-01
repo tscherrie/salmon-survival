@@ -32,7 +32,7 @@ function SecretField({ name, label, configured }: { name: 'anthropic' | 'fal'; l
         <input
           id={id}
           type="password"
-          className="text-input"
+          className="field"
           autoComplete="off"
           spellCheck={false}
           value={value}
@@ -45,10 +45,10 @@ function SecretField({ name, label, configured }: { name: 'anthropic' | 'fal'; l
             }
           }}
         />
-        <button type="button" className="button" onClick={() => void save()} disabled={!value.trim() || busy}>
+        <button type="button" className="btn" onClick={() => void save()} disabled={!value.trim() || busy}>
           {t('settings.keySave')}
         </button>
-        <button type="button" className="button button-ghost" onClick={() => void actions.setSecret(name, null)} disabled={busy}>
+        <button type="button" className="btn ghost" onClick={() => void actions.setSecret(name, null)} disabled={busy}>
           {t('settings.keyRemove')}
         </button>
       </div>
@@ -93,10 +93,10 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       width={620}
       footer={
         <>
-          <button type="button" className="button" onClick={onClose}>
+          <button type="button" className="btn" onClick={onClose}>
             {t('common.cancel')}
           </button>
-          <button type="button" className="button button-primary" onClick={() => void save()} disabled={!draft}>
+          <button type="button" className="btn primary" onClick={() => void save()} disabled={!draft}>
             {t('common.save')}
           </button>
         </>

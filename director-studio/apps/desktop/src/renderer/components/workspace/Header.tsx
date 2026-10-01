@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../common/Dialog.tsx';
 import { Icon } from '../common/Icon.tsx';
 import { Popover } from '../common/Popover.tsx';
 import { ThemeToggle } from '../common/ThemeToggle.tsx';
+import { Tooltip } from '../common/Tooltip.tsx';
 import { BudgetMeter } from '../director/BudgetMeter.tsx';
 import { SettingsDialog } from '../start/SettingsDialog.tsx';
 
@@ -76,7 +77,7 @@ function VersionSelector() {
                 <div className="version-actions">
                   <button
                     type="button"
-                    className="button button-small"
+                    className="btn sm"
                     onClick={() => {
                       void actions.viewVersion(v.number);
                       setOpen(false);
@@ -86,7 +87,7 @@ function VersionSelector() {
                     <Icon name="eye" size={12} /> {t('versions.view')}
                   </button>
                   {v.number !== head && (
-                    <button type="button" className="button button-small" onClick={() => setConfirm(v.number)} aria-label={`${t('versions.restore')} v${v.number}`}>
+                    <button type="button" className="btn sm" onClick={() => setConfirm(v.number)} aria-label={`${t('versions.restore')} v${v.number}`}>
                       <Icon name="restore" size={12} /> {t('versions.restore')}
                     </button>
                   )}
@@ -148,7 +149,7 @@ function ExportMenu() {
       align="end"
       label={t('header.export')}
       anchor={
-        <button type="button" className="button button-small" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <button type="button" className="btn sm" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           <Icon name="export" size={14} /> {t('header.export')}
         </button>
       }
@@ -187,7 +188,7 @@ export function Header() {
   if (!manifest) return null;
   return (
     <header className="app-header">
-      <button type="button" className="button button-ghost button-small" onClick={() => actions.closeProject()}>
+      <button type="button" className="btn ghost sm" onClick={() => actions.closeProject()}>
         <Icon name="chevronLeft" size={14} /> {t('header.projects')}
       </button>
       <div className="project-title">
@@ -203,9 +204,11 @@ export function Header() {
       <VersionSelector />
       <ExportMenu />
       <ThemeToggle />
-      <button type="button" className="icon-button" onClick={() => setSettings(true)} aria-label={t('header.settings')} title={t('header.settings')}>
-        <Icon name="settings" />
-      </button>
+      <Tooltip label={t('header.settings')} placement="bottom">
+        <button type="button" className="ibtn" onClick={() => setSettings(true)} aria-label={t('header.settings')}>
+          <Icon name="settings" />
+        </button>
+      </Tooltip>
       {settings && <SettingsDialog onClose={() => setSettings(false)} />}
     </header>
   );

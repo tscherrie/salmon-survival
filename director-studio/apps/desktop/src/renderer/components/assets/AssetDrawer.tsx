@@ -115,7 +115,7 @@ export function AssetDrawer({ asset, onClose, onSelect }: { asset: Asset; onClos
     <aside className="asset-drawer" aria-label={`${t('assets.details')}: ${asset.title}`}>
       <header className="asset-drawer-header">
         <h3>{asset.title}</h3>
-        <button type="button" className="icon-button" onClick={onClose} aria-label={t('common.close')}>
+        <button type="button" className="ibtn" onClick={onClose} aria-label={t('common.close')}>
           <Icon name="close" />
         </button>
       </header>
@@ -123,7 +123,7 @@ export function AssetDrawer({ asset, onClose, onSelect }: { asset: Asset; onClos
         <div className="asset-missing" role="alert">
           <Icon name="warning" size={14} />
           <span>{t('assets.fileMissing')}</span>
-          <button type="button" className="button button-small" onClick={() => void relink()} disabled={relinking}>
+          <button type="button" className="btn sm" onClick={() => void relink()} disabled={relinking}>
             <Icon name="link" size={12} /> {t('assets.relink')}
           </button>
         </div>
@@ -131,10 +131,10 @@ export function AssetDrawer({ asset, onClose, onSelect }: { asset: Asset; onClos
         (asset.kind === 'image' || asset.kind === 'video') && <img key={previewKey} className="asset-drawer-preview" src={assetUrl(asset.id, 'thumb')} alt="" />
       )}
       <div className="asset-drawer-actions">
-        <button type="button" className="button button-primary button-small" onClick={() => actions.insertRef({ kind: 'asset', assetId: asset.id })}>
+        <button type="button" className="btn primary sm" onClick={() => actions.insertRef({ kind: 'asset', assetId: asset.id })}>
           {t('assets.toComposer')}
         </button>
-        <button type="button" className="button button-small" onClick={() => void actions.revealAsset(asset.id)}>
+        <button type="button" className="btn sm" onClick={() => void actions.revealAsset(asset.id)}>
           <Icon name="folder" size={13} /> {t('assets.reveal')}
         </button>
       </div>

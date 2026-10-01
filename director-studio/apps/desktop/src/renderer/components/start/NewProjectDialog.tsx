@@ -45,10 +45,10 @@ export function NewProjectDialog({ onClose }: { onClose: () => void }) {
       width={600}
       footer={
         <>
-          <button type="button" className="button" onClick={onClose}>
+          <button type="button" className="btn" onClick={onClose}>
             {t('common.cancel')}
           </button>
-          <button type="button" className="button button-primary" onClick={() => void create()} disabled={busy}>
+          <button type="button" className="btn primary" onClick={() => void create()} disabled={busy}>
             {busy ? t('newProject.creating') : t('newProject.create')}
           </button>
         </>
@@ -66,7 +66,7 @@ export function NewProjectDialog({ onClose }: { onClose: () => void }) {
         </label>
         <input
           id={titleId}
-          className="text-input"
+          className="field"
           value={title}
           onChange={(e) => {
             setTitle(e.target.value);
@@ -113,7 +113,7 @@ export function NewProjectDialog({ onClose }: { onClose: () => void }) {
           <code className="folder-path">{directory ?? settings?.projectsDir ?? t('newProject.defaultFolder')}</code>
           <button
             type="button"
-            className="button button-small"
+            className="btn sm"
             onClick={async () => {
               const dir = await api.chooseDirectory();
               if (dir) setDirectory(dir);

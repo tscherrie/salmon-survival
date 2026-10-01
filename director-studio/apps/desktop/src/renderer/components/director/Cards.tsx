@@ -101,7 +101,7 @@ export function QuestionCard({ question }: { question: PendingQuestion }) {
             {a?.otherOn && (
               <input
                 type="text"
-                className="text-input"
+                className="field"
                 value={a.other}
                 placeholder={t('director.otherPlaceholder')}
                 aria-label={`${q.question} – ${t('director.otherPlaceholder')}`}
@@ -113,7 +113,7 @@ export function QuestionCard({ question }: { question: PendingQuestion }) {
         );
       })}
       <div className="card-actions">
-        <button type="submit" className="button button-primary" disabled={!complete || submitting}>
+        <button type="submit" className="btn primary" disabled={!complete || submitting}>
           {t('director.answer')}
         </button>
       </div>
@@ -184,17 +184,17 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
         </div>
       </div>
       <div className="card-actions">
-        <button type="button" className="button button-primary" onClick={() => void approve()} disabled={!valid || busy}>
+        <button type="button" className="btn primary" onClick={() => void approve()} disabled={!valid || busy}>
           {t('director.approve', { amount: valid ? formatUsd(amount) : '—' })}
         </button>
-        <button type="button" className="button" aria-expanded={changes} onClick={() => setChanges((v) => !v)}>
+        <button type="button" className="btn" aria-expanded={changes} onClick={() => setChanges((v) => !v)}>
           {t('director.requestChanges')}
         </button>
       </div>
       {changes && (
         <div className="checkpoint-feedback">
           <textarea
-            className="text-input"
+            className="field"
             rows={3}
             value={feedback}
             placeholder={t('director.feedbackPlaceholder')}
@@ -202,7 +202,7 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
             onChange={(e) => setFeedback(e.target.value)}
             autoFocus
           />
-          <button type="button" className="button" onClick={() => void requestChanges()} disabled={!feedback.trim() || busy}>
+          <button type="button" className="btn" onClick={() => void requestChanges()} disabled={!feedback.trim() || busy}>
             {t('director.sendFeedback')}
           </button>
         </div>
@@ -234,11 +234,11 @@ export function ApprovalCard({ request }: { request: ApprovalRequest }) {
       <p>{request.detail}</p>
       {request.amountUsd !== undefined && <p className="approval-amount">{formatUsd(request.amountUsd)}</p>}
       <div className="card-actions">
-        <button type="button" className="button button-primary" onClick={() => void decide(true)} disabled={busy}>
+        <button type="button" className="btn primary" onClick={() => void decide(true)} disabled={busy}>
           {t('director.grant')}
           {request.amountUsd !== undefined ? ` (${formatUsd(request.amountUsd)})` : ''}
         </button>
-        <button type="button" className="button" onClick={() => void decide(false)} disabled={busy}>
+        <button type="button" className="btn" onClick={() => void decide(false)} disabled={busy}>
           {t('director.deny')}
         </button>
       </div>

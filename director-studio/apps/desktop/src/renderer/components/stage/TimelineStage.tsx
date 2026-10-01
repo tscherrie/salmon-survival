@@ -1,5 +1,5 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { clipsAtFrame, formatTimecode, type Asset, type Clip, type Marker, type Timeline, type Track, type TrackKind } from '@studio/core';
+import { clipsAtFrame, formatTimecode, type Asset, type Clip, type Marker, type Timeline, type Track } from '@studio/core';
 import { useT } from '../../i18n.ts';
 import { usePeaks, waveformPath } from '../../lib/hooks.ts';
 import { clipDisplayName } from '../../lib/labels.ts';
@@ -19,8 +19,11 @@ import {
   visibleFrames,
   xToFrame,
 } from '../../lib/timelineGeometry.ts';
+import { trackHeight, useTrackHeights } from '../../lib/layout.ts';
 import { useActions, useApi, useAssetUrl, useStudio, useStudioStore } from '../../state/context.tsx';
 import { Icon, TRACK_KIND_ICONS } from '../common/Icon.tsx';
+import { Tooltip } from '../common/Tooltip.tsx';
+import { StageTools } from './StageTools.tsx';
 
 /**
  * Multi-Track-Timeline (nur lesend). Klick → Zeitpunkt, Ziehen → Spanne (in einer Spur: spurgebunden),
@@ -29,12 +32,6 @@ import { Icon, TRACK_KIND_ICONS } from '../common/Icon.tsx';
  */
 
 export const RULER_HEIGHT = 24;
-const LANE_HEIGHTS: Record<TrackKind, number> = { video: 36, overlay: 22, text: 24, audio: 30 };
-const AUDIO_PROJECT_LANE = 56;
-
-export function laneHeight(track: Track, audioProject: boolean): number {
-  return audioProject && track.kind === 'audio' ? AUDIO_PROJECT_LANE : LANE_HEIGHTS[track.kind];
-}
 
 // ───────────────────────── Clip ─────────────────────────
 
@@ -187,11 +184,6 @@ function Playhead({ fps, pps, height, scrollRef }: { fps: number; pps: number; h
   return <div className="tl-playhead" style={{ left: x, height }} aria-hidden="true" />;
 }
 
-function PlayheadTime({ fps }: { fps: number }) {
-  const playhead = useStudio((s) => s.playhead);
-  return <span className="tl-time">{formatTimecode(playhead, fps)}</span>;
-}
-
 // ───────────────────────── Timeline ─────────────────────────
 
 export function TimelineStage({ timeline, audioProject = false }: { timeline: Timeline; audioProject?: boolean }) {
@@ -218,15 +210,17 @@ export function TimelineStage({ timeline, audioProject = false }: { timeline: Ti
   const titles = useMemo(() => new Map(assets.map((a) => [a.id, a.title])), [assets]);
   const beats = useMemo(() => beatFrames(timeline.markers), [timeline.markers]);
   const flags = useMemo(() => timeline.markers.filter((m) => m.kind !== 'beat' && m.kind !== 'downbeat' && m.kind !== 'word'), [timeline.markers]);
+  // Spurhöhen je Breakpoint (DESIGN.md §2.3)
+  const { heights, audioProjectHeight } = useTrackHeights();
   const lanes = useMemo(() => {
     let top = 0;
     return timeline.tracks.map((track) => {
-      const height = laneHeight(track, audioProject);
+      const height = trackHeight(track, heights, audioProject ? audioProjectHeight : undefined);
       const lane = { track, top, height };
       top += height;
       return lane;
     });
-  }, [timeline.tracks, audioProject]);
+  }, [timeline.tracks, audioProject, heights, audioProjectHeight]);
   const lanesHeight = lanes.reduce((h, l) => h + l.height, 0);
   const [from, to] = visibleFrames(view.left, view.width, fps, pps, total);
 
@@ -390,20 +384,24 @@ export function TimelineStage({ timeline, audioProject = false }: { timeline: Ti
 
   return (
     <div className="tl" data-testid="timeline">
-      <div className="tl-toolbar">
-        <PlayheadTime fps={fps} />
-        <span className="hint">{t('stage.hint')}</span>
-        <span className="spacer" />
-        <button type="button" className="icon-button" onClick={() => zoomBy(1 / 1.5)} aria-label={t('stage.zoomOut')}>
-          <Icon name="minus" />
-        </button>
-        <button type="button" className="icon-button" onClick={zoomFit} aria-label={t('stage.zoomFit')}>
-          <Icon name="fit" />
-        </button>
-        <button type="button" className="icon-button" onClick={() => zoomBy(1.5)} aria-label={t('stage.zoomIn')}>
-          <Icon name="plus" />
-        </button>
-      </div>
+      <StageTools>
+        <span className="hint stage-hint">{t('stage.hint')}</span>
+        <Tooltip label={t('stage.zoomOut')}>
+          <button type="button" className="ibtn" onClick={() => zoomBy(1 / 1.5)} aria-label={t('stage.zoomOut')}>
+            <Icon name="minus" size={14} />
+          </button>
+        </Tooltip>
+        <Tooltip label={t('stage.zoomFit')}>
+          <button type="button" className="ibtn" onClick={zoomFit} aria-label={t('stage.zoomFit')}>
+            <Icon name="fit" size={14} />
+          </button>
+        </Tooltip>
+        <Tooltip label={t('stage.zoomIn')}>
+          <button type="button" className="ibtn" onClick={() => zoomBy(1.5)} aria-label={t('stage.zoomIn')}>
+            <Icon name="plus" size={14} />
+          </button>
+        </Tooltip>
+      </StageTools>
       <div className="tl-body">
         <div className="tl-headers">
           <div className="tl-header-spacer" style={{ height: RULER_HEIGHT }} />

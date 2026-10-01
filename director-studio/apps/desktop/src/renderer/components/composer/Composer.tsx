@@ -4,6 +4,8 @@ import { useT } from '../../i18n.ts';
 import { formatElapsed } from '../../lib/hooks.ts';
 import { useActions, useLabelContext, useStudio } from '../../state/context.tsx';
 import { Icon } from '../common/Icon.tsx';
+import { Popover } from '../common/Popover.tsx';
+import { ModelPickerBar } from '../picker/ModelPickerBar.tsx';
 import { ComposerEditor } from './ComposerEditor.tsx';
 import { usePushToTalk } from './usePushToTalk.ts';
 
@@ -19,7 +21,7 @@ function RecordingIndicator() {
   if (voice.transcribing) {
     return (
       <div className="voice-indicator is-transcribing" role="status">
-        <span className="spinner" aria-hidden="true" />
+        <span className="spin" aria-hidden="true" />
         {t('voice.transcribing')}
       </div>
     );
@@ -34,6 +36,36 @@ function RecordingIndicator() {
         <span style={{ width: `${Math.round(voice.level * 100)}%` }} />
       </span>
       {voice.clicks.length > 0 && <span className="voice-clicks">{t('voice.clicks', { count: voice.clicks.length })}</span>}
+    </div>
+  );
+}
+
+/**
+ * Steckplatz der Modellwahl in der Composer-Werkzeugleiste (DESIGN.md §7.8). Übergangsweise öffnet er die
+ * bisherige Picker-Leiste als Popover; die Modell-Zusammenfassung mit zweistufigem Panel ersetzt ihn.
+ */
+function ModelsSlot() {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="composer-models">
+      <Popover
+        open={open}
+        onClose={() => setOpen(false)}
+        placement="top"
+        align="end"
+        label={t('picker.label')}
+        className="models-popover"
+        anchor={
+          <button type="button" className="btn ghost" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+            <Icon name="director" size={14} />
+            {t('picker.models')}
+            <Icon name="chevronDown" size={12} />
+          </button>
+        }
+      >
+        <ModelPickerBar />
+      </Popover>
     </div>
   );
 }
@@ -86,12 +118,13 @@ export function Composer() {
         </button>
         <ComposerEditor onSubmit={send} />
         <div className="composer-actions">
+          <ModelsSlot />
           {running && (
-            <button type="button" className="button button-danger" onClick={() => void actions.interrupt()}>
+            <button type="button" className="btn danger" onClick={() => void actions.interrupt()}>
               <Icon name="stop" size={14} /> {t('composer.stop')}
             </button>
           )}
-          <button type="button" className="button button-primary" onClick={send} disabled={empty}>
+          <button type="button" className="btn primary" onClick={send} disabled={empty}>
             <Icon name="send" size={14} /> {running ? t('composer.queue') : t('composer.send')}
           </button>
         </div>
@@ -104,10 +137,10 @@ export function Composer() {
             {queue.map((message, i) => (
               <span key={i} className="queue-item">
                 <span className="queue-text">{composerToDisplayText(message.segments, ctx)}</span>
-                <button type="button" className="button button-small" onClick={() => void actions.sendQueued(i)} disabled={running}>
+                <button type="button" className="btn sm" onClick={() => void actions.sendQueued(i)} disabled={running}>
                   {t('composer.sendNow')}
                 </button>
-                <button type="button" className="icon-button" onClick={() => actions.removeQueued(i)} aria-label={t('common.remove')}>
+                <button type="button" className="ibtn sm" onClick={() => actions.removeQueued(i)} aria-label={t('common.remove')}>
                   <Icon name="close" size={12} />
                 </button>
               </span>

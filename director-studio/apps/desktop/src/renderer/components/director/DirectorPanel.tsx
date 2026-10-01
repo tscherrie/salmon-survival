@@ -4,7 +4,10 @@ import { formatDateTime, useT } from '../../i18n.ts';
 import { refChipLabel, refChipTitle } from '../../lib/labels.ts';
 import type { ProgressNote } from '../../state/types.ts';
 import { useActions, useLabelContext, useStudio } from '../../state/context.tsx';
+import { useLayout } from '../../lib/layout.ts';
 import { Icon } from '../common/Icon.tsx';
+import { ariaKeyShortcuts } from '../common/Kbd.tsx';
+import { Tooltip } from '../common/Tooltip.tsx';
 import { BudgetMeter } from './BudgetMeter.tsx';
 import { ApprovalCard, CheckpointCard, GenerationQueue, QuestionCard } from './Cards.tsx';
 import { DirectorMarkdown } from './DirectorMarkdown.tsx';
@@ -100,6 +103,7 @@ export function DirectorPanel() {
   const budget = useStudio((s) => s.budget);
   const runState = useStudio((s) => s.runState);
   const ctx = useLabelContext();
+  const layout = useLayout();
   const feedRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
 
@@ -135,9 +139,23 @@ export function DirectorPanel() {
         <RunIndicator />
         <span className="spacer" />
         {runState === 'running' && (
-          <button type="button" className="button button-small button-danger" onClick={() => void actions.interrupt()}>
+          <button type="button" className="btn sm danger" onClick={() => void actions.interrupt()}>
             <Icon name="stop" size={12} /> {t('director.stop')}
           </button>
+        )}
+        {layout && (
+          <Tooltip label={t('layout.hideDirector')} keys={['mod', '2']}>
+            <button
+              type="button"
+              className="ibtn"
+              aria-label={t('layout.hideDirector')}
+              aria-expanded={true}
+              aria-keyshortcuts={ariaKeyShortcuts(['mod', '2'])}
+              onClick={() => layout.toggle('director')}
+            >
+              <Icon name="sideRight" size={16} />
+            </button>
+          </Tooltip>
         )}
       </header>
       <div

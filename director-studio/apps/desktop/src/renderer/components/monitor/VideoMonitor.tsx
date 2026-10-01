@@ -24,9 +24,13 @@ export function safeAreasFor(format: FormatSpec): Array<{ x: number; y: number; 
   ];
 }
 
+/** Innenabstand des Bildbereichs (DESIGN.md §2.4: Breite − 24, Höhe − 12 unten; oben steht die Leiste). */
+const STAGE_PAD_X = 24;
+const STAGE_PAD_Y = 12;
+
 function fitBox(format: FormatSpec, size: { width: number; height: number }): { width: number; height: number } {
   if (size.width <= 0 || size.height <= 0) return { width: 480, height: Math.round((480 * format.height) / format.width) };
-  const scale = Math.min(size.width / format.width, size.height / format.height);
+  const scale = Math.max(0.01, Math.min((size.width - STAGE_PAD_X) / format.width, (size.height - STAGE_PAD_Y) / format.height));
   return { width: Math.floor(format.width * scale), height: Math.floor(format.height * scale) };
 }
 
@@ -143,7 +147,7 @@ export function VideoMonitor({ timeline, audioOnly }: { timeline: Timeline; audi
           <span className="badge">{t('monitor.audioOnly')}</span>
         ) : (
           <>
-            <div className="segmented" role="group" aria-label={t('monitor.format')}>
+            <div className="seg" role="group" aria-label={t('monitor.format')}>
               {formats.map((f) => (
                 <button key={f.id} type="button" aria-pressed={f.id === format.id} onClick={() => actions.setFormat(f.id)}>
                   {f.id}

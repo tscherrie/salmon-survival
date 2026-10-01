@@ -4,7 +4,7 @@ import { CanvasMonitor, DeckMonitor } from './DocMonitors.tsx';
 import { VideoMonitor } from './VideoMonitor.tsx';
 import { WebMonitor } from './WebMonitor.tsx';
 
-/** Monitor (links oben): Player, Folie, Leinwand oder Web-Vorschau – je nach Dokument. */
+/** Monitor (Mitte oben, immer dunkel): Player, Folie, Leinwand oder Web-Vorschau – je nach Dokument. */
 export function Monitor() {
   const t = useT();
   const doc = useViewDocument();
@@ -27,7 +27,7 @@ export function Monitor() {
       content = <div className="monitor-empty">{t('monitor.noDocument')}</div>;
   }
   return (
-    <section className="monitor" aria-label={t('monitor.label')}>
+    <section className="monitor always-dark" aria-label={t('monitor.label')}>
       {content}
     </section>
   );

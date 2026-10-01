@@ -73,7 +73,7 @@ export function Dialog({
       >
         <header className="dialog-header">
           <h2 id={titleId}>{title}</h2>
-          <button type="button" className="icon-button" onClick={onClose} aria-label={t('common.close')}>
+          <button type="button" className="ibtn" onClick={onClose} aria-label={t('common.close')}>
             <Icon name="close" />
           </button>
         </header>
@@ -106,10 +106,10 @@ export function ConfirmDialog({
       width={440}
       footer={
         <>
-          <button type="button" className="button" onClick={onCancel}>
+          <button type="button" className="btn" onClick={onCancel}>
             {t('common.cancel')}
           </button>
-          <button type="button" className="button button-primary" onClick={onConfirm} data-autofocus>
+          <button type="button" className="btn primary" onClick={onConfirm} data-autofocus>
             {confirmLabel}
           </button>
         </>

@@ -3,15 +3,18 @@ import { ASSET_SOURCES, assetMatches, type AssetKind, type AssetSource } from '@
 import { useT } from '../../i18n.ts';
 import { assetUiStatus, matchesStatusFilter, shortModelName, type AssetUiStatus } from '../../lib/assets.ts';
 import { useDebounced } from '../../lib/hooks.ts';
+import { useLayout } from '../../lib/layout.ts';
 import { useActions, useAssetUrl, useStudio } from '../../state/context.tsx';
 import { ASSET_KIND_ICONS, Icon } from '../common/Icon.tsx';
+import { ariaKeyShortcuts } from '../common/Kbd.tsx';
+import { Tooltip } from '../common/Tooltip.tsx';
 import { AssetCard } from './AssetCard.tsx';
 import { AssetDrawer } from './AssetDrawer.tsx';
 
 type SortKey = 'newest' | 'kind' | 'cost';
 const STATUS_FILTERS: Array<AssetUiStatus | 'all'> = ['all', 'used', 'unused', 'rejected', 'linked'];
 
-/** Asset-Browser (volle Breite): Filter, Suche, Sortierung, Karten, Detail-Drawer, Import. */
+/** Asset-Browser (linke Seitenleiste): Kopf mit Import und Einklappen, Filter, Suche, Sortierung, Karten, Details. */
 export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }) {
   const t = useT();
   const actions = useActions();
@@ -27,6 +30,7 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
   const [sort, setSort] = useState<SortKey>('newest');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedQuery = useDebounced(query, searchDelayMs);
+  const layout = useLayout();
 
   const used = useMemo(() => new Set(usedIds), [usedIds]);
   const modelNames = useMemo(() => new Map((models ?? []).map((m) => [m.id, m.displayName])), [models]);
@@ -56,8 +60,39 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
 
   return (
     <section className="assets" aria-label={t('assets.label')}>
+      <header className="assets-head">
+        <h2>{t('assets.title')}</h2>
+        <span className="assets-count" aria-live="polite">
+          {t('assets.count', { count: visible.length, total: assets.length })}
+        </span>
+        <span className="spacer" />
+        <Tooltip label={t('assets.link')}>
+          <button type="button" className="ibtn" onClick={() => void actions.importFiles('link')} aria-label={t('assets.link')}>
+            <Icon name="link" size={14} />
+          </button>
+        </Tooltip>
+        <Tooltip label={t('assets.import')}>
+          <button type="button" className="ibtn" onClick={() => void actions.importFiles('import')} aria-label={t('assets.import')}>
+            <Icon name="plus" size={16} />
+          </button>
+        </Tooltip>
+        {layout && (
+          <Tooltip label={t('layout.hideAssets')} keys={['mod', '1']}>
+            <button
+              type="button"
+              className="ibtn"
+              aria-label={t('layout.hideAssets')}
+              aria-expanded={true}
+              aria-keyshortcuts={ariaKeyShortcuts(['mod', '1'])}
+              onClick={() => layout.toggle('assets')}
+            >
+              <Icon name="sideLeft" size={16} />
+            </button>
+          </Tooltip>
+        )}
+      </header>
       <div className="assets-toolbar" role="toolbar" aria-label={t('assets.label')}>
-        <div className="search-box">
+        <div className="field search-box">
           <Icon name="search" size={14} />
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('assets.searchPlaceholder')} aria-label={t('assets.search')} />
         </div>
@@ -108,16 +143,6 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
             <option value="cost">{t('assets.sort.cost')}</option>
           </select>
         </label>
-        <span className="spacer" />
-        <span className="assets-count" aria-live="polite">
-          {t('assets.count', { count: visible.length, total: assets.length })}
-        </span>
-        <button type="button" className="button button-small" onClick={() => void actions.importFiles('link')}>
-          <Icon name="link" size={13} /> {t('assets.link')}
-        </button>
-        <button type="button" className="button button-small" onClick={() => void actions.importFiles('import')}>
-          <Icon name="plus" size={13} /> {t('assets.import')}
-        </button>
       </div>
       <div className="assets-body">
         <div className="assets-grid" role="list" aria-label={t('assets.label')}>

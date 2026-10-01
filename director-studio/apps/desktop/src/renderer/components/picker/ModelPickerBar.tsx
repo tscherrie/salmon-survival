@@ -253,7 +253,7 @@ export function ModelPickerBar() {
           )}
         </div>
       ))}
-      <button type="button" className="icon-button picker-refresh" onClick={() => void actions.refreshModels()} aria-label={t('picker.refresh')} title={t('picker.refresh')}>
+      <button type="button" className="ibtn picker-refresh" onClick={() => void actions.refreshModels()} aria-label={t('picker.refresh')} title={t('picker.refresh')}>
         <Icon name="refresh" />
       </button>
     </section>

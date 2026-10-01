@@ -72,11 +72,11 @@ export function DeckMonitor({ deck }: { deck: Deck }) {
   return (
     <div className="monitor-doc">
       <div className="monitor-toolbar" role="toolbar" aria-label={t('monitor.label')}>
-        <button type="button" className="icon-button" onClick={() => go(-1)} disabled={index === 0} aria-label={t('monitor.prevSlide')}>
+        <button type="button" className="ibtn" onClick={() => go(-1)} disabled={index === 0} aria-label={t('monitor.prevSlide')}>
           <Icon name="chevronLeft" />
         </button>
         <span className="monitor-caption">{t('monitor.slideOf', { n: index + 1, total: deck.slides.length })}</span>
-        <button type="button" className="icon-button" onClick={() => go(1)} disabled={index >= deck.slides.length - 1} aria-label={t('monitor.nextSlide')}>
+        <button type="button" className="ibtn" onClick={() => go(1)} disabled={index >= deck.slides.length - 1} aria-label={t('monitor.nextSlide')}>
           <Icon name="chevronRight" />
         </button>
         <span className="spacer" />
@@ -156,14 +156,14 @@ export function CanvasMonitor({ canvas }: { canvas: Canvas }) {
   return (
     <div className="monitor-doc">
       <div className="monitor-toolbar" role="toolbar" aria-label={t('monitor.label')}>
-        <button type="button" className="icon-button" onClick={() => setZoom((z) => Math.max(0.25, z / 1.25))} aria-label={t('monitor.zoomOut')}>
+        <button type="button" className="ibtn" onClick={() => setZoom((z) => Math.max(0.25, z / 1.25))} aria-label={t('monitor.zoomOut')}>
           <Icon name="minus" />
         </button>
         <span className="monitor-caption">{Math.round(scale * 100)} %</span>
-        <button type="button" className="icon-button" onClick={() => setZoom((z) => Math.min(8, z * 1.25))} aria-label={t('monitor.zoomIn')}>
+        <button type="button" className="ibtn" onClick={() => setZoom((z) => Math.min(8, z * 1.25))} aria-label={t('monitor.zoomIn')}>
           <Icon name="plus" />
         </button>
-        <button type="button" className="icon-button" onClick={() => setZoom(1)} aria-label={t('monitor.zoomFit')}>
+        <button type="button" className="ibtn" onClick={() => setZoom(1)} aria-label={t('monitor.zoomFit')}>
           <Icon name="fit" />
         </button>
         <span className="spacer" />

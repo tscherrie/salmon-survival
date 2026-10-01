@@ -1,10 +1,14 @@
 import type { AssetKind, Modality, TrackKind } from '@studio/core';
 
-/** Schlichte Strich-Icons (24er Raster, `currentColor`). */
+/**
+ * Schlichte Strich-Icons (24er Raster, Kontur 1.5, runde Enden, `currentColor`; DESIGN.md §5).
+ * Gefüllt sind nur Play, Pause, Stopp und Record (Hardware-Tasten) sowie die Hilfsformen `star` und `dot`.
+ */
 const PATHS = {
   play: 'M7 5l12 7-12 7z',
-  pause: 'M8 5v14M16 5v14',
+  pause: 'M7 5h3.5v14H7zM13.5 5H17v14h-3.5z',
   stop: 'M7 7h10v10H7z',
+  record: 'M12 6a6 6 0 1 1 0 12 6 6 0 0 1 0-12z',
   mic: 'M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3',
   send: 'M4 12l16-8-6 16-3-7z',
   search: 'M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM20 20l-4-4',
@@ -56,12 +60,38 @@ const PATHS = {
   budget: 'M12 3v18M16 7c0-1.7-1.8-3-4-3s-4 1.3-4 3 1.8 2.5 4 3 4 1.3 4 3-1.8 3-4 3-4-1.3-4-3',
   fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
   monitor: 'M3 4h18v12H3zM8 20h8',
+  // Seitenleisten und Bühne ein-/ausblenden
+  sideLeft: 'M4 5h16v14H4zM9.5 5v14',
+  sideRight: 'M4 5h16v14H4zM14.5 5v14',
+  sideBottom: 'M4 5h16v14H4zM4 14.5h16',
+  more: 'M6 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM12 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM18 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2z',
+  filter: 'M4 6h16M7 12h10M10 18h4',
+  grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
+  group: 'M4 5h16M4 5v4M8 11h12M8 11v8M8 15h12M8 19h12',
+  // Marker-Sprünge und Transport
+  prev: 'M11 7l-5 5 5 5M14 6h6v6l-3 2.5-3-2.5z',
+  next: 'M13 7l5 5-5 5M4 6h6v6l-3 2.5L4 12z',
+  skipBack: 'M6 5v14M18 6l-9 6 9 6z',
+  skipFwd: 'M18 5v14M6 6l9 6-9 6z',
+  frameBack: 'M15 6l-6 6 6 6M18 6v12',
+  frameFwd: 'M9 6l6 6-6 6M6 6v12',
+  safeArea: 'M3 5h18v14H3zM7 8.5h10v7H7z',
+  volume: 'M4 9h4l5-4v14l-5-4H4zM16.5 9a4 4 0 0 1 0 6',
+  fullscreen: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
+  eyeOff: 'M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c6 0 10 6 10 6a17.6 17.6 0 0 1-3.2 3.8M6.6 6.6C3.8 8.4 2 12 2 12s4 6 10 6a9.4 9.4 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2',
+  magnet: 'M6 4v8a6 6 0 0 0 12 0V4h-4v8a2 2 0 0 1-4 0V4zM6 8h4M14 8h4',
+  info: 'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 11v5.5M12 7.5v.5',
+  pin: 'M9 4h6l-1 6 3 3H7l3-3zM12 13v7',
+  clock: 'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7.5V12l3 2',
 } as const;
 
 export type IconName = keyof typeof PATHS;
 
+const FILLED: ReadonlySet<IconName> = new Set<IconName>(['play', 'pause', 'stop', 'record', 'star', 'dot']);
+
 export function Icon({ name, size = 16, title, className }: { name: IconName; size?: number; title?: string; className?: string }) {
-  const filled = name === 'play' || name === 'stop' || name === 'star' || name === 'dot';
+  const filled = FILLED.has(name);
   return (
     <svg
       className={className ? `icon ${className}` : 'icon'}
@@ -70,7 +100,7 @@ export function Icon({ name, size = 16, title, className }: { name: IconName; si
       viewBox="0 0 24 24"
       fill={filled ? 'currentColor' : 'none'}
       stroke="currentColor"
-      strokeWidth={1.8}
+      strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden={title ? undefined : true}
@@ -79,6 +109,19 @@ export function Icon({ name, size = 16, title, className }: { name: IconName; si
     >
       {title && <title>{title}</title>}
       <path d={PATHS[name]} />
+    </svg>
+  );
+}
+
+/**
+ * Bildmarke: Sucherklammern plus Tally-Punkt (§5). Der Punkt ist `--text`; Tungsten nur, solange der Director
+ * arbeitet (`live`).
+ */
+export function BrandMark({ size = 16, live = false }: { size?: number; live?: boolean }) {
+  return (
+    <svg className={`icon brand-mark-svg${live ? ' is-live' : ''}`} width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+      <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <circle className="brand-tally" cx="12" cy="12" r="2.5" fill="currentColor" />
     </svg>
   );
 }

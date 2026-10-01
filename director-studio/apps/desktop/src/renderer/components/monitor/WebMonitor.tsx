@@ -104,8 +104,8 @@ export function WebMonitor({ site }: { site: Site }) {
     frameRef.current?.contentWindow?.postMessage({ type: PICK_MODE_MESSAGE, enabled: pickMode }, '*');
   }, [api, projectId, pickMode]);
 
-  const scale = size.width > 0 ? Math.min(1, (size.width - 16) / vp.width) : 0.5;
-  const frameHeight = size.height > 0 ? Math.round((size.height - 16) / scale) : vp.height;
+  const scale = size.width > 0 ? Math.min(1, (size.width - 24) / vp.width) : 0.5;
+  const frameHeight = size.height > 0 ? Math.round((size.height - 12) / scale) : vp.height;
   const src = url ? `${url}#${pagePath}` : null;
 
   const onRegion = (rect: Rect) => actions.insertRef({ kind: 'region', doc: 'site', ...(page ? { page: page.path } : {}), rect });
@@ -113,7 +113,7 @@ export function WebMonitor({ site }: { site: Site }) {
   return (
     <div className="monitor-web">
       <div className="monitor-toolbar" role="toolbar" aria-label={t('monitor.label')}>
-        <div className="segmented" role="group" aria-label={t('monitor.viewport')}>
+        <div className="seg" role="group" aria-label={t('monitor.viewport')}>
           {VIEWPORT_IDS.map((id) => (
             <button key={id} type="button" aria-pressed={viewport === id} onClick={() => actions.setViewport(id)}>
               {t(`monitor.viewport.${id}`)}
@@ -140,7 +140,7 @@ export function WebMonitor({ site }: { site: Site }) {
         ) : (
           <span className="monitor-caption">{pagePath}</span>
         )}
-        <button type="button" className="button button-small" onClick={() => projectId && void api.previewOpenExternal(projectId)}>
+        <button type="button" className="btn sm" onClick={() => projectId && void api.previewOpenExternal(projectId)}>
           <Icon name="external" size={14} /> {t('monitor.openExternal')}
         </button>
       </div>

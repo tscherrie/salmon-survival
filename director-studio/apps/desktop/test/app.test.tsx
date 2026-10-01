@@ -16,7 +16,8 @@ describe('App (Integration mit Fake-Backend)', () => {
     expect(screen.getByRole('region', { name: 'Monitor' })).toBeInTheDocument();
     expect(screen.getByRole('complementary', { name: 'Director' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Bühne (nur lesbar)' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Modell-Picker' })).toBeInTheDocument();
+    // Modellwahl steckt in der Composer-Werkzeugleiste (DESIGN.md §7.8), nicht mehr als eigene Zeile
+    expect(screen.getByRole('button', { name: 'Modelle' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Nachricht an den Director' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Asset-Browser' })).toBeInTheDocument();
 

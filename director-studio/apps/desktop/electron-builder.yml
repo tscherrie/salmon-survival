@@ -22,6 +22,11 @@ extraResources:
   - from: vendor/ffmpeg/${os}-${arch}
     to: ffmpeg
     filter: ["**/*"]
+  # Lizenztexte der mitgelieferten Schriften (SIL OFL 1.1: Instrument Sans, IBM Plex Mono) – siehe DESIGN.md §4.2.
+  # Die woff2-Dateien selbst bündelt Vite unverändert in out/renderer/assets.
+  - from: src/renderer/assets/fonts
+    to: licenses/fonts
+    filter: ["OFL-*.txt"]
 mac:
   category: public.app-category.video
   target:

@@ -44,6 +44,13 @@ if (!('ResizeObserver' in globalThis)) {
   Object.defineProperty(globalThis, 'ResizeObserver', { value: ResizeObserverStub, writable: true, configurable: true });
 }
 
+// Referenzgröße des Arbeitsbereichs (DESIGN.md §2.3, 1440×900); jsdom startet sonst mit 1024×768, und unter 1200 px
+// klappt die Asset-Leiste automatisch ein.
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: 1440 });
+  Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: 900 });
+}
+
 if (typeof window !== 'undefined' && !window.matchMedia) {
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,

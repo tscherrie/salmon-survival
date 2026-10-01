@@ -3,6 +3,7 @@ import { formatDateTime, useT } from '../../i18n.ts';
 import { useActions, useApi, useApiMode, useStudio } from '../../state/context.tsx';
 import { Icon, type IconName } from '../common/Icon.tsx';
 import { ThemeToggle } from '../common/ThemeToggle.tsx';
+import { Tooltip } from '../common/Tooltip.tsx';
 import { AuthStatusPanel } from './AuthStatusPanel.tsx';
 import { NewProjectDialog } from './NewProjectDialog.tsx';
 import { SettingsDialog } from './SettingsDialog.tsx';
@@ -38,9 +39,11 @@ export function StartScreen() {
         <span className="spacer" />
         {mode === 'fake' && <span className="badge badge-warn">{t('app.fakeMode')}</span>}
         <ThemeToggle />
-        <button type="button" className="icon-button" onClick={() => setDialog('settings')} aria-label={t('start.settings')} title={t('start.settings')}>
-          <Icon name="settings" />
-        </button>
+        <Tooltip label={t('start.settings')} placement="bottom">
+          <button type="button" className="ibtn" onClick={() => setDialog('settings')} aria-label={t('start.settings')}>
+            <Icon name="settings" />
+          </button>
+        </Tooltip>
       </header>
       <main className="start-main">
         <section className="start-actions">
