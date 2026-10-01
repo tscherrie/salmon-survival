@@ -37,6 +37,8 @@ export interface Checkpoint {
   feedback?: string | undefined;
   proposedAt?: string | undefined;
   decidedAt?: string | undefined;
+  /** Vom Director hier hineingelegte Checkpoints (siehe {@link mergeCheckpoints}). */
+  mergedFrom?: Array<{ id: string; kind: CheckpointKind; title: string }> | undefined;
 }
 
 export const CHECKPOINT_SEQUENCES: Record<ProjectCategory, Array<{ kind: CheckpointKind; title: string }>> = {
@@ -133,4 +135,48 @@ export function decideCheckpoint(list: readonly Checkpoint[], checkpointId: stri
         return { ...c, status: 'skipped' as const, decidedAt: now };
     }
   });
+}
+
+/**
+ * Legt mehrere noch offene Checkpoints (`pending` bzw. `changes_requested`) zu einem zusammen (PLAN 5.3: „der
+ * Director darf zusammenlegen“). Der zusammengelegte Checkpoint behält ID, Art und Position des in der
+ * Reihenfolge ersten beteiligten Checkpoints und bekommt den neuen Titel; die übrigen verschwinden aus der
+ * Liste und werden unter `mergedFrom` vermerkt. Ergebnisse früherer Runden (Zusammenfassung, Budgetantrag)
+ * werden verworfen – der neue Checkpoint muss neu vorgelegt werden; offenes Änderungs-Feedback bleibt erhalten.
+ */
+export function mergeCheckpoints(list: readonly Checkpoint[], ids: readonly string[], title: string): Checkpoint[] {
+  const cleanTitle = title.trim();
+  if (!cleanTitle) throw new Error('Zusammengelegter Checkpoint braucht einen Titel');
+  const unique = [...new Set(ids)];
+  if (unique.length !== ids.length) throw new Error('Checkpoint-IDs dürfen nicht doppelt vorkommen');
+  if (unique.length < 2) throw new Error('Zum Zusammenlegen sind mindestens zwei Checkpoints nötig');
+  const members: Checkpoint[] = [];
+  for (const c of list) if (unique.includes(c.id)) members.push(c);
+  const missing = unique.filter((id) => !members.some((c) => c.id === id));
+  if (missing.length) throw new Error(`Unbekannte Checkpoints: ${missing.join(', ')}`);
+  const locked = members.filter((c) => c.status !== 'pending' && c.status !== 'changes_requested');
+  if (locked.length) {
+    throw new Error(
+      `Nur offene Checkpoints lassen sich zusammenlegen; ${locked.map((c) => `„${c.title}“ (${c.status})`).join(', ')} ist bereits vorgelegt, freigegeben oder übersprungen`,
+    );
+  }
+  const [first, ...rest] = members as [Checkpoint, ...Checkpoint[]];
+  const feedback = members
+    .filter((c) => c.status === 'changes_requested' && c.feedback?.trim())
+    .map((c) => `${c.title}: ${c.feedback!.trim()}`);
+  const assetIds = [...new Set(members.flatMap((c) => c.assetIds ?? []))];
+  const merged: Checkpoint = {
+    id: first.id,
+    kind: first.kind,
+    title: cleanTitle,
+    status: members.some((c) => c.status === 'changes_requested') ? 'changes_requested' : 'pending',
+    ...(assetIds.length ? { assetIds } : {}),
+    ...(feedback.length ? { feedback: feedback.join('\n') } : {}),
+    mergedFrom: [
+      ...(first.mergedFrom ?? []),
+      ...rest.flatMap((c) => [...(c.mergedFrom ?? []), { id: c.id, kind: c.kind, title: c.title }]),
+    ],
+  };
+  const removed = new Set(rest.map((c) => c.id));
+  return list.filter((c) => !removed.has(c.id)).map((c) => (c.id === first.id ? merged : c));
 }

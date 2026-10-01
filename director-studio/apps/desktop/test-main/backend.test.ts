@@ -125,7 +125,7 @@ describe('StudioBackend – Projekte und Director', () => {
     const backend = makeBackend();
     const snap = await backend.createProject({ title: 'Musikvideo', category: 'video', directory: join(root, 'projects') });
     expect(snap.manifest.title).toBe('Musikvideo');
-    expect(snap.document.kind).toBe('timeline');
+    expect(snap.document?.kind).toBe('timeline');
     expect(snap.versions).toHaveLength(1);
     expect(snap.checkpoints[0]?.kind).toBe('treatment');
     expect((await backend.listRecentProjects()).map((p) => p.title)).toEqual(['Musikvideo']);
@@ -161,7 +161,7 @@ describe('StudioBackend – Projekte und Director', () => {
     await waitFor(() => events.some((e) => e.type === 'run_state' && e.state === 'idle'));
     const after = await backend.getSnapshot(id);
     expect(after.manifest.category).toBe('slides');
-    expect(after.document.kind).toBe('deck');
+    expect(after.document?.kind).toBe('deck');
     expect(after.checkpoints[0]).toMatchObject({ status: 'proposed', budgetRequestedUsd: 5 });
     expect(after.messages.map((m) => m.role)).toEqual(['user', 'director']);
     expect(after.pendingQuestion).toBeNull();
@@ -281,7 +281,8 @@ describe('StudioBackend – Medien, Vorschau, Export', () => {
     const { url } = await backend.previewOpen(id, { viewport: 'desktop' });
     const html = await (await fetch(url)).text();
     expect(html).toContain('Hallo');
-    expect(html).toContain('__studioPicker');
+    // Der Picker kommt nicht mehr über das HTML (Hauptwelt der Seite), sondern isoliert vom PreviewController.
+    expect(html).not.toContain('__studioPicker');
     backend.handlePreviewPick(id, { selector: 'h1', bbox: { x: 0, y: 0, width: 100, height: 40 }, text: 'Hallo', tag: 'h1', dataSid: 'hero', page: '/' });
     const pick = await waitFor(() => events.find((e): e is Extract<StudioEvent, { type: 'preview_pick' }> => e.type === 'preview_pick'));
     expect(pick.ref.kind).toBe('element');

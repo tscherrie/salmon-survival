@@ -1,12 +1,13 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, safeStorage, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, safeStorage, shell, type IpcMainInvokeEvent } from 'electron';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { StudioEvent } from '@studio/core';
 import { PICKER_SCRIPT } from '@studio/render/browser';
 import { ASSET_SCHEME, createAssetHandler } from './asset-protocol.ts';
 import { StudioBackend } from './backend.ts';
-import { channelFor, EVENT_CHANNEL, STUDIO_METHODS, type IpcErrorPayload } from './ipc-contract.ts';
+import { channelFor, EVENT_CHANNEL, GESTURE_METHODS, STUDIO_METHODS, type IpcErrorPayload } from './ipc-contract.ts';
 import { PreviewController } from './preview.ts';
+import { GestureGate, isAllowedAppSubframeUrl, isAppUrl, safeExternalUrl } from './security.ts';
 
 /**
  * Electron-Hauptprozess: Fenster, Sicherheitsrichtlinien, `studio-asset://`-Protokoll, IPC-Brücke zum
@@ -15,6 +16,10 @@ import { PreviewController } from './preview.ts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const isSmokeTest = process.env.STUDIO_SMOKE_TEST === '1';
+const rendererEntry = join(here, '../renderer/index.html');
+const devUrl = process.env.STUDIO_RENDERER_URL;
+/** Einstieg der App. Das Hauptfenster darf nichts anderes laden (Navigationssperre, IPC-Absenderprüfung). */
+const appUrl = devUrl ?? pathToFileURL(rendererEntry).href;
 
 // Isolierter Datenordner (Tests, mehrere Profile).
 if (process.env.STUDIO_USER_DATA) app.setPath('userData', process.env.STUDIO_USER_DATA);
@@ -23,19 +28,25 @@ protocol.registerSchemesAsPrivileged([
   { scheme: ASSET_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true } },
 ]);
 
-if (!app.requestSingleInstanceLock() && !isSmokeTest) {
-  app.quit();
-}
-
 let mainWindow: BrowserWindow | null = null;
 let backend: StudioBackend | null = null;
+let preview: PreviewController | null = null;
+/** Letzte echte Nutzereingabe im Hauptfenster: externe Links nur nach Klick/Taste. */
+const mainGestures = new GestureGate(5000);
 
 function broadcast(event: StudioEvent): void {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(EVENT_CHANNEL, event);
 }
 
+/** Öffnet nur geprüfte http(s)-Links im System-Browser. */
+async function openExternalSafely(raw: string): Promise<void> {
+  const url = safeExternalUrl(raw);
+  if (!url) throw new Error('Nur http(s)-Links können geöffnet werden');
+  await shell.openExternal(url);
+}
+
 async function createWindow(): Promise<void> {
-  mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     width: 1600,
     height: 1000,
     minWidth: 1280,
@@ -49,32 +60,62 @@ async function createWindow(): Promise<void> {
       sandbox: true,
       nodeIntegration: false,
       webSecurity: true,
+      navigateOnDragDrop: false,
       spellcheck: true,
     },
   });
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:/.test(url)) void shell.openExternal(url);
+  mainWindow = win;
+  const wc = win.webContents;
+  wc.on('input-event', (_event, input) => mainGestures.note(input.type));
+  wc.setWindowOpenHandler(({ url }) => {
+    if (mainGestures.consume()) void openExternalSafely(url).catch(() => undefined);
     return { action: 'deny' };
   });
-  mainWindow.webContents.on('will-navigate', (event) => {
-    const current = mainWindow?.webContents.getURL();
-    if (current && new URL(event.url).origin !== new URL(current).origin) event.preventDefault();
+  // Navigationssperre: Der Hauptframe bleibt auf dem App-Einstieg (in Produktion genau diese file://-Datei;
+  // ein Origin-Vergleich hilft dort nicht, weil alle file:-URLs den Origin "null" haben). Unterframes
+  // (srcdoc-Bühnen) dürfen nur about:/data:/blob: bzw. den App-Origin laden.
+  const allowed = (url: string, isMainFrame: boolean) => (isMainFrame ? isAppUrl(url, appUrl) : isAllowedAppSubframeUrl(url, appUrl));
+  wc.on('will-navigate', (event) => {
+    if (!allowed(event.url, true)) event.preventDefault();
   });
-  mainWindow.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
-    // Mikrofon für Push-to-Talk erlauben, alles andere ablehnen.
-    callback(permission === 'media');
+  wc.on('will-frame-navigate', (event) => {
+    if (!allowed(event.url, event.isMainFrame)) event.preventDefault();
   });
-  mainWindow.once('ready-to-show', () => mainWindow?.show());
-  const devUrl = process.env.STUDIO_RENDERER_URL;
-  if (devUrl) await mainWindow.loadURL(devUrl);
-  else await mainWindow.loadFile(join(here, '../renderer/index.html'));
+  wc.on('will-redirect', (event) => {
+    if (!allowed(event.url, event.isMainFrame)) event.preventDefault();
+  });
+  wc.session.setPermissionRequestHandler((_contents, permission, callback, details) => {
+    // Nur das Mikrofon (Push-to-Talk) und nur für die App selbst; Kamera, Bildschirm usw. werden abgelehnt.
+    const mediaTypes = 'mediaTypes' in details ? (details.mediaTypes ?? []) : [];
+    const audioOnly = permission === 'media' && mediaTypes.length > 0 && mediaTypes.every((type) => type === 'audio');
+    callback(audioOnly && details.isMainFrame && isAppUrl(details.requestingUrl, appUrl));
+  });
+  win.on('closed', () => {
+    if (mainWindow === win) mainWindow = null;
+    // Vorschau-Views hängen am Fenster; ohne Fenster sollen keine KI-Seiten im Hintergrund weiterlaufen.
+    preview?.closeAll();
+  });
+  win.once('ready-to-show', () => win.show());
+  if (devUrl) await win.loadURL(devUrl);
+  else await win.loadFile(rendererEntry);
+}
+
+/** Nur der App-Einstieg im Hauptframe des Hauptfensters darf das Backend aufrufen. */
+function isTrustedSender(event: IpcMainInvokeEvent): boolean {
+  const win = mainWindow;
+  if (!win || win.isDestroyed() || event.sender !== win.webContents) return false;
+  const frame = event.senderFrame;
+  return !!frame && !frame.parent && isAppUrl(frame.url, appUrl);
 }
 
 function registerIpc(target: StudioBackend): void {
   for (const method of STUDIO_METHODS) {
     ipcMain.handle(channelFor(method), async (event, ...args: unknown[]) => {
-      if (!mainWindow || event.sender !== mainWindow.webContents) {
+      if (!isTrustedSender(event)) {
         return { __studioError: true, name: 'SecurityError', message: 'Unbekannter Absender' } satisfies IpcErrorPayload;
+      }
+      if (GESTURE_METHODS.has(method) && !mainGestures.consume()) {
+        return { __studioError: true, name: 'SecurityError', message: 'Links werden nur nach einem Klick geöffnet' } satisfies IpcErrorPayload;
       }
       try {
         const fn = (target as unknown as Record<string, (...a: unknown[]) => unknown>)[method];
@@ -90,11 +131,12 @@ function registerIpc(target: StudioBackend): void {
 
 async function main(): Promise<void> {
   await app.whenReady();
-  const preview = new PreviewController(
+  preview = new PreviewController(
     () => mainWindow,
     PICKER_SCRIPT,
     (projectId, payload) => backend?.handlePreviewPick(projectId, payload),
     (projectId, state) => broadcast({ type: 'preview_state', projectId, ...state }),
+    (url) => void openExternalSafely(url).catch(() => undefined),
   );
   backend = new StudioBackend({
     appDataDir: app.getPath('userData'),
@@ -120,7 +162,7 @@ async function main(): Promise<void> {
       },
     },
     shell: {
-      openExternal: (url) => shell.openExternal(url),
+      openExternal: (url) => openExternalSafely(url),
       showItemInFolder: (path) => shell.showItemInFolder(path),
     },
     preview,
@@ -144,19 +186,50 @@ function buildMenu(): Menu {
   ]);
 }
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin' || isSmokeTest) app.quit();
-});
+function focusMainWindow(): void {
+  const win = mainWindow;
+  if (win && !win.isDestroyed()) {
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+  } else if (backend) {
+    void createWindow().catch((error) => console.error('Fenster konnte nicht geöffnet werden:', error));
+  }
+}
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) void createWindow();
-});
+// Nur eine Instanz je Datenordner: Eine zweite startet kein Backend, sondern holt das vorhandene Fenster nach vorn.
+const gotLock = isSmokeTest || app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => focusMainWindow());
 
-app.on('before-quit', () => {
-  void backend?.shutdown();
-});
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin' || isSmokeTest) app.quit();
+  });
 
-void main().catch((error) => {
-  console.error('Start fehlgeschlagen:', error);
-  app.exit(1);
-});
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0 && backend) void createWindow().catch((error) => console.error('Fenster konnte nicht geöffnet werden:', error));
+  });
+
+  // Geordnet herunterfahren (Dev-Server/Kindprozesse stoppen, Indizes schließen), erst dann beenden.
+  let quitting = false;
+  app.on('before-quit', (event) => {
+    if (quitting || !backend) return;
+    event.preventDefault();
+    quitting = true;
+    const hardExit = setTimeout(() => app.exit(0), 10_000);
+    void backend
+      .shutdown()
+      .catch((error: unknown) => console.error('Herunterfahren fehlgeschlagen:', error))
+      .finally(() => {
+        clearTimeout(hardExit);
+        app.quit();
+      });
+  });
+
+  void main().catch((error) => {
+    console.error('Start fehlgeschlagen:', error);
+    app.exit(1);
+  });
+}

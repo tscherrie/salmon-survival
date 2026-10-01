@@ -14,7 +14,16 @@ export interface Generation {
   purpose: string;
   /** fal request_id, sobald eingereicht. */
   requestId?: string | undefined;
+  /**
+   * Queue-URLs aus der Submit-Antwort von fal. Werden mitjournalisiert, damit Status-Abfrage, Ergebnis und
+   * Abbruch nach einem Neustart exakt dieselben Endpunkte treffen (nicht aus der Endpoint-ID rekonstruiert).
+   */
+  queueHandle?: GenerationQueueHandle | undefined;
   queuePosition?: number | undefined;
+  /** Geschätzte Restdauer in Sekunden (aus Queue-Position bzw. Fortschritt), für die Anzeige im Panel. */
+  etaSec?: number | undefined;
+  /** Abgerechnete Menge in der Preiseinheit des Modells (z. B. Sekunden, Bilder), falls fal sie meldet. */
+  billableUnits?: number | undefined;
   estimateUsd: number;
   costUsd?: number | undefined;
   checkpointId?: string | undefined;
@@ -29,6 +38,12 @@ export interface Generation {
   createdAt: string;
   submittedAt?: string | undefined;
   finishedAt?: string | undefined;
+}
+
+export interface GenerationQueueHandle {
+  statusUrl: string;
+  responseUrl: string;
+  cancelUrl: string;
 }
 
 export function isTerminal(status: GenerationStatus): boolean {

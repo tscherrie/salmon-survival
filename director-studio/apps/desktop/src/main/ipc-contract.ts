@@ -27,6 +27,8 @@ export const STUDIO_METHODS = [
   'importFiles',
   'searchAssets',
   'revealAsset',
+  'getLineage',
+  'relinkAsset',
   'getVersion',
   'restoreVersion',
   'transcribe',
@@ -35,11 +37,22 @@ export const STUDIO_METHODS = [
   'previewSetBounds',
   'previewSetPickMode',
   'previewOpenExternal',
+  'previewNavigate',
   'exportProject',
   'openExternal',
-] as const satisfies ReadonlyArray<Exclude<keyof StudioApi, 'assetUrl' | 'onEvent'>>;
+] as const satisfies ReadonlyArray<Exclude<keyof StudioApi, LocalMethod>>;
 
 export type StudioMethod = (typeof STUDIO_METHODS)[number];
+
+/** Methoden, die die Preload-Schicht selbst umsetzt (kein IPC). */
+type LocalMethod = 'assetUrl' | 'onEvent' | 'pathForFile';
+
+/** Kompilierzeit-Prüfung: Jede StudioApi-Methode hat einen IPC-Kanal (sonst fehlt sie in `window.studio`). */
+type MissingIpcMethods = Exclude<keyof StudioApi, StudioMethod | LocalMethod>;
+export const IPC_COVERS_STUDIO_API: [MissingIpcMethods] extends [never] ? true : { missing: MissingIpcMethods } = true;
+
+/** Methoden, die externe Programme öffnen: nur unmittelbar nach einer Nutzereingabe im Hauptfenster. */
+export const GESTURE_METHODS: ReadonlySet<StudioMethod> = new Set<StudioMethod>(['openExternal', 'previewOpenExternal']);
 
 export const EVENT_CHANNEL = 'studio:event';
 

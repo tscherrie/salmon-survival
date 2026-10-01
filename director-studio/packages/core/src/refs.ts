@@ -21,6 +21,14 @@ export const sourceLocationSchema = z.object({
 });
 export type SourceLocation = z.infer<typeof sourceLocationSchema>;
 
+/** Höchstlänge des sichtbaren Element-Texts in einer Referenz (Kontext für den Director, kein Volltext). */
+export const REF_TEXT_MAX = 120;
+
+/** Kürzt sichtbaren Element-Text auf eine Zeile mit höchstens {@link REF_TEXT_MAX} Zeichen. */
+export function clampRefText(value: string): string {
+  return shorten(value.replace(/\s+/g, ' ').trim(), REF_TEXT_MAX);
+}
+
 export const refSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('time'), frame: z.number().int().nonnegative() }),
   z.object({
@@ -42,6 +50,13 @@ export const refSchema = z.discriminatedUnion('kind', [
     selector: z.string().optional(),
     source: sourceLocationSchema.optional(),
     bbox: rectSchema.optional(),
+    /** Sichtbarer Text des Elements (eine Zeile, ≤ 120 Zeichen; längere Texte werden gekürzt). */
+    text: z.string().transform(clampRefText).optional(),
+    /** HTML-Tag bzw. Elementtyp in Kleinbuchstaben, z. B. `h1`, `button`, `img`. */
+    tag: z
+      .string()
+      .transform((t) => t.trim().toLowerCase())
+      .optional(),
   }),
   z.object({
     kind: z.literal('region'),
@@ -107,7 +122,11 @@ export function refLabel(ref: Ref, ctx: RefLabelContext = {}): string {
         : ref.page
           ? `${ref.page} · `
           : '';
-      const what = ref.elementId ? name(ref.elementId) : (ref.selector ?? 'Element');
+      const what = ref.elementId
+        ? name(ref.elementId)
+        : ref.text
+          ? `${ref.tag ? `${ref.tag} ` : ''}„${shorten(ref.text, 40)}“`
+          : (ref.selector ?? ref.tag ?? 'Element');
       return `◳ ${where}${what}`;
     }
     case 'region': {
@@ -171,6 +190,8 @@ export function serializeRef(ref: Ref, id: string, fps = 30): string {
         attrs.push(['source', `${ref.source.file}:${ref.source.line}${ref.source.column ? `:${ref.source.column}` : ''}`]);
       }
       if (ref.bbox) attrs.push(['bbox', rectToString(ref.bbox)]);
+      if (ref.tag) attrs.push(['tag', ref.tag]);
+      if (ref.text) attrs.push(['text', clampRefText(ref.text)]);
       break;
     case 'region':
       attrs.push(['doc', ref.doc], ['rect', rectToString(ref.rect)]);
@@ -237,6 +258,8 @@ export function parseRefTag(tag: string, fps = 30): { id: string; ref: Ref } {
         ...(attrs.selector ? { selector: attrs.selector } : {}),
         ...(attrs.source ? { source: parseSource(attrs.source) } : {}),
         ...(attrs.bbox ? { bbox: parseRect(attrs.bbox) } : {}),
+        ...(attrs.tag ? { tag: attrs.tag } : {}),
+        ...(attrs.text ? { text: attrs.text } : {}),
       };
       break;
     case 'region':
@@ -302,6 +325,12 @@ export function escapeAttr(value: string): string {
 
 function unescapeAttr(value: string): string {
   return value.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+}
+
+/** Kürzt auf höchstens `max` Zeichen (Codepoints) inkl. Auslassungszeichen. */
+function shorten(text: string, max: number): string {
+  const chars = Array.from(text);
+  return chars.length > max ? `${chars.slice(0, max - 1).join('').trimEnd()}…` : text;
 }
 
 function round2(n: number): number {

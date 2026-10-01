@@ -2,7 +2,16 @@ import { applyCanvasOps, createCanvas, summarizeCanvas, type Canvas, type Canvas
 import type { OpContext } from './common.ts';
 import { applyDeckOps, createDeck, summarizeDeck, type Deck, type DeckOpInput } from './deck.ts';
 import { applySiteOps, createSite, summarizeSite, type Site, type SiteOpInput } from './site.ts';
-import { applyTimelineOps, createTimeline, STANDARD_FORMATS, summarizeTimeline, type FormatSpec, type Timeline, type TimelineOpInput } from './timeline.ts';
+import {
+  applyTimelineOps,
+  clipAssetIds,
+  createTimeline,
+  STANDARD_FORMATS,
+  summarizeTimeline,
+  type FormatSpec,
+  type Timeline,
+  type TimelineOpInput,
+} from './timeline.ts';
 
 export * from './common.ts';
 export * from './timeline.ts';
@@ -84,10 +93,12 @@ export function documentAssetIds(doc: StudioDocument): Set<string> {
   const ids = new Set<string>();
   switch (doc.kind) {
     case 'timeline':
-      for (const t of doc.tracks) for (const c of t.clips) if (c.assetId) ids.add(c.assetId);
+      // Clip-Assets inkl. Asset-Referenzen in props (z. B. `rotoscope`, `…Asset`, `…AssetId`), siehe `clipAssetIds`.
+      for (const t of doc.tracks) for (const c of t.clips) for (const id of clipAssetIds(c)) ids.add(id);
       for (const c of Object.values(doc.components)) ids.add(c.assetId);
       break;
     case 'deck':
+      for (const a of Object.values(doc.theme.fontAssets ?? {})) ids.add(a);
       for (const s of doc.slides) {
         if (s.background && typeof s.background === 'object') ids.add(s.background.assetId);
         for (const e of s.elements) if (e.assetId) ids.add(e.assetId);

@@ -1,9 +1,27 @@
 import { z } from 'zod';
-import { DocumentOpError, assertAssetKind, assertUniqueId, deepClone, mergePatch, type OpContext } from './common.ts';
+import {
+  DocumentOpError,
+  assertAssetKind,
+  assertUniqueId,
+  deepClone,
+  mergeNested,
+  mergePatch,
+  parseOrThrow,
+  patchSchemaOf,
+  setOrDelete,
+  type OpContext,
+} from './common.ts';
 
 /** Präsentation: Theme + Folien mit frei positionierten Elementen (Pixel im Folienraster). */
 
 export const DECK_ELEMENT_TYPES = ['text', 'image', 'shape', 'video', 'html', 'chart'] as const;
+
+/**
+ * Typografische Rollen für `style.role` (Größe/Schrift/Farbe kommen dann aus dem Theme):
+ * `title`, `subtitle`, `body`, `caption`, `kicker` (Dachzeile), `quote`, `stat` (große Kennzahl).
+ */
+export const DECK_TEXT_ROLES = ['title', 'subtitle', 'body', 'caption', 'kicker', 'quote', 'stat'] as const;
+export type DeckTextRole = (typeof DECK_TEXT_ROLES)[number];
 
 export const deckElementSchema = z.object({
   id: z.string().min(1),
@@ -29,8 +47,14 @@ export const deckElementSchema = z.object({
       series: z.array(z.object({ name: z.string(), values: z.array(z.number()) })),
     })
     .optional(),
-  /** CSS-ähnliche Stilangaben (color, fontSize, fontWeight, fontFamily, background, align, …). */
-  style: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+  /**
+   * CSS-ähnliche Stilangaben (color, fontSize, fontWeight, fontFamily, background, align, …).
+   * `role` ist eine der {@link DECK_TEXT_ROLES} (title|subtitle|body|caption|kicker|quote|stat).
+   */
+  style: z
+    .record(z.string(), z.union([z.string(), z.number()]))
+    .optional()
+    .describe('CSS-ähnliche Stilangaben; role: title|subtitle|body|caption|kicker|quote|stat'),
   /** Einblendung in der Präsentation (Reihenfolge). */
   build: z.number().int().nonnegative().optional(),
 });
@@ -48,14 +72,19 @@ export const slideSchema = z.object({
 });
 export type Slide = z.infer<typeof slideSchema>;
 
+export const deckFontsSchema = z.object({ heading: z.string(), body: z.string(), mono: z.string().optional() });
+
 export const deckThemeSchema = z.object({
   name: z.string().optional(),
   colors: z.record(z.string(), z.string()).default({}),
-  fonts: z.object({ heading: z.string(), body: z.string(), mono: z.string().optional() }).default({ heading: 'Inter', body: 'Inter' }),
+  fonts: deckFontsSchema.default({ heading: 'Inter', body: 'Inter' }),
+  /** Eingebettete Schriften: Schriftfamilie (wie in `fonts`/`style.fontFamily`) → Font-Asset-ID. */
+  fontAssets: z.record(z.string(), z.string()).optional().describe('Schriftfamilie → Font-Asset-ID'),
   background: z.string().optional(),
   /** Zusätzliche globale CSS-Regeln (isoliert). */
   css: z.string().optional(),
 });
+export type DeckTheme = z.infer<typeof deckThemeSchema>;
 
 export const deckSchema = z.object({
   kind: z.literal('deck'),
@@ -71,21 +100,31 @@ export function createDeck(options: { width?: number; height?: number } = {}): D
   return deckSchema.parse({ kind: 'deck', width: options.width ?? 1920, height: options.height ?? 1080 });
 }
 
-const elementPatchSchema = deckElementSchema.omit({ id: true }).partial();
+/**
+ * Patch-Schemas ohne Defaults (zod 4 würde sie bei `.partial()` injizieren und echte Werte überschreiben).
+ * Semantik: fehlendes Feld = unverändert, `null` = optionales Feld entfernen bzw. auf Standard zurücksetzen.
+ * `style`, `colors`, `fonts` und `fontAssets` werden schlüsselweise gemergt (`null` je Schlüssel löscht ihn).
+ */
+const styleValuePatchSchema = z.union([z.string(), z.number(), z.null()]);
+const elementPatchSchema = patchSchemaOf(deckElementSchema.omit({ id: true })).extend({
+  style: z.record(z.string(), styleValuePatchSchema).nullable().optional(),
+});
+const slidePatchSchema = patchSchemaOf(slideSchema.omit({ id: true, elements: true }));
+const themePatchSchema = patchSchemaOf(deckThemeSchema).extend({
+  colors: z.record(z.string(), z.string().nullable()).nullable().optional(),
+  fonts: patchSchemaOf(deckFontsSchema).nullable().optional(),
+  fontAssets: z.record(z.string(), z.string().nullable()).nullable().optional(),
+});
 
 export const deckOpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('add_slide'), slide: slideSchema, index: z.number().int().nonnegative().optional() }),
   z.object({ op: z.literal('remove_slide'), slideId: z.string() }),
   z.object({ op: z.literal('move_slide'), slideId: z.string(), index: z.number().int().nonnegative() }),
-  z.object({
-    op: z.literal('update_slide'),
-    slideId: z.string(),
-    patch: slideSchema.omit({ id: true, elements: true }).partial(),
-  }),
+  z.object({ op: z.literal('update_slide'), slideId: z.string(), patch: slidePatchSchema }),
   z.object({ op: z.literal('add_element'), slideId: z.string(), element: deckElementSchema }),
   z.object({ op: z.literal('update_element'), slideId: z.string(), elementId: z.string(), patch: elementPatchSchema }),
   z.object({ op: z.literal('remove_element'), slideId: z.string(), elementId: z.string() }),
-  z.object({ op: z.literal('update_theme'), patch: deckThemeSchema.partial() }),
+  z.object({ op: z.literal('update_theme'), patch: themePatchSchema }),
   z.object({
     op: z.literal('update_deck'),
     patch: z.object({ width: z.number().int().positive(), height: z.number().int().positive() }).partial(),
@@ -115,6 +154,7 @@ function applyOne(doc: Deck, op: DeckOp, ctx: OpContext): Deck {
   switch (op.op) {
     case 'add_slide': {
       assertUniqueId(doc.slides.map((s) => s.id), op.slide.id, 'Folie');
+      checkSlideBackground(op.slide, ctx);
       for (const el of op.slide.elements) checkElement(el, ctx);
       doc.slides.splice(Math.min(op.index ?? doc.slides.length, doc.slides.length), 0, op.slide);
       return doc;
@@ -131,11 +171,11 @@ function applyOne(doc: Deck, op: DeckOp, ctx: OpContext): Deck {
       return doc;
     }
     case 'update_slide': {
-      const slide = doc.slides[slideIndex(doc, op.slideId)]!;
-      if (op.patch.background && typeof op.patch.background === 'object') {
-        assertAssetKind(ctx, op.patch.background.assetId, ['image', 'video'], `Folie "${slide.id}"`);
-      }
-      Object.assign(slide, op.patch);
+      const idx = slideIndex(doc, op.slideId);
+      const slide = doc.slides[idx]!;
+      const updated = parseOrThrow(slideSchema, mergePatch(slide as Record<string, unknown>, op.patch), `Folie "${slide.id}"`);
+      if (op.patch.background) checkSlideBackground(updated, ctx);
+      doc.slides[idx] = updated;
       return doc;
     }
     case 'add_element': {
@@ -150,10 +190,10 @@ function applyOne(doc: Deck, op: DeckOp, ctx: OpContext): Deck {
       const idx = slide.elements.findIndex((e) => e.id === op.elementId);
       if (idx < 0) throw new Error(`Element "${op.elementId}" existiert nicht auf Folie "${op.slideId}"`);
       const current = slide.elements[idx]!;
-      const merged = deckElementSchema.parse({
-        ...mergePatch(current as Record<string, unknown>, op.patch),
-        ...(op.patch.style ? { style: { ...(current.style ?? {}), ...op.patch.style } } : {}),
-      });
+      const { style, ...rest } = op.patch;
+      const next: Record<string, unknown> = mergePatch(current as Record<string, unknown>, rest);
+      setOrDelete(next, 'style', mergeNested(current.style, style));
+      const merged = parseOrThrow(deckElementSchema, next, `Element "${current.id}"`);
       checkElement(merged, ctx);
       slide.elements[idx] = merged;
       return doc;
@@ -166,17 +206,28 @@ function applyOne(doc: Deck, op: DeckOp, ctx: OpContext): Deck {
       return doc;
     }
     case 'update_theme': {
-      doc.theme = deckThemeSchema.parse({
-        ...doc.theme,
-        ...op.patch,
-        colors: { ...doc.theme.colors, ...(op.patch.colors ?? {}) },
-      });
+      const { colors, fonts, fontAssets, ...rest } = op.patch;
+      const next: Record<string, unknown> = mergePatch(doc.theme as Record<string, unknown>, rest);
+      setOrDelete(next, 'colors', mergeNested(doc.theme.colors, colors));
+      setOrDelete(next, 'fonts', mergeNested(doc.theme.fonts, fonts));
+      setOrDelete(next, 'fontAssets', mergeNested(doc.theme.fontAssets, fontAssets));
+      const theme = parseOrThrow(deckThemeSchema, next, 'Theme');
+      for (const [family, assetId] of Object.entries(fontAssets ?? {})) {
+        if (assetId !== null) assertAssetKind(ctx, assetId, ['font'], `Schrift "${family}"`);
+      }
+      doc.theme = theme;
       return doc;
     }
     case 'update_deck': {
       Object.assign(doc, op.patch);
       return doc;
     }
+  }
+}
+
+function checkSlideBackground(slide: Slide, ctx: OpContext): void {
+  if (slide.background && typeof slide.background === 'object') {
+    assertAssetKind(ctx, slide.background.assetId, ['image', 'video'], `Hintergrund von Folie "${slide.id}"`);
   }
 }
 
@@ -189,6 +240,10 @@ function checkElement(el: DeckElement, ctx: OpContext): void {
   if (el.type === 'text' && el.text === undefined) throw new Error(`Element "${el.id}" (text) braucht text`);
   if (el.type === 'html' && el.html === undefined) throw new Error(`Element "${el.id}" (html) braucht html`);
   if (el.type === 'chart' && !el.chart) throw new Error(`Element "${el.id}" (chart) braucht chart`);
+  const role = el.style?.role;
+  if (role !== undefined && !(DECK_TEXT_ROLES as readonly unknown[]).includes(role)) {
+    throw new Error(`Element "${el.id}": style.role "${role}" ist unbekannt (erlaubt: ${DECK_TEXT_ROLES.join('|')})`);
+  }
 }
 
 export function validateDeck(doc: Deck): void {

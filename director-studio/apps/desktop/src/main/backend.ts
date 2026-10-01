@@ -2,6 +2,8 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { homedir, platform } from 'node:os';
 import { basename, join } from 'node:path';
 import {
+  clampRefText,
+  initialPickers,
   type AppSettings,
   type Asset,
   type AssetQuery,
@@ -12,6 +14,7 @@ import {
   type DirectorEffort,
   type DirectorRuntimeId,
   type ExportOptions,
+  type LineageEdge,
   type Modality,
   type ModelInfo,
   type PickerSelection,
@@ -42,15 +45,19 @@ import { ProjectStore, RecentProjects } from '@studio/project';
 import { buildAssetUrl, type AssetVariant, type ResolvedAssetFile } from './asset-protocol.ts';
 import { exportProject as runExport } from './exporter.ts';
 import { SecretStore, type SecretCipher, type SecretName } from './secrets.ts';
+import { resolvePreviewPath, validatePickPayload } from './security.ts';
 import { CombinedCatalog, DerivedMedia, FalHub, renderPortFor, RenderService } from './services.ts';
 import { defaultSettings, SettingsStore } from './settings.ts';
 
 /** Elektron-spezifische Fähigkeiten, die das Backend braucht (in Tests ersetzbar). */
 export interface PreviewPort {
   open(projectId: string, url: string, viewport: PreviewViewport): Promise<void>;
+  /** Seitenpfad der Site anzeigen (z. B. `/about`). */
+  navigate(projectId: string, path: string): Promise<void>;
   setBounds(projectId: string, bounds: Rect | null): void;
   setPickMode(projectId: string, enabled: boolean): Promise<void>;
-  openExternal(projectId: string): void;
+  /** Aktuell angezeigte Seite der Vorschau; `null`, wenn keine Vorschau offen ist. */
+  currentUrl(projectId: string): string | null;
   close(projectId: string): void;
   closeAll(): void;
 }
@@ -127,7 +134,11 @@ export class StudioBackend implements StudioApi {
   private ensureSecrets(): Promise<void> {
     this.secretsLoaded ??= (async () => {
       this.fal.setKey(await this.secrets.get('fal'));
-    })();
+    })().catch((error: unknown) => {
+      // Kein abgelehntes Promise cachen: der nächste Aufruf versucht es erneut.
+      this.secretsLoaded = null;
+      throw error;
+    });
     return this.secretsLoaded;
   }
 
@@ -171,14 +182,21 @@ export class StudioBackend implements StudioApi {
     await this.ensureSecrets();
     const settings = await this.settings.get();
     const o = this.deps.overrides;
+    const anthropicApiKey = await this.secrets.get('anthropic');
+    const hasAnthropicProfile = detectAnthropicProfile(o?.env ?? process.env, o?.homedir ?? homedir(), o?.platform ?? platform());
     const result = selectRuntime({
       settings,
-      anthropicApiKey: await this.secrets.get('anthropic'),
-      hasAnthropicProfile: detectAnthropicProfile(o?.env ?? process.env, o?.homedir ?? homedir(), o?.platform ?? platform()),
+      anthropicApiKey,
+      hasAnthropicProfile,
       falApiKey: await this.secrets.get('fal'),
       agentSdkAvailable: await this.isAgentSdkAvailable(),
     });
-    return { runtimes: result.runtimes, active: result.active, falConfigured: this.fal.hasKey };
+    return {
+      runtimes: result.runtimes,
+      active: result.active,
+      falConfigured: this.fal.hasKey,
+      anthropic: { apiKey: !!anthropicApiKey?.trim(), oauthProfile: hasAnthropicProfile },
+    };
   }
 
   private isAgentSdkAvailable(): Promise<boolean> {
@@ -212,6 +230,8 @@ export class StudioBackend implements StudioApi {
     });
     await store.updateManifest((m) => {
       m.director.effort = settings.defaultEffort;
+      // Picker-Defaults des Nutzers (PLAN 4.3), fehlende Modalitäten aus DEFAULT_PICKERS.
+      m.pickers = initialPickers(settings.defaultPickers);
     });
     const open = this.register(store);
     await this.touchRecent(open);
@@ -277,7 +297,8 @@ export class StudioBackend implements StudioApi {
     return {
       path: store.dir,
       manifest: store.manifest,
-      document: head?.document ?? (await placeholderDocument()),
+      // Projekte ohne Kategorie haben bis zum Planungsergebnis kein Dokument; die UI zeigt dann den Chat.
+      document: head?.document ?? null,
       versions: await store.listVersions(),
       assets: store.allAssets(),
       usedAssetIds: [...(await store.usedAssetIds())],
@@ -461,6 +482,19 @@ export class StudioBackend implements StudioApi {
     if (file) this.deps.shell.showItemInFolder(file);
   }
 
+  async getLineage(projectId: string, assetId: string): Promise<{ parents: LineageEdge[]; children: LineageEdge[] }> {
+    return this.project(projectId).store.lineage(assetId);
+  }
+
+  async relinkAsset(projectId: string, assetId: string, newPath: string): Promise<Asset> {
+    const open = this.project(projectId);
+    if (typeof newPath !== 'string' || !newPath.trim()) throw new Error('Kein Dateipfad angegeben');
+    // relink() prüft, dass die neue Datei denselben Inhalt (SHA-256) hat.
+    const asset = await open.store.relink(assetId, newPath);
+    this.emit({ type: 'asset', projectId, asset });
+    return asset;
+  }
+
   async assetPeaks(projectId: string, assetId: string): Promise<{ peaks: number[]; durationMs: number } | null> {
     const { store } = this.project(projectId);
     const asset = store.getAsset(assetId);
@@ -538,7 +572,9 @@ export class StudioBackend implements StudioApi {
     await mkdir(open.store.siteDir, { recursive: true });
     const mod = await this.render.load();
     const hasViteProject = doc.framework === 'vite-react' && (await ProjectStore.isProject(open.store.dir)) && (await hasFile(join(open.store.siteDir, 'package.json')));
-    const server = await mod.SiteServer.start(open.store.siteDir, { injectPicker: true, framework: hasViteProject ? 'vite-react' : 'html' });
+    // Kein Picker im ausgelieferten HTML: Die Electron-Vorschau lädt ihn selbst in eine isolierte Welt
+    // (Seiten-Skripte können ihn dort weder sehen noch Picks vortäuschen).
+    const server = await mod.SiteServer.start(open.store.siteDir, { injectPicker: false, framework: hasViteProject ? 'vite-react' : 'html' });
     open.site = { url: server.url, stop: () => server.stop() };
     return server.url;
   }
@@ -560,18 +596,42 @@ export class StudioBackend implements StudioApi {
 
   async previewOpenExternal(projectId: string): Promise<void> {
     const open = this.project(projectId);
-    const url = await this.ensureSite(open);
-    if (this.deps.preview) this.deps.preview.openExternal(projectId);
-    else await this.deps.shell.openExternal(url);
+    const base = await this.ensureSite(open);
+    // Die gerade angezeigte Seite öffnen, sofern sie zum Vorschau-Server gehört.
+    const current = this.deps.preview?.currentUrl(projectId) ?? null;
+    const target = current && sameOrigin(current, base) ? current : base;
+    await this.deps.shell.openExternal(target);
   }
 
-  /** Vom PreviewController: Element in der Web-Vorschau gewählt. */
+  async previewNavigate(projectId: string, path: string): Promise<void> {
+    const open = this.project(projectId);
+    const base = await this.ensureSite(open);
+    resolvePreviewPath(base, path); // wirft bei fremden/ungültigen Pfaden
+    await this.deps.preview?.navigate(projectId, path);
+  }
+
+  /** Vom PreviewController: Element in der Web-Vorschau gewählt (Nutzlast wird hier erneut geprüft). */
   handlePreviewPick(projectId: string, payload: unknown): void {
+    const pick = validatePickPayload(payload);
+    if (!pick || !this.projects.has(projectId)) return;
     void (async () => {
       const mod = await import('@studio/render/browser');
-      const ref = mod.pickPayloadToRef(payload as Parameters<typeof mod.pickPayloadToRef>[0], 'site');
-      const p = payload as { text?: string; tag?: string };
-      this.emit({ type: 'preview_pick', projectId, ref, ...(p.text ? { label: p.text.slice(0, 60) } : p.tag ? { label: `<${p.tag}>` } : {}) });
+      const ref = mod.pickPayloadToRef(
+        {
+          selector: pick.selector,
+          bbox: pick.bbox,
+          text: pick.text ?? '',
+          tag: pick.tag ?? '',
+          dataSid: pick.dataSid ?? null,
+          dataSrc: pick.dataSrc ?? null,
+          page: pick.page ?? '/',
+        },
+        'site',
+      );
+      const text = pick.text ? clampRefText(pick.text) : '';
+      const tag = pick.tag?.trim().toLowerCase() ?? '';
+      const enriched = ref.kind === 'element' ? { ...ref, ...(text && !ref.text ? { text } : {}), ...(tag && !ref.tag ? { tag } : {}) } : ref;
+      this.emit({ type: 'preview_pick', projectId, ref: enriched, ...(text ? { label: text.slice(0, 60) } : tag ? { label: `<${tag}>` } : {}) });
     })().catch(() => undefined);
   }
 
@@ -601,17 +661,38 @@ export class StudioBackend implements StudioApi {
   async closeProject(projectId: string): Promise<void> {
     const open = this.projects.get(projectId);
     if (!open) return;
-    await open.session?.close();
-    await open.site?.stop();
-    this.deps.preview?.close(projectId);
-    open.store.close();
     this.projects.delete(projectId);
+    // Jeder Schritt einzeln: ein Fehler (z. B. hängender Dev-Server) darf das Schließen nicht abbrechen.
+    const errors: unknown[] = [];
+    const step = async (fn: () => unknown) => {
+      try {
+        await fn();
+      } catch (error) {
+        errors.push(error);
+      }
+    };
+    await step(() => open.session?.close());
+    await step(() => open.site?.stop());
+    await step(() => this.deps.preview?.close(projectId));
+    await step(() => open.store.close());
+    if (errors.length > 0) throw errors[0];
   }
 
   async shutdown(): Promise<void> {
-    for (const id of [...this.projects.keys()]) await this.closeProject(id);
+    // Projekte parallel schließen, damit mehrere Dev-Server sich nicht aufsummieren.
+    const results = await Promise.allSettled([...this.projects.keys()].map((id) => this.closeProject(id)));
     this.deps.preview?.closeAll();
     await this.render.close();
+    const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (failed) throw failed.reason;
+  }
+}
+
+function sameOrigin(a: string, b: string): boolean {
+  try {
+    return new URL(a).origin === new URL(b).origin;
+  } catch {
+    return false;
   }
 }
 
@@ -624,8 +705,3 @@ async function hasFile(path: string): Promise<boolean> {
   }
 }
 
-/** Projekte ohne Kategorie haben bis zum Planungsergebnis kein Dokument; die UI zeigt dann den Chat. */
-async function placeholderDocument() {
-  const { createDeck } = await import('@studio/core');
-  return createDeck();
-}

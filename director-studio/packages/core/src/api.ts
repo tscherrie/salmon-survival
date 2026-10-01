@@ -1,11 +1,11 @@
-import type { Asset, AssetQuery } from './assets.ts';
+import type { Asset, AssetQuery, LineageEdge } from './assets.ts';
 import type { BudgetSummary } from './budget.ts';
 import type { Checkpoint, CheckpointDecision } from './checkpoints.ts';
 import type { ComposerMessage } from './composer.ts';
 import type { FormatSpec, ProjectCategory, StudioDocument } from './documents/index.ts';
 import type { ApprovalRequest, ChatMessage, DirectorQuestion, RunState, StudioEvent, ToolActivity } from './events.ts';
 import type { Generation } from './generation.ts';
-import type { Modality, ModelInfo, PickerSelection } from './models.ts';
+import type { Modality, ModelInfo, PickerSelection, PickerState } from './models.ts';
 import type { DirectorEffort, ProjectManifest } from './project.ts';
 import type { Rect } from './refs.ts';
 import type { Version, VersionMeta } from './versioning.ts';
@@ -21,7 +21,8 @@ export type PreviewViewport = 'mobile' | 'tablet' | 'desktop';
 export interface ProjectSnapshot {
   path: string;
   manifest: ProjectManifest;
-  document: StudioDocument;
+  /** Aktuelles Dokument; `null`, solange das Projekt noch keine Kategorie (und damit kein Dokument) hat. */
+  document: StudioDocument | null;
   versions: VersionMeta[];
   assets: Asset[];
   /** Asset-IDs, die im aktuellen Dokument verwendet werden. */
@@ -50,6 +51,8 @@ export interface AuthStatus {
   runtimes: Array<{ id: DirectorRuntimeId; available: boolean; detail: string }>;
   active: DirectorRuntimeId | null;
   falConfigured: boolean;
+  /** Anthropic-Anmeldung: API-Key hinterlegt bzw. OAuth-Profil (Claude-Abo) gefunden. */
+  anthropic: { apiKey: boolean; oauthProfile: boolean };
 }
 
 export interface AppSettings {
@@ -60,6 +63,11 @@ export interface AppSettings {
   projectsDir: string;
   /** Erlaubt die Claude-Abo-Anmeldung (nur Eigennutzung). */
   allowClaudeSubscription: boolean;
+  /**
+   * Picker-Defaults des Nutzers für neue Projekte (PLAN 4.3: „Default pro Nutzer“); fehlende Modalitäten
+   * kommen aus `DEFAULT_PICKERS`. Zusammenführen mit `initialPickers()`.
+   */
+  defaultPickers?: PickerState | undefined;
 }
 
 export interface CreateProjectInput {
@@ -108,6 +116,10 @@ export interface StudioApi {
   searchAssets(projectId: string, query: AssetQuery): Promise<Asset[]>;
   assetUrl(projectId: string, assetId: string, variant?: 'original' | 'proxy' | 'thumb'): string;
   revealAsset(projectId: string, assetId: string): Promise<void>;
+  /** Lineage eines Assets: Kanten zu Eltern (`childId` = Asset) und Kindern (`parentId` = Asset). */
+  getLineage(projectId: string, assetId: string): Promise<{ parents: LineageEdge[]; children: LineageEdge[] }>;
+  /** Verknüpfte Datei neu zuordnen (z. B. nach Umbenennen/Verschieben des Ordners); ID und Verwendungen bleiben. */
+  relinkAsset(projectId: string, assetId: string, newPath: string): Promise<Asset>;
 
   // Versionen
   getVersion(projectId: string, number: number): Promise<Version>;
@@ -126,6 +138,8 @@ export interface StudioApi {
   /** Element-Picker an/aus: Klicks erzeugen `preview_pick`-Ereignisse statt zu navigieren. */
   previewSetPickMode(projectId: string, enabled: boolean): Promise<void>;
   previewOpenExternal(projectId: string): Promise<void>;
+  /** Navigiert die Web-Vorschau zu einem Seitenpfad der Site, z. B. `/about`. */
+  previewNavigate(projectId: string, path: string): Promise<void>;
 
   // Export
   exportProject(projectId: string, options: ExportOptions): Promise<{ path: string }>;

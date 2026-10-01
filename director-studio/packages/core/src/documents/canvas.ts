@@ -1,9 +1,13 @@
 import { z } from 'zod';
-import { DocumentOpError, assertAssetKind, assertUniqueId, deepClone, mergePatch, type OpContext } from './common.ts';
+import { DocumentOpError, assertAssetKind, assertUniqueId, deepClone, mergeNested, mergePatch, parseOrThrow, setOrDelete, type OpContext } from './common.ts';
 
 /** Grafik/Collage: Leinwand mit Ebenenbaum. Koordinaten in Pixeln der Leinwand. */
 
 export const LAYER_TYPES = ['image', 'text', 'shape', 'group'] as const;
+
+/** Werte für `style.maskMode`: wie `maskAssetId` ausgewertet wird (Alphakanal oder Helligkeit); Standard `luminance`. */
+export const MASK_MODES = ['alpha', 'luminance'] as const;
+export type MaskMode = (typeof MASK_MODES)[number];
 
 export const layerEffectSchema = z.object({
   type: z.enum(['shadow', 'paper', 'grain', 'blur', 'outline', 'halftone', 'tear']),
@@ -30,6 +34,10 @@ export interface Layer {
   text?: string | undefined;
   shape?: 'rect' | 'ellipse' | 'path' | undefined;
   path?: string | undefined;
+  /**
+   * CSS-ähnliche Stilangaben (color, fontSize, fontFamily, fill, stroke, …).
+   * `maskMode` ist `alpha` oder `luminance` (Standard) und bestimmt, wie `maskAssetId` angewendet wird.
+   */
   style?: Record<string, string | number> | undefined;
   effects?: Array<z.infer<typeof layerEffectSchema>> | undefined;
   children?: Layer[] | undefined;
@@ -54,7 +62,10 @@ export const layerSchema: z.ZodType<Layer> = z.lazy(() =>
     text: z.string().optional(),
     shape: z.enum(['rect', 'ellipse', 'path']).optional(),
     path: z.string().optional(),
-    style: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+    style: z
+      .record(z.string(), z.union([z.string(), z.number()]))
+      .optional()
+      .describe('CSS-ähnliche Stilangaben; maskMode: alpha|luminance (Standard luminance)'),
     effects: z.array(layerEffectSchema).optional(),
     children: z.array(layerSchema).optional(),
   }),
@@ -68,7 +79,8 @@ export const canvasSchema = z.object({
   dpi: z.number().positive().default(72),
   /** Beschnittzugabe für Druck (in `unit`). */
   bleed: z.number().nonnegative().default(0),
-  background: z.string().default('#ffffff'),
+  /** Beliebige CSS-Farbe (`#fff`, `rgb(…)`, `transparent`) oder ein CSS-Verlauf (`linear-gradient(…)`). */
+  background: z.string().default('#ffffff').describe('CSS-Farbe oder CSS-Verlauf (z. B. linear-gradient(…))'),
   layers: z.array(layerSchema).default([]),
 });
 export type Canvas = z.infer<typeof canvasSchema>;
@@ -90,7 +102,13 @@ export const canvasOpSchema = z.discriminatedUnion('op', [
     parentId: z.string().optional(),
     index: z.number().int().nonnegative().optional(),
   }),
-  z.object({ op: z.literal('update_layer'), layerId: z.string(), patch: z.record(z.string(), z.unknown()) }),
+  z.object({
+    op: z.literal('update_layer'),
+    layerId: z.string(),
+    patch: z
+      .record(z.string(), z.unknown())
+      .describe('Felder der Ebene; null entfernt ein Feld. style wird schlüsselweise gemergt (null je Schlüssel löscht ihn).'),
+  }),
   z.object({ op: z.literal('remove_layer'), layerId: z.string() }),
   z.object({
     op: z.literal('move_layer'),
@@ -107,7 +125,7 @@ export const canvasOpSchema = z.discriminatedUnion('op', [
         unit: z.enum(['px', 'mm']),
         dpi: z.number().positive(),
         bleed: z.number().nonnegative(),
-        background: z.string(),
+        background: z.string().describe('CSS-Farbe oder CSS-Verlauf (z. B. linear-gradient(…))'),
       })
       .partial(),
   }),
@@ -145,11 +163,11 @@ function applyOne(doc: Canvas, op: CanvasOp, ctx: OpContext): Canvas {
     case 'update_layer': {
       const { siblings, index, layer } = locate(doc.layers, op.layerId);
       if ('id' in op.patch || 'children' in op.patch) throw new Error('id/children können nicht per update_layer geändert werden');
-      const style = op.patch.style as Record<string, string | number> | undefined;
-      const merged = layerSchema.parse({
-        ...mergePatch(layer as unknown as Record<string, unknown>, op.patch),
-        ...(style ? { style: { ...(layer.style ?? {}), ...style } } : {}),
-      });
+      const { style: rawStyle, ...rest } = op.patch;
+      const style = rawStyle === undefined || rawStyle === null ? rawStyle : parseOrThrow(layerStylePatchSchema, rawStyle, 'style');
+      const next: Record<string, unknown> = mergePatch(layer as unknown as Record<string, unknown>, rest);
+      setOrDelete(next, 'style', mergeNested(layer.style, style));
+      const merged = parseOrThrow(layerSchema, next, `Ebene "${layer.id}"`);
       checkLayer(merged, ctx);
       siblings[index] = merged;
       return doc;
@@ -176,12 +194,21 @@ function applyOne(doc: Canvas, op: CanvasOp, ctx: OpContext): Canvas {
   }
 }
 
+/** Stil-Patch für `update_layer`: Objekt aus Schlüssel → Wert (`null` löscht den Schlüssel). */
+const layerStylePatchSchema = z.record(z.string(), z.union([z.string(), z.number(), z.null()]), {
+  error: 'muss ein Objekt {Schlüssel: Text|Zahl|null} sein',
+});
+
 function checkLayer(layer: Layer, ctx: OpContext): void {
   if (layer.type === 'image') {
     if (!layer.assetId) throw new Error(`Ebene "${layer.id}" (image) braucht assetId`);
     assertAssetKind(ctx, layer.assetId, ['image', 'video'], `Ebene "${layer.id}"`);
   }
   if (layer.maskAssetId) assertAssetKind(ctx, layer.maskAssetId, ['image', 'data'], `Maske von "${layer.id}"`);
+  const maskMode = layer.style?.maskMode;
+  if (maskMode !== undefined && !(MASK_MODES as readonly unknown[]).includes(maskMode)) {
+    throw new Error(`Ebene "${layer.id}": style.maskMode "${maskMode}" ist unbekannt (erlaubt: ${MASK_MODES.join('|')})`);
+  }
   if (layer.type === 'text' && layer.text === undefined) throw new Error(`Ebene "${layer.id}" (text) braucht text`);
   if (layer.type === 'shape' && layer.shape === 'path' && !layer.path) throw new Error(`Ebene "${layer.id}" braucht path`);
   if (layer.type !== 'group' && layer.children?.length) throw new Error(`Nur Gruppen haben Kinder ("${layer.id}")`);

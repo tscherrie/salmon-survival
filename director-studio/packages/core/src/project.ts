@@ -58,9 +58,10 @@ export const projectManifestSchema = z.object({
   brief: projectBriefSchema.nullable(),
   pickers: z.record(z.string(), z.unknown()),
   checkpoints: z.array(z.record(z.string(), z.unknown())),
-  budgetApprovals: z.array(
-    z.object({ checkpointId: z.string(), amountUsd: z.number(), approvedAt: z.string(), note: z.string().optional() }),
-  ),
+  // Defekte Freigaben (`Infinity` wurde früher als `null` gespeichert) werden verworfen statt das Öffnen zu blockieren.
+  budgetApprovals: z
+    .array(z.object({ checkpointId: z.string(), amountUsd: z.number().nullable(), approvedAt: z.string(), note: z.string().optional() }))
+    .transform((list) => list.filter((a): a is typeof a & { amountUsd: number } => a.amountUsd !== null && a.amountUsd > 0)),
   director: z.object({ effort: z.enum(DIRECTOR_EFFORTS), runtime: z.string().optional() }),
   phase: z.enum(['planning', 'production']),
 });

@@ -1,6 +1,17 @@
 import { z } from 'zod';
 import { formatTimecode } from '../time.ts';
-import { DocumentOpError, assertAssetKind, assertUniqueId, deepClone, mergePatch, type OpContext } from './common.ts';
+import {
+  DocumentOpError,
+  assertAssetKind,
+  assertUniqueId,
+  deepClone,
+  mergeNested,
+  mergePatch,
+  parseOrThrow,
+  patchSchemaOf,
+  setOrDelete,
+  type OpContext,
+} from './common.ts';
 
 /** Timeline-Dokument für Video und Audio: framegenau, Ganzzahlen. */
 
@@ -33,15 +44,31 @@ export const transitionSchema = z.object({
   props: z.record(z.string(), z.unknown()).optional(),
 });
 
-export const clipTransformSchema = z.object({
-  fit: z.enum(['cover', 'contain', 'fill', 'none']).default('cover'),
-  x: z.number().optional(),
-  y: z.number().optional(),
+export const CLIP_FITS = ['cover', 'contain', 'fill', 'none'] as const;
+
+export const reframeSchema = z.object({
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
   scale: z.number().positive().optional(),
-  rotation: z.number().optional(),
-  /** Bildausschnitt je Format (Mittelpunkt normiert 0..1). */
-  reframe: z.record(z.string(), z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), scale: z.number().positive().optional() })).optional(),
 });
+
+/**
+ * Lage eines Clips im Bild. `x`/`y` sind Verschiebungen als **Bruchteil der Bildgröße** (x relativ zur Breite,
+ * y relativ zur Höhe; 0.1 = 10 % nach rechts bzw. unten, negativ = nach links bzw. oben), unabhängig vom Format.
+ * `rotation` in Grad, `scale` als Faktor. `reframe` legt je Format-ID den Bildausschnitt fest.
+ */
+export const clipTransformSchema = z.object({
+  fit: z.enum(CLIP_FITS).default('cover'),
+  x: z.number().optional().describe('Horizontale Verschiebung als Bruchteil der Bildbreite (0.1 = 10 % nach rechts)'),
+  y: z.number().optional().describe('Vertikale Verschiebung als Bruchteil der Bildhöhe (0.1 = 10 % nach unten)'),
+  scale: z.number().positive().optional(),
+  rotation: z.number().optional().describe('Drehung in Grad'),
+  /** Bildausschnitt je Format (Mittelpunkt normiert 0..1). */
+  reframe: z.record(z.string(), reframeSchema).optional(),
+});
+
+export const FADE_CURVES = ['linear', 'equal-power'] as const;
+export type FadeCurve = (typeof FADE_CURVES)[number];
 
 export const clipSchema = z.object({
   id: z.string().min(1),
@@ -59,6 +86,10 @@ export const clipSchema = z.object({
   gainDb: z.number().optional(),
   fadeInFrames: z.number().int().nonnegative().optional(),
   fadeOutFrames: z.number().int().nonnegative().optional(),
+  /** Kurvenform der Ein-/Ausblendungen (`fadeInFrames`/`fadeOutFrames`); Standard `linear`. */
+  fadeCurve: z.enum(FADE_CURVES).optional().describe('Kurvenform der Ein-/Ausblendungen; Standard linear'),
+  /** Nur Clips auf Videospuren: den Originalton des Video-Assets mitmischen (`gainDb`/Fades gelten auch dafür). */
+  includeSourceAudio: z.boolean().optional().describe('Nur Videospur: Originalton des Videos mitmischen'),
   opacity: z.number().min(0).max(1).optional(),
   blend: z.string().optional(),
   transform: clipTransformSchema.optional(),
@@ -68,6 +99,54 @@ export const clipSchema = z.object({
 export type Clip = z.infer<typeof clipSchema>;
 export type ClipInput = z.input<typeof clipSchema>;
 
+export const DUCK_MODES = ['clips', 'signal'] as const;
+export type DuckMode = (typeof DUCK_MODES)[number];
+
+/**
+ * Ducking: die Spur wird um `db` abgesenkt, solange die Schlüsselspur `byTrackId` aktiv ist.
+ * `mode` `clips` (Standard) nimmt die Clip-Bereiche der Schlüsselspur, `signal` deren Audiosignal (Sidechain).
+ * `attackMs`/`releaseMs` sind die Rampen beim Absenken bzw. Zurückkehren, `leadMs` lässt die Absenkung so viele
+ * Millisekunden vor dem Schlüssel beginnen (nur sinnvoll im Modus `clips`).
+ */
+export const trackDuckSchema = z.object({
+  byTrackId: z.string(),
+  db: z.number(),
+  attackMs: z.number().nonnegative().optional().describe('Rampe beim Absenken (ms)'),
+  releaseMs: z.number().nonnegative().optional().describe('Rampe beim Zurückkehren (ms)'),
+  leadMs: z.number().nonnegative().optional().describe('Absenkung beginnt so viele ms vor dem Schlüssel (Modus clips)'),
+  mode: z.enum(DUCK_MODES).optional().describe('clips = Clip-Bereiche der Schlüsselspur (Standard), signal = deren Audiosignal'),
+});
+export type TrackDuck = z.infer<typeof trackDuckSchema>;
+
+/**
+ * Schlüssel in `clip.props` (und `transitionIn.props`), deren String-Werte als Asset-Referenz gelten:
+ * `rotoscope`, `asset`, `assetId` sowie alles, was auf `Asset` oder `AssetId` endet (z. B. `logoAsset`, `maskAssetId`).
+ */
+export function isAssetPropKey(key: string): boolean {
+  return key === 'rotoscope' || key === 'asset' || key === 'assetId' || key.endsWith('Asset') || key.endsWith('AssetId');
+}
+
+/** Asset-Referenzen in den Props eines Clips (inkl. Übergang) mit Herkunft (`props.x` / `transitionIn.props.x`). */
+export function clipPropAssetRefs(clip: Pick<Clip, 'props' | 'transitionIn'>): Array<{ path: string; assetId: string }> {
+  const refs: Array<{ path: string; assetId: string }> = [];
+  const visit = (props: Record<string, unknown> | undefined, prefix: string) => {
+    for (const [key, value] of Object.entries(props ?? {})) {
+      if (typeof value === 'string' && value && isAssetPropKey(key)) refs.push({ path: `${prefix}.${key}`, assetId: value });
+    }
+  };
+  visit(clip.props, 'props');
+  visit(clip.transitionIn?.props, 'transitionIn.props');
+  return refs;
+}
+
+/** Alle Asset-IDs, die ein Clip verwendet (`assetId` plus Asset-Referenzen in den Props), ohne Duplikate. */
+export function clipAssetIds(clip: Pick<Clip, 'assetId' | 'props' | 'transitionIn'>): string[] {
+  const ids = new Set<string>();
+  if (clip.assetId) ids.add(clip.assetId);
+  for (const ref of clipPropAssetRefs(clip)) ids.add(ref.assetId);
+  return [...ids];
+}
+
 export const trackSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(TRACK_KINDS),
@@ -76,8 +155,8 @@ export const trackSchema = z.object({
   muted: z.boolean().optional(),
   hidden: z.boolean().optional(),
   gainDb: z.number().optional(),
-  /** Ducking: diese Spur wird abgesenkt, solange auf `byTrackId` Clips liegen. */
-  duck: z.object({ byTrackId: z.string(), db: z.number() }).optional(),
+  /** Ducking: diese Spur wird abgesenkt, solange `byTrackId` aktiv ist (siehe {@link trackDuckSchema}). */
+  duck: trackDuckSchema.optional(),
   clips: z.array(clipSchema).default([]),
 });
 export type Track = z.infer<typeof trackSchema>;
@@ -151,18 +230,29 @@ export function createTimeline(options: {
 
 // ───────────────────────── Operationen ─────────────────────────
 
-const clipPatchSchema = clipSchema.omit({ id: true }).partial().extend({
-  props: z.record(z.string(), z.unknown()).nullable().optional(),
+/**
+ * Patch-Schemas ohne Defaults (zod 4 würde sie bei `.partial()` injizieren und echte Werte überschreiben).
+ * Semantik: fehlendes Feld = unverändert, `null` = Feld entfernen bzw. auf Standard zurücksetzen.
+ * `props`, `transform` (inkl. `reframe` je Format) und `duck` werden schlüsselweise gemergt.
+ */
+const clipTransformPatchSchema = patchSchemaOf(clipTransformSchema).extend({
+  reframe: z.record(z.string(), reframeSchema.nullable()).nullable().optional(),
 });
+const clipPatchSchema = patchSchemaOf(clipSchema.omit({ id: true })).extend({
+  props: z.record(z.string(), z.unknown()).nullable().optional(),
+  transform: clipTransformPatchSchema.nullable().optional(),
+});
+const trackPatchSchema = patchSchemaOf(trackSchema.omit({ id: true, kind: true, clips: true })).extend({
+  duck: patchSchemaOf(trackDuckSchema).nullable().optional(),
+});
+const timelinePatchSchema = patchSchemaOf(
+  timelineSchema.pick({ durationFrames: true, width: true, height: true, formats: true, backgroundColor: true }),
+);
 
 export const timelineOpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('add_track'), track: trackSchema, index: z.number().int().nonnegative().optional() }),
   z.object({ op: z.literal('remove_track'), trackId: z.string() }),
-  z.object({
-    op: z.literal('update_track'),
-    trackId: z.string(),
-    patch: trackSchema.omit({ id: true, kind: true, clips: true }).partial(),
-  }),
+  z.object({ op: z.literal('update_track'), trackId: z.string(), patch: trackPatchSchema }),
   z.object({ op: z.literal('insert_clip'), trackId: z.string(), clip: clipSchema }),
   z.object({ op: z.literal('remove_clip'), clipId: z.string() }),
   z.object({
@@ -181,18 +271,7 @@ export const timelineOpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('update_clip'), clipId: z.string(), patch: clipPatchSchema }),
   z.object({ op: z.literal('add_marker'), marker: markerSchema }),
   z.object({ op: z.literal('remove_marker'), markerId: z.string() }),
-  z.object({
-    op: z.literal('update_timeline'),
-    patch: z
-      .object({
-        durationFrames: z.number().int().nonnegative(),
-        width: z.number().int().positive(),
-        height: z.number().int().positive(),
-        formats: z.array(formatSpecSchema),
-        backgroundColor: z.string(),
-      })
-      .partial(),
-  }),
+  z.object({ op: z.literal('update_timeline'), patch: timelinePatchSchema }),
   z.object({ op: z.literal('register_component'), componentId: z.string(), component: componentRefSchema }),
   z.object({ op: z.literal('unregister_component'), componentId: z.string() }),
 ]);
@@ -221,7 +300,12 @@ function applyOne(doc: Timeline, op: TimelineOp, ctx: OpContext): Timeline {
   switch (op.op) {
     case 'add_track': {
       assertUniqueId(doc.tracks.map((t) => t.id), op.track.id, 'Spur');
-      for (const clip of op.track.clips) assertUniqueId(allClipIds(doc), clip.id, 'Clip');
+      const existing = allClipIds(doc);
+      for (const clip of op.track.clips) {
+        assertUniqueId(existing, clip.id, 'Clip');
+        checkClipForTrack(op.track, clip, ctx);
+      }
+      sortClips(op.track);
       const index = op.index ?? doc.tracks.length;
       doc.tracks.splice(Math.min(index, doc.tracks.length), 0, op.track);
       return doc;
@@ -233,8 +317,13 @@ function applyOne(doc: Timeline, op: TimelineOp, ctx: OpContext): Timeline {
       return doc;
     }
     case 'update_track': {
-      const track = getTrack(doc, op.trackId);
-      Object.assign(track, op.patch);
+      const index = doc.tracks.findIndex((t) => t.id === op.trackId);
+      if (index < 0) throw new Error(`Spur "${op.trackId}" existiert nicht`);
+      const track = doc.tracks[index]!;
+      const { duck, ...rest } = op.patch;
+      const merged: Record<string, unknown> = mergePatch(track as Record<string, unknown>, rest);
+      setOrDelete(merged, 'duck', mergeNested(track.duck, duck));
+      doc.tracks[index] = parseOrThrow(trackSchema, merged, `Spur "${track.id}"`);
       return doc;
     }
     case 'insert_clip': {
@@ -278,15 +367,17 @@ function applyOne(doc: Timeline, op: TimelineOp, ctx: OpContext): Timeline {
     }
     case 'update_clip': {
       const { track, index, clip } = locateClip(doc, op.clipId);
-      const { props, ...rest } = op.patch;
-      let updated: Clip = mergePatch(clip as Record<string, unknown>, rest) as Clip;
-      if (props === null) {
-        const { props: _drop, ...withoutProps } = updated;
-        updated = withoutProps as Clip;
-      } else if (props) {
-        updated = { ...updated, props: mergePatch(clip.props ?? {}, props) };
+      const { props, transform, ...rest } = op.patch;
+      const merged: Record<string, unknown> = mergePatch(clip as Record<string, unknown>, rest);
+      setOrDelete(merged, 'props', mergeNested(clip.props, props));
+      if (transform === null) delete merged.transform;
+      else if (transform) {
+        const { reframe, ...transformRest } = transform;
+        const nextTransform: Record<string, unknown> = mergePatch((clip.transform ?? {}) as Record<string, unknown>, transformRest);
+        setOrDelete(nextTransform, 'reframe', mergeNested(clip.transform?.reframe, reframe));
+        merged.transform = nextTransform;
       }
-      updated = clipSchema.parse(updated);
+      const updated = parseOrThrow(clipSchema, merged, `Clip "${clip.id}"`);
       checkClipForTrack(track, updated, ctx);
       track.clips[index] = updated;
       sortClips(track);
@@ -305,8 +396,7 @@ function applyOne(doc: Timeline, op: TimelineOp, ctx: OpContext): Timeline {
       return doc;
     }
     case 'update_timeline': {
-      Object.assign(doc, op.patch);
-      return doc;
+      return parseOrThrow(timelineSchema, mergePatch(doc as Record<string, unknown>, op.patch), 'Timeline');
     }
     case 'register_component': {
       assertAssetKind(ctx, op.component.assetId, ['code'], 'Komponente');
@@ -324,6 +414,21 @@ function applyOne(doc: Timeline, op: TimelineOp, ctx: OpContext): Timeline {
 }
 
 function checkClipForTrack(track: Track, clip: Clip, ctx: OpContext): void {
+  if (ctx.assetKind) {
+    for (const ref of clipPropAssetRefs(clip)) {
+      if (ctx.assetKind(ref.assetId) === undefined) {
+        throw new Error(`Clip "${clip.id}": Asset "${ref.assetId}" (${ref.path}) existiert nicht`);
+      }
+    }
+  }
+  if (clip.includeSourceAudio) {
+    if (track.kind !== 'video') {
+      throw new Error(`Clip "${clip.id}": includeSourceAudio gilt nur für Clips auf Videospuren (Spur "${track.id}" ist ${track.kind})`);
+    }
+    if (clip.assetId && ctx.assetKind?.(clip.assetId) === 'image') {
+      throw new Error(`Clip "${clip.id}": includeSourceAudio braucht ein Video-Asset, "${clip.assetId}" ist ein Bild`);
+    }
+  }
   switch (track.kind) {
     case 'video':
       if (!clip.assetId) throw new Error(`Clip "${clip.id}" auf Videospur braucht assetId`);
@@ -379,8 +484,12 @@ export function validateTimeline(doc: Timeline, _ctx: OpContext = {}): void {
       }
     }
   }
-  if (doc.tracks.some((t) => t.duck && !doc.tracks.find((x) => x.id === t.duck?.byTrackId))) {
-    throw new Error('Ducking verweist auf eine unbekannte Spur');
+  for (const track of doc.tracks) {
+    if (!track.duck) continue;
+    if (!doc.tracks.some((x) => x.id === track.duck?.byTrackId)) {
+      throw new Error(`Ducking von Spur "${track.id}" verweist auf eine unbekannte Spur "${track.duck.byTrackId}" (vorher update_track mit duck: null)`);
+    }
+    if (track.duck.byTrackId === track.id) throw new Error(`Spur "${track.id}" kann sich nicht selbst ducken`);
   }
 }
 
