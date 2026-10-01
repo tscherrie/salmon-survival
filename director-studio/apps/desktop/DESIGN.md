@@ -1003,7 +1003,10 @@ Neue Gruppe „Darstellung“:
 
 Die Gruppe „Anmeldung“ der Einstellungen ist **dieselbe Komponente** wie auf der Startseite (§7.14), in voller Form.
 
-### 7.14 Anmeldung auf der Startseite (Wunsch des Nutzers, verbindlich)
+### 7.14 Anmeldung auf der Startseite (zurückgestellt)
+
+> **Status:** Auf Wunsch des Nutzers vorerst zurückgestellt (nicht umgesetzt). Bis dahin zeigt die Startseite den
+> kompakten Anmeldestatus mit „Schlüssel hinterlegen“; Keys und Claude-Abo-Login stehen in den Einstellungen.
 
 > Nutzer: „Wir sollten auf der Startseite bereits die Anmeldeseite und Felder für API-Keys haben.“ Heute steht dort nur
 > ein Status, und Keys bzw. der Claude-Abo-Login sind in den Einstellungen versteckt.
@@ -1590,7 +1593,7 @@ genannten Abnahmekriterien erfüllt sind. Die Reihenfolge ist verbindlich, weil 
 14. Startbildschirm nach §7.12, inklusive optionaler `RecentProject`-Felder in Main bzw. Project. Ohne Daten erscheint
     die ruhige Kategorie-Kachel.
 15. Einstellungen: Kontrast, Hinweise zurücksetzen, technische Details. Kürzel-Übersicht mit `?`.
-15a. **Anmeldung auf der Startseite (§7.14)**, einschließlich der dort genannten Änderungen in Core, Main, Director,
+15a. *(zurückgestellt)* **Anmeldung auf der Startseite (§7.14)**, einschließlich der dort genannten Änderungen in Core, Main, Director,
     IPC und Fake-Backend. *Abnahme:* Erster Start ohne Keys zeigt die Anmeldung als Hauptinhalt; Claude-Abo-Login,
     API-Key speichern/prüfen und fal-Key speichern/prüfen funktionieren im Fake-Modus; kein Key erscheint je im
     Renderer, im Log oder in einer Datei außerhalb des Schlüsselbunds.
