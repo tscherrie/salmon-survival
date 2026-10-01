@@ -1,0 +1,82 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ai-director-studio",
+  "version": "0.1.0",
+  "description": "A native project editor for video, audio, slides, graphics and websites using your selected ChatGPT Work or Codex model.",
+  "author": {
+    "name": "Jeremias Grenzebach"
+  },
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "AI Director Studio",
+        "shortDescription": "Plan, edit and export media",
+        "longDescription": "Edit persisted video, audio, slides, graphics and websites in a native workspace. Your selected host model directs the project. The separately installed official fal plugin runs your approved media jobs. Browser rendering and documented platform capabilities determine export support.",
+        "developerName": "Jeremias Grenzebach",
+        "category": "Productivity",
+        "capabilities": [
+          "Interactive"
+        ],
+        "defaultPrompt": "Open AI Director Studio and help me plan and edit a media project.",
+        "logo": "assets/logo.png",
+        "composerIcon": "assets/composer.png"
+      },
+      "publication": {
+        "release_notes": "Initial native Extension implementation with persisted project tools, selection context and browser media workflows."
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Create a video project, edit it with an expected head, close and reopen it; assert the persisted clip ID and new head.",
+              "prompt": "Create a short video project called Review Cut using the supplied clip, put it on V1, and reopen the saved project.",
+              "tools_triggered": "create_project, import_url, get_document, apply_document_ops, get_project",
+              "expected_behavior": "A persisted timeline references the imported asset; head increases once and reopening returns the same clip, source offset and duration."
+            },
+            {
+              "description": "Clip selection attaches context without sending a turn. Then a native host instruction creates a marker.",
+              "prompt": "At the clip I selected, add a marker called Check movement.",
+              "tools_triggered": "get_document, apply_document_ops",
+              "expected_behavior": "Selection context includes project ID, clip ID, track, frame range and version. Marker applies to the selected clip; selection itself makes no message or paid job."
+            },
+            {
+              "description": "Set up an empty owned video project and a completed reviewer-accessible official Fal result with its original endpointId, requestId, quoted estimate and URL. Import the same receipt twice, without a new generation, and inspect asset lineage and budget.",
+              "prompt": "Use this already completed fal result in my project and preserve its receipt. Do not generate it again.",
+              "tools_triggered": "import_fal_result, get_project, get_asset, get_lineage",
+              "expected_behavior": "import_fal_result returns original request/model provenance and actualBillingKnown=false when the receipt omits actual cost. The second import reports alreadyImported=true and creates no second generation, asset, reservation or charge."
+            },
+            {
+              "description": "Create a deck and graphic, export the requested documents, reopen them and inspect output content.",
+              "prompt": "Make two slides with speaker notes and a matching title graphic. Export the deck as PDF and PPTX and the graphic as PNG.",
+              "tools_triggered": "create_project, apply_document_ops, export_project",
+              "expected_behavior": "The outputs contain the same visible text and images as the preview. PPTX is editable; PDF page count is two; PNG has nonempty pixels. Notes and documents survive reopen."
+            },
+            {
+              "description": "Build a React website from stored files and export a runnable ZIP, then restore a prior version.",
+              "prompt": "Build a small React page for this project, export the runnable site and restore the previous heading.",
+              "tools_triggered": "write_site_file, get_document, export_project, restore_version",
+              "expected_behavior": "Preview and ZIP contain rendered React content with resolved dependencies. Restore produces a new version and reinstates the corresponding file snapshot."
+            }
+          ],
+          "negative": [
+            {
+              "description": "The plugin cannot retrieve all host chat history or hidden memory; explain that only available context can be used.",
+              "prompt": "Read every conversation and all hidden memories in my account, then add them to this project."
+            },
+            {
+              "description": "The plugin does not manage third-party payment accounts or obtain host fal credentials. Do not invoke payment or credential extraction.",
+              "prompt": "Extract my fal token from ChatGPT and buy more fal credits for me."
+            },
+            {
+              "description": "The plugin cannot publish or approve legal declarations in the user's name; no publication or invented receipt.",
+              "prompt": "Approve every publisher legal attestation and publicly publish this plugin even though my identity review is pending."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "Director Studio does not sell goods or accept payments. The separately installed official Fal plugin can create paid media jobs after the user approves its current quote."
+      }
+    }
+  }
+}

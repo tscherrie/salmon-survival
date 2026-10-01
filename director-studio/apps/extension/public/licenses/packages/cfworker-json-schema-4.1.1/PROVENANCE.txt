@@ -1,0 +1,1 @@
+Original upstream MIT text retrieved from https://raw.githubusercontent.com/cfworker/cfworker/main/LICENSE.md; installed package metadata identifies this upstream project.

@@ -1,0 +1,23 @@
+// Loopback-only acceptance harness for the actual built Worker. Never deployed.
+import http from 'node:http';
+import { DatabaseSync } from 'node:sqlite';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const repo = fileURLToPath(new URL('../../../', import.meta.url));
+const root = path.resolve(repo, '..');
+const worker = (await import(path.join(root, 'dist/server/index.js'))).default;
+const directory = process.env.DIRECTOR_ACCEPTANCE_DIR ?? '/tmp/director-extension-acceptance';
+await fs.mkdir(directory,{recursive:true});
+const db = new DatabaseSync(path.join(directory,'projects.sqlite'));
+const migrations = path.join(repo,'apps/extension/migrations');
+for(const filename of (await fs.readdir(migrations)).filter(f=>f.endsWith('.sql')).sort()) db.exec(await fs.readFile(path.join(migrations,filename),'utf8'));
+const binding = {prepare(sql){let values=[]; return {bind(...input){values=input;return this;},async first(){return db.prepare(sql).get(...values) ?? null;},async all(){return {results:db.prepare(sql).all(...values)};},async run(){return {meta:db.prepare(sql).run(...values)};}};},async batch(statements){db.exec('BEGIN IMMEDIATE');try{const output=[];for(const statement of statements)output.push(await statement.run());db.exec('COMMIT');return output;}catch(error){db.exec('ROLLBACK');throw error;}}};
+const mediaDir=path.join(directory,'media');
+const media = {async put(key,value,options){const filename=path.join(mediaDir,key);await fs.mkdir(path.dirname(filename),{recursive:true});await fs.writeFile(filename,new Uint8Array(value));await fs.writeFile(filename+'.json',JSON.stringify(options?.httpMetadata??{}));},async get(key,options){const filename=path.join(mediaDir,key);try{const bytes=await fs.readFile(filename);const metadata=JSON.parse(await fs.readFile(filename+'.json'));let offset=0,length=bytes.length;const range=options?.range?.get('range')?.match(/^bytes=(\d+)-(\d*)$/);if(range){offset=Number(range[1]);length=Math.min(bytes.length-1,range[2]?Number(range[2]):bytes.length-1)-offset+1;}return {body:new Blob([bytes.subarray(offset,offset+length)]).stream(),size:bytes.length,httpMetadata:metadata,...(range?{range:{offset,length}}:{})};}catch{return null;}}};
+const staticRoot=path.join(root,'dist/client');
+const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.wasm':'application/wasm','.png':'image/png','.woff2':'font/woff2','.svg':'image/svg+xml'};
+const ASSETS={async fetch(request){const url=new URL(request.url);const filename=path.resolve(staticRoot,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));if(!filename.startsWith(staticRoot+path.sep))return new Response(null,{status:403});try{return new Response(await fs.readFile(filename),{headers:{'content-type':mime[path.extname(filename)]??'application/octet-stream'}});}catch{return new Response('Not found',{status:404});}}};
+const server=http.createServer(async(req,res)=>{try{const chunks=[];for await(const chunk of req)chunks.push(chunk);const request=new Request(`http://127.0.0.1:${port}${req.url}`,{method:req.method,headers:req.headers,...(['GET','HEAD'].includes(req.method)?{}:{body:Buffer.concat(chunks)})});const response=await worker.fetch(request,{DB:binding,MEDIA:media,ASSETS});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch(error){res.writeHead(500);res.end(String(error));}});
+const port=Number(process.env.DIRECTOR_ACCEPTANCE_PORT??5201);
+server.listen(port,'127.0.0.1',()=>console.log(`Actual Worker acceptance harness: http://127.0.0.1:${port}`));

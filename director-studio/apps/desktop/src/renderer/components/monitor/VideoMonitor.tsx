@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type RefObject } from 'react';
 import { Player, type PlayerRef } from '@remotion/player';
+import { SandboxTimelinePreview, wordsForTimeline, type ExportRequest } from '@studio/browser-media';
 import { clipAssetIds, type Asset, type Clip, type FormatSpec, type Timeline } from '@studio/core';
 import type { AssetMedia, MediaErrorInfo } from '@studio/render/browser';
 import { useT } from '../../i18n.ts';
@@ -55,6 +56,7 @@ export function buildMedia(
   const used = new Set<string>();
   // Auch Assets aus Clip-Props (`rotoscope`, `…Asset`, `…AssetId`) – Komponenten brauchen sie in der Vorschau.
   for (const track of timeline.tracks) for (const clip of track.clips) for (const id of clipAssetIds(clip)) used.add(id);
+  for (const component of Object.values(timeline.components)) used.add(component.assetId);
   const out: Record<string, AssetMedia> = {};
   for (const asset of assets) {
     if (!used.has(asset.id)) continue;
@@ -432,6 +434,9 @@ export function VideoMonitor({
   const playbackRate = useStudio((s) => s.playbackRate);
   const seekRequest = useStudio((s) => s.seekRequest);
   const assets = useStudio((s) => s.assets);
+  const projectId = useStudio((s) => s.projectId);
+  const api = useApi();
+  const native = (api as typeof api & { isNative?: boolean }).isNative === true;
   const assetUrl = useAssetUrl();
   const playerRef = useRef<PlayerRef>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -452,7 +457,21 @@ export function VideoMonitor({
     setMediaIssues((list) => (list.some((i) => i.clipId === info.clipId && i.assetId === info.assetId) ? list : [...list, info]));
   }, []);
   const visibleIssues = useMemo(() => currentMediaIssues(mediaIssues, timeline), [mediaIssues, timeline]);
-  const inputProps = useMemo(() => ({ timeline, assets: media, includeAudio: true, formatId: format.id, onMediaError }), [timeline, media, format.id, onMediaError]);
+  const words = useMemo(() => wordsForTimeline(timeline, assets), [timeline, assets]);
+  const inputProps = useMemo(() => ({ timeline, assets: media, words, includeAudio: true, formatId: format.id, onMediaError }), [timeline, media, words, format.id, onMediaError]);
+  const [sandboxRequest, setSandboxRequest] = useState<ExportRequest | null>(null);
+  const [sandboxReady, setSandboxReady] = useState(0);
+  const [sandboxError, setSandboxError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!native || !projectId || timeline.durationFrames <= 0) return;
+    let alive = true; setSandboxError(null);
+    void (async () => {
+      const components: Record<string, string> = {};
+      for (const [id, component] of Object.entries(timeline.components)) { const response = await fetch(assetUrl(component.assetId, 'original')); if (!response.ok) throw new Error(`Komponente ${id}: Datei fehlt`); components[id] = await response.text(); }
+      if (alive) setSandboxRequest({ document: timeline, assets: media, components, words, format: 'mp4', options: { formatId: format.id, normalizeLufs: format.id === 'podcast' ? -16 : -14 } });
+    })().catch((error) => { if (alive) setSandboxError((error as Error).message); });
+    return () => { alive = false; };
+  }, [native, projectId, timeline, media, words, format.id, assetUrl, audioOnly]);
   const hasContent = timeline.durationFrames > 0;
   const Composition = mod?.TimelineComposition;
 
@@ -484,7 +503,7 @@ export function VideoMonitor({
       player.removeEventListener('ended', onPause);
       actions.setTransport(null);
     };
-  }, [Composition, hasContent, actions, store]);
+  }, [Composition, hasContent, actions, store, sandboxReady]);
 
   // Seek-Anfragen von Bühne/Tastatur/Timecode-Links
   useEffect(() => {
@@ -497,7 +516,7 @@ export function VideoMonitor({
     if (!player) return;
     if (muted) player.mute?.();
     else player.unmute?.();
-  }, [muted, Composition, hasContent]);
+  }, [muted, Composition, hasContent, sandboxReady]);
 
   const toggleFullscreenByDoubleClick = () => {
     if (!audioOnly && fullscreen && monitorRef?.current) fullscreen.toggle();
@@ -510,7 +529,9 @@ export function VideoMonitor({
           <MonitorEmpty icon="film" title={t('monitor.emptyTitle')} text={t('monitor.emptyText')} />
         ) : (
           <div className="player-box" style={{ width: box.width, height: box.height }} onDoubleClick={toggleFullscreenByDoubleClick}>
-            {Composition ? (
+            {native ? (
+              sandboxError ? <div className="monitor-error" role="alert">{sandboxError}</div> : sandboxRequest ? <SandboxTimelinePreview ref={playerRef} request={sandboxRequest} playbackRate={playbackRate} style={{ width: box.width, height: box.height }} onReady={() => setSandboxReady((n) => n + 1)} onError={(error) => setSandboxError(error.message)} /> : <div className="monitor-empty">{t('common.loading')}</div>
+            ) : Composition ? (
               <Player
                 ref={playerRef}
                 component={Composition as unknown as ComponentType<Record<string, unknown>>}

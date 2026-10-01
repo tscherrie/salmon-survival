@@ -12,6 +12,7 @@ import {
   useVideoConfig,
 } from 'remotion';
 import { DUCK_DEFAULTS, type Clip, type Timeline, type Track } from '@studio/core';
+import { Video as WebVideo } from '@remotion/media';
 import { clipLayerTransform, computeMediaStyle, type MediaFit } from './layout.ts';
 import { dbToGain, resolveFormat } from './meta.ts';
 import { makeClipRandom } from './random.ts';
@@ -49,7 +50,7 @@ export function TimelineComposition(props: TimelineCompositionProps) {
     fps: timeline.fps,
     formatKey,
     showPlaceholders: props.showPlaceholders ?? !isRendering,
-    videoTag: mode === 'offthread' || (mode === 'auto' && isRendering) ? 'offthread' : 'html5',
+    videoTag: mode === 'web' ? 'web' : mode === 'offthread' || (mode === 'auto' && isRendering) ? 'offthread' : 'html5',
     onComponentError: props.onComponentError,
     onMediaError: props.onMediaError,
     lang,
@@ -81,7 +82,7 @@ interface RenderContext {
   fps: number;
   formatKey: string;
   showPlaceholders: boolean;
-  videoTag: 'offthread' | 'html5';
+  videoTag: 'offthread' | 'html5' | 'web';
   onComponentError: TimelineCompositionProps['onComponentError'];
   onMediaError: TimelineCompositionProps['onMediaError'];
   lang: string;
@@ -350,6 +351,7 @@ function MediaView({ clip, ctx, frame }: { clip: Clip; ctx: RenderContext; frame
   });
   if (asset.kind === 'image') return <Img src={url} style={style} alt="" maxRetries={MEDIA_MAX_RETRIES} onImageError={onMediaFailure} />;
   const trimBefore = clip.in > 0 ? clip.in : undefined;
+  if (ctx.videoTag === 'web') return <WebVideo src={url} muted trimBefore={trimBefore} playbackRate={clip.speed} style={style} disallowFallbackToOffthreadVideo onError={(error) => { onMediaFailure(error); return 'fail'; }} />;
   return ctx.videoTag === 'offthread' ? (
     <OffthreadVideo src={url} muted trimBefore={trimBefore} playbackRate={clip.speed} style={style} onError={onMediaFailure} />
   ) : (

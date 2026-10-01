@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-export type ApiMode = 'electron' | 'fake';
+export type ApiMode = 'electron' | 'fake' | 'native';
 
 let fallback: Promise<StudioApi> | null = null;
 
@@ -33,5 +33,5 @@ export function getStudioApi(): Promise<StudioApi> {
 
 /** Fake-Backend erkennt man an seinem `debug`-Griff (kein `instanceof`, damit das Fake optional bleibt). */
 export function apiModeOf(api: StudioApi): ApiMode {
-  return (api as { isFake?: boolean }).isFake === true ? 'fake' : 'electron';
+  return (api as { isNative?: boolean }).isNative ? 'native' : (api as { isFake?: boolean }).isFake === true ? 'fake' : 'electron';
 }

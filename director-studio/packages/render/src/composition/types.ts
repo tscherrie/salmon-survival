@@ -79,7 +79,7 @@ export interface TimelineCompositionProps {
    * Videokomponente: `auto` (Standard) nimmt beim Rendern `<OffthreadVideo>` (framegenau, über den
    * Compositor) und im Player `<Html5Video>`; `offthread`/`html5` erzwingen eine Variante.
    */
-  videoComponent?: 'auto' | 'offthread' | 'html5' | undefined;
+  videoComponent?: 'auto' | 'offthread' | 'html5' | 'web' | undefined;
   /**
    * Platzhalter für fehlende Assets/Komponenten zeigen (gestrichelter Rahmen mit Hinweis).
    * Standard: nur in der Vorschau (nicht beim Rendern).

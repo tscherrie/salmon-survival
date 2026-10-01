@@ -33,3 +33,5 @@ export { markdownToHtml, markdownToPlain, parseBlocks, parseInline, type TextBlo
 export { sanitizeHtml, isDangerousUrl } from './util/sanitize.ts';
 export { escapeHtml } from './util/html.ts';
 export * as studioFx from './fx/index.ts';
+
+export { portableDeckToPptx, toPptxColor, type PortableDeckToPptxOptions } from './deck/pptx.ts';
