@@ -1,0 +1,17 @@
+
+> director-studio@0.1.0 extension:test
+> npm run -w @studio/extension test
+
+
+> @studio/extension@0.1.0 test
+> vitest run --config vitest.config.ts
+
+
+ RUN  v5.0.3 /Users/jeremias/.codex/worktrees/27c0/AI Director Studio/director-studio/apps/extension
+
+
+ Test Files  3 passed (3)
+      Tests  39 passed (39)
+   Start at  00:39:03
+   Duration  1.14s (environment 57%, import 17%, transform 15%, tests 12%)
+

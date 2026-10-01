@@ -1,0 +1,24 @@
+{
+  "base": "http://127.0.0.1:5201",
+  "account": "synthetic acceptance owner",
+  "checks": [
+    "Created graphic project through production UI/real Worker",
+    "Already-open UI observes host document mutation via persisted revision",
+    "Version viewing and exit operates in reusable monitor",
+    "Closed and reopened stored project",
+    "Persistent question answered in preserved approval UI",
+    "420px layout no horizontal page overflow and no own composer/chat",
+    "Page reload reopens persisted project"
+  ],
+  "errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "projectId": "prj_ccef2fbac853406b9bf7c014c4be283a",
+  "geometry": {
+    "viewport": 420,
+    "scrollWidth": 420,
+    "monitor": 420,
+    "chatPanels": 0
+  },
+  "passed": true
+}

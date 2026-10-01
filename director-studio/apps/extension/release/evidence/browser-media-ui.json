@@ -1,0 +1,87 @@
+{
+  "checks": [
+    "Actual1.3MB H264/AAC fixture imported from native UI into owned media storage",
+    "Native video timeline observes host insertion",
+    "Isolated Remotion Canvas renders imported video and actual Play advances timeline",
+    "Real FFmpeg audio analysis completed and peaks/beats/loudness stored",
+    "Persistent frames job automatically claimed and executed by open native editor, PNGs stored",
+    "Actual MP4 export Cancel control aborts browser processing and journal remains canceled on reload"
+  ],
+  "errors": [],
+  "projectId": "prj_31e97f02a433492981eca5f3726d9a28",
+  "imported": {
+    "id": "ast_b3ece2132c7341b2b3479c5a2a7a5d55",
+    "bytes": 1302229,
+    "width": 832,
+    "height": 480,
+    "durationMs": 5184,
+    "kind": "video"
+  },
+  "preview": {
+    "sandbox": "allow-scripts",
+    "ownChat": 0,
+    "contextText": "AuswahlKontext kopieren und im Chat einfügenKopierenAuswahl sendet keine Nachricht.",
+    "iframeCount": 1,
+    "clock": "00:00:00:24/ 00:00:05:06",
+    "canvas": {
+      "width": 832,
+      "height": 480
+    }
+  },
+  "jobs": [
+    {
+      "id": "job_b3ef1d57fe714998909fc44c5ae019b1",
+      "kind": "analyze_audio",
+      "status": "completed",
+      "output": {
+        "assetIds": [
+          "ast_45a1fa8e03134ec08c5cc92bafb2c888"
+        ],
+        "durationMs": 5184,
+        "filename": "beat-map.json",
+        "peaksSamples": 3982,
+        "beats": {
+          "bpm": 0,
+          "beats": [],
+          "downbeats": [],
+          "onsets": [
+            5.176
+          ],
+          "confidence": 0,
+          "sections": []
+        },
+        "loudness": {
+          "integratedLufs": null,
+          "truePeakDb": -74.56,
+          "rangeLu": 0,
+          "raw": {
+            "input_i": "-inf",
+            "input_tp": "-74.56",
+            "input_lra": "0.00",
+            "input_thresh": "-70.00",
+            "output_i": "-inf",
+            "output_tp": "-74.56",
+            "output_lra": "0.00",
+            "output_thresh": "-70.00",
+            "normalization_type": "dynamic",
+            "target_offset": "inf"
+          }
+        }
+      }
+    },
+    {
+      "id": "job_05d88459cf3141eb8120c95d324f1d13",
+      "kind": "frames",
+      "status": "completed",
+      "output": {
+        "assetIds": [
+          "ast_057f0861b5634a95a15f040bc97e8edd",
+          "ast_b8c14be2380a4081b062b41dd4398da8"
+        ],
+        "filename": "frame-1-1.000s.png"
+      }
+    }
+  ],
+  "canceledJob": "job_aeb763db370844129d9ef19552a2d269",
+  "passed": true
+}

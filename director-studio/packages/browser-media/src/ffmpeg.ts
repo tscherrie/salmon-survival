@@ -1,9 +1,44 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { BrowserCapabilityError, checkAbort } from './types.ts';
 
-let runtime = { coreURL: '/runtime/ffmpeg/ffmpeg-core.js', wasmURL: '/runtime/ffmpeg/ffmpeg-core.wasm', classWorkerURL: '/runtime/ffmpeg/worker.js' };
+let runtime = { coreURL: '/runtime/ffmpeg/ffmpeg-core.js', wasmURL: '/runtime/ffmpeg/ffmpeg-core.wasm.json', classWorkerURL: '/runtime/ffmpeg/worker.js' };
 /** The app ships these runtime assets on its own origin. No credential or CDN dependency. */
 export function configureMediaRuntime(value: Partial<typeof runtime>): void { runtime = { ...runtime, ...value }; }
+interface WasmChunk { url: string; bytes: number; sha256: string }
+interface WasmManifest { version: 1; bytes: number; sha256: string; chunks: WasmChunk[] }
+const hashPattern = /^[a-f0-9]{64}$/i;
+async function sha256(bytes: Uint8Array): Promise<string> {
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new Uint8Array(bytes)));
+  return Array.from(hash, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+function checkedManifest(raw: unknown): WasmManifest {
+  const value = raw as Partial<WasmManifest> | null;
+  if (!value || value.version !== 1 || !Number.isSafeInteger(value.bytes) || value.bytes! <= 0 || value.bytes! > 256 * 1024 * 1024 || typeof value.sha256 !== 'string' || !hashPattern.test(value.sha256) || !Array.isArray(value.chunks) || !value.chunks.length || value.chunks.length > 64) throw new Error('Ungültiges WASM-Manifest');
+  let bytes = 0;
+  for (const chunk of value.chunks) {
+    if (!chunk || typeof chunk.url !== 'string' || !/^[\w.-]+$/.test(chunk.url) || chunk.url === '.' || chunk.url === '..' || !Number.isSafeInteger(chunk.bytes) || chunk.bytes <= 0 || chunk.bytes > 25 * 1024 * 1024 || typeof chunk.sha256 !== 'string' || !hashPattern.test(chunk.sha256)) throw new Error('Ungültiges WASM-Teilstück im Manifest');
+    bytes += chunk.bytes;
+  }
+  if (bytes !== value.bytes) throw new Error('WASM-Manifest: Gesamtgröße stimmt nicht mit Teilstücken überein');
+  return value as WasmManifest;
+}
+/** Assemble the owned runtime, verifying every chunk and the complete binary before execution. */
+export async function loadWasmRuntime(manifestUrl: URL, signal?: AbortSignal): Promise<Blob> {
+  checkAbort(signal);
+  const response = await fetch(manifestUrl, { credentials: 'omit', signal });
+  if (!response.ok) throw new Error(`WASM-Manifest HTTP ${response.status}`);
+  const manifest = checkedManifest(await response.json()), bytes = new Uint8Array(manifest.bytes); let offset = 0;
+  for (const chunk of manifest.chunks) {
+    checkAbort(signal); const url = new URL(chunk.url, manifestUrl);
+    const part = await fetch(url, { credentials: 'omit', signal }); if (!part.ok) throw new Error(`WASM-Teilstück ${chunk.url}: HTTP ${part.status}`);
+    const content = new Uint8Array(await part.arrayBuffer()); checkAbort(signal);
+    if (content.byteLength !== chunk.bytes) throw new Error(`WASM-Teilstück ${chunk.url}: Länge ${content.byteLength} statt ${chunk.bytes}`);
+    if (await sha256(content) !== chunk.sha256.toLowerCase()) throw new Error(`WASM-Teilstück ${chunk.url}: SHA-256 stimmt nicht überein`);
+    checkAbort(signal); bytes.set(content, offset); offset += content.byteLength;
+  }
+  if (offset !== manifest.bytes || await sha256(bytes) !== manifest.sha256.toLowerCase()) throw new Error('WASM-Laufzeit: SHA-256 oder Gesamtlänge stimmt nicht überein');
+  checkAbort(signal); return new Blob([bytes], { type: 'application/wasm' });
+}
 let queue: Promise<unknown> = Promise.resolve();
 export async function withFFmpeg<T>(task: (ffmpeg: FFmpeg) => Promise<T>, signal?: AbortSignal): Promise<T> {
   const previous = queue;
@@ -21,8 +56,9 @@ export async function withFFmpeg<T>(task: (ffmpeg: FFmpeg) => Promise<T>, signal
     let loadTimer: ReturnType<typeof setTimeout> | undefined;
     const guardedLoad = (options: Parameters<FFmpeg['load']>[0]) => Promise.race([ff.load(options), new Promise<never>((_, reject) => { loadTimer = setTimeout(() => { ff.terminate(); reject(new Error('FFmpeg-Runtime konnte nach 30 Sekunden nicht starten (Worker-CSP, CORS oder WASM)')); }, 30000); })]);
     try {
-      if (window.origin === 'null' || new URL(runtime.classWorkerURL, document.baseURI).origin !== location.origin) await guardedLoad({ classWorkerURL: await loadUrl(runtime.classWorkerURL, 'text/javascript'), coreURL: await loadUrl(runtime.coreURL, 'text/javascript'), wasmURL: await loadUrl(runtime.wasmURL, 'application/wasm') });
-      else await guardedLoad({ classWorkerURL: new URL(runtime.classWorkerURL, document.baseURI).href, coreURL: new URL(runtime.coreURL, document.baseURI).href, wasmURL: new URL(runtime.wasmURL, document.baseURI).href });
+      const wasmBlob = await loadWasmRuntime(new URL(runtime.wasmURL, document.baseURI), signal), wasmUrl = URL.createObjectURL(wasmBlob); urls.push(wasmUrl);
+      if (window.origin === 'null' || new URL(runtime.classWorkerURL, document.baseURI).origin !== location.origin) await guardedLoad({ classWorkerURL: await loadUrl(runtime.classWorkerURL, 'text/javascript'), coreURL: await loadUrl(runtime.coreURL, 'text/javascript'), wasmURL: wasmUrl });
+      else await guardedLoad({ classWorkerURL: new URL(runtime.classWorkerURL, document.baseURI).href, coreURL: new URL(runtime.coreURL, document.baseURI).href, wasmURL: wasmUrl });
     }
     finally { clearTimeout(loadTimer); for (const url of urls) URL.revokeObjectURL(url); }
     return await task(ff);

@@ -1,6 +1,7 @@
 import { build } from 'esbuild';
 import { build as viteBuild } from 'vite';
-import { mkdir, cp, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, cp, readFile, writeFile, rm } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 const here = fileURLToPath(new URL('..', import.meta.url));
@@ -13,6 +14,17 @@ await build({ entryPoints: [path.join(here, 'server/worker.ts')], outfile: path.
 await mkdir(path.join(dist, '.openai'), {recursive: true});
 await cp(path.join(root, '.openai/hosting.json'), path.join(dist, '.openai/hosting.json'));
 await cp(path.join(studio, 'node_modules/@ffmpeg/core/dist/esm'), path.join(dist, 'client/runtime/ffmpeg'), {recursive: true});
+// Sites static files have a25MiB limit. Preserve the original WASM bytes while
+// transporting them in independently verified16MiB chunks.
+const wasmPath=path.join(dist,'client/runtime/ffmpeg/ffmpeg-core.wasm');
+const wasm=await readFile(wasmPath), hash=bytes=>createHash('sha256').update(bytes).digest('hex'), chunks=[];
+for(let offset=0,index=0;offset<wasm.length;offset+=16*1024*1024,index++) {
+  const bytes=wasm.subarray(offset,offset+16*1024*1024), url=`ffmpeg-core.wasm.part${index}`;
+  await writeFile(path.join(dist,'client/runtime/ffmpeg',url),bytes);
+  chunks.push({url,bytes:bytes.length,sha256:hash(bytes)});
+}
+await writeFile(path.join(dist,'client/runtime/ffmpeg/ffmpeg-core.wasm.json'),JSON.stringify({version:1,bytes:wasm.length,sha256:hash(wasm),chunks}));
+await rm(wasmPath);
 await cp(path.join(studio, 'node_modules/esbuild-wasm/esbuild.wasm'), path.join(dist, 'client/runtime/esbuild.wasm'));
 await build({entryPoints:[path.join(studio,'node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js')],outfile:path.join(dist,'client/runtime/ffmpeg/worker.js'),bundle:true,format:'esm',platform:'browser',target:'es2023'});
 await cp(path.join(here, 'public'), path.join(dist, 'client'), {recursive: true});

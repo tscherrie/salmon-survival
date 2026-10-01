@@ -1,0 +1,172 @@
+
+> director-studio@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.3 /private/tmp/director-baseline.2OU8GI/director-studio
+
+ ❯ |desktop-main| test-main/app-env.test.ts (16 tests | 1 failed) 1350ms
+   ❯ runChromiumWorker (3)
+     × echter Hilfsprozess: erster Versuch scheitert, der zweite (neuer Prozess) findet die Shell im Cache 1215ms
+ ❯ |desktop-main| test-main/integration-followups.test.ts (5 tests | 1 failed) 1058ms
+   ❯ Snapshot: fehlende verknüpfte Dateien, Rückfrage-Lauf, Speicher-Warnungen (3)
+     × zeigt übersprungene Journalzeilen einmal als Systemhinweis (auch über mehrere Öffnungen) 130ms
+stderr | test-main/backend.test.ts > StudioBackend – Projekte und Director > runs a planning conversation with question, brief and checkpoint
+[media] ffmpeg und ffprobe wurden nicht gefunden. Director Studio braucht beide für Vorschaubilder, Ton, Lautheit und den Video-Export. Über die Paketverwaltung installieren, z. B. `sudo apt install ffmpeg`. Danach Director Studio neu starten. Alternativ den Pfad über die Umgebungsvariable `FFMPEG_PATH` oder als `ffmpegPath` in der `settings.json` im Datenordner angeben.
+
+stderr | test-main/backend.test.ts > StudioBackend – Medien, Vorschau, Export > exports decks (PDF + PPTX) and canvases (PNG)
+[media] ffmpeg und ffprobe wurden nicht gefunden. Director Studio braucht beide für Vorschaubilder, Ton, Lautheit und den Video-Export. Über die Paketverwaltung installieren, z. B. `sudo apt install ffmpeg`. Danach Director Studio neu starten. Alternativ den Pfad über die Umgebungsvariable `FFMPEG_PATH` oder als `ffmpegPath` in der `settings.json` im Datenordner angeben.
+
+ ❯ |desktop-main| test-main/backend.test.ts (21 tests | 2 failed) 11450ms
+   ❯ StudioBackend – Projekte und Director (4)
+     × runs a planning conversation with question, brief and checkpoint 766ms
+   ❯ StudioBackend – Medien, Vorschau, Export (8)
+     × exports decks (PDF + PPTX) and canvases (PNG) 711ms
+ ❯ |media| test/toolkit-video.test.ts (15 tests | 1 failed) 5553ms
+   ❯ Bilder (5)
+     × contactSheet: Raster mit Zeitstempeln (und Rückfall ohne Beschriftung) 236ms
+ ❯ |media| test/toolkit-audio.test.ts (15 tests | 1 failed) 8660ms
+   ❯ Fähigkeiten (1)
+     × ermittelt Version, Filter und Encoder einmalig 121ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |desktop-main| test-main/app-env.test.ts > runChromiumWorker > echter Hilfsprozess: erster Versuch scheitert, der zweite (neuer Prozess) findet die Shell im Cache
+AssertionError: expected '/private/var/folders/00/z9gl46452nq9m…' to be '/var/folders/00/z9gl46452nq9mxpx32sl1…' // Object.is equality
+
+Expected: "/var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-appenv-2qG9SV/runtime/node_modules/.remotion/chrome-headless-shell/mac-arm64/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+Received: "/private/var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-appenv-2qG9SV/runtime/node_modules/.remotion/chrome-headless-shell/mac-arm64/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+
+ ❯ test-main/app-env.test.ts:228:46
+    226|     const exe = await seedHeadlessShell(runtime);
+    227|     try {
+    228|       expect(await service.ensureChromium()).toBe(exe);
+       |                                              ^
+    229|       expect(process.env.STUDIO_CHROMIUM_PATH).toBe(exe);
+    230|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  |desktop-main| test-main/backend.test.ts > StudioBackend – Projekte und Director > runs a planning conversation with question, brief and checkpoint
+AssertionError: expected [ 'system', 'user', 'director' ] to deeply equal [ 'user', 'director' ]
+
+- Expected
++ Received
+
+  [
++   "system",
+    "user",
+    "director",
+  ]
+
+ ❯ test-main/backend.test.ts:169:47
+    167|     expect(after.document?.kind).toBe('deck');
+    168|     expect(after.checkpoints[0]).toMatchObject({ status: 'proposed', b…
+    169|     expect(after.messages.map((m) => m.role)).toEqual(['user', 'direct…
+       |                                               ^
+    170|     expect(after.pendingQuestion).toBeNull();
+    171|     // Freigabe → Budget gebucht, Director informiert (nächster Turn).
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  |desktop-main| test-main/backend.test.ts > StudioBackend – Medien, Vorschau, Export > exports decks (PDF + PPTX) and canvases (PNG)
+Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell
+ ❯ BrowserPool.browser ../../packages/render/src/node/chromium.ts:49:31
+     47|     }
+     48|     const executablePath = resolveChromiumExecutable(this.opts.executa…
+     49|     this.launching = chromium.launch({
+       |                               ^
+     50|       ...(executablePath ? { executablePath } : {}),
+     51|       headless: true,
+ ❯ BrowserPool.withPage ../../packages/render/src/node/chromium.ts:59:32
+ ❯ ../../packages/render/src/node/html-render.ts:117:10
+ ❯ withHtmlFile ../../packages/render/src/node/html-render.ts:55:18
+ ❯ Module.renderDeck ../../packages/render/src/node/html-render.ts:181:5
+ ❯ exportProject src/main/exporter.ts:82:26
+ ❯ StudioBackend.exportProject src/main/backend.ts:833:14
+ ❯ test-main/backend.test.ts:300:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  |desktop-main| test-main/integration-followups.test.ts > Snapshot: fehlende verknüpfte Dateien, Rückfrage-Lauf, Speicher-Warnungen > zeigt übersprungene Journalzeilen einmal als Systemhinweis (auch über mehrere Öffnungen)
+AssertionError: expected 'Hinweis zum Projektspeicher: Unvollst…' to match /Zeile 1 .*messages\.jsonl.*übersprung…/
+
+- Expected:
+/Zeile 1 .*messages\.jsonl.*übersprungen/
+
++ Received:
+"Hinweis zum Projektspeicher: Unvollständige letzte Zeile 2 in /var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/dstudio-followups-pBoBIp/Kaputt.dstudio/conversation/messages.jsonl übersprungen (vermutlich Absturz beim Schreiben): Unterminated string in JSON at position 31 (line 1 column 32)"
+
+ ❯ test-main/integration-followups.test.ts:182:32
+    180|       const notices = reopened.messages.filter((m) => m.role === 'syst…
+    181|       expect(notices, `Öffnung ${round + 1}`).toHaveLength(1);
+    182|       expect(notices[0]!.text).toMatch(/Zeile 1 .*messages\.jsonl.*übe…
+       |                                ^
+    183|       await backend.shutdown();
+    184|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  |media| test/toolkit-audio.test.ts > Fähigkeiten > ermittelt Version, Filter und Encoder einmalig
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/toolkit-audio.test.ts:71:41
+     69|     const caps = await tk.capabilities();
+     70|     expect(caps.version.length).toBeGreaterThan(0);
+     71|     expect(caps.filters.has('ebur128')).toBe(true);
+       |                                         ^
+     72|     expect(caps.filters.has('sidechaincompress')).toBe(true);
+     73|     expect(caps.encoders.has('aac')).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  |media| test/toolkit-video.test.ts > Bilder > contactSheet: Raster mit Zeitstempeln (und Rückfall ohne Beschriftung)
+AssertionError: expected { …(7) } to match object { columns: 3, rows: 2, …(3) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "columns": 3,
+-   "labeled": true,
++   "labeled": false,
+    "rows": 2,
+    "tileHeight": 120,
+    "tileWidth": 160,
+  }
+
+ ❯ test/toolkit-video.test.ts:101:19
+     99|   it('contactSheet: Raster mit Zeitstempeln (und Rückfall ohne Beschri…
+    100|     const sheet = await tk.contactSheet(p('clip.mp4'), p('sheet.png'),…
+    101|     expect(sheet).toMatchObject({ columns: 3, rows: 2, tileWidth: 160,…
+       |                   ^
+    102|     expect(sheet.timesSec).toEqual([0.25, 0.75, 1.25, 1.75, 2.25, 2.75…
+    103|     // 3·160 + 2·4 (Abstand) + 2·4 (Rand) = 496; 2·120 + 4 + 8 = 252
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  5 failed | 76 passed | 3 skipped (84)
+      Tests  6 failed | 1061 passed | 19 skipped (1086)
+   Start at  23:56:42
+   Duration  30.34s (tests 60%, transform 18%, import 10%, environment 9%, setup 3%)
+
+  Transform  |desktop-main| transforming modules took 7.90s · 29% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+  Transform  |fal| transforming modules took 3.71s · 36% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+  Transform  |render| transforming modules took 4.51s · 36% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
