@@ -55,6 +55,14 @@ function useWorkspaceShortcuts(layout: WorkspaceLayout) {
         else layoutRef.current.toggle(digit === '1' ? 'assets' : digit === '2' ? 'director' : 'stage');
         return;
       }
+      // mod+K bei eingeklappter Asset-Leiste: aufklappen und die Suche fokussieren (offen erledigt das AssetBrowser)
+      if (mod && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k' && layoutRef.current.collapsed.assets) {
+        event.preventDefault();
+        layoutRef.current.setCollapsed('assets', false);
+        const focus = () => document.querySelector<HTMLInputElement>('.assets input[type="search"]')?.focus();
+        requestAnimationFrame(() => requestAnimationFrame(focus));
+        return;
+      }
       if (event.key === 'F6' && !event.ctrlKey && !event.metaKey && !event.altKey) {
         const root = document.querySelector<HTMLElement>('.workspace');
         if (root) {

@@ -20,10 +20,6 @@ function read(): boolean {
   return cached;
 }
 
-export function getTechDetails(): boolean {
-  return read();
-}
-
 export function setTechDetails(on: boolean): void {
   cached = on;
   try {

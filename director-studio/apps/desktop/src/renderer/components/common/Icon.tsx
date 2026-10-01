@@ -1,4 +1,4 @@
-import type { AssetKind, Modality, TrackKind } from '@studio/core';
+import type { AssetKind, Modality } from '@studio/core';
 
 /**
  * Schlichte Strich-Icons (24er Raster, Kontur 1.5, runde Enden, `currentColor`; DESIGN.md §5).
@@ -163,13 +163,6 @@ export const ASSET_KIND_ICONS: Record<AssetKind, IconName> = {
   font: 'font',
   document: 'document',
   web: 'web',
-};
-
-export const TRACK_KIND_ICONS: Record<TrackKind, IconName> = {
-  video: 'film',
-  overlay: 'overlay',
-  text: 'text',
-  audio: 'audio',
 };
 
 export const MODALITY_ICONS: Record<Modality, IconName> = {

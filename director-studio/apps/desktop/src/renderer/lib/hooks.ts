@@ -34,11 +34,6 @@ export function useDebounced<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-/** Bevorzugt reduzierte Bewegung? */
-export function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
 type PeaksResult = { peaks: number[]; durationMs: number } | null;
 const peaksCache = new WeakMap<StudioApi, Map<string, Promise<PeaksResult>>>();
 

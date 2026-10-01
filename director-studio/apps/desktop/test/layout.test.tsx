@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { createTimeline, type Timeline } from '@studio/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Workspace } from '../src/renderer/components/workspace/Workspace.tsx';
@@ -168,6 +168,19 @@ describe('Arbeitsbereich (Workspace.tsx)', () => {
     expect(vars()['--side-l']).toBe('40px');
     fireEvent.click(screen.getByRole('button', { name: 'Director ausblenden' }));
     expect(vars()['--side-r']).toBe('40px');
+  });
+
+  it('Strg+K fokussiert die Asset-Suche, auch wenn die Leiste eingeklappt ist (§13.4)', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    renderStudio(<Workspace />, studio);
+    const k = () => fireEvent.keyDown(window, { key: 'k', code: 'KeyK', ctrlKey: true });
+    k();
+    expect(document.activeElement).toBe(document.querySelector('.assets input[type="search"]'));
+    press('Digit1');
+    expect(screen.queryByRole('region', { name: 'Asset-Browser' })).toBeNull();
+    k();
+    expect(screen.getByRole('region', { name: 'Asset-Browser' })).toBeInTheDocument();
+    await waitFor(() => expect(document.activeElement).toBe(document.querySelector('.assets input[type="search"]')));
   });
 
   it('Strg+0: Fokusmodus klappt alles ein (Composer bleibt), ein zweites Strg+0 stellt her; nicht gespeichert', async () => {

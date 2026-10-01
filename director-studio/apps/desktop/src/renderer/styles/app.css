@@ -1438,9 +1438,12 @@ textarea.field {
   font: 400 12px/1.2 var(--font-ui);
 }
 
-/* Mitte: Stepper, Innenabstand 16 bis zum ersten Kreis (die Liste bringt 6 px für die Hover-Fläche mit) */
+/*
+ * Mitte: Stepper, Innenabstand 16 bis zum ersten Kreis (die Liste bringt 6 px für die Hover-Fläche mit). Rechts kein
+ * eigener Abstand: Den Abstand zur rechten Zone bringen deren 16 px links mit, die Labels behalten so mehr Platz.
+ */
 .hdr-steps {
-  padding: 0 16px 0 10px;
+  padding: 0 0 0 10px;
   overflow: hidden;
 }
 
@@ -1558,6 +1561,13 @@ button.step-btn:hover {
   color: var(--text-3);
   font-size: 11px;
   font-weight: 500;
+}
+/*
+ * Das aktuelle Label schrumpft erst auf Stufe 3: Vorher läuft die Liste über, und die Messung klappt zuerst die Labels
+ * erledigter, dann offener Schritte ein (das aktuelle Label bleibt immer sichtbar, §7.2).
+ */
+.steps:not(.steps-l3) .step.is-current {
+  flex: none;
 }
 /* Stufe 3: nur der aktuelle Schritt plus „3/5“ */
 .steps-l3 .step:not(.is-current) {

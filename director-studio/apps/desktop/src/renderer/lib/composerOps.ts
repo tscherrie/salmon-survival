@@ -80,10 +80,6 @@ export function trimSegments(segments: readonly ComposerSegment[]): ComposerSegm
   return out;
 }
 
-export function segmentsEqual(a: readonly ComposerSegment[], b: readonly ComposerSegment[]): boolean {
-  return JSON.stringify(normalizeSegments(a)) === JSON.stringify(normalizeSegments(b));
-}
-
 /** Index des Segments, das die Position `position` (0-basiert, Einheit wie oben) belegt. */
 export function segmentIndexAt(segments: readonly ComposerSegment[], position: number): { index: number; offset: number } | null {
   let pos = 0;

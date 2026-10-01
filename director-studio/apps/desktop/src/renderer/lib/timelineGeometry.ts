@@ -21,8 +21,6 @@ export const RULER_H = 22;
 export const SECTIONS_H = 20;
 /** Unterhalb dieses Abstands gelten zwei Marker-Tags als „nah“ (Versatz bzw. Sammel-Tag; §8.3). */
 export const MARKER_PROXIMITY_PX = 18;
-/** Senkrechter Versatz des späteren von zwei nahen Tags. */
-export const MARKER_RAISE_PX = 6;
 /** Breite des Marker-Tags: 16 px, ab zwei Ziffern 20 px. */
 export function markerTagWidth(n: number): number {
   return n >= 10 ? 20 : 16;

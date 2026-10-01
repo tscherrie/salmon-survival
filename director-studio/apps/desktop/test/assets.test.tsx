@@ -429,14 +429,17 @@ describe('Kopfzeile (DESIGN.md §7.2)', () => {
     expect(now[1]!.querySelector('.step-pill')).toHaveTextContent('zur Freigabe');
     expect(document.querySelectorAll('.step-approved')).toHaveLength(1);
 
-    // Klick auf einen Schritt zeigt dessen Entscheidung (Element mit data-checkpoint-id) und sagt ihn an
-    const target = document.createElement('button');
-    target.dataset.checkpointId = rest[0]!.id;
-    document.body.appendChild(target);
+    // Klick auf einen Schritt: ohne offene Entscheidung im Dock (hier kein Director gerendert) scrollt der Verlauf zur
+    // Systemzeile dieses Checkpoints; der Schritt wird angesagt. Den Weg ins Dock deckt wiring.test.tsx ab.
+    const line = document.createElement('p');
+    line.dataset.sys = `cp-pinned:${rest[0]!.id}`;
+    const scrolled = vi.fn();
+    line.scrollIntoView = scrolled;
+    document.body.appendChild(line);
     await userEvent.click(within(now[1]!).getByRole('button'));
-    await waitFor(() => expect(target).toHaveFocus());
+    await waitFor(() => expect(scrolled).toHaveBeenCalled());
     expect(studio.store.getState().announcement).toContain(rest[0]!.title);
-    target.remove();
+    line.remove();
 
     await userEvent.click(screen.getByRole('button', { name: 'Projekte' }));
     expect(studio.store.getState().screen).toBe('start');
