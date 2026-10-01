@@ -1,0 +1,40 @@
+# Paketierung (electron-builder). Signierung/Notarisierung über Umgebungsvariablen (CSC_LINK, APPLE_ID, …).
+appId: studio.director.desktop
+productName: Director Studio
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**
+  - package.json
+  - "!**/*.map"
+asar: true
+asarUnpack:
+  # Native Binaries dürfen nicht im asar-Archiv liegen (Remotion-Compositor, esbuild, Claude-Code-Binary).
+  - "**/node_modules/@remotion/compositor-*/**"
+  - "**/node_modules/@esbuild/**"
+  - "**/node_modules/@anthropic-ai/claude-agent-sdk-*/**"
+  - "**/node_modules/playwright-core/**"
+extraResources:
+  # Eigene ffmpeg/ffprobe-Builds je Plattform (LGPL, OS-Encoder) – siehe docs/director-studio/PLAN.md 19a.
+  - from: vendor/ffmpeg/${os}-${arch}
+    to: ffmpeg
+    filter: ["**/*"]
+mac:
+  category: public.app-category.video
+  target:
+    - target: dmg
+      arch: [arm64]
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: "Push-to-Talk: Director Studio nimmt deine Sprachanweisungen nur auf, solange du die Taste hältst."
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+publish: null

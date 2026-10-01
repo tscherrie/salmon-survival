@@ -133,4 +133,7 @@ export interface StudioApi {
 
   // Ereignisse
   onEvent(listener: (event: StudioEvent) => void): () => void;
+
+  /** Nur Electron: Dateipfad einer per Drag & Drop abgelegten Datei (`webUtils.getPathForFile`). */
+  pathForFile?(file: File): string;
 }

@@ -3,3 +3,4 @@
  * Der Render-Agent erweitert diese Datei (Komposition, deckToHtml, canvasToSvg, Picker-Skript).
  */
 export * from './composition/types.ts';
+export { TimelineComposition } from './composition/TimelineComposition.tsx';
