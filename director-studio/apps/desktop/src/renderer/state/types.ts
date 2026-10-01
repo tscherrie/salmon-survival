@@ -59,6 +59,13 @@ export interface PendingQuestion {
   runId: string | null;
 }
 
+/** Genehmigung nach `approval_resolved`: Anfrage, Entscheidung und Zeitpunkt (Systemzeile im Verlauf). */
+export interface DecidedApproval {
+  request: ApprovalRequest;
+  approved: boolean;
+  decidedAt: string;
+}
+
 export interface StudioData {
   screen: 'start' | 'workspace';
   settings: AppSettings | null;
@@ -89,6 +96,8 @@ export interface StudioData {
   activities: ToolActivity[];
   question: PendingQuestion | null;
   approvals: ApprovalRequest[];
+  /** Erledigte Genehmigungen dieser Sitzung: erscheinen im Verlauf nur noch als Systemzeile (DESIGN.md §7.6.2). */
+  decidedApprovals: DecidedApproval[];
   generations: Generation[];
   runState: RunState;
   runId: string | null;
@@ -158,6 +167,7 @@ export function initialData(): StudioData {
     activities: [],
     question: null,
     approvals: [],
+    decidedApprovals: [],
     generations: [],
     runState: 'idle',
     runId: null,

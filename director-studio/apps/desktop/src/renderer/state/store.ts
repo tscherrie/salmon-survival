@@ -120,7 +120,8 @@ export interface StudioActions {
   // Assets
   /** Dateien wählen und importieren bzw. verknüpfen; `insert` fügt danach je Datei einen Asset-Chip ein (Composer „+“). */
   importFiles(mode: 'link' | 'import', opts?: { insert?: boolean }): Promise<void>;
-  importDroppedFiles(files: File[]): Promise<void>;
+  /** Verknüpft fallen gelassene Dateien; `insert: false` (Ablage auf der Asset-Leiste) setzt keine Chips, sondern meldet nur. */
+  importDroppedFiles(files: File[], opts?: { insert?: boolean }): Promise<void>;
   revealAsset(assetId: string): Promise<void>;
   /** Verknüpfte Datei neu zuordnen: Datei wählen (`chooseFiles`) → `relinkAsset`. `true` bei Erfolg. */
   relinkAsset(assetId: string): Promise<boolean>;
@@ -280,6 +281,12 @@ export function createStudioStore(api: StudioApi): StudioStore {
           case 'run_state':
             if (event.state === 'idle' && get().queue.length > 0) void get().sendQueued(0);
             break;
+          case 'approval_resolved': {
+            // Director-Verlauf: Erledigte Genehmigungen bleiben als Systemzeile stehen (§7.6.2)
+            const request = state.approvals.find((a) => a.id === event.approvalId);
+            if (request) set((s) => ({ decidedApprovals: [...s.decidedApprovals, { request, approved: event.approved, decidedAt: new Date().toISOString() }].slice(-50) }));
+            break;
+          }
           default:
             break;
         }
@@ -767,7 +774,7 @@ export function createStudioStore(api: StudioApi): StudioStore {
         else get().toast('success', t('assets.imported', { count: assets.length }));
       },
 
-      async importDroppedFiles(files) {
+      async importDroppedFiles(files, opts) {
         const id = get().projectId;
         if (!id || files.length === 0) return;
         // Electron: echter Pfad über webUtils.getPathForFile; Browser/Fake: nur der Dateiname.
@@ -775,7 +782,8 @@ export function createStudioStore(api: StudioApi): StudioStore {
         try {
           const assets = await api.importFiles(id, paths, 'link');
           set((s) => ({ assets: assets.reduce((list, a) => (list.some((x) => x.id === a.id) ? list : [...list, a]), s.assets) }));
-          for (const asset of assets) get().insertRef({ kind: 'asset', assetId: asset.id });
+          if (opts?.insert === false) get().toast('success', t('assets.imported', { count: assets.length }));
+          else for (const asset of assets) get().insertRef({ kind: 'asset', assetId: asset.id });
         } catch (error) {
           get().toast('error', t('composer.importFailed', { error: errorText(error) }));
         }

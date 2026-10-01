@@ -980,8 +980,7 @@ Der Aufbau folgt A (`final-shots/08-start.png`): zwei Zonen.
   - „Was produzieren wir heute?“ (Display).
   - **Neues Projekt** (primary lg, Tooltip „⌘N“) und *Projekt öffnen …*
   - „Neu aus Kategorie“: 5 Zeilen mit Icon, Name und Beispielen in `--text-3`.
-  - Unten der Systemstatus (`AuthStatusPanel`): Director-Anbindung und fal.ai, Status als Text plus Punkt
-    (`--ok`/`--warn`), *Schlüssel hinterlegen*.
+  - Unten die **Anmeldung** nach §7.14 (ersetzt den reinen Systemstatus): Director-Anbindung und fal.ai.
 - **Rechts** (`--base`):
   - „Zuletzt geöffnet“ (Test-Hook Heading) mit Suche und Raster/Liste.
   - Das **Feature** (zuletzt bearbeitetes Projekt) zeigt groß das Standbild, eine Mini-Checkpoint-Leiste mit Kosten je
@@ -1001,6 +1000,67 @@ Neue Gruppe „Darstellung“:
 - **Erhöhter Kontrast**: Systemstandard · An · Aus; gesetzt wird `data-contrast`.
 - **Technische Details im Verlauf** (Toggle).
 - **Hinweise zurücksetzen** (Knopf; setzt §8.6 zurück).
+
+Die Gruppe „Anmeldung“ der Einstellungen ist **dieselbe Komponente** wie auf der Startseite (§7.14), in voller Form.
+
+### 7.14 Anmeldung auf der Startseite (Wunsch des Nutzers, verbindlich)
+
+> Nutzer: „Wir sollten auf der Startseite bereits die Anmeldeseite und Felder für API-Keys haben.“ Heute steht dort nur
+> ein Status, und Keys bzw. der Claude-Abo-Login sind in den Einstellungen versteckt.
+
+**Komponente** `components/start/SignInPanel.tsx` (neu; ersetzt `AuthStatusPanel` auf der Startseite und bildet die
+Gruppe „Anmeldung“ in `SettingsDialog`). Sie liegt auf der Startseite unten in der linken Spalte (§7.12).
+
+**Erster Start (kein Director verfügbar oder kein fal-Key):** Die linke Spalte zeigt die Anmeldung als Hauptinhalt
+direkt unter der Überschrift, mit dem Titel „Verbinde den Director“ und einer Zeile Erklärung. „Neues Projekt“ bleibt
+sichtbar, ist aber `secondary`, bis ein Director verfügbar ist (Tooltip nennt den Grund). Drei Zeilen, jede mit Status
+links (Punkt + Text) und Aktion rechts:
+
+1. **Claude-Abo (nur Eigennutzung)**
+   - Schalter „Claude-Abo-Login erlauben“ (= `settings.allowClaudeSubscription`) mit dem Hinweis aus i18n
+     `settings.subscriptionHint` als Fußnote.
+   - Ist er an: Status „Angemeldet“ / „Nicht angemeldet“ aus `AuthStatus.claudeSubscription` und der Knopf
+     **„Bei Claude anmelden“** → `api.startLogin('claude')`. Während der Anmeldung: Spinner und „Anmeldung im Browser
+     abschließen …“, Abbrechen möglich. Danach aktualisiert sich der Status ohne Neuladen.
+   - Ist kein Claude-Code-Programm verfügbar: Status „Nicht verfügbar“ mit dem Grund aus `detail`.
+2. **Anthropic API**
+   - Passwortfeld „Anthropic API-Key“ (Einfügen erlaubt, nie im Klartext angezeigt, `autocomplete=off`,
+     `spellcheck=false`) mit **Speichern** (→ `setSecret('anthropic', …)`) und **Prüfen** (→ `api.testSecret('anthropic')`,
+     Ergebnis „gültig“ / Fehlertext). Ist ein Key hinterlegt: maskiert „sk-ant-…“ + letzte 4 Zeichen *nicht* anzeigen,
+     nur „Hinterlegt“ mit *Ersetzen* und *Entfernen*.
+   - Darunter klein: „Oder mit Anthropic anmelden“ → `api.startLogin('anthropic')` (führt `ant auth login` aus, wenn
+     das Programm gefunden wird; sonst ein Hinweis mit dem Installationsweg). Status „Login gefunden“ aus
+     `AuthStatus.anthropic.oauthProfile`.
+3. **fal.ai** (Pflicht für alle Medienmodelle und Fallback für den Director)
+   - Passwortfeld „fal-Key“ mit **Speichern** und **Prüfen** (`testSecret('fal')`), Link „Key erstellen“ →
+     `openExternal('https://fal.ai/dashboard/keys')`.
+
+Darunter eine Zeile „Aktiver Director: …“ (`AuthStatus.active`) und, wenn mehr als eine Laufzeit verfügbar ist, die Wahl
+„Bevorzugt“ (Automatisch · Anthropic API · Claude-Abo · fal) = `settings.preferredRuntime`.
+
+**Danach (alles verbunden):** Die Anmeldung schrumpft auf zwei ruhige Zeilen („Director · Claude-Abo“ bzw. „Anthropic
+API“, „fal.ai · verbunden“) mit *Ändern* (klappt die volle Form auf). Kein Tungsten in der Anmeldung, außer der eine
+Primärknopf der aktuell nötigen Aktion beim ersten Start.
+
+**Sicherheit:** Keys gehen nur über `setSecret` an Main (Schlüsselbund via `safeStorage`) und werden nie an den Renderer
+zurückgegeben, nie geloggt, nie in Dateien außerhalb des Schlüsselbunds geschrieben. Das Feld leert sich nach dem
+Speichern. Fehlermeldungen von `testSecret` enthalten den Key nie.
+
+**Main/Core (gehört zu diesem Punkt):**
+- `AuthStatus.claudeSubscription?: { cliAvailable: boolean; loggedIn: boolean; authMethod?: string; detail: string }`.
+  Ermittelt über `claude auth status --json` (Felder `loggedIn`, `authMethod`; keine E-Mail-Adresse in die UI). Programm:
+  zuerst die mit `@anthropic-ai/claude-agent-sdk` gelieferte Claude-Code-Binärdatei der Plattform, sonst `claude` aus
+  `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin` bzw. `%USERPROFILE%\.local\bin` und dem PATH. Zeitlimit 5 s,
+  Ergebnis 30 s zwischengespeichert. Die Laufzeit `agent-sdk` gilt nur als verfügbar, wenn erlaubt **und** angemeldet.
+- `StudioApi.startLogin(kind: 'claude' | 'anthropic'): Promise<{ started: boolean; message?: string }>`: startet
+  `claude auth login` bzw. `ant auth login` als Kindprozess (der Browser öffnet sich dort), ohne die Keys der App in die
+  Umgebung zu geben (`ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `FAL_KEY` entfernen). Ende des Prozesses → neues
+  `AuthStatus` als Event. Höchstens ein Login gleichzeitig; `cancelLogin()` beendet ihn. Gehört zu `GESTURE_METHODS`
+  (nur nach einer Nutzergeste).
+- `StudioApi.testSecret(name: 'anthropic' | 'fal'): Promise<{ ok: boolean; message: string }>`: billige Prüfung mit dem
+  hinterlegten Key (Anthropic: Modellliste; fal: Plattform-API `GET /v1/models?limit=1`), Zeitlimit 10 s, ohne Kosten.
+- IPC-Vertrag (`STUDIO_METHODS`, Preload, `IPC_COVERS_STUDIO_API`), `FakeStudioApi` (simuliert alle Zustände, auch
+  „Anmeldung läuft“) und Tests in Main, Director und Renderer.
 
 ---
 
@@ -1530,6 +1590,10 @@ genannten Abnahmekriterien erfüllt sind. Die Reihenfolge ist verbindlich, weil 
 14. Startbildschirm nach §7.12, inklusive optionaler `RecentProject`-Felder in Main bzw. Project. Ohne Daten erscheint
     die ruhige Kategorie-Kachel.
 15. Einstellungen: Kontrast, Hinweise zurücksetzen, technische Details. Kürzel-Übersicht mit `?`.
+15a. **Anmeldung auf der Startseite (§7.14)**, einschließlich der dort genannten Änderungen in Core, Main, Director,
+    IPC und Fake-Backend. *Abnahme:* Erster Start ohne Keys zeigt die Anmeldung als Hauptinhalt; Claude-Abo-Login,
+    API-Key speichern/prüfen und fal-Key speichern/prüfen funktionieren im Fake-Modus; kein Key erscheint je im
+    Renderer, im Log oder in einer Datei außerhalb des Schlüsselbunds.
 16. Bewegung: Settle-Animation, Blitz, Atmen, `reduced-motion`-Prüfung.
 17. **Visuelle Abnahme:**
     - Playwright-Screenshots `e2e/test-results/` neu erzeugen: Video, Audio, Deck, Canvas, Web, Start, jeweils hell und

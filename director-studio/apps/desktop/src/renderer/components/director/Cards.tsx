@@ -1,11 +1,22 @@
-import { useEffect, useId, useState } from 'react';
-import { formatUsd, type ApprovalRequest, type Checkpoint, type DirectorQuestion, type Generation } from '@studio/core';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { formatUsd, type ApprovalRequest, type Checkpoint, type DirectorQuestion } from '@studio/core';
 import { useT } from '../../i18n.ts';
-import { formatElapsed } from '../../lib/hooks.ts';
 import type { PendingQuestion } from '../../state/types.ts';
 import { useActions, useAssetUrl, useStudio } from '../../state/context.tsx';
-import { Icon } from '../common/Icon.tsx';
+import { ASSET_KIND_ICONS, Icon } from '../common/Icon.tsx';
 import { DirectorMarkdown } from './DirectorMarkdown.tsx';
+import { checkpointNumber, splitRecommendation } from './history.ts';
+
+/**
+ * Karten der angedockten Entscheidung (DESIGN.md §7.6.3): Rückfrage, Checkpoint, Genehmigung. Kompakt gesetzt
+ * (Kicker, Kartentitel 13.5/600, Text 12.5) und nur im Dock zu sehen, nie im Verlauf. Genau ein Primärknopf je
+ * Karte; er ist der einzige im sichtbaren Kontext (Tungsten-Budget §6).
+ */
+
+/** Beträge im Fließtext in Mono setzen („Überschreitet das Budget um `$3.20`.“). */
+function withMonoAmounts(text: string): ReactNode[] {
+  return text.split(/(\$\d[\d,]*(?:\.\d+)?)/g).map((part, i) => (i % 2 === 1 ? <span key={i} className="mono">{part}</span> : part));
+}
 
 // ───────────────────────── Rückfrage ─────────────────────────
 
@@ -15,15 +26,15 @@ interface AnswerState {
   otherOn: boolean;
 }
 
-function answerText(q: DirectorQuestion, a: AnswerState | undefined): string {
+function answerText(a: AnswerState | undefined): string {
   if (!a) return '';
   const parts = [...a.selected];
   if (a.otherOn && a.other.trim()) parts.push(a.other.trim());
   return parts.join(', ');
 }
 
-/** Rückfrage-Karte: Optionen je Frage (Einzel-/Mehrfachauswahl), „Andere …“ mit Freitext. */
-export function QuestionCard({ question }: { question: PendingQuestion }) {
+/** Rückfrage: je Frage Radio- bzw. Checkbox-Zeilen, „Andere …“ mit Freitext; Antworten (primär) und Später. */
+export function QuestionCard({ question, onLater }: { question: PendingQuestion; onLater?: (() => void) | undefined }) {
   const t = useT();
   const actions = useActions();
   const baseId = useId();
@@ -38,84 +49,99 @@ export function QuestionCard({ question }: { question: PendingQuestion }) {
   const update = (q: DirectorQuestion, patch: (a: AnswerState) => AnswerState) =>
     setAnswers((all) => ({ ...all, [q.id]: patch(all[q.id] ?? { selected: [], other: '', otherOn: false }) }));
 
-  const complete = question.questions.every((q) => answerText(q, answers[q.id]) !== '');
+  const complete = question.questions.every((q) => answerText(answers[q.id]) !== '');
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!complete || submitting) return;
     setSubmitting(true);
     const payload: Record<string, string> = {};
-    for (const q of question.questions) payload[q.id] = answerText(q, answers[q.id]);
+    for (const q of question.questions) payload[q.id] = answerText(answers[q.id]);
     await actions.answerQuestion(payload);
     setSubmitting(false);
   };
 
   return (
-    <form className="card question-card" onSubmit={submit} aria-label={t('director.question')}>
-      <header className="card-header">
-        <Icon name="dot" size={10} />
-        <span>{t('director.question')}</span>
-      </header>
+    <form className="card dock-card question-card" onSubmit={submit} aria-label={t('director.question')}>
       {question.questions.map((q, qi) => {
         const a = answers[q.id];
         const name = `${baseId}-${qi}`;
+        const type = q.multiSelect ? 'checkbox' : 'radio';
         return (
           <fieldset key={q.id} className="question">
             <legend>
-              {q.header && <span className="badge">{q.header}</span>} {q.question}
+              {q.header && <span className="overline question-kicker">{q.header}</span>}
+              <span className="card-title">{q.question}</span>
             </legend>
-            {q.options.map((option) => {
-              const checked = !!a?.selected.includes(option.label);
-              return (
-                <label key={option.label} className={`option${checked ? ' is-checked' : ''}`}>
-                  <input
-                    type={q.multiSelect ? 'checkbox' : 'radio'}
-                    name={name}
-                    checked={checked}
-                    onChange={() =>
-                      update(q, (cur) =>
-                        q.multiSelect
-                          ? { ...cur, selected: checked ? cur.selected.filter((s) => s !== option.label) : [...cur.selected, option.label] }
-                          : { selected: [option.label], other: cur.other, otherOn: false },
-                      )
-                    }
-                  />
-                  <span className="option-text">
-                    <span className="option-label">{option.label}</span>
-                    {option.description && <span className="option-desc">{option.description}</span>}
-                  </span>
-                </label>
-              );
-            })}
-            <label className={`option option-other${a?.otherOn ? ' is-checked' : ''}`}>
-              <input
-                type={q.multiSelect ? 'checkbox' : 'radio'}
-                name={name}
-                checked={!!a?.otherOn}
-                onChange={() => update(q, (cur) => (q.multiSelect ? { ...cur, otherOn: !cur.otherOn } : { selected: [], other: cur.other, otherOn: true }))}
-              />
-              <span className="option-text">
-                <span className="option-label">{t('director.other')}</span>
-              </span>
-            </label>
-            {a?.otherOn && (
-              <input
-                type="text"
-                className="field"
-                value={a.other}
-                placeholder={t('director.otherPlaceholder')}
-                aria-label={`${q.question} – ${t('director.otherPlaceholder')}`}
-                onChange={(e) => update(q, (cur) => ({ ...cur, other: e.target.value }))}
-                autoFocus
-              />
-            )}
+            <div className="options">
+              {q.options.map((option) => {
+                const checked = !!a?.selected.includes(option.label);
+                const shown = splitRecommendation(option.label, option.description);
+                return (
+                  <label key={option.label} className={`option${checked ? ' is-checked' : ''}`}>
+                    <input
+                      type={type}
+                      name={name}
+                      checked={checked}
+                      onChange={() =>
+                        update(q, (cur) =>
+                          q.multiSelect
+                            ? { ...cur, selected: checked ? cur.selected.filter((s) => s !== option.label) : [...cur.selected, option.label] }
+                            : { selected: [option.label], other: cur.other, otherOn: false },
+                        )
+                      }
+                    />
+                    <span className={`opt-mark opt-${type}`} aria-hidden="true">
+                      {q.multiSelect && <Icon name="check" size={10} />}
+                    </span>
+                    <span className="option-text">
+                      <span className="option-label">
+                        {shown.label}
+                        {shown.recommended && <span className="badge">{t('dock.recommended')}</span>}
+                      </span>
+                      {shown.description && <span className="option-desc">{shown.description}</span>}
+                    </span>
+                  </label>
+                );
+              })}
+              <label className={`option option-other${a?.otherOn ? ' is-checked' : ''}`}>
+                <input
+                  type={type}
+                  name={name}
+                  checked={!!a?.otherOn}
+                  onChange={() => update(q, (cur) => (q.multiSelect ? { ...cur, otherOn: !cur.otherOn } : { selected: [], other: cur.other, otherOn: true }))}
+                />
+                <span className={`opt-mark opt-${type}`} aria-hidden="true">
+                  {q.multiSelect && <Icon name="check" size={10} />}
+                </span>
+                <span className="option-text">
+                  <span className="option-label">{t('director.other')}</span>
+                </span>
+              </label>
+              {a?.otherOn && (
+                <input
+                  type="text"
+                  className="field option-field"
+                  value={a.other}
+                  placeholder={t('director.otherPlaceholder')}
+                  aria-label={`${q.question} – ${t('director.otherPlaceholder')}`}
+                  onChange={(e) => update(q, (cur) => ({ ...cur, other: e.target.value }))}
+                  autoFocus
+                />
+              )}
+            </div>
           </fieldset>
         );
       })}
       <div className="card-actions">
-        <button type="submit" className="btn primary" disabled={!complete || submitting}>
+        <button type="submit" className="btn primary" disabled={!complete || submitting} aria-busy={submitting || undefined}>
           {t('director.answer')}
         </button>
+        {onLater && (
+          <button type="button" className="btn ghost" onClick={onLater}>
+            {t('dock.later')}
+          </button>
+        )}
       </div>
     </form>
   );
@@ -123,12 +149,47 @@ export function QuestionCard({ question }: { question: PendingQuestion }) {
 
 // ───────────────────────── Checkpoint ─────────────────────────
 
-/** Checkpoint-Karte: Zusammenfassung, Belege, beantragtes Budget (editierbar), Freigeben/Ändern. */
+/** Zusammenfassung höchstens drei Zeilen; „Mehr“ nur, wenn der Text wirklich abgeschnitten ist. */
+function ClampedSummary({ text }: { text: string }) {
+  const t = useT();
+  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || open) return;
+    const measure = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [text, open]);
+  return (
+    <div className="card-summary">
+      <div ref={ref} className={`card-summary-text${open ? ' is-open' : ''}`}>
+        <DirectorMarkdown text={text} />
+      </div>
+      {(overflows || open) && (
+        <button type="button" className="link-button card-more" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          {open ? t('dock.less') : t('dock.more')}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Checkpoint zur Freigabe: Kicker „Checkpoint 3 von 5“ mit neutraler Pill, Titel, Zusammenfassung, bis zu vier Belege,
+ * Budgetzeile mit editierbarem Mono-Betrag, Aufschlüsselung (eingeklappt), Freigeben (primär) und Ändern …
+ */
 export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
   const t = useT();
   const actions = useActions();
   const assetUrl = useAssetUrl();
   const assets = useStudio((s) => s.assets);
+  const checkpoints = useStudio((s) => s.checkpoints);
+  const budgetSummary = useStudio((s) => s.budget);
   const inputId = useId();
   const [budget, setBudget] = useState(() => String(checkpoint.budgetRequestedUsd ?? 0));
   const [changes, setChanges] = useState(false);
@@ -142,8 +203,11 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
   }, [checkpoint.id, checkpoint.proposedAt, checkpoint.budgetRequestedUsd]);
 
   const amount = Number(budget.replace(',', '.'));
-  const valid = Number.isFinite(amount) && amount >= 0;
-  const linked = (checkpoint.assetIds ?? []).map((id) => assets.find((a) => a.id === id)).filter((a) => !!a);
+  const valid = budget.trim() !== '' && Number.isFinite(amount) && amount >= 0;
+  const linked = (checkpoint.assetIds ?? []).map((id) => assets.find((a) => a.id === id)).filter((a) => !!a).slice(0, 4);
+  const n = checkpointNumber(checkpoints, checkpoint.id);
+  const next = n > 0 ? checkpoints[n] : undefined;
+  const amountText = valid ? formatUsd(amount) : '—';
 
   const approve = async () => {
     if (!valid) return;
@@ -158,41 +222,98 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
     setBusy(false);
   };
 
+  const approvedSoFar = budgetSummary?.approvedUsd ?? 0;
+  const spent = budgetSummary?.spentUsd ?? 0;
+  const after = approvedSoFar + (valid ? amount : 0);
+
   return (
-    <article className="card checkpoint-card" aria-label={`${t('director.checkpoint')}: ${checkpoint.title}`}>
-      <header className="card-header">
-        <Icon name="check" size={14} />
-        <span>{t('director.checkpoint')}</span>
-        <strong className="card-title">{checkpoint.title}</strong>
+    <article className="card dock-card checkpoint-card" aria-label={`${t('director.checkpoint')}: ${checkpoint.title}`}>
+      <header className="card-kicker">
+        <span className="overline">{n > 0 ? t('dock.checkpointOf', { n, total: checkpoints.length }) : t('director.checkpoint')}</span>
+        <span className="badge">{t('cpStatus.proposed')}</span>
       </header>
-      {checkpoint.summary && <DirectorMarkdown text={checkpoint.summary} />}
+      <h3 className="card-title">{checkpoint.title}</h3>
+      {checkpoint.summary && <ClampedSummary text={checkpoint.summary} />}
       {linked.length > 0 && (
-        <div className="checkpoint-assets" aria-label={t('director.attachments')}>
+        <div className="cp-evidence" role="group" aria-label={t('director.attachments')}>
           {linked.map((asset) => (
-            <button key={asset.id} type="button" className="checkpoint-asset" onClick={() => actions.insertRef({ kind: 'asset', assetId: asset.id })} title={asset.title}>
-              {asset.kind === 'image' || asset.kind === 'video' ? <img src={assetUrl(asset.id, 'thumb')} alt="" /> : <Icon name="text" size={18} />}
-              <span>{asset.title}</span>
+            <button
+              key={asset.id}
+              type="button"
+              className="cp-thumb"
+              title={asset.title}
+              aria-label={t('dock.evidence', { title: asset.title })}
+              onClick={() => actions.insertRef({ kind: 'asset', assetId: asset.id })}
+            >
+              {asset.kind === 'image' || asset.kind === 'video' ? <img src={assetUrl(asset.id, 'thumb')} alt="" /> : <Icon name={ASSET_KIND_ICONS[asset.kind]} size={14} />}
             </button>
           ))}
         </div>
       )}
-      <div className="checkpoint-budget">
-        <label htmlFor={inputId}>{t('director.budgetRequested')}</label>
-        <div className="money-input">
-          <span>$</span>
-          <input id={inputId} type="number" min={0} step={0.5} inputMode="decimal" value={budget} onChange={(e) => setBudget(e.target.value)} aria-invalid={!valid} />
-        </div>
+      <div className="cp-budget">
+        <label htmlFor={inputId}>{next ? t('dock.budgetFor', { title: next.title }) : t('dock.budget')}</label>
+        <span className="money-input">
+          <span aria-hidden="true">$</span>
+          <input
+            id={inputId}
+            type="number"
+            min={0}
+            step={0.5}
+            inputMode="decimal"
+            value={budget}
+            aria-label={t('director.budgetRequested')}
+            aria-invalid={!valid}
+            onChange={(e) => setBudget(e.target.value)}
+          />
+        </span>
       </div>
+      <details className="cp-breakdown">
+        <summary>
+          {t('dock.breakdown')}
+          <Icon name="chevronDown" size={12} />
+        </summary>
+        <dl>
+          <div>
+            <dt>{t('dock.breakdown.approved')}</dt>
+            <dd className="mono">{formatUsd(approvedSoFar)}</dd>
+          </div>
+          <div>
+            <dt>{t('dock.breakdown.request')}</dt>
+            <dd className="mono">{amountText}</dd>
+          </div>
+          <div>
+            <dt>{t('dock.breakdown.spent')}</dt>
+            <dd className="mono">{formatUsd(spent)}</dd>
+          </div>
+        </dl>
+        <div className="cp-after">
+          <span>{t('dock.breakdown.after')}</span>
+          <span className="cp-meter" aria-hidden="true">
+            <i style={{ width: `${after > 0 ? Math.min(100, (spent / after) * 100) : 0}%` }} />
+          </span>
+          <span className="mono">
+            {formatUsd(spent)} <span className="cp-after-total">/ {formatUsd(after)}</span>
+          </span>
+        </div>
+      </details>
       <div className="card-actions">
-        <button type="button" className="btn primary" onClick={() => void approve()} disabled={!valid || busy}>
-          {t('director.approve', { amount: valid ? formatUsd(amount) : '—' })}
+        <button
+          type="button"
+          className="btn primary"
+          onClick={() => void approve()}
+          disabled={!valid || busy}
+          aria-busy={busy || undefined}
+          aria-label={t('director.approve', { amount: amountText })}
+        >
+          <Icon name="check" size={14} />
+          {t('dock.approve')} · <span className="mono">{amountText}</span>
         </button>
         <button type="button" className="btn" aria-expanded={changes} onClick={() => setChanges((v) => !v)}>
-          {t('director.requestChanges')}
+          {t('dock.change')}
         </button>
       </div>
       {changes && (
-        <div className="checkpoint-feedback">
+        <div className="cp-feedback">
           <textarea
             className="field"
             rows={3}
@@ -213,6 +334,7 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
 
 // ───────────────────────── Genehmigung ─────────────────────────
 
+/** Genehmigung: Warn-Icon, Kicker „Genehmigung · Budget“, Titel, ein Satz, Genehmigen (primär) und Ablehnen. */
 export function ApprovalCard({ request }: { request: ApprovalRequest }) {
   const t = useT();
   const actions = useActions();
@@ -222,73 +344,36 @@ export function ApprovalCard({ request }: { request: ApprovalRequest }) {
     await actions.decideApproval(request.id, approved);
     setBusy(false);
   };
+  const amount = request.amountUsd !== undefined ? formatUsd(request.amountUsd) : null;
   return (
-    <article className="card approval-card" aria-label={`${t('director.approval')}: ${request.title}`}>
-      <header className="card-header">
-        <Icon name="warning" size={14} />
-        <span>
-          {t('director.approval')} · {t(`director.approval.${request.kind}`)}
-        </span>
+    <article className="card dock-card approval-card" aria-label={`${t('director.approval')}: ${request.title}`}>
+      <header className="card-kicker">
+        <Icon name="warning" size={14} className="approval-icon" />
+        <span className="overline">{t('dock.approvalKicker', { kind: t(`director.approval.${request.kind}`) })}</span>
       </header>
-      <strong className="card-title">{request.title}</strong>
-      <p>{request.detail}</p>
-      {request.amountUsd !== undefined && <p className="approval-amount">{formatUsd(request.amountUsd)}</p>}
+      <h3 className="card-title">{request.title}</h3>
+      {request.detail && <p className="card-text">{withMonoAmounts(request.detail)}</p>}
       <div className="card-actions">
-        <button type="button" className="btn primary" onClick={() => void decide(true)} disabled={busy}>
+        <button
+          type="button"
+          className="btn primary"
+          onClick={() => void decide(true)}
+          disabled={busy}
+          aria-busy={busy || undefined}
+          aria-label={amount ? `${t('director.grant')} (${amount})` : undefined}
+        >
           {t('director.grant')}
-          {request.amountUsd !== undefined ? ` (${formatUsd(request.amountUsd)})` : ''}
+          {amount && (
+            <>
+              {' · '}
+              <span className="mono">{amount}</span>
+            </>
+          )}
         </button>
         <button type="button" className="btn" onClick={() => void decide(false)} disabled={busy}>
           {t('director.deny')}
         </button>
       </div>
     </article>
-  );
-}
-
-// ───────────────────────── Warteschlange ─────────────────────────
-
-export function GenerationQueue({ generations }: { generations: Generation[] }) {
-  const t = useT();
-  const models = useStudio((s) => s.models);
-  const [now, setNow] = useState(() => Date.now());
-  const active = generations.filter((g) => g.status === 'queued' || g.status === 'running');
-  useEffect(() => {
-    if (!active.some((g) => g.status === 'running')) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [active.length, active]);
-  if (active.length === 0) return null;
-  const nameOf = (id: string) => models?.find((m) => m.id === id)?.displayName ?? id.split('/').slice(-2).join('/');
-  const first = active.find((g) => g.status === 'running') ?? active[0]!;
-  return (
-    <details className="gen-queue" aria-label={t('director.queue')}>
-      <summary>
-        <span className={`gen-status${first.status === 'running' ? ' is-running' : ''}`} aria-hidden="true" />
-        <span>
-          {t('director.queue')} ({active.length})
-        </span>
-        <span className="gen-queue-first">{first.purpose}</span>
-      </summary>
-      <ul>
-        {active.map((g) => (
-          <li key={g.id} className={`gen gen-${g.status}`}>
-            <span className={`gen-status${g.status === 'running' ? ' is-running' : ''}`} aria-hidden="true" />
-            <span className="gen-main">
-              <span className="gen-purpose">{g.purpose}</span>
-              <span className="gen-meta">
-                {nameOf(g.endpointId)} ·{' '}
-                {g.status === 'queued'
-                  ? g.queuePosition
-                    ? t('director.queuePosition', { n: g.queuePosition })
-                    : t('director.gen.queued')
-                  : t('director.queueRunning', { elapsed: formatElapsed(now - new Date(g.submittedAt ?? g.createdAt).getTime()) })}{' '}
-                · {t('director.queueEstimate', { amount: formatUsd(g.estimateUsd) })}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </details>
   );
 }

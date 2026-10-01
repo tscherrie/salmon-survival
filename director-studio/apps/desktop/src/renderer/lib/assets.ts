@@ -1,6 +1,56 @@
-import type { Asset, Generation, LineageEdge } from '@studio/core';
+import { clipAssetIds, type Asset, type Generation, type Layer, type LineageEdge, type StudioDocument } from '@studio/core';
 
 export type AssetUiStatus = 'used' | 'unused' | 'rejected' | 'linked';
+
+/**
+ * Verwendungsorte aller Assets eines Dokuments (DESIGN.md §7.3), in Dokumentreihenfolge und ohne Duplikate:
+ * - Timeline: IDs der Spuren mit Clips, die das Asset verwenden (`clip.assetId` und Asset-Referenzen in `props`),
+ * - Deck: `F{n}` für Folien, deren Element oder Hintergrund das Asset verwendet,
+ * - Leinwand: Ebenennamen (ohne Namen die Ebenen-ID; Bild und Maske),
+ * - Site: Pfade der Seiten, deren `mockups` das Asset enthalten.
+ */
+export function assetUsageMap(doc: StudioDocument | null): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  const add = (assetId: string | undefined, place: string) => {
+    if (!assetId) return;
+    const list = map.get(assetId);
+    if (!list) map.set(assetId, [place]);
+    else if (!list.includes(place)) list.push(place);
+  };
+  switch (doc?.kind) {
+    case 'timeline':
+      for (const track of doc.tracks) for (const clip of track.clips) for (const id of clipAssetIds(clip)) add(id, track.id);
+      break;
+    case 'deck':
+      doc.slides.forEach((slide, i) => {
+        if (slide.background && typeof slide.background === 'object') add(slide.background.assetId, `F${i + 1}`);
+        for (const el of slide.elements) add(el.assetId, `F${i + 1}`);
+      });
+      break;
+    case 'canvas': {
+      const visit = (layers: readonly Layer[]) => {
+        for (const layer of layers) {
+          add(layer.assetId, layer.name ?? layer.id);
+          add(layer.maskAssetId, layer.name ?? layer.id);
+          if (layer.children) visit(layer.children);
+        }
+      };
+      visit(doc.layers);
+      break;
+    }
+    case 'site':
+      for (const page of doc.pages) for (const id of Object.values(page.mockups ?? {})) add(id, page.path);
+      break;
+    default:
+      break;
+  }
+  return map;
+}
+
+/** Verwendungsorte eines Assets (`V1`, `A2`, `F3`, `/about` …); leer, wenn es nicht im Dokument steckt. */
+export function assetUsage(doc: StudioDocument | null, assetId: string): string[] {
+  return assetUsageMap(doc).get(assetId) ?? [];
+}
 
 /** Status für Chip/Filter: verworfen > im Dokument > verknüpft > ungenutzt. */
 export function assetUiStatus(asset: Asset, used: ReadonlySet<string>): AssetUiStatus {
