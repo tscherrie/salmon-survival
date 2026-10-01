@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+<title>Director Studio</title>
+<defs>
+<clipPath id="body"><path d="M 19.077 2 C 21.646 2 22.931 2 24.314 2.437 C 25.824 2.987 27.013 4.176 27.563 5.686 C 28 7.069 28 8.354 28 10.923 L 28 19.077 C 28 21.646 28 22.931 27.563 24.314 C 27.013 25.824 25.824 27.013 24.314 27.563 C 22.931 28 21.646 28 19.077 28 L 10.923 28 C 8.354 28 7.069 28 5.686 27.563 C 4.176 27.013 2.987 25.824 2.437 24.314 C 2 22.931 2 21.646 2 19.077 L 2 10.923 C 2 8.354 2 7.069 2.437 5.686 C 2.987 4.176 4.176 2.987 5.686 2.437 C 7.069 2 8.354 2 10.923 2 Z"/></clipPath>
+<linearGradient id="well" x1="0" y1="2" x2="0" y2="28" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#222224"/><stop offset="1" stop-color="#0B0B0C"/></linearGradient>
+<linearGradient id="rim" x1="0" y1="2" x2="0" y2="28" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.16"/><stop offset=".5" stop-color="#fff" stop-opacity="0.07"/><stop offset="1" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+<linearGradient id="floor" x1="0" y1="19" x2="0" y2="28" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.05"/><stop offset="1" stop-color="#fff" stop-opacity="0.012"/></linearGradient>
+</defs>
+<path d="M 19.077 2 C 21.646 2 22.931 2 24.314 2.437 C 25.824 2.987 27.013 4.176 27.563 5.686 C 28 7.069 28 8.354 28 10.923 L 28 19.077 C 28 21.646 28 22.931 27.563 24.314 C 27.013 25.824 25.824 27.013 24.314 27.563 C 22.931 28 21.646 28 19.077 28 L 10.923 28 C 8.354 28 7.069 28 5.686 27.563 C 4.176 27.013 2.987 25.824 2.437 24.314 C 2 22.931 2 21.646 2 19.077 L 2 10.923 C 2 8.354 2 7.069 2.437 5.686 C 2.987 4.176 4.176 2.987 5.686 2.437 C 7.069 2 8.354 2 10.923 2 Z" fill="url(#well)"/>
+<g clip-path="url(#body)">
+<rect x="0" y="19" width="30" height="11" fill="url(#floor)"/>
+<rect x="11" y="20" width="1" height="1" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="11" y="22" width="1" height="1" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="11" y="24" width="1" height="1" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="11" y="26" width="1" height="1" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="0" y="18" width="30" height="1" fill="#8C8881"/>
+<rect x="21" y="6" width="1" height="21" fill="#F0A458"/>
+<rect x="11" y="14" width="1" height="5" fill="#9DBDD8"/>
+<rect x="6" y="6" width="11" height="9" rx="2.019" fill="#9DBDD8"/>
+<rect x="11" y="8" width="1" height="6" fill="#0B1620"/>
+<rect x="10" y="9" width="1" height="1" fill="#0B1620"/>
+<rect x="10" y="13" width="3" height="1" fill="#0B1620"/>
+<rect x="19" y="6" width="5" height="1" fill="#F0A458"/>
+<rect x="19" y="7" width="5" height="1" fill="#F0A458"/>
+<rect x="19" y="8" width="5" height="1" fill="#F0A458"/>
+<rect x="19" y="9" width="5" height="1" fill="#F0A458"/>
+<rect x="19" y="10" width="5" height="1" fill="#F0A458"/>
+<rect x="20" y="11" width="3" height="1" fill="#F0A458"/>
+</g>
+<path d="M 19.077 2 C 21.646 2 22.931 2 24.314 2.437 C 25.824 2.987 27.013 4.176 27.563 5.686 C 28 7.069 28 8.354 28 10.923 L 28 19.077 C 28 21.646 28 22.931 27.563 24.314 C 27.013 25.824 25.824 27.013 24.314 27.563 C 22.931 28 21.646 28 19.077 28 L 10.923 28 C 8.354 28 7.069 28 5.686 27.563 C 4.176 27.013 2.987 25.824 2.437 24.314 C 2 22.931 2 21.646 2 19.077 L 2 10.923 C 2 8.354 2 7.069 2.437 5.686 C 2.987 4.176 4.176 2.987 5.686 2.437 C 7.069 2 8.354 2 10.923 2 Z" fill="none" stroke="url(#rim)" stroke-width="2" clip-path="url(#body)"/>
+</svg>

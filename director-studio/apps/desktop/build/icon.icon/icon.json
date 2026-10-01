@@ -1,0 +1,81 @@
+{
+  "color-space-for-untagged-svg-colors": "srgb",
+  "fill-specializations": [
+    {
+      "value": {
+        "automatic-gradient": "srgb:0.09412,0.09412,0.10196,1.00000"
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "automatic-gradient": "srgb:0.09412,0.09412,0.10196,1.00000"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "playhead.svg",
+          "name": "Playhead"
+        }
+      ],
+      "name": "Playhead",
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.3
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "marker.svg",
+          "name": "Marker"
+        },
+        {
+          "image-name": "drop-line.svg",
+          "name": "Drop line",
+          "opacity": 0.5,
+          "glass": false
+        }
+      ],
+      "name": "Marker",
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.3
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "rule.svg",
+          "name": "Timeline rule"
+        }
+      ],
+      "name": "Timeline",
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.3
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.3
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}

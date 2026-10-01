@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+<title>Director Studio</title>
+<defs>
+<clipPath id="body"><path d="M 12.822 1 C 14.601 1 15.491 1 16.448 1.303 C 17.493 1.683 18.317 2.507 18.697 3.552 C 19 4.509 19 5.399 19 7.178 L 19 12.822 C 19 14.601 19 15.491 18.697 16.448 C 18.317 17.493 17.493 18.317 16.448 18.697 C 15.491 19 14.601 19 12.822 19 L 7.178 19 C 5.399 19 4.509 19 3.552 18.697 C 2.507 18.317 1.683 17.493 1.303 16.448 C 1 15.491 1 14.601 1 12.822 L 1 7.178 C 1 5.399 1 4.509 1.303 3.552 C 1.683 2.507 2.507 1.683 3.552 1.303 C 4.509 1 5.399 1 7.178 1 Z"/></clipPath>
+<linearGradient id="well" x1="0" y1="1" x2="0" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#222224"/><stop offset="1" stop-color="#0B0B0C"/></linearGradient>
+<linearGradient id="rim" x1="0" y1="1" x2="0" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.16"/><stop offset=".5" stop-color="#fff" stop-opacity="0.07"/><stop offset="1" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+<linearGradient id="floor" x1="0" y1="13" x2="0" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.05"/><stop offset="1" stop-color="#fff" stop-opacity="0.012"/></linearGradient>
+</defs>
+<path d="M 12.822 1 C 14.601 1 15.491 1 16.448 1.303 C 17.493 1.683 18.317 2.507 18.697 3.552 C 19 4.509 19 5.399 19 7.178 L 19 12.822 C 19 14.601 19 15.491 18.697 16.448 C 18.317 17.493 17.493 18.317 16.448 18.697 C 15.491 19 14.601 19 12.822 19 L 7.178 19 C 5.399 19 4.509 19 3.552 18.697 C 2.507 18.317 1.683 17.493 1.303 16.448 C 1 15.491 1 14.601 1 12.822 L 1 7.178 C 1 5.399 1 4.509 1.303 3.552 C 1.683 2.507 2.507 1.683 3.552 1.303 C 4.509 1 5.399 1 7.178 1 Z" fill="url(#well)"/>
+<g clip-path="url(#body)">
+<rect x="0" y="13" width="20" height="7" fill="url(#floor)"/>
+<rect x="7" y="14" width="1" height="1" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="7" y="16" width="1" height="1" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="-1" y="12" width="22" height="1" fill="#8C8881"/>
+<rect x="14" y="4" width="1" height="14" fill="#F0A458"/>
+<rect x="7" y="10" width="1" height="2" fill="#9DBDD8"/>
+<rect x="4" y="4" width="7" height="6" rx="1" fill="#9DBDD8"/>
+<rect x="7" y="5" width="1" height="4" fill="#0B1620"/>
+<rect x="6" y="6" width="1" height="1" fill="#0B1620"/>
+<rect x="6" y="8" width="1" height="1" fill="#0B1620"/>
+<rect x="8" y="8" width="1" height="1" fill="#0B1620"/>
+<rect x="13" y="4" width="3" height="3" fill="#F0A458"/>
+</g>
+<path d="M 12.822 1 C 14.601 1 15.491 1 16.448 1.303 C 17.493 1.683 18.317 2.507 18.697 3.552 C 19 4.509 19 5.399 19 7.178 L 19 12.822 C 19 14.601 19 15.491 18.697 16.448 C 18.317 17.493 17.493 18.317 16.448 18.697 C 15.491 19 14.601 19 12.822 19 L 7.178 19 C 5.399 19 4.509 19 3.552 18.697 C 2.507 18.317 1.683 17.493 1.303 16.448 C 1 15.491 1 14.601 1 12.822 L 1 7.178 C 1 5.399 1 4.509 1.303 3.552 C 1.683 2.507 2.507 1.683 3.552 1.303 C 4.509 1 5.399 1 7.178 1 Z" fill="none" stroke="url(#rim)" stroke-width="2" clip-path="url(#body)"/>
+</svg>

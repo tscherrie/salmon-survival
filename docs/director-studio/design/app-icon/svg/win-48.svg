@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+<title>Director Studio</title>
+<defs>
+<clipPath id="body"><path d="M 30.585 3 C 34.736 3 36.811 3 39.045 3.706 C 41.484 4.594 43.406 6.516 44.294 8.955 C 45 11.189 45 13.264 45 17.415 L 45 30.585 C 45 34.736 45 36.811 44.294 39.045 C 43.406 41.484 41.484 43.406 39.045 44.294 C 36.811 45 34.736 45 30.585 45 L 17.415 45 C 13.264 45 11.189 45 8.955 44.294 C 6.516 43.406 4.594 41.484 3.706 39.045 C 3 36.811 3 34.736 3 30.585 L 3 17.415 C 3 13.264 3 11.189 3.706 8.955 C 4.594 6.516 6.516 4.594 8.955 3.706 C 11.189 3 13.264 3 17.415 3 Z"/></clipPath>
+<linearGradient id="well" x1="0" y1="3" x2="0" y2="45" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#222224"/><stop offset="1" stop-color="#0B0B0C"/></linearGradient>
+<linearGradient id="rim" x1="0" y1="3" x2="0" y2="45" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.16"/><stop offset=".5" stop-color="#fff" stop-opacity="0.07"/><stop offset="1" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+<linearGradient id="floor" x1="0" y1="30" x2="0" y2="45" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.05"/><stop offset="1" stop-color="#fff" stop-opacity="0.012"/></linearGradient>
+</defs>
+<path d="M 30.585 3 C 34.736 3 36.811 3 39.045 3.706 C 41.484 4.594 43.406 6.516 44.294 8.955 C 45 11.189 45 13.264 45 17.415 L 45 30.585 C 45 34.736 45 36.811 44.294 39.045 C 43.406 41.484 41.484 43.406 39.045 44.294 C 36.811 45 34.736 45 30.585 45 L 17.415 45 C 13.264 45 11.189 45 8.955 44.294 C 6.516 43.406 4.594 41.484 3.706 39.045 C 3 36.811 3 34.736 3 30.585 L 3 17.415 C 3 13.264 3 11.189 3.706 8.955 C 4.594 6.516 6.516 4.594 8.955 3.706 C 11.189 3 13.264 3 17.415 3 Z" fill="url(#well)"/>
+<g clip-path="url(#body)">
+<rect x="0" y="30" width="48" height="18" fill="url(#floor)"/>
+<rect x="18" y="32" width="2" height="2" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="18" y="36" width="2" height="2" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="18" y="40" width="2" height="2" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="1" y="28" width="46" height="2" fill="#8C8881"/>
+<rect x="18" y="24" width="2" height="5" fill="#9DBDD8"/>
+<rect x="9" y="11" width="20" height="14" rx="3.262" fill="#5F7F9C"/>
+<rect x="9" y="10" width="20" height="14" rx="3.262" fill="#9DBDD8"/>
+<rect x="18" y="13" width="2" height="9" fill="#0B1620"/>
+<rect x="17" y="14" width="1" height="2" fill="#0B1620"/>
+<rect x="16" y="15" width="1" height="2" fill="#0B1620"/>
+<rect x="16" y="21" width="6" height="1" fill="#0B1620"/>
+<path d="M 31 10 H 40 V 17 L 36 19.667 V 44 H 35 V 19.667 L 31 17 Z" fill="#F0A458"/>
+</g>
+<path d="M 30.585 3 C 34.736 3 36.811 3 39.045 3.706 C 41.484 4.594 43.406 6.516 44.294 8.955 C 45 11.189 45 13.264 45 17.415 L 45 30.585 C 45 34.736 45 36.811 44.294 39.045 C 43.406 41.484 41.484 43.406 39.045 44.294 C 36.811 45 34.736 45 30.585 45 L 17.415 45 C 13.264 45 11.189 45 8.955 44.294 C 6.516 43.406 4.594 41.484 3.706 39.045 C 3 36.811 3 34.736 3 30.585 L 3 17.415 C 3 13.264 3 11.189 3.706 8.955 C 4.594 6.516 6.516 4.594 8.955 3.706 C 11.189 3 13.264 3 17.415 3 Z" fill="none" stroke="url(#rim)" stroke-width="2" clip-path="url(#body)"/>
+</svg>

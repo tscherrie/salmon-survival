@@ -12,7 +12,9 @@ appId: studio.director.desktop
 electronVersion: 44.5.1
 productName: Director Studio
 copyright: Copyright © 2026 Director Studio
-# Icons (build/icon.icns, build/icon.ico, build/icons/) erzeugt scripts/make-icons.mjs aus build/icon.svg.
+# App-Icon „Marker“ (build/icon.icns, build/icon.ico, build/icons/): fertige, für kleine Größen von Hand
+# abgestimmte Dateien. Quellen und Generator: docs/director-studio/design/app-icon/. build/icon.icon ist die
+# Icon-Composer-Fassung für macOS 26+ (Kompilieren braucht Xcode 26, siehe dortige layers/README.txt).
 directories:
   output: release
   buildResources: build

@@ -32,6 +32,8 @@ const APP_NAME = 'Director Studio';
 const WINDOW = { width: 1600, height: 1000, minWidth: 1180, minHeight: 720 };
 /** Hilfsprozess für Remotions Chromium-Download (eigener Einstieg im Bündel, siehe chromium.ts). */
 const chromiumWorker = join(here, 'chromium-worker.js');
+/** App-Icon für den ungepackten Start (out/main → build/icon.png); gepackt kommt es aus icns/ico. */
+const devIcon = app.isPackaged ? undefined : join(here, '../../build/icon.png');
 
 // Isolierter Datenordner (Tests, mehrere Profile).
 if (process.env.STUDIO_USER_DATA) app.setPath('userData', process.env.STUDIO_USER_DATA);
@@ -85,6 +87,8 @@ async function createWindow(): Promise<void> {
     show: false,
     backgroundColor: '#111214',
     title: APP_NAME,
+    // Windows/Linux ungepackt: Fenster- und Taskleisten-Icon (unter macOS setzt main() das Dock-Icon).
+    ...(devIcon && process.platform !== 'darwin' ? { icon: devIcon } : {}),
     webPreferences: {
       preload: join(here, '../preload/index.cjs'),
       contextIsolation: true,
@@ -209,6 +213,8 @@ async function main(): Promise<void> {
   });
   protocol.handle(ASSET_SCHEME, createAssetHandler((projectId, assetId, variant) => backend!.resolveAssetFile(projectId, assetId, variant)));
   registerIpc(backend);
+  // Ungepackt (npm run app) zeigt das Dock sonst das Electron-Icon; die gepackte App bringt icon.icns mit.
+  if (devIcon && process.platform === 'darwin') app.dock?.setIcon(devIcon);
   app.setAboutPanelOptions({ applicationName: APP_NAME, applicationVersion: app.getVersion() });
   Menu.setApplicationMenu(
     Menu.buildFromTemplate(

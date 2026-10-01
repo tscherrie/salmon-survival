@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<title>Director Studio</title>
+<defs>
+<clipPath id="body"><path d="M 40.153 6 C 45.292 6 47.862 6 50.627 6.875 C 53.647 7.974 56.026 10.353 57.125 13.373 C 58 16.138 58 18.708 58 23.847 L 58 40.153 C 58 45.292 58 47.862 57.125 50.627 C 56.026 53.647 53.647 56.026 50.627 57.125 C 47.862 58 45.292 58 40.153 58 L 23.847 58 C 18.708 58 16.138 58 13.373 57.125 C 10.353 56.026 7.974 53.647 6.875 50.627 C 6 47.862 6 45.292 6 40.153 L 6 23.847 C 6 18.708 6 16.138 6.875 13.373 C 7.974 10.353 10.353 7.974 13.373 6.875 C 16.138 6 18.708 6 23.847 6 Z"/></clipPath>
+<linearGradient id="well" x1="0" y1="6" x2="0" y2="58" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#222224"/><stop offset="1" stop-color="#0B0B0C"/></linearGradient>
+<linearGradient id="rim" x1="0" y1="6" x2="0" y2="58" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.16"/><stop offset=".5" stop-color="#fff" stop-opacity="0.07"/><stop offset="1" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+<linearGradient id="floor" x1="0" y1="39" x2="0" y2="58" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.05"/><stop offset="1" stop-color="#fff" stop-opacity="0.012"/></linearGradient>
+</defs>
+<path d="M 40.153 6 C 45.292 6 47.862 6 50.627 6.875 C 53.647 7.974 56.026 10.353 57.125 13.373 C 58 16.138 58 18.708 58 23.847 L 58 40.153 C 58 45.292 58 47.862 57.125 50.627 C 56.026 53.647 53.647 56.026 50.627 57.125 C 47.862 58 45.292 58 40.153 58 L 23.847 58 C 18.708 58 16.138 58 13.373 57.125 C 10.353 56.026 7.974 53.647 6.875 50.627 C 6 47.862 6 45.292 6 40.153 L 6 23.847 C 6 18.708 6 16.138 6.875 13.373 C 7.974 10.353 10.353 7.974 13.373 6.875 C 16.138 6 18.708 6 23.847 6 Z" fill="url(#well)"/>
+<g clip-path="url(#body)">
+<rect x="0" y="39" width="64" height="25" fill="url(#floor)"/>
+<rect x="25" y="41" width="2" height="3" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="25" y="46" width="2" height="3" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="25" y="51" width="2" height="3" fill="#9DBDD8" fill-opacity="0.5"/>
+<rect x="4" y="38" width="56" height="1" fill="#8C8881"/>
+<rect x="25" y="33" width="2" height="6" fill="#9DBDD8"/>
+<rect x="14" y="15" width="24" height="19" rx="4.039" fill="#5F7F9C"/>
+<rect x="14" y="14" width="24" height="19" rx="4.039" fill="#9DBDD8"/>
+<rect x="25" y="18" width="2" height="12" fill="#0B1620"/>
+<rect x="24" y="19" width="1" height="2" fill="#0B1620"/>
+<rect x="23" y="20" width="1" height="2" fill="#0B1620"/>
+<rect x="22" y="21" width="1" height="2" fill="#0B1620"/>
+<rect x="22" y="28" width="8" height="2" fill="#0B1620"/>
+<path d="M 41 14 H 51 V 22 L 47 25.2 V 57 H 45 V 25.2 L 41 22 Z" fill="#F0A458"/>
+</g>
+<path d="M 40.153 6 C 45.292 6 47.862 6 50.627 6.875 C 53.647 7.974 56.026 10.353 57.125 13.373 C 58 16.138 58 18.708 58 23.847 L 58 40.153 C 58 45.292 58 47.862 57.125 50.627 C 56.026 53.647 53.647 56.026 50.627 57.125 C 47.862 58 45.292 58 40.153 58 L 23.847 58 C 18.708 58 16.138 58 13.373 57.125 C 10.353 56.026 7.974 53.647 6.875 50.627 C 6 47.862 6 45.292 6 40.153 L 6 23.847 C 6 18.708 6 16.138 6.875 13.373 C 7.974 10.353 10.353 7.974 13.373 6.875 C 16.138 6 18.708 6 23.847 6 Z" fill="none" stroke="url(#rim)" stroke-width="2" clip-path="url(#body)"/>
+</svg>

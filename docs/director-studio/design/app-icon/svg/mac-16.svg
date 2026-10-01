@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+<title>Director Studio</title>
+<defs>
+<clipPath id="body"><path d="M 9.538 1 C 10.823 1 11.465 1 12.157 1.219 C 12.912 1.493 13.507 2.088 13.781 2.843 C 14 3.535 14 4.177 14 5.462 L 14 9.538 C 14 10.823 14 11.465 13.781 12.157 C 13.507 12.912 12.912 13.507 12.157 13.781 C 11.465 14 10.823 14 9.538 14 L 5.462 14 C 4.177 14 3.535 14 2.843 13.781 C 2.088 13.507 1.493 12.912 1.219 12.157 C 1 11.465 1 10.823 1 9.538 L 1 5.462 C 1 4.177 1 3.535 1.219 2.843 C 1.493 2.088 2.088 1.493 2.843 1.219 C 3.535 1 4.177 1 5.462 1 Z"/></clipPath>
+<linearGradient id="well" x1="0" y1="1" x2="0" y2="14" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#222224"/><stop offset="1" stop-color="#0B0B0C"/></linearGradient>
+<linearGradient id="rim" x1="0" y1="1" x2="0" y2="14" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.16"/><stop offset=".5" stop-color="#fff" stop-opacity="0.07"/><stop offset="1" stop-color="#fff" stop-opacity="0.1"/></linearGradient>
+<linearGradient id="floor" x1="0" y1="10" x2="0" y2="14" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.05"/><stop offset="1" stop-color="#fff" stop-opacity="0.012"/></linearGradient>
+</defs>
+<path d="M 9.538 1 C 10.823 1 11.465 1 12.157 1.219 C 12.912 1.493 13.507 2.088 13.781 2.843 C 14 3.535 14 4.177 14 5.462 L 14 9.538 C 14 10.823 14 11.465 13.781 12.157 C 13.507 12.912 12.912 13.507 12.157 13.781 C 11.465 14 10.823 14 9.538 14 L 5.462 14 C 4.177 14 3.535 14 2.843 13.781 C 2.088 13.507 1.493 12.912 1.219 12.157 C 1 11.465 1 10.823 1 9.538 L 1 5.462 C 1 4.177 1 3.535 1.219 2.843 C 1.493 2.088 2.088 1.493 2.843 1.219 C 3.535 1 4.177 1 5.462 1 Z" fill="url(#well)"/>
+<g clip-path="url(#body)">
+<rect x="0" y="10" width="16" height="6" fill="url(#floor)"/>
+<rect x="-1" y="9" width="18" height="1" fill="#8C8881"/>
+<rect x="10" y="3" width="1" height="10" fill="#F0A458"/>
+<rect x="5" y="8" width="1" height="1" fill="#9DBDD8"/>
+<rect x="3" y="3" width="5" height="5" rx="0.75" fill="#9DBDD8"/>
+<rect x="9" y="3" width="3" height="2" fill="#F0A458"/>
+</g>
+<path d="M 9.538 1 C 10.823 1 11.465 1 12.157 1.219 C 12.912 1.493 13.507 2.088 13.781 2.843 C 14 3.535 14 4.177 14 5.462 L 14 9.538 C 14 10.823 14 11.465 13.781 12.157 C 13.507 12.912 12.912 13.507 12.157 13.781 C 11.465 14 10.823 14 9.538 14 L 5.462 14 C 4.177 14 3.535 14 2.843 13.781 C 2.088 13.507 1.493 12.912 1.219 12.157 C 1 11.465 1 10.823 1 9.538 L 1 5.462 C 1 4.177 1 3.535 1.219 2.843 C 1.493 2.088 2.088 1.493 2.843 1.219 C 3.535 1 4.177 1 5.462 1 Z" fill="none" stroke="url(#rim)" stroke-width="2" clip-path="url(#body)"/>
+</svg>
