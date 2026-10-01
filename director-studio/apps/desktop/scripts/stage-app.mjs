@@ -2,7 +2,8 @@
 //
 //   app/                 App-Ordner für electron-builder (landet als app.asar in resources/):
 //     package.json       Name, Version, Einstieg – OHNE dependencies (electron-builder sammelt nichts ein)
-//     out/               Main/Preload (esbuild) und Oberfläche (Vite), ohne Source-Maps
+//     out/               Main (samt Chromium-Hilfsprozess), Preload (esbuild), Oberfläche (Vite) und die
+//                        Director-Skills (out/skills), ohne Source-Maps
 //   node_modules/        Laufzeitpakete (landet über extraResources als resources/node_modules, AUSSERHALB des asar):
 //                        die externen Importe des Main-Bündels samt Abhängigkeitshülle, genau in den installierten
 //                        (= Lockfile-)Versionen und nur mit den Plattformpaketen des Build-Rechners; dazu die Quellen
@@ -32,7 +33,7 @@ export function stageApp(options = {}) {
   const log = options.log ?? ((msg) => console.log(msg));
 
   const out = path.join(appDir, 'out');
-  for (const required of ['main/index.js', 'main/externals.json', 'preload/index.cjs', 'renderer/index.html']) {
+  for (const required of ['main/index.js', 'main/chromium-worker.js', 'main/externals.json', 'preload/index.cjs', 'renderer/index.html', 'skills']) {
     if (!existsSync(path.join(out, required))) throw new Error(`out/${required} fehlt – zuerst „npm run build“ ausführen.`);
   }
 

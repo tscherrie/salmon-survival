@@ -555,9 +555,11 @@ mit Seed) → Basis ausblenden oder mischen → QA per Stills.
 4. **E2E und Härtung**, danach groß angelegte Tests mit echten Keys (fal/Anthropic) in einer Umgebung mit
    Netzwerkfreigabe.
 5. **Installierbare App:** `npm run dist`/`dist:dir` (electron-builder, Staging mit den Laufzeitpaketen außerhalb
-   des asar, Vollständigkeitsprüfung mit dem gepackten Electron), Installationsskripte für macOS (ad hoc signiert,
-   Hardened Runtime) und Windows (NSIS bzw. Kopie mit Startmenü-Eintrag), ffmpeg-Suche im Hauptprozess. Siehe
-   `director-studio/README.md`, Abschnitt „Als App installieren“.
+   des asar, Director-Skills im asar, Vollständigkeitsprüfung der gepackten Ressourcen), Electron-Fuses (kein
+   RunAsNode/NODE_OPTIONS/--inspect, nur das geprüfte app.asar; Node-Kindprozesse als utilityProcess),
+   Installationsskripte für macOS (ad hoc signiert, Hardened Runtime, Compositor-Bibliotheken über @loader_path) und
+   Windows x64 (NSIS bzw. Kopie mit Startmenü-Eintrag), ffmpeg-Suche im Hauptprozess, Chromium-Bereitstellung im
+   Hilfsprozess. Siehe `director-studio/README.md`, Abschnitt „Als App installieren“.
 6. **Später:** Mehrnutzer (Sync/Teams), Signierung mit Developer ID/Zertifikat und Notarisierung (über `CSC_LINK`,
    `APPLE_ID` … vorbereitet), Auto-Update, lokale ML-Option (Apple Silicon / NVIDIA), Deploy-Integrationen.
 

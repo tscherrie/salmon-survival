@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Entitlements für lokale Builds ohne Developer ID (ad hoc signiert, Identität „-“): wie entitlements.mac.plist,
+  dazu disable-library-validation. Ad-hoc-signierter Code hat keine Team-ID; mit Library Validation verweigerte dyld
+  dann das Laden der Electron-Frameworks und nativer Module („mapped file has no Team ID“). scripts/dist.mjs und
+  scripts/install-mac.sh wählen diese Datei nur für die Ad-hoc-Signierung.
+-->
+<plist version="1.0">
+  <dict>
+    <!-- V8 (Electron) braucht JIT -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <!-- Push-to-Talk -->
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+  </dict>
+</plist>

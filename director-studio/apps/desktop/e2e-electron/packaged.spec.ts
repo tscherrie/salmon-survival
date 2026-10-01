@@ -1,20 +1,36 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { _electron as electron, expect, test, type ElectronApplication, type Page } from '@playwright/test';
 import { ProjectStore } from '@studio/project';
+import { headlessShellLocation } from '../src/main/chromium.ts';
 
 /**
- * Smoke-Test der GEPACKTEN App (release/…, vorher `npm run dist:dir`): Oberfläche aus dem asar, Preload/IPC,
- * `studio-asset://`, Projekte anlegen/öffnen und echte lokale Renderings über die mitgelieferten Pakete
- * (Remotion-Bündel + Compositor + ffmpeg für das Video, Playwright/Chromium für das PDF, pptxgenjs).
+ * Smoke-Test der GEPACKTEN App (release/…, vorher `npm run dist:test`, d. h. dist.mjs --dir --test-fuses: Playwright
+ * braucht die Inspektor-Argumente): Oberfläche aus dem asar, Director-Skills, Preload/IPC, `studio-asset://`,
+ * Projekte anlegen/öffnen und echte lokale Renderings über die mitgelieferten Pakete (Remotion-Bündel + Compositor +
+ * ffmpeg für das Video, Playwright/Chromium für das PDF, pptxgenjs), die Website-Vorschau (statisch und mit Vite im
+ * utilityProcess) und die Fuses.
+ *
+ * Chromium: Wie in der ausgelieferten App ohne STUDIO_CHROMIUM_PATH – der Hilfsprozess stellt Remotions
+ * Headless-Shell bereit. Ohne Netz (Standard) liegt Playwrights Headless-Shell als „Download“ in Remotions Cache;
+ * vorher lässt ein gesperrter Cache den ersten Versuch scheitern (ein zweiter muss in derselben Sitzung gelingen).
+ * Mit STUDIO_PACKAGED_DOWNLOAD=1 lädt die App die Shell wirklich herunter (Netz nötig).
  */
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
-const HEADLESS_SHELL = '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
+const rootDir = join(appDir, '..', '..');
+const HEADLESS_SHELL = process.env.STUDIO_TEST_HEADLESS_SHELL ?? '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
+const realDownload = process.env.STUDIO_PACKAGED_DOWNLOAD === '1';
+const require = createRequire(import.meta.url);
+/** Chrome-Version, die das mitgelieferte Remotion erwartet (steht in der VERSION-Datei seines Caches). */
+const REMOTION_CHROME_VERSION = (
+  require(join(dirname(require.resolve('@remotion/renderer/package.json')), 'dist', 'browser', 'get-chrome-download-url.js')) as { TESTED_VERSION: string }
+).TESTED_VERSION;
 
 function packagedExecutable(): string {
   if (process.env.STUDIO_PACKAGED_APP) return process.env.STUDIO_PACKAGED_APP;
@@ -35,7 +51,16 @@ function ffprobeJson(file: string): { streams: Array<{ codec_type: string; codec
 
 const executable = packagedExecutable();
 
-test.skip(!existsSync(executable), `Gepackte App fehlt (${executable}) – zuerst „npm run dist:dir“`);
+test.skip(!existsSync(executable), `Gepackte App fehlt (${executable}) – zuerst „npm run dist:test“`);
+test.skip(!realDownload && !existsSync(HEADLESS_SHELL), `Headless-Shell für den Test fehlt (${HEADLESS_SHELL}) – STUDIO_TEST_HEADLESS_SHELL setzen oder STUDIO_PACKAGED_DOWNLOAD=1`);
+
+/** Legt eine Headless-Shell so in Remotions Cache unter `runtime`, wie Remotions Download sie hinterlässt. */
+async function seedRemotionCache(runtime: string): Promise<void> {
+  const location = headlessShellLocation(runtime)!;
+  await mkdir(dirname(location.executable), { recursive: true });
+  await symlink(HEADLESS_SHELL, location.executable);
+  await writeFile(location.versionFile, REMOTION_CHROME_VERSION);
+}
 
 test('gepackte App: Oberfläche aus dem asar, Asset-Protokoll, Projekte und echte Exporte', async () => {
   const work = await mkdtemp(join(tmpdir(), 'dstudio-packaged-'));
@@ -69,13 +94,33 @@ test('gepackte App: Oberfläche aus dem asar, Asset-Protokoll, Projekte und echt
     );
     const filmDir = film.dir;
     await film.close();
+    // Websites: eine ohne installiertes Vite (wie aus dem Director), eine mit Vite im node_modules des Site-Ordners.
+    const webWithout = await ProjectStore.create(projectsDir, { title: 'Web ohne Vite', category: 'web' });
+    await mkdir(webWithout.siteDir, { recursive: true });
+    await writeFile(join(webWithout.siteDir, 'package.json'), '{"name":"site","private":true,"devDependencies":{"vite":"*"}}');
+    await writeFile(join(webWithout.siteDir, 'index.html'), '<!doctype html><html><body><h1>Statische Vorschau</h1></body></html>');
+    const webWithoutDir = webWithout.dir;
+    await webWithout.close();
+    const webVite = await ProjectStore.create(projectsDir, { title: 'Web mit Vite', category: 'web' });
+    await mkdir(join(webVite.siteDir, 'node_modules'), { recursive: true });
+    await writeFile(join(webVite.siteDir, 'package.json'), '{"name":"site","private":true,"type":"module"}');
+    await writeFile(join(webVite.siteDir, 'index.html'), '<!doctype html><html><body><h1>Vite im utilityProcess</h1></body></html>');
+    await symlink(dirname(require.resolve('vite/package.json')), join(webVite.siteDir, 'node_modules', 'vite'), 'dir');
+    const webViteDir = webVite.dir;
+    await webVite.close();
 
-    const chromium = process.env.STUDIO_CHROMIUM_PATH ?? (existsSync(HEADLESS_SHELL) ? HEADLESS_SHELL : undefined);
+    // Remotions Cache im Arbeitsordner der App: zunächst gesperrt (Datei statt Ordner) → der erste Versuch scheitert.
+    const runtime = join(userData, 'runtime');
+    if (!realDownload) {
+      await mkdir(join(runtime, 'node_modules'), { recursive: true });
+      await writeFile(join(runtime, 'node_modules', '.remotion'), 'gesperrt');
+    }
+    const { STUDIO_CHROMIUM_PATH: _ignored, ...env } = process.env;
     app = await electron.launch({
       executablePath: executable,
       args: ['--no-sandbox'],
       env: {
-        ...process.env,
+        ...env,
         // Wie eine aus Finder/Dock gestartete App: ffmpeg nicht im PATH, die App muss es selbst finden.
         PATH: '/nonexistent-gui-path',
         FFMPEG_PATH: '',
@@ -83,9 +128,10 @@ test('gepackte App: Oberfläche aus dem asar, Asset-Protokoll, Projekte und echt
         STUDIO_SMOKE_TEST: '1',
         STUDIO_USER_DATA: userData,
         ELECTRON_ENABLE_LOGGING: '1',
-        ...(chromium ? { STUDIO_CHROMIUM_PATH: chromium } : {}),
       },
     });
+    const mainLog: string[] = [];
+    app.process().stderr?.on('data', (chunk: Buffer) => mainLog.push(chunk.toString('utf8')));
     const window = await app.firstWindow();
     const errors: string[] = [];
     window.on('pageerror', (e) => errors.push(e.message));
@@ -109,6 +155,17 @@ test('gepackte App: Oberfläche aus dem asar, Asset-Protokoll, Projekte und echt
     expect(main.minimumSize).toEqual([1180, 720]);
     expect(main.menu).toEqual(process.platform === 'darwin' ? ['Director Studio', 'Bearbeiten', 'Fenster', 'Hilfe'] : ['Datei', 'Bearbeiten', 'Fenster', 'Hilfe']);
     expect(main.accelerators.join(' ')).not.toMatch(/(?:CommandOrControl|CmdOrCtrl)\+(?:0|1|2|3|M|Plus|-)\b/);
+
+    // Director-Skills im asar, dort, wo defaultSkillsDir() des Bündels sucht (out/skills neben out/main).
+    const skills = await app.evaluate(() => {
+      const builtin = (process as unknown as { getBuiltinModule(id: string): unknown }).getBuiltinModule;
+      const fs = builtin('node:fs') as typeof import('node:fs');
+      const path = builtin('node:path') as typeof import('node:path');
+      const dir = path.join(process.resourcesPath, 'app.asar', 'out', 'skills');
+      return fs.readdirSync(dir).filter((name) => fs.readFileSync(path.join(dir, name, 'SKILL.md'), 'utf8').includes('description:'));
+    });
+    expect(skills.length).toBeGreaterThan(10);
+    expect(skills).toEqual(expect.arrayContaining(['web-design', 'slides', 'image-models']));
 
     // 2. Preload/IPC und Werkzeugsuche (ffmpeg trotz leerem PATH über die bekannten Systemordner).
     expect(await window.evaluate(() => typeof (globalThis as { require?: unknown }).require)).toBe('undefined');
@@ -149,6 +206,17 @@ test('gepackte App: Oberfläche aus dem asar, Asset-Protokoll, Projekte und echt
 
     // 5. Deck: PDF (Playwright + Chromium) und PPTX (pptxgenjs).
     const deckSnap = await studio<{ manifest: { id: string } }>(window, 'openProject', deckDir);
+    if (!realDownload) {
+      // Erster Versuch: Chromium lässt sich nicht bereitstellen (gesperrter Cache) → verständlicher Fehler …
+      const failed = await window.evaluate(
+        (pid) => (window as unknown as AnyStudio).studio.exportProject!(pid, { target: 'pdf' }).then(() => 'ok', (e: Error) => e.message),
+        deckSnap.manifest.id,
+      );
+      expect(failed).toContain('Chromium für das Rendern konnte nicht geladen werden');
+      // … danach liegt die Shell im Cache, und der nächste Versuch in DERSELBEN Sitzung muss gelingen.
+      await rm(join(runtime, 'node_modules', '.remotion'));
+      await seedRemotionCache(runtime);
+    }
     const pdf = await studio<{ path: string }>(window, 'exportProject', deckSnap.manifest.id, { target: 'pdf' });
     expect((await readFile(pdf.path)).subarray(0, 4).toString()).toBe('%PDF');
     const pptx = await studio<{ path: string }>(window, 'exportProject', deckSnap.manifest.id, { target: 'pptx' });
@@ -162,13 +230,82 @@ test('gepackte App: Oberfläche aus dem asar, Asset-Protokoll, Projekte und echt
     expect(probe.streams.map((s) => s.codec_type).sort()).toEqual(['audio', 'video']);
     expect(Number(probe.format.duration)).toBeGreaterThan(0.8);
     expect(Number(probe.format.duration)).toBeLessThan(1.5);
+    // Die Headless-Shell kam aus Remotions Cache im Arbeitsordner (über den Hilfsprozess), nicht von außen.
+    const chromiumPath = await app.evaluate(() => process.env.STUDIO_CHROMIUM_PATH ?? null);
+    expect(chromiumPath).toBe(headlessShellLocation(runtime)!.executable);
+
+    // 7. Website ohne Vite: statische Vorschau und ein Hinweis im Projekt.
+    const webWithoutSnap = await studio<{ manifest: { id: string } }>(window, 'openProject', webWithoutDir);
+    const staticPreview = await studio<{ url: string }>(window, 'previewOpen', webWithoutSnap.manifest.id, { viewport: 'desktop' });
+    expect(await (await fetch(staticPreview.url)).text()).toContain('Statische Vorschau');
+    const webWithoutMessages = (await studio<{ messages: Array<{ role: string; text: string }> }>(window, 'getSnapshot', webWithoutSnap.manifest.id)).messages;
+    expect(webWithoutMessages.some((m) => m.role === 'system' && m.text.includes('Website-Vorschau ohne Vite'))).toBe(true);
+
+    // 8. Website mit Vite: Dev-Server als utilityProcess (die App startet nicht mehr als Node, Fuse RunAsNode aus).
+    const webViteSnap = await studio<{ manifest: { id: string } }>(window, 'openProject', webViteDir);
+    const vitePreview = await studio<{ url: string }>(window, 'previewOpen', webViteSnap.manifest.id, { viewport: 'desktop' });
+    const viteHtml = await (await fetch(vitePreview.url)).text();
+    expect(viteHtml).toContain('Vite im utilityProcess');
+    expect(viteHtml).toContain('/@vite/client');
 
     await window.screenshot({ path: join(appDir, 'test-results', 'packaged-smoke.png') });
     expect(errors).toEqual([]);
+    // Kein unbehandelter Promise-Fehler im Hauptprozess (früher nach dem ersten gescheiterten Chromium-Download).
+    expect(mainLog.join('')).not.toMatch(/UnhandledPromiseRejection/);
   } finally {
     await app?.close();
     // STUDIO_KEEP_TEST_OUTPUT=1: Projekte und Exporte zum Ansehen behalten.
     if (process.env.STUDIO_KEEP_TEST_OUTPUT === '1') console.log(`Testausgabe behalten: ${work}`);
     else await rm(work, { recursive: true, force: true });
+  }
+});
+
+test('gepackte App: Fuses – kein ELECTRON_RUN_AS_NODE, kein NODE_OPTIONS, nur app.asar mit Integritätsprüfung', async () => {
+  const { getCurrentFuseWire, FuseV1Options } = require('@electron/fuses') as typeof import('@electron/fuses');
+  const wire = await getCurrentFuseWire(executable);
+  const on = (fuse: number) => wire[fuse as keyof typeof wire] === 49; // FuseState.ENABLE
+  expect(on(FuseV1Options.RunAsNode)).toBe(false);
+  expect(on(FuseV1Options.EnableNodeOptionsEnvironmentVariable)).toBe(false);
+  expect(on(FuseV1Options.OnlyLoadAppFromAsar)).toBe(true);
+  expect(on(FuseV1Options.EnableEmbeddedAsarIntegrityValidation)).toBe(true);
+  // EnableNodeCliInspectArguments ist nur im Test-Build (--test-fuses) an – sonst könnte Playwright die App nicht steuern.
+
+  // Mit ELECTRON_RUN_AS_NODE und NODE_OPTIONS startet trotzdem die App (kein Node, keine fremden Module).
+  const work = await mkdtemp(join(tmpdir(), 'dstudio-fuses-'));
+  try {
+    const child = spawn(executable, ['--no-sandbox', '-e', "console.log('ALS-NODE-GESTARTET')"], {
+      env: {
+        ...process.env,
+        ELECTRON_RUN_AS_NODE: '1',
+        NODE_OPTIONS: `--require ${join(work, 'gibt-es-nicht.cjs')}`,
+        STUDIO_SMOKE_TEST: '1',
+        STUDIO_USER_DATA: join(work, 'userdata'),
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let output = '';
+    child.stdout.on('data', (chunk: Buffer) => (output += chunk.toString('utf8')));
+    child.stderr.on('data', (chunk: Buffer) => (output += chunk.toString('utf8')));
+    const result = await new Promise<string>((resolve) => {
+      const timer = setTimeout(() => resolve('Zeitüberschreitung'), 60_000);
+      const check = () => {
+        if (output.includes('STUDIO_SMOKE_READY')) {
+          clearTimeout(timer);
+          resolve('App gestartet');
+        }
+      };
+      child.stdout.on('data', check);
+      child.once('exit', (code) => {
+        clearTimeout(timer);
+        resolve(`beendet (${code})`);
+      });
+    });
+    const exited = child.exitCode !== null || child.signalCode !== null ? Promise.resolve() : new Promise<void>((resolve) => child.once('exit', () => resolve()));
+    child.kill();
+    await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 10_000))]);
+    expect(result).toBe('App gestartet');
+    expect(output).not.toContain('ALS-NODE-GESTARTET');
+  } finally {
+    await rm(work, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   }
 });

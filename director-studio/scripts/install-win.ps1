@@ -130,8 +130,14 @@ if ($missing.Count -gt 0) {
 }
 
 # Architektur: npm installiert die nativen Pakete (Remotion, esbuild, Claude-Code-Binary) für die Architektur von Node.
+# Für Windows gibt es Remotions Compositor und die Chromium-Headless-Shell nur für x64 – ein ARM64-Node würde erst
+# nach npm ci und Build scheitern. Ein x64-Node läuft auf Windows-ARM-Rechnern in der Emulation (die App dann auch).
 $arch = (node -p 'process.arch').Trim()
-if ($arch -ne 'x64' -and $arch -ne 'arm64') { Fail "Nicht unterstützte Architektur: $arch" }
+if ($arch -eq 'arm64') {
+  Fail ('Windows auf ARM64 wird nicht unterstützt (kein Remotion-Compositor und keine Chromium-Headless-Shell für ARM64). ' +
+    'Bitte die x64-Version von Node.js installieren (läuft in der x64-Emulation), z. B. winget install OpenJS.NodeJS.LTS --architecture x64, und das Skript erneut starten.')
+}
+if ($arch -ne 'x64') { Fail "Nicht unterstützte Architektur: $arch" }
 Write-Host "  Architektur: $arch"
 
 # ───────────── 2. Quelltext aktualisieren (optional) ─────────────

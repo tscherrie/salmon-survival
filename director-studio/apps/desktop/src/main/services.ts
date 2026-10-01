@@ -163,7 +163,10 @@ export interface RenderServiceOptions {
    * dieselbe Datei. In der Entwicklung bleibt es bei Playwrights eigenem Browser.
    */
   provisionChromium?: boolean | undefined;
-  /** Für Tests: Ersatz für Remotions `ensureBrowser` (liefert den Pfad zur Headless-Shell). */
+  /**
+   * Stellt die Headless-Shell bereit und liefert ihren Pfad – in der App ein Hilfsprozess (`runChromiumWorker`,
+   * siehe chromium.ts: Remotions `ensureBrowser` darf nicht im Hauptprozess laufen). Pflicht mit `provisionChromium`.
+   */
   ensureBrowser?: (() => Promise<string | undefined>) | undefined;
 }
 
@@ -196,12 +199,16 @@ export class RenderService {
     const explicit = this.options.browserExecutable || process.env.STUDIO_CHROMIUM_PATH;
     if (explicit) return explicit;
     if (!this.options.provisionChromium) return undefined;
+    const ensureBrowser = this.options.ensureBrowser;
+    if (!ensureBrowser) throw new Error('Chromium für das Rendern ist nicht eingerichtet (STUDIO_CHROMIUM_PATH setzen)');
     this.chromium ??= (async () => {
       let path: string | undefined;
       try {
-        path = this.options.ensureBrowser ? await this.options.ensureBrowser() : await remotionHeadlessShell();
+        path = await ensureBrowser();
       } catch (error) {
-        throw new Error(`Chromium für das Rendern konnte nicht geladen werden (einmalig ca. 100 MB, Internetverbindung nötig): ${(error as Error).message}`);
+        throw new Error(
+          `Chromium für das Rendern konnte nicht geladen werden (einmalig ca. 100 MB, Internetverbindung nötig – danach einfach erneut versuchen): ${(error as Error).message}`,
+        );
       }
       if (!path) throw new Error('Chromium für das Rendern ist nicht verfügbar');
       process.env.STUDIO_CHROMIUM_PATH = path;
@@ -350,13 +357,6 @@ export class RenderService {
     this.renderer = null;
     if (this.module) await (await this.module).closeDefaultBrowserPool();
   }
-}
-
-/** Remotions Headless-Shell (lädt sie beim ersten Aufruf herunter; Zielordner hängt vom Arbeitsordner ab). */
-async function remotionHeadlessShell(): Promise<string | undefined> {
-  const { ensureBrowser } = await import('@remotion/renderer');
-  const status = await ensureBrowser({ logLevel: 'error', chromeMode: 'headless-shell' });
-  return 'path' in status ? status.path : undefined;
 }
 
 export function toAssetMedia(asset: Asset, url: string): AssetMedia {

@@ -16,6 +16,7 @@
     "dist:dir": "node apps/desktop/scripts/dist.mjs --dir",
     "dist:mac": "node apps/desktop/scripts/dist.mjs --mac",
     "dist:win": "node apps/desktop/scripts/dist.mjs --win",
+    "dist:test": "node apps/desktop/scripts/dist.mjs --dir --test-fuses",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

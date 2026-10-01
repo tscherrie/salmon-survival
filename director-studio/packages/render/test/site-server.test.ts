@@ -3,7 +3,7 @@ import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { request } from 'node:http';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { BrowserPool, buildSiteZip, createZip, readPngSize, scrubEnv, screenshotSite, SiteServer } from '../src/index.ts';
+import { BrowserPool, buildSiteZip, createZip, readPngSize, scrubEnv, screenshotSite, SiteServer, spawnNodeLauncher, type NodeChild, type NodeLauncher } from '../src/index.ts';
 import { HAS_CHROMIUM, solidPng, testChromiumPath, tmpDir } from './helpers.ts';
 
 let base: string;
@@ -160,6 +160,37 @@ describe('SiteServer (vite-react)', () => {
       delete process.env.STUDIO_TEST_API_KEY;
       await server?.stop();
     }
+  }, 60000);
+
+  it('startet Vite über einen übergebenen Launcher (in der App: utilityProcess) und beendet ihn mit stop()', async () => {
+    const vsite = path.join(base, 'vite-launcher');
+    await mkdir(vsite, { recursive: true });
+    await writeFile(path.join(vsite, 'index.html'), '<!doctype html><html><head><title>Launcher</title></head><body>Über den Launcher</body></html>');
+    const calls: Array<{ script: string; args: string[]; cwd: string; env: Record<string, string> }> = [];
+    const inner = spawnNodeLauncher();
+    let child: NodeChild | undefined;
+    const launcher: NodeLauncher = (script, args, options) => {
+      calls.push({ script, args, cwd: options.cwd, env: options.env });
+      child = inner(script, args, options);
+      return child;
+    };
+    process.env.STUDIO_TEST_TOKEN = 'geheim';
+    const server = await SiteServer.start(vsite, { framework: 'vite-react', launcher });
+    try {
+      expect(calls).toHaveLength(1);
+      expect(calls[0]!.script).toMatch(/vite\.js$/);
+      expect(calls[0]!.args).toEqual(expect.arrayContaining(['--strictPort', '--host', '127.0.0.1']));
+      expect(calls[0]!.cwd).toBe(path.resolve(vsite));
+      // Bereinigte Umgebung; ELECTRON_RUN_AS_NODE setzt nur der Standard-Launcher in Electron.
+      expect(calls[0]!.env.STUDIO_TEST_TOKEN).toBeUndefined();
+      expect(calls[0]!.env.ELECTRON_RUN_AS_NODE).toBeUndefined();
+      expect(await (await fetch(server.url)).text()).toContain('Über den Launcher');
+    } finally {
+      delete process.env.STUDIO_TEST_TOKEN;
+      await server.stop();
+    }
+    const state = await Promise.race([child!.exited.then(() => 'beendet'), new Promise((resolve) => setTimeout(() => resolve('läuft noch'), 5000))]);
+    expect(state).toBe('beendet');
   }, 60000);
 });
 

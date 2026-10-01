@@ -4,8 +4,9 @@
 #   bash director-studio/scripts/install-mac.sh            # baut den aktuellen Stand und installiert ihn
 #   bash director-studio/scripts/install-mac.sh --update   # vorher „git pull --ff-only“
 #
-# Ablauf: Voraussetzungen prüfen (git, Node.js ≥ 22.13, ffmpeg) → npm ci → npm run build → entpackte App für die
-# Architektur dieses Macs (dist.mjs --dir, ad hoc signiert) → nach /Applications (oder ~/Applications) kopieren.
+# Ablauf: Voraussetzungen prüfen (git, Xcode Command Line Tools, Node.js ≥ 22.13, ffmpeg) → npm ci → npm run build →
+# entpackte App für die Architektur dieses Macs (dist.mjs --dir, ad hoc signiert) → nach /Applications (oder
+# ~/Applications) kopieren.
 # Homebrew wird NICHT installiert; fehlende Werkzeuge nennt das Skript mit dem passenden brew-Befehl.
 # API-Keys fragt das Skript nie ab: Die App fragt in ihren Einstellungen danach und legt sie verschlüsselt
 # (Schlüssel im macOS-Schlüsselbund) im Datenordner ab.
@@ -14,7 +15,7 @@ set -euo pipefail
 APP_NAME="Director Studio"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-ENTITLEMENTS="$ROOT/apps/desktop/build/entitlements.mac.plist"
+ENTITLEMENTS="$ROOT/apps/desktop/build/entitlements.mac.adhoc.plist"
 
 bold() { printf '\033[1m%s\033[0m\n' "$*"; }
 step() { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
@@ -42,16 +43,25 @@ done
 
 [[ "$(uname -s)" == "Darwin" ]] || die "Dieses Skript ist für macOS. Unter Windows: scripts/install-win.ps1"
 
-# Aus Finder/Dock oder einer frischen Shell fehlen die Homebrew-Ordner manchmal im PATH.
+# Aus Finder/Dock oder einer frischen Shell fehlen die Homebrew-Ordner manchmal im PATH. Nur hinten anhängen: Ein
+# vom Nutzer gewähltes Node (nvm, fnm, volta …) weiter vorn im PATH hat Vorrang.
 for dir in /opt/homebrew/bin /usr/local/bin; do
-  [[ -d "$dir" && ":$PATH:" != *":$dir:"* ]] && PATH="$dir:$PATH"
+  if [[ -d "$dir" && ":$PATH:" != *":$dir:"* ]]; then PATH="$PATH:$dir"; fi
 done
 export PATH
 
 # ───────────── 1. Voraussetzungen ─────────────
 step "Voraussetzungen prüfen"
 missing=()
-if command -v git >/dev/null 2>&1; then
+# Xcode Command Line Tools: git und install_name_tool (die Paketierung stellt damit die Bibliotheksnamen des
+# Remotion-Compositors auf @loader_path um, siehe apps/desktop/scripts/macho.mjs). Ohne sie ist /usr/bin/git nur ein
+# Platzhalter, der den Installationsdialog öffnet.
+if xcrun --find install_name_tool >/dev/null 2>&1; then
+  echo "  Xcode Command Line Tools: $(xcode-select -p 2>/dev/null || echo vorhanden)"
+else
+  missing+=("Xcode Command Line Tools fehlen:   xcode-select --install   (danach das Skript erneut starten)")
+fi
+if command -v git >/dev/null 2>&1 && git --version >/dev/null 2>&1; then
   echo "  git:     $(git --version | awk '{print $3}')"
 else
   missing+=("git fehlt:      xcode-select --install   (oder: brew install git)")
@@ -132,9 +142,9 @@ step "Signatur prüfen"
 if codesign --verify --deep --strict "$BUILT" 2>/dev/null; then
   echo "  $(codesign -dv "$BUILT" 2>&1 | grep -E '^(Signature|TeamIdentifier|Runtime)' | tr '\n' ' ')"
 else
-  warn "Signatur ungültig oder fehlt – signiere ad hoc (Hardened Runtime, Entitlements aus build/entitlements.mac.plist)."
-  codesign --force --deep --sign - --options runtime --entitlements "$ENTITLEMENTS" "$BUILT"
-  codesign --verify --deep --strict "$BUILT" || die "Ad-hoc-Signierung fehlgeschlagen."
+  warn "Signatur ungültig oder fehlt – signiere ad hoc (Hardened Runtime, Entitlements aus build/entitlements.mac.adhoc.plist)."
+  codesign --force --deep --sign - --options runtime --entitlements "$ENTITLEMENTS" "$BUILT" || die "Ad-hoc-Signierung fehlgeschlagen (codesign)."
+  codesign --verify --deep --strict "$BUILT" || die "Ad-hoc-Signierung fehlgeschlagen (Prüfung)."
 fi
 
 # ───────────── 5. Installieren ─────────────

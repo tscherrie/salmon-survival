@@ -46,6 +46,7 @@ import {
 } from '@studio/director';
 import { MediaToolkit } from '@studio/media';
 import { ProjectStore, RecentProjects } from '@studio/project';
+import type { NodeLauncher } from '@studio/render';
 import type { MediaErrorInfo } from '@studio/render/browser';
 import { buildAssetUrl, type AssetVariant, type ResolvedAssetFile } from './asset-protocol.ts';
 import { exportProject as runExport } from './exporter.ts';
@@ -79,10 +80,17 @@ export interface BackendDeps {
   preview?: PreviewPort | undefined;
   emit(event: StudioEvent): void;
   /**
-   * Ausgelieferte App: Ordner mit mitgelieferten ffmpeg/ffprobe (`<resources>/ffmpeg`) und ob die
-   * Chromium-Headless-Shell bei Bedarf geladen wird (siehe `RenderService.ensureChromium`).
+   * Laufzeit der App: Ordner mit mitgelieferten ffmpeg/ffprobe (`<resources>/ffmpeg`); in der ausgelieferten App
+   * die Bereitstellung der Chromium-Headless-Shell (Hilfsprozess, siehe `RenderService.ensureChromium`); und der
+   * Start von Node-Kindprozessen (Vite der Website-Vorschau) – in Electron als utilityProcess.
    */
-  runtime?: { bundledFfmpegDir?: string | undefined; provisionChromium?: boolean | undefined } | undefined;
+  runtime?:
+    | {
+        bundledFfmpegDir?: string | undefined;
+        provisionChromium?: (() => Promise<string | undefined>) | undefined;
+        nodeLauncher?: NodeLauncher | undefined;
+      }
+    | undefined;
   /** Für Tests: Medien-Toolkit, Render-Dienst, Director-Fabrik ersetzen. */
   overrides?: {
     media?: MediaToolkit;
@@ -96,6 +104,8 @@ export interface BackendDeps {
     web?: WebPort;
     /** ffmpeg-Suche: Prüfung „ausführbare Datei“ ersetzen (Tests ohne echtes Dateisystem). */
     isExecutable?: (file: string) => boolean;
+    /** Website-Vorschau: Suche nach Vite ersetzen (Tests: „nicht installiert“ wie in der ausgelieferten App). */
+    findViteBin?: (siteDir: string) => string | undefined;
   };
 }
 
@@ -113,6 +123,12 @@ export interface OpenProject {
 }
 
 const MAX_ACTIVITIES = 60;
+
+/** Systemhinweis, wenn eine Vite-Website ohne installiertes Vite in der Vorschau geöffnet wird. */
+export const VITE_MISSING_NOTICE =
+  '**Website-Vorschau ohne Vite:** Im Ordner `site/` dieses Projekts ist Vite nicht installiert, deshalb zeigt die Vorschau die Dateien unverändert. ' +
+  'Seiten mit `.tsx`/`.jsx` oder npm-Paketen bleiben dann leer. Abhilfe: im Terminal im Ordner `site/` einmal `npm install` ausführen (Node.js nötig) und die Vorschau neu öffnen – ' +
+  'oder den Director bitten, die Website als schlichtes HTML/CSS/JS ohne Build-Schritt anzulegen.';
 
 /**
  * Das Backend hinter `window.studio`: verwaltet Projekte, Director-Sessions, Modelle, Medien, Rendering
@@ -145,7 +161,8 @@ export class StudioBackend implements StudioApi {
       new RenderService({
         workDir: join(deps.appDataDir, 'render-cache'),
         browserExecutable: process.env.STUDIO_CHROMIUM_PATH,
-        provisionChromium: deps.runtime?.provisionChromium === true,
+        provisionChromium: Boolean(deps.runtime?.provisionChromium),
+        ensureBrowser: deps.runtime?.provisionChromium,
       });
     this.mediaValue = deps.overrides?.media ?? null;
     this.derived = new DerivedMedia(() => this.media);
@@ -696,10 +713,24 @@ export class StudioBackend implements StudioApi {
     if (!doc || doc.kind !== 'site') throw new Error('Dieses Projekt ist keine Website');
     await mkdir(open.store.siteDir, { recursive: true });
     const mod = await this.render.load();
-    const hasViteProject = doc.framework === 'vite-react' && (await ProjectStore.isProject(open.store.dir)) && (await hasFile(join(open.store.siteDir, 'package.json')));
+    let framework: 'vite-react' | 'html' =
+      doc.framework === 'vite-react' && (await ProjectStore.isProject(open.store.dir)) && (await hasFile(join(open.store.siteDir, 'package.json'))) ? 'vite-react' : 'html';
+    // Vite kommt aus dem node_modules des Site-Ordners (in der Entwicklung notfalls aus dem Monorepo); die
+    // ausgelieferte App bringt keins mit. Ohne Vite zeigt die Vorschau die Dateien statisch und sagt, warum.
+    const viteBin = framework === 'vite-react' ? (this.deps.overrides?.findViteBin ?? mod.findViteBin)(open.store.siteDir) : undefined;
+    if (framework === 'vite-react' && !viteBin) {
+      framework = 'html';
+      await this.postNotice(open, VITE_MISSING_NOTICE, { once: true }).catch(() => undefined);
+    }
     // Kein Picker im ausgelieferten HTML: Die Electron-Vorschau lädt ihn selbst in eine isolierte Welt
     // (Seiten-Skripte können ihn dort weder sehen noch Picks vortäuschen).
-    const server = await mod.SiteServer.start(open.store.siteDir, { injectPicker: false, framework: hasViteProject ? 'vite-react' : 'html' });
+    const launcher = this.deps.runtime?.nodeLauncher;
+    const server = await mod.SiteServer.start(open.store.siteDir, {
+      injectPicker: false,
+      framework,
+      ...(viteBin ? { viteBin } : {}),
+      ...(launcher ? { launcher } : {}),
+    });
     open.site = { url: server.url, stop: () => server.stop() };
     return server.url;
   }

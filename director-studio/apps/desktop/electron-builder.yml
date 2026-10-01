@@ -1,8 +1,11 @@
 # Paketierung (electron-builder). Aufruf über die Skripte im Wurzel-package.json (npm run dist, dist:dir, dist:mac,
 # dist:win), die scripts/dist.mjs nutzen: bauen → Staging (scripts/stage-app.mjs) → electron-builder → Prüfung
 # (scripts/verify-app.mjs). dist.mjs ergänzt zur Laufzeit electronVersion/electronDist, die Architektur des
-# Build-Rechners und die macOS-Signierung (ad hoc „-“ ohne Developer ID; mit CSC_LINK/CSC_NAME echte Signierung,
-# mit APPLE_ID/APPLE_APP_SPECIFIC_PASSWORD/APPLE_TEAM_ID bzw. APPLE_API_KEY zusätzlich Notarisierung).
+# Build-Rechners, die Electron-Fuses (kein RunAsNode/NODE_OPTIONS/--inspect, nur app.asar mit Integritätsprüfung),
+# unter macOS @loader_path für den Remotion-Compositor (afterPack) und die macOS-Signierung (ad hoc „-“ mit
+# build/entitlements.mac.adhoc.plist ohne Developer ID; mit CSC_LINK/CSC_NAME echte Signierung, mit
+# APPLE_ID/APPLE_APP_SPECIFIC_PASSWORD/APPLE_TEAM_ID bzw. APPLE_API_KEY zusätzlich Notarisierung).
+# Ein direkter Aufruf von electron-builder (ohne dist.mjs) ließe Fuses und @loader_path aus – nicht für Installationen.
 appId: studio.director.desktop
 # Muss der installierten Electron-Version entsprechen (Test: test-main/packaging.test.ts); dist.mjs setzt sie ohnehin
 # aus node_modules/electron. Steht hier, damit auch ein direkter Aufruf von electron-builder funktioniert.
@@ -44,9 +47,13 @@ mac:
   # Architektur setzt dist.mjs (Build-Rechner); die nativen Pakete stammen von dort.
   target: [dmg]
   hardenedRuntime: true
-  # Signatur-Identität setzt dist.mjs: ohne CSC_LINK/CSC_NAME ad hoc („-“), sonst die Developer ID.
+  # Signatur-Identität setzt dist.mjs: ohne CSC_LINK/CSC_NAME ad hoc („-“, dann mit entitlements.mac.adhoc.plist),
+  # sonst die Developer ID mit diesen Entitlements.
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
+  # Das Claude-Code-Binary behält Anthropics Signatur (Notarisierung, eigene Entitlements, Code-Identität).
+  signIgnore:
+    - "/node_modules/@anthropic-ai/claude-agent-sdk-darwin-[^/]+/claude$"
   extendInfo:
     NSMicrophoneUsageDescription: "Push-to-Talk: Director Studio nimmt deine Sprachanweisungen nur auf, solange du die Taste hältst."
 dmg:

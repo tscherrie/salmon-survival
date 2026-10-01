@@ -12,15 +12,17 @@ Director-Systemprompt in [`../docs/director-studio/DIRECTOR_SYSTEM_PROMPT.md`](.
 Ein Befehl baut die App auf deinem Rechner und installiert sie. Derselbe Befehl mit `--update` (bzw. `-Update`)
 holt den neuesten Stand und ersetzt die installierte App; Einstellungen, Keys und Projekte bleiben erhalten.
 
-**Voraussetzungen:** git, Node.js ≥ 22.13 und ffmpeg.
-macOS: `xcode-select --install` (git), `brew install node ffmpeg`. Windows: `winget install Git.Git OpenJS.NodeJS.LTS Gyan.FFmpeg`.
+**Voraussetzungen:** git, Node.js ≥ 22.13 und ffmpeg; unter macOS außerdem die Xcode Command Line Tools.
+macOS: `xcode-select --install` (git, install_name_tool), `brew install node ffmpeg`. Windows (x64; auf ARM-Rechnern
+die x64-Version von Node.js): `winget install Git.Git OpenJS.NodeJS.LTS Gyan.FFmpeg`.
 Die Skripte prüfen das vorher und nennen fehlende Befehle; Homebrew installieren sie nicht.
 
-**macOS** (Apple Silicon oder Intel, gebaut wird für die Architektur des Macs):
+**macOS** (Apple Silicon oder Intel, gebaut wird für die Architektur des Macs). Die Installationsskripte liegen auf
+dem Branch `packaging/desktop-app`:
 
 ```bash
 git clone https://github.com/tscherrie/salmon-survival.git && cd salmon-survival
-git checkout claude/zealous-faraday-yswfo1
+git checkout packaging/desktop-app
 bash director-studio/scripts/install-mac.sh            # Update: … install-mac.sh --update
 ```
 
@@ -31,7 +33,7 @@ Launchpad, Spotlight oder `open -a "Director Studio"`.
 
 ```powershell
 git clone https://github.com/tscherrie/salmon-survival.git; cd salmon-survival
-git checkout claude/zealous-faraday-yswfo1
+git checkout packaging/desktop-app
 powershell -ExecutionPolicy Bypass -File director-studio\scripts\install-win.ps1   # Update: … -Update
 ```
 
@@ -46,7 +48,10 @@ Umgebungsvariablen oder Skripte; die Installationsskripte fragen keine ab.
 
 **Wo liegt was:** Daten unter `~/Library/Application Support/Director Studio` bzw. `%APPDATA%\Director Studio`
 (Einstellungen, verschlüsselte Keys, Caches). Beim ersten Rendern lädt die App einmalig die Chromium-Headless-Shell
-von Remotion (ca. 100 MB) nach `runtime/` in diesen Ordner. Projekte liegen unter `Dokumente/Director Studio`.
+von Remotion (ca. 100 MB) nach `runtime/` in diesen Ordner; scheitert das (offline), klappt der nächste Versuch ohne
+Neustart. Projekte liegen unter `Dokumente/Director Studio`. Websites mit Vite zeigt die Vorschau mit Dev-Server, wenn
+im Ordner `site/` des Projekts `npm install` gelaufen ist; sonst zeigt sie die Dateien unverändert und sagt das im
+Projekt.
 ffmpeg sucht die App selbst (Einstellung `ffmpegPath`, `FFMPEG_PATH`, Homebrew, winget/Chocolatey/Scoop, `PATH`);
 fehlt es, steht ein Hinweis mit dem Installationsbefehl im Projekt und unter **Hilfe → Systemprüfung**.
 
@@ -133,15 +138,22 @@ danach folgen Checkpoints mit Budgetfreigabe. Projekte liegen als Ordner `*.dstu
 | `npm run dist` | Installer für diese Plattform (macOS `.dmg`, Windows NSIS-`.exe`) nach `apps/desktop/release` |
 | `npm run dist:dir` | Nur die entpackte App (`release/mac-arm64/Director Studio.app`, `release/win-unpacked` …) |
 | `npm run dist:mac`, `npm run dist:win` | Wie `dist`, mit ausdrücklicher Plattform (muss die des Build-Rechners sein) |
-| `npm run test:packaged` | Smoke-Test der gepackten App inkl. echtem Video-/PDF-Export (`xvfb-run -a` unter Linux) |
+| `npm run dist:test` | Entpackte App für `test:packaged` (wie `dist:dir`, aber mit Inspektor-Argumenten für Playwright – nicht installieren) |
+| `npm run test:packaged` | Smoke-Test der gepackten App inkl. echtem Video-/PDF-Export, Website-Vorschau und Fuses (`xvfb-run -a` unter Linux) |
 
 **Paketierung:** `dist` baut, stellt die App in `apps/desktop/dist/stage` zusammen (`scripts/stage-app.mjs`) und
 ruft electron-builder auf. Die App selbst (Main, Preload, Oberfläche) liegt im `app.asar`; die Laufzeitpakete
 (externe Importe des Main-Bündels laut esbuild-Metafile samt Abhängigkeiten, in den Lockfile-Versionen, nur mit den
 nativen Binaries des Build-Rechners) liegen daneben in `resources/node_modules`, zusammen mit den Quellen von
-`@studio/render` und `@studio/core`, die Remotion zur Laufzeit bündelt. Danach prüft `scripts/verify-app.mjs` mit
-dem gepackten Electron, dass sich jeder externe Import aus der App heraus auflösen und laden lässt und die nativen
-Helfer starten. Deshalb gilt: Mac-App auf dem Mac bauen, Windows-App unter Windows.
+`@studio/render` und `@studio/core`, die Remotion zur Laufzeit bündelt; die Director-Skills liegen als `out/skills` im
+`app.asar`. Electron-Fuses: Die App startet nicht als Node (`ELECTRON_RUN_AS_NODE`), ignoriert `NODE_OPTIONS` und
+`--inspect` und lädt nur ihr geprüftes `app.asar` – Node-Kindprozesse (Chromium-Bereitstellung, Vite) laufen als
+utilityProcess. Unter macOS stellt die Paketierung die relativen Bibliotheksnamen des Remotion-Compositors auf
+`@loader_path` um (`scripts/macho.mjs`), weil dyld sie unter der Hardened Runtime sonst verweigert; das
+Claude-Code-Binary behält Anthropics Signatur. Danach prüft `scripts/verify-app.mjs` (mit dem Electron aus
+`node_modules`), dass die Skills da sind, sich jeder externe Import aus der App heraus auflösen und laden lässt und die
+nativen Helfer so starten, wie Remotion sie startet. Deshalb gilt: Mac-App auf dem Mac bauen, Windows-App unter
+Windows (x64).
 
 ### Struktur
 

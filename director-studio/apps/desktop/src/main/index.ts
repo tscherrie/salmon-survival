@@ -7,11 +7,13 @@ import { PICKER_SCRIPT } from '@studio/render/browser';
 import { prepareRuntimeDir, systemCheckText } from './app-env.ts';
 import { ASSET_SCHEME, createAssetHandler } from './asset-protocol.ts';
 import { StudioBackend } from './backend.ts';
+import { cachedHeadlessShell, runChromiumWorker } from './chromium.ts';
 import { extendGuiPath } from './ffmpeg.ts';
 import { channelFor, EVENT_CHANNEL, GESTURE_METHODS, STUDIO_METHODS, type IpcErrorPayload } from './ipc-contract.ts';
 import { buildMenuTemplate } from './menu.ts';
 import { PreviewController } from './preview.ts';
 import { GestureGate, isAllowedAppSubframeUrl, isAppUrl, safeExternalUrl } from './security.ts';
+import { forkUtilityWorker, utilityNodeLauncher } from './utility.ts';
 
 /**
  * Electron-Hauptprozess: Fenster, Sicherheitsrichtlinien, `studio-asset://`-Protokoll, IPC-Brücke zum
@@ -28,6 +30,8 @@ const appUrl = devUrl ?? pathToFileURL(rendererEntry).href;
 const APP_NAME = 'Director Studio';
 /** Fenstergrößen laut DESIGN.md §2.3 (empfohlenes Minimum 1180 × 720). */
 const WINDOW = { width: 1600, height: 1000, minWidth: 1180, minHeight: 720 };
+/** Hilfsprozess für Remotions Chromium-Download (eigener Einstieg im Bündel, siehe chromium.ts). */
+const chromiumWorker = join(here, 'chromium-worker.js');
 
 // Isolierter Datenordner (Tests, mehrere Profile).
 if (process.env.STUDIO_USER_DATA) app.setPath('userData', process.env.STUDIO_USER_DATA);
@@ -67,13 +71,17 @@ async function openExternalSafely(raw: string): Promise<void> {
 }
 
 async function createWindow(): Promise<void> {
-  // Auf kleineren Bildschirmen (z. B. 13-Zoll-MacBook) passt sich die Startgröße dem Arbeitsbereich an.
+  // Auf kleineren Bildschirmen (z. B. 13-Zoll-MacBook) passt sich die Startgröße dem Arbeitsbereich an. Das
+  // Minimum ebenfalls: Ein 1080p-Laptop mit 150 % Skalierung hat unter Windows nur 1280 × 688 DIP Arbeitsbereich –
+  // mit festen 720 px läge die Timeline am unteren Rand hinter der Taskleiste.
   const area = screen.getPrimaryDisplay().workAreaSize;
+  const minWidth = Math.min(WINDOW.minWidth, area.width);
+  const minHeight = Math.min(WINDOW.minHeight, area.height);
   const win = new BrowserWindow({
-    width: Math.max(WINDOW.minWidth, Math.min(WINDOW.width, area.width)),
-    height: Math.max(WINDOW.minHeight, Math.min(WINDOW.height, area.height)),
-    minWidth: WINDOW.minWidth,
-    minHeight: WINDOW.minHeight,
+    width: Math.max(minWidth, Math.min(WINDOW.width, area.width)),
+    height: Math.max(minHeight, Math.min(WINDOW.height, area.height)),
+    minWidth,
+    minHeight,
     show: false,
     backgroundColor: '#111214',
     title: APP_NAME,
@@ -193,7 +201,10 @@ async function main(): Promise<void> {
     runtime: {
       // Mitgelieferte ffmpeg/ffprobe (extraResources, optional) und Chromium-Bereitstellung nur in der gepackten App.
       bundledFfmpegDir: app.isPackaged ? join(process.resourcesPath, 'ffmpeg') : undefined,
-      provisionChromium: app.isPackaged,
+      // Remotions Download im Hilfsprozess, Ziel ist der Arbeitsordner (userData/runtime, siehe oben).
+      provisionChromium: app.isPackaged ? () => runChromiumWorker(forkUtilityWorker, chromiumWorker, process.cwd()) : undefined,
+      // Vite der Website-Vorschau als utilityProcess (die ausgelieferte App hat die Fuse RunAsNode aus).
+      nodeLauncher: utilityNodeLauncher,
     },
   });
   protocol.handle(ASSET_SCHEME, createAssetHandler((projectId, assetId, variant) => backend!.resolveAssetFile(projectId, assetId, variant)));
@@ -230,6 +241,8 @@ async function showSystemCheck(): Promise<void> {
   const text = systemCheckText({
     media: await backend.mediaToolsStatus(),
     chromium: process.env.STUDIO_CHROMIUM_PATH ?? null,
+    // In einer früheren Sitzung geladen: steht in Remotions Cache im Arbeitsordner.
+    cachedChromium: app.isPackaged ? cachedHeadlessShell(process.cwd()) : null,
     provisionChromium: app.isPackaged,
     userData: app.getPath('userData'),
   });

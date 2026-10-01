@@ -26,8 +26,17 @@ const SOURCE_LABELS: Record<MediaToolSource, string> = {
   path: 'PATH',
 };
 
-/** Text für den Dialog „Systemprüfung“ (Hilfe-Menü). */
-export function systemCheckText(input: { media: MediaToolsStatus; chromium: string | null; provisionChromium: boolean; userData: string }): {
+/**
+ * Text für den Dialog „Systemprüfung“ (Hilfe-Menü). `chromium`: in dieser Sitzung verwendeter Pfad
+ * (`STUDIO_CHROMIUM_PATH`); `cachedChromium`: in einer früheren Sitzung geladene Headless-Shell (Remotions Cache).
+ */
+export function systemCheckText(input: {
+  media: MediaToolsStatus;
+  chromium: string | null;
+  cachedChromium?: { path: string; version: string | null } | null | undefined;
+  provisionChromium: boolean;
+  userData: string;
+}): {
   ok: boolean;
   message: string;
   detail: string;
@@ -35,7 +44,9 @@ export function systemCheckText(input: { media: MediaToolsStatus; chromium: stri
   const { media } = input;
   const ok = Boolean(media.ffmpeg && media.ffprobe);
   const where = media.source ? ` (${SOURCE_LABELS[media.source]})` : '';
-  const chromium = input.chromium ?? (input.provisionChromium ? 'wird beim ersten Rendern automatisch geladen (einmalig ca. 100 MB)' : 'Standard von Playwright/Remotion');
+  const cached = input.cachedChromium ? `${input.cachedChromium.path} (bereits geladen${input.cachedChromium.version ? `, Version ${input.cachedChromium.version}` : ''})` : null;
+  const chromium =
+    input.chromium ?? cached ?? (input.provisionChromium ? 'wird beim ersten Rendern automatisch geladen (einmalig ca. 100 MB)' : 'Standard von Playwright/Remotion');
   const lines = [
     `ffmpeg: ${media.ffmpeg ?? 'nicht gefunden'}${media.ffmpeg ? where : ''}`,
     `ffprobe: ${media.ffprobe ?? 'nicht gefunden'}`,

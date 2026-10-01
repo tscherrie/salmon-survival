@@ -1,7 +1,7 @@
 // Bündelt Electron-Main und -Preload mit esbuild. Workspace-Pakete (@studio/*, TypeScript-Quellen) werden
 // eingebunden; alle übrigen npm-Pakete bleiben extern (werden mit der App ausgeliefert).
 import { build } from 'esbuild';
-import { writeFile } from 'node:fs/promises';
+import { cp, readdir, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -30,10 +30,12 @@ const common = {
   loader: { '.md': 'text' },
 };
 
+// Zwei Einstiege: der Hauptprozess und der Hilfsprozess, der Remotions Chromium lädt (chromium-worker.ts, läuft als
+// utilityProcess – siehe dort, warum nicht im Hauptprozess).
 const main = await build({
   ...common,
-  entryPoints: [join(root, 'src/main/index.ts')],
-  outfile: join(root, 'out/main/index.js'),
+  entryPoints: { index: join(root, 'src/main/index.ts'), 'chromium-worker': join(root, 'src/main/chromium-worker.ts') },
+  outdir: join(root, 'out/main'),
   format: 'esm',
   metafile: true,
   banner: {
@@ -56,6 +58,17 @@ await writeFile(
   join(root, 'out/main/externals.json'),
   `${JSON.stringify([...externals].sort(([a], [b]) => a.localeCompare(b)).map(([path, kinds]) => ({ path, kinds: [...kinds].sort() })), null, 2)}\n`,
 );
+
+// Director-Skills (packages/director/skills/<name>/SKILL.md): `defaultSkillsDir()` sucht sie relativ zum Modul
+// (`../skills/`), im Bündel out/main/index.js also unter out/skills/. Von dort landen sie mit out/ im app.asar
+// (Electrons fs liest Ordner und Dateien im asar wie gewohnt).
+const skillsSrc = join(root, '..', '..', 'packages', 'director', 'skills');
+const skillsOut = join(root, 'out', 'skills');
+await rm(skillsOut, { recursive: true, force: true });
+await cp(skillsSrc, skillsOut, { recursive: true });
+const skillCount = (await readdir(skillsOut, { withFileTypes: true })).filter((e) => e.isDirectory()).length;
+if (skillCount === 0) throw new Error(`Keine Director-Skills in ${skillsSrc}`);
+console.log(`Director-Skills: ${skillCount} nach out/skills kopiert`);
 
 await build({
   ...common,
