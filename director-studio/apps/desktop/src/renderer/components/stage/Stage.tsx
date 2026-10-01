@@ -1,19 +1,26 @@
 import { useState } from 'react';
-import { formatTimecode, type StudioDocument } from '@studio/core';
+import type { StudioDocument } from '@studio/core';
 import { useT } from '../../i18n.ts';
 import { countLayers, useLayout } from '../../lib/layout.ts';
+import { tcParts } from '../../lib/timecode.ts';
 import { useActions, useStudio, useViewDocument } from '../../state/context.tsx';
 import { Icon, type IconName } from '../common/Icon.tsx';
 import { ariaKeyShortcuts } from '../common/Kbd.tsx';
 import { Tooltip } from '../common/Tooltip.tsx';
 import { CanvasStage, DeckStage, SiteStage } from './DocStages.tsx';
 import { StageToolsProvider } from './StageTools.tsx';
-import { TimelineStage } from './TimelineStage.tsx';
+import { TimelineStage, useTimelineShortcuts } from './TimelineStage.tsx';
 
-/** Abspielkopf als Timecode in der Leiste (bleibt auch bei eingeklappter Bühne sichtbar). */
+/** Abspielkopf als Timecode in der Leiste, nur bei eingeklappter Bühne (sonst steht er groß in der Index-Spalte). */
 function BarTimecode({ fps }: { fps: number }) {
   const playhead = useStudio((s) => s.playhead);
-  return <span className="stage-tc mono">{formatTimecode(playhead, fps)}</span>;
+  const { head, frames } = tcParts(playhead, fps, 'smpte');
+  return (
+    <span className="stage-tc mono" aria-live="off">
+      {head}
+      <span className="ff">{frames}</span>
+    </span>
+  );
 }
 
 /** Bühnen-Leiste (32 px): Index-Zone mit Icon, Titel und Meta; rechts die Werkzeuge der Kategorie und Einklappen. */
@@ -66,7 +73,7 @@ function StageBar({ doc, audioProject, onTools }: { doc: StudioDocument | null; 
           </span>
         )}
       </div>
-      {doc?.kind === 'timeline' && <BarTimecode fps={doc.fps} />}
+      {doc?.kind === 'timeline' && collapsed && <BarTimecode fps={doc.fps} />}
       <div className="stage-tools" ref={onTools} />
       {layout && (
         <Tooltip label={toggleLabel} keys={['mod', '3']}>
@@ -96,6 +103,8 @@ export function Stage() {
   const layout = useLayout();
   const collapsed = layout?.collapsed.stage ?? false;
   const [tools, setTools] = useState<HTMLElement | null>(null);
+  // Timeline-Kürzel (Enter, Klammern, Beat-Raster …) gelten auch bei eingeklappter Bühne (§8.5)
+  useTimelineShortcuts();
   let content;
   switch (doc?.kind) {
     case 'timeline':

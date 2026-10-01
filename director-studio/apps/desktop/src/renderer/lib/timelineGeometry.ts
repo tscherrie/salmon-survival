@@ -8,10 +8,119 @@ export const TIMELINE_PAD = 8;
 export const DEFAULT_PX_PER_SECOND = 50;
 export const MIN_PX_PER_SECOND = 0.5;
 export const MAX_PX_PER_SECOND = 2000;
-/** Snap-Toleranz in Pixeln (Shift-Klick auf Beat/Downbeat). */
+/** Snap-Toleranz in Pixeln (Beat-Raster: nächster Schlag innerhalb dieser Strecke). */
 export const SNAP_TOLERANCE_PX = 12;
 /** Ab dieser Mausbewegung wird aus einem Klick ein Ziehen. */
 export const DRAG_THRESHOLD_PX = 4;
+
+/** Senkrechte Anatomie der Timeline (DESIGN.md §7.9): Markerleiste · Lineal · Abschnitte. */
+export const STRIP_H = 16;
+/** Die Trefferzone der Markerleiste ragt so weit ins Lineal (dort stehen keine Labels; §8.4). */
+export const STRIP_HIT_EXTRA = 4;
+export const RULER_H = 22;
+export const SECTIONS_H = 20;
+/** Unterhalb dieses Abstands gelten zwei Marker-Tags als „nah“ (Versatz bzw. Sammel-Tag; §8.3). */
+export const MARKER_PROXIMITY_PX = 18;
+/** Senkrechter Versatz des späteren von zwei nahen Tags. */
+export const MARKER_RAISE_PX = 6;
+/** Breite des Marker-Tags: 16 px, ab zwei Ziffern 20 px. */
+export function markerTagWidth(n: number): number {
+  return n >= 10 ? 20 : 16;
+}
+
+/**
+ * Zone eines Pointers in der Kopfzone der Timeline (`y` relativ zur Oberkante der Markerleiste): `true` = Markerleiste
+ * (16 px plus 4 px Trefferzone im Lineal), sonst Scrub-Zone. `blocked` steht für ein Element, das selbst reagiert
+ * (Kappe des Abspielkopfs, Dokument-Raute), und nimmt die Trefferzone im Lineal zurück.
+ */
+export function markerStripHit(y: number, opts: { blocked?: boolean } = {}): boolean {
+  if (y < 0) return false;
+  if (y < STRIP_H) return true;
+  return !opts.blocked && y < STRIP_H + STRIP_HIT_EXTRA;
+}
+
+/** Ein Tag in der Markerleiste: Lage `normal`, bei Nähe `low` (früherer) bzw. `high` (späterer, 6 px höher). */
+export interface MarkerTagLayout<T> {
+  type: 'tag';
+  marker: T;
+  x: number;
+  level: 'normal' | 'low' | 'high';
+}
+/** Sammel-Tag für mehr als drei Marker innerhalb von 18 px; ein Klick zoomt auf `from`…`to`. */
+export interface MarkerCollectorLayout<T> {
+  type: 'collector';
+  markers: T[];
+  x: number;
+  from: number;
+  to: number;
+}
+export type MarkerLayoutItem<T> = MarkerTagLayout<T> | MarkerCollectorLayout<T>;
+
+/**
+ * Ordnet die Marker-Tags der Leiste an (§8.3): Jeder Tag steht zentriert auf `frameToX`. Liegen zwei Tags näher als
+ * 18 px, steht der spätere 6 px höher und überlappt den früheren um die Hälfte (innerhalb einer Kette abwechselnd).
+ * Mehr als drei Tags innerhalb von 18 px werden zu einem Sammel-Tag.
+ */
+export function layoutMarkerTags<T extends { frame: number }>(markers: readonly T[], pps: number, fps: number): MarkerLayoutItem<T>[] {
+  const sorted = [...markers].sort((a, b) => a.frame - b.frame);
+  const xs = sorted.map((m) => frameToX(m.frame, fps, pps));
+  const items: MarkerLayoutItem<T>[] = [];
+  for (let i = 0; i < sorted.length; ) {
+    let j = i;
+    while (j + 1 < sorted.length && xs[j + 1]! - xs[i]! < MARKER_PROXIMITY_PX) j++;
+    if (j - i + 1 > 3) {
+      const group = sorted.slice(i, j + 1);
+      items.push({ type: 'collector', markers: group, x: (xs[i]! + xs[j]!) / 2, from: group[0]!.frame, to: group[group.length - 1]!.frame });
+      i = j + 1;
+      continue;
+    }
+    items.push({ type: 'tag', marker: sorted[i]!, x: xs[i]!, level: 'normal' });
+    i++;
+  }
+  // Ketten naher Einzel-Tags: abwechselnd tief und hoch, damit jede Nummer lesbar bleibt
+  for (let k = 1; k < items.length; k++) {
+    const prev = items[k - 1]!;
+    const item = items[k]!;
+    if (prev.type !== 'tag' || item.type !== 'tag' || item.x - prev.x >= MARKER_PROXIMITY_PX) continue;
+    if (prev.level === 'normal') prev.level = 'low';
+    item.level = prev.level === 'high' ? 'low' : 'high';
+  }
+  return items;
+}
+
+/** Abschnitt (Section-Marker) mit Ende am nächsten Abschnitt bzw. am Ende der Timeline. */
+export interface SectionSpan {
+  marker: Marker;
+  from: number;
+  to: number;
+}
+
+export function sectionSpans(markers: readonly Marker[], totalFrames: number): SectionSpan[] {
+  const sections = markers.filter((m) => m.kind === 'section').sort((a, b) => a.frame - b.frame);
+  return sections.map((marker, i) => ({ marker, from: marker.frame, to: Math.max(marker.frame, sections[i + 1]?.frame ?? totalFrames) }));
+}
+
+/** Tempo aus den Beat-Markern (Median der Abstände); `null` ohne Beats. */
+export function beatsPerMinute(beats: readonly number[], fps: number): number | null {
+  if (beats.length < 2) return null;
+  const gaps: number[] = [];
+  for (let i = 1; i < beats.length; i++) if (beats[i]! > beats[i - 1]!) gaps.push(beats[i]! - beats[i - 1]!);
+  if (gaps.length === 0) return null;
+  gaps.sort((a, b) => a - b);
+  const median = gaps[Math.floor(gaps.length / 2)]!;
+  return Math.round((60 * fps) / median);
+}
+
+/** Nächster Schlag vor (-1) bzw. nach (1) `frame`; `null`, wenn es keinen gibt. */
+export function adjacentBeat(beats: readonly number[], frame: number, direction: -1 | 1): number | null {
+  if (direction > 0) return beats.find((b) => b > frame) ?? null;
+  let found: number | null = null;
+  for (const b of beats) {
+    if (b >= frame) break;
+    found = b;
+  }
+  return found;
+}
 
 export function frameToX(frame: number, fps: number, pxPerSecond: number): number {
   return TIMELINE_PAD + (frame / fps) * pxPerSecond;
@@ -83,7 +192,10 @@ export function visibleFrames(
 }
 
 export function beatFrames(markers: readonly Marker[]): number[] {
-  return markers.filter((m) => m.kind === 'beat' || m.kind === 'downbeat').map((m) => m.frame);
+  return markers
+    .filter((m) => m.kind === 'beat' || m.kind === 'downbeat')
+    .map((m) => m.frame)
+    .sort((a, b) => a - b);
 }
 
 /** Snapt auf den nächsten Beat/Downbeat innerhalb der Pixeltoleranz. */

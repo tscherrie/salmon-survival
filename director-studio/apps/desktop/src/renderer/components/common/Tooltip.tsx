@@ -32,11 +32,14 @@ export function Tooltip({
   label,
   keys,
   placement = 'top',
+  disabled = false,
   children,
 }: {
   label: string;
   keys?: readonly KeyName[];
   placement?: Placement;
+  /** Unterdrückt den Tooltip (z. B. solange das Popover des Auslösers offen ist). */
+  disabled?: boolean;
   children: ReactElement;
 }) {
   const id = useId();
@@ -44,7 +47,7 @@ export function Tooltip({
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tipRef = useRef<HTMLDivElement>(null);
-  const open = anchor !== null;
+  const open = anchor !== null && !disabled;
 
   const clear = () => {
     if (timer.current) clearTimeout(timer.current);

@@ -118,7 +118,8 @@ export interface StudioActions {
   setPicker(modality: Modality, selection: PickerSelection): Promise<void>;
 
   // Assets
-  importFiles(mode: 'link' | 'import'): Promise<void>;
+  /** Dateien wählen und importieren bzw. verknüpfen; `insert` fügt danach je Datei einen Asset-Chip ein (Composer „+“). */
+  importFiles(mode: 'link' | 'import', opts?: { insert?: boolean }): Promise<void>;
   importDroppedFiles(files: File[]): Promise<void>;
   revealAsset(assetId: string): Promise<void>;
   /** Verknüpfte Datei neu zuordnen: Datei wählen (`chooseFiles`) → `relinkAsset`. `true` bei Erfolg. */
@@ -754,7 +755,7 @@ export function createStudioStore(api: StudioApi): StudioStore {
 
       // ───────────── Assets ─────────────
 
-      async importFiles(mode) {
+      async importFiles(mode, opts) {
         const id = get().projectId;
         if (!id) return;
         const paths = await guarded(() => api.chooseFiles());
@@ -762,7 +763,8 @@ export function createStudioStore(api: StudioApi): StudioStore {
         const assets = await guarded(() => api.importFiles(id, paths, mode));
         if (!assets) return;
         set((s) => ({ assets: assets.reduce((list, a) => (list.some((x) => x.id === a.id) ? list.map((x) => (x.id === a.id ? a : x)) : [...list, a]), s.assets) }));
-        get().toast('success', t('assets.imported', { count: assets.length }));
+        if (opts?.insert) for (const asset of assets) get().insertRef({ kind: 'asset', assetId: asset.id });
+        else get().toast('success', t('assets.imported', { count: assets.length }));
       },
 
       async importDroppedFiles(files) {

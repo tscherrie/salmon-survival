@@ -2295,13 +2295,8 @@ textarea.field {
   gap: 2px;
   min-width: 0;
 }
-.stage-hint {
-  flex: 1;
-  min-width: 0;
-  margin: 0 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.stage-tc .ff {
+  color: var(--text-3);
 }
 .stage-collapse {
   margin-left: 4px;
@@ -2355,152 +2350,620 @@ textarea.field {
   color: var(--warn);
 }
 
-/* Timeline (Übergang: Lineal 24 px mit Markern, Spuren nach §2.3; Markerleiste und Index folgen in §7.9) */
+/*
+ * Timeline (§7.9, §8): Index-Spalte (Breite = Asset-Leiste) | Scrollfläche. Die Kopfzone (Markerleiste 16 ·
+ * Lineal 22 · Abschnitte 20) bleibt beim senkrechten Scrollen stehen. Alles unterhalb der Markerleiste ist
+ * Scrub-Zone. Ebenen in der Kopfzone: Band 2 · Marker-Linien 3 · Rauten 4 · Abspielkopf 5 · Marker-Tags 6.
+ */
 .tl {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--index-w, 168px) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+.tl-micro {
+  color: var(--text-3);
+  font: 600 10px/12px var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tl .tone-video {
+  --trk: var(--trk-video);
+}
+.tl .tone-overlay {
+  --trk: var(--trk-overlay);
+}
+.tl .tone-text {
+  --trk: var(--trk-text);
+}
+.tl .tone-voice {
+  --trk: var(--trk-voice);
+}
+.tl .tone-music {
+  --trk: var(--trk-music);
+}
+.tl .tone-sfx {
+  --trk: var(--trk-sfx);
+}
+
+/* Index-Spalte: großer Timecode, Zeilenlegenden, Spurköpfe (§7.9) */
+.tl-index {
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
-.tl-body {
-  display: flex;
-  min-width: 0;
-}
-.tl-headers {
-  flex: none;
-  width: var(--index-w, 168px);
+  min-height: 0;
   border-right: 1px solid var(--line);
   background: var(--base);
 }
-.tl-header-spacer {
+.tl-index-head {
+  display: flex;
+  flex: none;
+  flex-direction: column;
   border-bottom: 1px solid var(--line);
+}
+.tl-index-strip {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: var(--strip-h);
+  padding: 0 6px 0 12px;
+}
+.tl-index-count {
+  color: var(--text-3);
+  font-size: 10px;
+  line-height: 1;
+}
+.tl-index-nav {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+.tl-index-nav:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--text);
+}
+.tl-index-nav:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.tl-index-readout {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 0 10px 0 12px;
+}
+.tl-index-tc {
+  flex: none;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+}
+.tl-index-tc .ff {
+  color: var(--text-3);
+}
+.tl-index-readout.is-compact .tl-index-tc {
+  font-size: 15px;
+}
+.tl-index-legends {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  align-items: flex-end;
+  min-width: 0;
+  margin-left: auto;
+}
+.tl-index-legends .tl-micro {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+}
+.tl-index-bpm {
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* Schmale Index-Spalte (240): neben dem großen Timecode bleibt nur „120 BPM“ als Legende der Abschnittszeile */
+.tl-index {
+  container-type: inline-size;
+}
+@container (max-width: 259px) {
+  .tl-index-legends .has-bpm .tl-legend-word {
+    display: none;
+  }
+}
+.tl-index-tracks {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 12px;
+  overflow: hidden;
 }
 .tl-track-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 12px;
+  padding: 0 10px 0 12px;
   overflow: hidden;
   border-bottom: 1px solid var(--line);
   color: var(--text);
   font-size: 12px;
+  line-height: 1;
   white-space: nowrap;
-}
-.tl-track-header .icon {
-  color: var(--text-3);
 }
 .tl-track-header.is-active {
   background: var(--hover);
 }
-.tl-track-header.is-hidden {
-  opacity: 0.5;
+.tl-track-header.is-hidden .tl-track-name {
+  color: var(--text-3);
+}
+.tl-swatch {
+  flex: none;
+  width: 3px;
+  height: 14px;
+  border-radius: 1px;
+  background: var(--trk);
 }
 .tl-track-id {
+  flex: none;
+  width: 18px;
   color: var(--text-2);
-  font-family: var(--font-mono);
   font-size: 11px;
 }
 .tl-track-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.tl-track-state {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--text-3);
+}
+
+/* Werkzeuge in der Bühnen-Leiste: Beat-Raster (Toggle mit LED), Zoom − / Einpassen / + */
+.tl-tools-gap {
+  width: 6px;
+}
+
+/* Scrollfläche */
 .tl-scroll {
-  flex: 1;
+  position: relative;
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
   outline: none;
 }
-.tl-scroll:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--focus);
+.tl-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.tl-scroll::-webkit-scrollbar-thumb {
+  border-width: 2px;
+}
+/* Fokus der Spurfläche als Rahmen über der ganzen Fläche (die stehende Kopfzone würde einen Umriss verdecken) */
+.tl:has(> .tl-scroll:focus-visible)::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 var(--index-w, 168px);
+  z-index: 8;
+  border: 2px solid var(--focus);
+  pointer-events: none;
 }
 .tl-content {
   position: relative;
   cursor: default;
   user-select: none;
 }
-.tl-ruler {
+.tl.is-grabbing,
+.tl.is-grabbing * {
+  cursor: grabbing !important;
+}
+.tl-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  overflow-x: clip;
+  background: var(--base);
+}
+
+/* Markerleiste (§8.3): --sunken, Cursor „copy“; die Trefferzone ragt 4 px ins Lineal */
+.tl-strip {
   position: absolute;
   top: 0;
   left: 0;
-  height: 24px;
+  height: var(--strip-h);
+  background: var(--sunken);
+  cursor: copy;
+}
+.tl-strip-band {
+  position: absolute;
+  top: var(--strip-h);
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 4px;
+  cursor: copy;
+}
+.mk-coach {
+  position: absolute;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: var(--strip-h);
+  color: var(--text-3);
+  font-size: 10.5px;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* Tag 16 × 13 (zweistellig 20), zentriert auf dem Frame; Trefferzone 24 × 20 */
+.mk {
+  position: absolute;
+  top: 0;
+  z-index: 6;
+  width: 24px;
+  height: 20px;
+  margin-left: -12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.mk:focus-visible {
+  outline: none;
+}
+.mk-tag {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 13px;
+  margin: 0 auto;
+  border-radius: var(--r-xs);
+  background: var(--ref);
+  color: var(--on-ref);
+  font: 600 10px/13px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  transition: box-shadow var(--t-fast) var(--ease);
+}
+/* Nähe (§8.3): der spätere Tag steht 6 px höher und überlappt den früheren um die Hälfte */
+.mk-high {
+  z-index: 7;
+  height: 14px;
+}
+.mk-high .mk-tag {
+  top: 1px;
+}
+.mk-low {
+  top: 7px;
+  height: 13px;
+}
+.mk-low .mk-tag {
+  top: 0;
+}
+.mk:hover .mk-tag,
+.mk.is-linked .mk-tag {
+  box-shadow: 0 0 0 2px var(--ref-line);
+}
+.mk:focus-visible .mk-tag {
+  box-shadow:
+    0 0 0 2px var(--sunken),
+    0 0 0 4px var(--focus);
+}
+.mk.is-settling .mk-tag {
+  animation: settle var(--t-med) var(--ease);
+}
+.mk-flash {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  animation: ref-flash 600ms var(--ease) both;
+  pointer-events: none;
+}
+.mk.is-pending {
+  cursor: default;
+}
+.mk.is-pending .mk-tag {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ref);
+}
+.mk-collector .mk-tag {
+  width: 18px;
+  border: 1px dashed var(--ref);
+  background: var(--ref-soft);
+  color: var(--ref-text);
+  line-height: 11px;
+}
+/* Geister-Marker: Umriss mit Plus; der Timecode steht in der Leiste, kein schwebender Kasten */
+.mk-ghost {
+  pointer-events: none;
+}
+.mk-ghost .mk-tag {
+  background: var(--sunken);
+  box-shadow: inset 0 0 0 1px var(--ref-line);
+  color: var(--ref-text);
+}
+.mk-ghost-tc {
+  position: absolute;
+  top: 2px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 13px;
+  padding: 0 4px;
+  background: var(--sunken);
+  color: var(--ref-text);
+  font-size: 10.5px;
+  line-height: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.mk-ghost-tc .ff {
+  opacity: 0.7;
+}
+/* Marker-Linie: 1 px Daylight, gestrichelt 3/3, 55 %; verknüpft durchgezogen 100 %, schwebend 30 % */
+.mk-line {
+  position: absolute;
+  z-index: 3;
+  width: 1px;
+  background: repeating-linear-gradient(to bottom, var(--ref) 0 3px, transparent 3px 6px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.mk-line.is-linked {
+  background: var(--ref);
+  opacity: 1;
+}
+.mk-line.is-pending {
+  opacity: 0.3;
+}
+/* Kontextmenü eines Markers */
+.tl-menu {
+  position: fixed;
+  z-index: 250;
+  min-width: 200px;
+  padding: 6px;
+  border-radius: var(--r-xl);
+  background: var(--raised);
+  box-shadow: var(--shadow-pop);
+  animation: rise-in var(--t-med) var(--ease);
+}
+.tl-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.tl-menu button .icon {
+  color: var(--text-2);
+}
+.tl-menu button .kbd-group {
+  margin-left: auto;
+}
+.tl-menu button:hover,
+.tl-menu button:focus-visible {
+  background: var(--hover);
+}
+.tl-menu button:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Lineal (22): Mono-Labels mit Tick, Takt-Ticks 8 px, Schlag-Ticks 4 px; die oberen 4 px gehören der Markerleiste */
+.tl-ruler {
+  position: absolute;
+  top: var(--strip-h);
+  left: 0;
+  height: var(--ruler-h);
   border-bottom: 1px solid var(--line);
-  background: var(--base);
 }
 .tl-ruler-ticks {
   position: absolute;
   inset: 0;
 }
 .tl-ruler-ticks path {
+  fill: none;
   stroke: var(--line-3);
   stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.tl-ruler-ticks .tick-beat {
+  stroke-opacity: 0.6;
 }
 .tl-ruler-label {
   position: absolute;
-  top: 2px;
+  top: 5px;
   color: var(--text-3);
-  font-family: var(--font-mono);
   font-size: 10px;
-  font-variant-numeric: tabular-nums;
+  line-height: 10px;
+  white-space: nowrap;
   pointer-events: none;
 }
-.marker-flag {
+.tl-ruler-label .ff {
+  opacity: 0.7;
+}
+/* Dokument-Marker (qa/note/checkpoint): 7-px-Rauten an der Unterkante des Lineals */
+.tl-doc-markers {
   position: absolute;
-  top: 0;
+  top: var(--strip-h);
+  left: 0;
   z-index: 4;
-  display: inline-flex;
-  align-items: center;
-  height: 14px;
-  padding: 0 4px;
+  height: var(--ruler-h);
+}
+.tl-doc-marker {
+  position: absolute;
+  bottom: 1px;
+  width: 14px;
+  height: 11px;
+  margin-left: -7px;
+  padding: 0;
   border: 0;
-  border-left: 1px solid currentColor;
-  background: color-mix(in srgb, currentColor 16%, var(--base));
-  font: 600 10px/14px var(--font-ui);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  cursor: pointer;
+  background: transparent;
+  color: var(--text-3);
+  cursor: default;
 }
-.marker-flag span {
-  color: var(--text-2);
+.tl-doc-marker::before {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: 4.5px;
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  transform: rotate(45deg);
 }
-/* Symbol-Marker (Checkpoint/QA/Notiz) unter den Abschnittsbeschriftungen, damit nichts überlappt */
-.marker-flag:not(.marker-section) {
-  top: 10px;
-}
-.marker-flag:hover {
-  background: color-mix(in srgb, currentColor 28%, var(--base));
-}
-.marker-section {
-  color: var(--line-3);
-}
-.marker-checkpoint {
+.tl-doc-marker.kind-checkpoint {
   color: var(--ok);
 }
-.marker-qa {
-  color: var(--danger);
+.tl-doc-marker.kind-qa {
+  color: var(--warn);
 }
-.marker-note {
-  color: var(--text-3);
+.tl-doc-marker:hover::before,
+.tl-doc-marker.is-linked::before,
+.tl-doc-marker.is-ref::before {
+  box-shadow: 0 0 0 1.5px var(--ref);
 }
-.tl-lanes {
+.tl-doc-marker .tl-ref-n {
   position: absolute;
+  bottom: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.tl-ref-n {
+  flex: none;
+  min-width: 14px;
+  height: 12px;
+  padding: 0 3px;
+  border-radius: var(--r-xs);
+  background: var(--ref);
+  color: var(--on-ref);
+  font: 600 10px/12px var(--font-mono);
+  text-align: center;
+}
+
+/* Abschnitte (20): Mikro-Labels mit Startzeit; aktueller Abschnitt --text auf --hover */
+.tl-sections {
+  position: absolute;
+  top: calc(var(--strip-h) + var(--ruler-h));
   left: 0;
-  right: 0;
+  height: var(--sections-h);
+  border-bottom: 1px solid var(--line);
+}
+/* Beschneiden per clip-path statt overflow, damit das Label beim Scrollen am linken Rand stehen bleibt (sticky) */
+.tl-section {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--line-3);
+  background: transparent;
+  color: var(--text-3);
+  white-space: nowrap;
+  cursor: default;
+  clip-path: inset(0);
+}
+.tl-section-inner {
+  position: sticky;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0 8px;
+  overflow: hidden;
+}
+.tl-section.is-current {
+  background: var(--hover);
+  color: var(--text);
+}
+.tl-section-label {
+  min-width: 0;
+  overflow: hidden;
+  font: 600 10px/12px var(--font-ui);
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+.tl-section-tc {
+  flex: none;
+  color: var(--text-3);
+  font-size: 10px;
+  line-height: 1;
+}
+.tl-section.is-current .tl-section-tc {
+  color: var(--text-2);
+}
+.tl-section.is-ref,
+.tl-section.is-linked {
+  box-shadow: inset 0 0 0 1.5px var(--ref);
+}
+.tl-section.is-linked {
+  background: var(--ref-soft);
+}
+
+/* Spuren */
+.tl-lanes {
+  position: relative;
 }
 .lane {
   position: absolute;
   left: 0;
   right: 0;
+  z-index: 1;
   border-bottom: 1px solid var(--line);
 }
 .lane.is-active {
-  background: color-mix(in srgb, var(--hover) 55%, transparent);
+  background: color-mix(in srgb, var(--hover) 45%, transparent);
 }
-.lane.is-muted .clip,
+.lane.is-muted .clip {
+  opacity: 0.45;
+}
+.lane.is-hidden {
+  background: repeating-linear-gradient(135deg, var(--line) 0 1px, transparent 1px 6px);
+}
 .lane.is-hidden .clip {
   opacity: 0.45;
 }
-/* Clips: getönte Fläche mit 2-px-Kante in Spurfarbe (§7.9); Tönung 14 % (dunkel) bzw. 18 % (hell) */
+/* Clips: getönte Fläche mit 2-px-Kante in Spurfarbe (§7.9); Tönung 14 % (dunkel) bzw. 18 % (hell); Radius 3 */
 .clip {
   --trk: var(--trk-video);
   --tint: 14%;
@@ -2516,83 +2979,158 @@ textarea.field {
 :root[data-theme='light'] .clip {
   --tint: 18%;
 }
-.clip-overlay {
-  --trk: var(--trk-overlay);
+.clip.is-ref,
+.clip.is-linked {
+  outline: 1.5px solid var(--ref);
+  outline-offset: -1.5px;
 }
-.clip-text {
-  --trk: var(--trk-text);
+.clip.is-linked {
+  outline-width: 2px;
+  outline-offset: -2px;
 }
-.clip-audio,
-.clip-role-voice,
-.clip-role-vocals {
-  --trk: var(--trk-voice);
+.clip-n {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  z-index: 2;
+  min-width: 14px;
+  height: 13px;
+  padding: 0 3px;
+  border-radius: var(--r-xs);
+  background: var(--ref);
+  color: var(--on-ref);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 13px;
+  text-align: center;
 }
-.clip-role-music {
-  --trk: var(--trk-music);
+.clip-label {
+  position: absolute;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
 }
-.clip-role-sfx,
-.clip-role-ambience {
-  --trk: var(--trk-sfx);
+/* Reiter oben links: V1 auf --media-chip, Audio auf --panel 85 % */
+.clip-tab {
+  top: 3px;
+  left: 3px;
+  max-width: calc(100% - 6px);
+  height: 16px;
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 16px;
 }
-/* V1: Filmstreifen (immer dunkel), Label als fester Reiter */
+.clip.is-ref .clip-tab {
+  left: 21px;
+  max-width: calc(100% - 24px);
+}
+.clip-no {
+  margin-right: 5px;
+  color: var(--text-3);
+  font-size: 10px;
+}
+/* V1: Filmstreifen aus Kacheln mit 1-px-Fugen (immer dunkel), ohne Verlauf */
 .clip-video {
+  border-right: 1px solid var(--base);
   background: var(--well);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6);
+  box-shadow: none;
 }
 .clip-thumbs {
   position: absolute;
   inset: 0;
+  background-position: 0 50%;
   background-repeat: repeat-x;
-  background-size: auto 100%;
+  background-size: var(--tile) auto;
+}
+.clip-thumbs::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to right, transparent 0 calc(var(--tile) - 1px), var(--well) calc(var(--tile) - 1px) var(--tile));
+}
+.clip-video .clip-tab {
+  background: var(--media-chip);
+  color: var(--text);
+}
+.clip-audio .clip-tab {
+  top: 2px;
+  left: 5px;
+  height: 14px;
+  padding: 0 4px;
+  background: color-mix(in srgb, var(--panel) 85%, transparent);
+  color: var(--text-2);
+  line-height: 14px;
+}
+.clip-audio.is-ref .clip-tab {
+  left: 21px;
 }
 .clip-wave {
   position: absolute;
-  top: 1px;
+  top: 2px;
   left: 0;
 }
 .clip-wave path {
   fill: var(--trk);
   fill-opacity: 0.75;
 }
-.clip-label {
-  position: absolute;
-  top: 2px;
-  left: 4px;
-  max-width: calc(100% - 8px);
-  padding: 0 4px;
-  overflow: hidden;
-  border-radius: var(--r-xs);
-  font-size: 10.5px;
-  font-weight: 500;
-  line-height: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.clip-video .clip-label {
-  background: var(--media-chip);
-  color: #ece9e4;
-}
-.clip-audio .clip-label {
-  background: color-mix(in srgb, var(--panel) 85%, transparent);
-  color: var(--text-2);
-}
+/* V2 und T1: Name bzw. Text mittig; T1 schmal gesetzt (wdth 80) */
 .clip-overlay .clip-label,
 .clip-text .clip-label {
   top: 50%;
-  left: 2px;
-  transform: translateY(-50%);
+  left: 7px;
+  right: 4px;
   color: var(--text);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  transform: translateY(-50%);
+}
+.clip-overlay.is-ref .clip-label,
+.clip-text.is-ref .clip-label {
+  left: 21px;
 }
 .clip-text .clip-label {
-  font-size: 11px;
   font-stretch: 80%;
 }
+.clip-mini {
+  display: inline-block;
+  width: 16px;
+  height: 11px;
+  margin-right: 5px;
+  border-radius: var(--r-xs);
+  background: center / cover no-repeat;
+  box-shadow: inset 0 0 0 1px var(--img-edge);
+  vertical-align: -1px;
+}
+/* Blitz (§5): Ring --ref blendet über 600 ms aus; innen, weil Clips und Abschnitte beschneiden */
+.ref-flash-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  animation: tl-flash 600ms var(--ease) both;
+  pointer-events: none;
+}
+@keyframes tl-flash {
+  from {
+    box-shadow: inset 0 0 0 2px var(--ref);
+  }
+  to {
+    box-shadow: inset 0 0 0 2px transparent;
+  }
+}
+/* Raster: Schläge und Takte hinter den Clips, Abschnittsgrenzen (--line-3) durch alle Spuren */
 .tl-grid {
   position: absolute;
   top: 0;
   left: 0;
   pointer-events: none;
+}
+.tl-grid path {
+  shape-rendering: crispEdges;
 }
 .grid-beat {
   stroke: var(--line);
@@ -2601,42 +3139,39 @@ textarea.field {
 .grid-downbeat {
   stroke: var(--line);
 }
+.tl-grid-sections {
+  z-index: 2;
+}
 .grid-section {
   stroke: var(--line-3);
 }
-.grid-word {
-  stroke: var(--text-4);
-}
-/* Abspielkopf (Tungsten #1): 1-px-Linie plus Kappe; wird nie animiert */
+/* Abspielkopf (Tungsten #1): 1-px-Linie ab Oberkante der Markerleiste, Kappe 11 × 14 im Lineal; nie animiert */
 .tl-playhead {
   position: absolute;
   top: 0;
   z-index: 5;
-  width: 0;
-  border-left: 1px solid var(--accent-line);
+  width: 1px;
+  background: var(--accent-line);
   pointer-events: none;
 }
-.tl-playhead::before {
-  content: '';
+.tl-playhead-cap {
   position: absolute;
-  top: 0;
-  left: -6px;
+  top: var(--strip-h);
+  left: -5px;
   width: 11px;
   height: 14px;
   background: var(--accent);
   clip-path: polygon(0 0, 100% 0, 100% 62%, 50% 100%, 0 62%);
-}
-.tl-selection {
-  position: absolute;
-  z-index: 3;
-  border: 1px solid var(--ref);
-  background: var(--ref-soft);
-  pointer-events: none;
+  cursor: grab;
+  pointer-events: auto;
 }
 .tl-empty {
-  padding: 8px 12px;
+  position: absolute;
+  left: 16px;
+  margin-top: 12px;
   color: var(--text-3);
   font-size: 12px;
+  pointer-events: none;
 }
 
 /* === 7.10 Andere Bühnen === */
@@ -2767,64 +3302,41 @@ textarea.field {
 }
 
 /* === 7.7 Composer === */
-/* Gleiche Fläche wie der Director (--panel), keine Oberkante; unter dem Monitor grenzt er per Luminanzsprung an */
+/*
+ * Keine innere Box (§7.7): Der Text steht direkt auf --panel, derselben Fläche wie der Director darüber – ohne Linie
+ * dazwischen, sodass Chat und Composer ein „L“ um die Monitor-Ecke bilden. Unter dem Monitor grenzt der Composer per
+ * Luminanzsprung an. Nur bei :focus-within hebt sich die Textzone an (--panel-hi, Radius 8); ihr Innenabstand ist
+ * im Ruhezustand schon da (transparent) und wird per negativem Rand ausgeglichen, damit der Text nicht springt.
+ */
 .composer {
   grid-area: composer;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   padding: 12px 16px 10px;
 }
-.composer-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-}
-.mic-button {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 32px;
-  height: 32px;
-  margin-bottom: 4px;
-  border: 0;
-  border-radius: var(--r-md);
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--line-2);
-  color: var(--text-2);
-  cursor: pointer;
-  touch-action: none;
-  transition:
-    background-color var(--t-fast) var(--ease),
-    color var(--t-fast) var(--ease);
-}
-.mic-button:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-.mic-button.is-recording {
-  background: var(--danger);
-  box-shadow: none;
-  color: #fff;
-}
 .composer-editor-wrap {
   position: relative;
-  flex: 1;
-  min-width: 0;
+  margin: -6px -8px;
 }
-/* Keine Box: Text direkt auf --panel; bei Fokus hebt sich die Zone leicht an (§7.7) */
 .composer-editor {
+  box-sizing: content-box;
+  /* 13.5/24: mindestens 2 Zeilen, höchstens 8, dann scrollt die Zone */
   min-height: 48px;
   max-height: 192px;
   padding: 6px 8px;
   overflow-y: auto;
   border-radius: var(--r-lg);
   background: transparent;
+  color: var(--text);
+  caret-color: var(--text);
   font: 400 13.5px/24px var(--font-ui);
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   outline: none;
   transition: background-color var(--t-fast) var(--ease);
 }
-.composer-editor:focus {
+.composer-editor-wrap:focus-within .composer-editor {
   background: var(--panel-hi);
 }
 .composer-editor-wrap.is-drag-over .composer-editor {
@@ -2837,55 +3349,102 @@ textarea.field {
   top: 6px;
   left: 8px;
   right: 8px;
+  display: -webkit-box;
   overflow: hidden;
   color: var(--text-3);
   font: 400 13.5px/24px var(--font-ui);
-  text-overflow: ellipsis;
-  white-space: nowrap;
   pointer-events: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
-.composer-actions {
+
+/* Werkzeugleiste: links Einfügen und Position, rechts Modelle, Mikrofon, Senden */
+.composer-bar {
   display: flex;
   align-items: center;
+  gap: 12px;
+  height: 32px;
+  min-width: 0;
+  margin-top: 6px;
+}
+.composer-bar-start {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  /* Das Plus-Icon steht bündig mit dem Text darüber */
+  margin-left: -6px;
+}
+.composer-bar-end {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+.composer-position {
   gap: 6px;
-  padding-bottom: 6px;
+  padding: 0 9px 0 8px;
 }
-.composer-models {
-  display: inline-flex;
+.composer-position-count {
+  margin-left: 1px;
+  color: var(--text-3);
+  font: 500 11px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
-.composer-meta {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 18px;
-  margin-top: 2px;
-  padding-left: 50px;
-  font-size: 11.5px;
+.composer-mic {
+  touch-action: none;
 }
-.composer-hint {
-  margin-left: auto;
+/* Aufnahme läuft: Knopf gefüllt in --danger mit weißem Icon (§6) */
+.composer-mic.is-recording,
+.composer-mic.is-recording:hover:not(:disabled) {
+  background: var(--danger);
+  color: #fff;
 }
-.voice-indicator {
+.composer-send {
+  min-width: 78px;
+  margin-left: 4px;
+}
+.composer-add-menu {
+  min-width: 200px;
+  padding: 4px;
+}
+
+/* Aufnahme: ersetzt den linken Teil der Leiste (roter Punkt, „Aufnahme“, Zeit, Pegel, Klicks) */
+.composer-rec {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--danger);
-}
-.voice-indicator.is-transcribing {
+  height: 28px;
+  padding-left: 8px;
   color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
 }
-.rec-dot {
+.composer-rec .rec-dot {
+  flex: none;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--danger);
 }
-.voice-time {
+.composer-rec .rec-label {
+  color: var(--danger);
+  font-weight: 500;
+}
+.composer-rec .rec-time {
   color: var(--text);
-  font-family: var(--font-mono);
+  font: 500 11.5px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.composer-rec .rec-clicks {
+  color: var(--ref-text);
 }
 .level-meter {
   display: inline-block;
+  flex: none;
   width: 48px;
   height: 4px;
   overflow: hidden;
@@ -2898,200 +3457,423 @@ textarea.field {
   background: var(--text-2);
   transition: width 60ms linear;
 }
-.voice-clicks {
-  color: var(--ref-text);
-}
+
+/* Warteschlange: Kopf „2 in Warteschlange“, darunter bis zu drei Zeilen à 28 px über dem Text */
 .composer-queue {
+  margin: -4px 0 10px;
+}
+.composer-queue-head {
+  margin-bottom: 2px;
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 16px;
+}
+.composer-queue-list {
+  max-height: 84px;
+  margin: 0 -8px;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.queue-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  color: var(--text-3);
-}
-.queue-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   height: 28px;
   padding: 0 2px 0 8px;
   border-radius: var(--r-md);
-  background: var(--raised);
-  box-shadow: inset 0 0 0 1px var(--line);
   color: var(--text-2);
+  font-size: 12.5px;
+}
+.queue-row:hover {
+  background: var(--hover);
+}
+.queue-icon {
+  flex: none;
+  color: var(--text-3);
 }
 .queue-text {
-  max-width: 280px;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 /* === 7.8 Modellwahl === */
-/* Übergang: die bisherige Leiste als Liste im Popover des Composer-Steckplatzes (Ebene 2 links daneben) */
-.models-popover {
-  width: 320px;
-  padding: 6px;
-}
-.models-popover .picker-bar {
+/*
+ * Zusammenfassung (Ghost, 28 px) in der Composer-Werkzeugleiste: Director mit Denktiefe, gebundene Modalitäten mit
+ * Icon und Kurzname (getrennt durch 1 px --line-2), der Rest als „+6 Auto“. Der Steckplatz nimmt den freien Platz;
+ * passt die volle Zusammenfassung nicht hinein, zeigt der Knopf „Modelle · 3 gebunden“.
+ */
+.mp-slot {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2px;
-}
-.models-popover .picker-slot {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.models-popover .picker-slot > .popover-wrap {
-  flex: 1;
+  flex: 1 1 auto;
+  justify-content: flex-end;
   min-width: 0;
 }
-.models-popover .picker-trigger {
-  justify-content: flex-start;
-  width: 100%;
-}
-.models-popover .picker-popover {
-  top: auto;
-  right: calc(100% + 14px);
-  bottom: -6px;
-  left: auto;
-}
-.models-popover .picker-refresh {
-  align-self: flex-end;
-}
-.picker-bar {
-  position: relative;
-  z-index: 20;
-  display: flex;
-  flex-wrap: wrap;
+.mp-summary {
+  display: inline-flex;
+  flex: none;
   align-items: center;
+  height: var(--ctl-h);
+  padding: 0 8px 0 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-2);
+  font: 500 12px/1 var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+.mp-summary:hover,
+.mp-summary[aria-expanded='true'] {
+  background: var(--hover);
+  color: var(--text);
+}
+.mp-summary:active {
+  background: var(--active);
+}
+/* Unsichtbare Messkopie der vollen Zusammenfassung (rechtsbündig, damit nichts überläuft) */
+.mp-measure {
+  position: absolute;
+  top: 0;
+  right: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.mp-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+}
+.mp-item + .mp-item::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 1px;
+  height: 12px;
+  margin-top: -6px;
+  background: var(--line-2);
+}
+.mp-item-director {
   gap: 4px;
 }
-.picker-slot {
+.mp-item .icon {
+  flex: none;
+  color: var(--text-3);
+}
+.mp-q {
+  color: var(--text-3);
+  font-weight: 400;
+}
+.mp-summary-chev {
+  flex: none;
+  margin-left: -3px;
+  color: var(--text-3);
+}
+
+/* Popover: nach oben, rechtsbündig an der Zusammenfassung, höchstens 400 px breit; Ebene 2 ersetzt Ebene 1 */
+.model-popover {
+  width: 400px;
+  max-width: calc(100vw - 16px);
+  padding: 0;
+  overflow: hidden;
+}
+.mp-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 16px);
+}
+.mp-level {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+.mp-level.is-forward {
+  animation: mp-forward var(--t-med) var(--ease);
+}
+.mp-level.is-back {
+  animation: mp-back var(--t-med) var(--ease);
+}
+@keyframes mp-forward {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+@keyframes mp-back {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+.mp-head {
   display: flex;
   flex: none;
   align-items: center;
-  gap: 2px;
-}
-.picker-trigger {
-  display: inline-flex;
-  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  height: 32px;
-  padding: 0 8px;
+  height: 40px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+.mp-title {
+  color: var(--text);
+  font: 600 12.5px/1 var(--font-ui);
+}
+
+/* Ebene 1: neun Modalitäten à 36 px */
+.mp-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px;
+  overflow-y: auto;
+}
+.mp-row {
+  position: relative;
+}
+.mp-row-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
   border: 0;
   border-radius: var(--r-md);
   background: transparent;
   color: var(--text-3);
-  font-size: 12px;
-  white-space: nowrap;
+  font: 400 12.5px/1 var(--font-ui);
+  text-align: left;
   cursor: pointer;
   transition: background-color var(--t-fast) var(--ease);
 }
-.picker-trigger:hover,
-.picker-trigger[aria-expanded='true'] {
+.mp-row-btn:hover {
   background: var(--hover);
 }
-.picker-trigger .icon {
+.mp-row-btn:focus-visible {
+  background: var(--hover);
+  outline-offset: -2px;
+}
+.mp-row-icon {
+  flex: none;
   color: var(--text-3);
 }
-.picker-modality {
-  width: 64px;
+.mp-mod {
+  flex: none;
+  width: 72px;
   color: var(--text-2);
+  font-size: 12px;
   font-weight: 500;
 }
-.picker-current {
+.mp-sel {
   flex: 1;
-  max-width: 150px;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.picker-trigger.is-bound .picker-current {
+.mp-row.is-bound .mp-sel {
   color: var(--text);
   font-weight: 500;
 }
-.picker-price {
+.mp-price {
+  flex: none;
   color: var(--text-3);
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font: 400 11px/1 var(--font-mono);
 }
-.effort-select select {
-  height: var(--ctl-h-sm);
-  padding: 0 4px;
-  border: 1px solid var(--line);
+.mp-warn {
+  flex: none;
+  color: var(--warn);
+}
+.mp-chev {
+  flex: none;
+  color: var(--text-3);
+  transition: color var(--t-fast) var(--ease);
+}
+.mp-row-btn:hover .mp-chev,
+.mp-row-btn:focus-visible .mp-chev {
+  color: var(--text);
+}
+/* Director-Zeile: Platzhalter für die Denktiefe links vom Chevron; die Auswahl liegt darüber (kein Select im Knopf) */
+.mp-effort-space {
+  flex: none;
+  width: 80px;
+}
+.mp-effort-wrap {
+  position: absolute;
+  top: 50%;
+  right: 32px;
+  width: 80px;
+  height: 24px;
+  margin-top: -12px;
+}
+.mp-effort {
+  width: 100%;
+  height: 100%;
+  padding: 0 16px 0 6px;
+  border: 1px solid var(--line-2);
   border-radius: var(--r-sm);
   background: var(--raised);
   color: var(--text-2);
-  font-size: 11.5px;
+  font: 500 11.5px/1 var(--font-ui);
+  cursor: pointer;
+  appearance: none;
+  transition:
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
 }
-.picker-refresh {
-  margin-left: auto;
+.mp-effort:hover {
+  background: var(--hover);
+  color: var(--text);
 }
-.picker-popover {
+.mp-effort-wrap .icon {
+  position: absolute;
+  top: 6px;
+  right: 4px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.mp-foot {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 400px;
-  max-height: min(60vh, 520px);
+  flex: none;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--line);
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 1.45;
 }
-.picker-search {
+.mp-foot .icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* Ebene 2: Zurück-Kopf, Suche mit Anzahl, Modelle als Liste */
+.mp-head-detail {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  height: auto;
+  padding: 6px 8px 8px;
+}
+.mp-back {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 4px;
+  height: var(--ctl-h);
+  padding: 0 10px 0 4px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text);
+  font: 600 12.5px/1 var(--font-ui);
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease);
+}
+.mp-back:hover {
+  background: var(--hover);
+}
+.mp-back .icon {
+  color: var(--text-2);
+}
+.mp-search {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   height: 32px;
   padding: 0 10px;
   border-radius: var(--r-md);
   background: var(--panel);
   box-shadow: inset 0 0 0 1px var(--line-2);
   color: var(--text-3);
+  transition: box-shadow var(--t-fast) var(--ease);
 }
-.picker-search input {
+.mp-search:focus-within {
+  box-shadow: inset 0 0 0 1px var(--line-3);
+}
+.mp-search input {
   flex: 1;
+  min-width: 0;
   border: 0;
   outline: none;
   background: transparent;
   color: var(--text);
+  font: 400 12.5px/1 var(--font-ui);
 }
-.picker-list {
+.mp-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.mp-count {
+  flex: none;
+  color: var(--text-3);
+  font: 400 11px/1 var(--font-mono);
+}
+.mp-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(60vh, 520px);
   margin: 0;
-  padding: 0;
-  overflow: auto;
+  padding: 4px;
+  overflow-y: auto;
   list-style: none;
 }
-.picker-option {
+.mp-option {
   padding: 9px 10px 10px;
   border-radius: var(--r-md);
   cursor: pointer;
 }
-.picker-option.is-active,
-.picker-option:hover {
+.mp-option + .mp-option {
+  margin-top: 2px;
+}
+.mp-option.is-active {
   background: var(--hover);
 }
-.picker-option.is-deprecated .picker-option-name {
-  text-decoration: line-through;
-  text-decoration-color: var(--warn);
-}
-.picker-option-head {
+.mp-option-head {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
-.picker-option-name {
-  font-size: 12.5px;
-  font-weight: 600;
+.mp-option-name {
+  overflow: hidden;
+  color: var(--text);
+  font: 600 12.5px/1.2 var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.picker-option-vendor {
+.mp-option.is-deprecated .mp-option-name {
+  color: var(--text-2);
+}
+.mp-option-vendor {
+  flex: none;
   color: var(--text-3);
   font-size: 11.5px;
+  white-space: nowrap;
 }
-.picker-option-price {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
+.mp-option-price {
+  flex: none;
+  color: var(--text);
+  font: 500 11.5px/1 var(--font-mono);
 }
-.picker-option-desc {
+.mp-check {
+  flex: none;
+  color: var(--text);
+}
+.mp-option-desc {
   display: -webkit-box;
-  margin: 3px 0 7px;
+  margin: 4px 0 0;
   overflow: hidden;
   color: var(--text-2);
   font-size: 11.5px;
@@ -3099,25 +3881,29 @@ textarea.field {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.picker-option-foot {
+.mp-option-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
+  margin-top: 8px;
 }
-.picker-example {
+.mp-example {
   color: var(--text-3);
-  font-family: var(--font-mono);
-  font-size: 10.5px;
+  font: 400 10.5px/1 var(--font-mono);
 }
-.picker-warning {
-  margin: 4px 0 0;
+.mp-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
   color: var(--warn);
   font-size: 11.5px;
 }
-.picker-empty {
+.mp-empty {
   padding: 12px;
   color: var(--text-3);
+  font-size: 12px;
 }
 
 /* === 7.6 Director === */

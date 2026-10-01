@@ -1,11 +1,11 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { serializeComposer, type ComposerSegment } from '@studio/core';
 import { Composer } from '../src/renderer/components/composer/Composer.tsx';
 import { parseDom, positionOf, renderSegments, setCaretPosition } from '../src/renderer/components/composer/editorDom.ts';
 import { insertSegmentsAt, trimSegments } from '../src/renderer/lib/composerOps.ts';
-import { DEMO_VIDEO_ID, DEMO_VIDEO_PATH, renderStudio, setupStudio } from './helpers.tsx';
+import { DEMO_CANVAS_PATH, DEMO_DECK_PATH, DEMO_VIDEO_ID, DEMO_VIDEO_PATH, DEMO_WEB_PATH, renderStudio, setupStudio } from './helpers.tsx';
 
 const TIME_REF = { kind: 'time' as const, frame: 372 };
 const ASSET_REF = { kind: 'asset' as const, assetId: 'ast_char_mira' };
@@ -204,22 +204,161 @@ describe('Composer', () => {
     expect(editor.querySelector('b')).toBeNull();
   });
 
-  it('reiht Nachrichten ein, solange der Director arbeitet, und sendet sie danach', async () => {
+  it('reiht Nachrichten ein, solange der Director arbeitet, und sendet sie danach; Stopp steht nicht im Composer', async () => {
     const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
     const send = vi.spyOn(studio.api, 'sendMessage').mockResolvedValue();
-    const interrupt = vi.spyOn(studio.api, 'interrupt');
     renderStudio(<Composer />, studio);
     act(() => studio.api.debug.emit({ type: 'run_state', projectId: DEMO_VIDEO_ID, runId: 'run_x', state: 'running' }));
+    // Stopp gehört in den Director-Kopf (DESIGN.md §7.7.1)
+    expect(screen.queryByRole('button', { name: /Stopp/ })).toBeNull();
+    // Leer heißt der Knopf auch während des Laufs „Senden“ (deaktiviert)
+    expect(screen.getByRole('button', { name: 'Senden' })).toBeDisabled();
     act(() => studio.store.getState().insertSegments([{ type: 'text', text: 'Danach bitte Musik' }]));
-    await userEvent.click(screen.getByRole('button', { name: 'Einreihen' }));
+    const queueButton = screen.getByRole('button', { name: 'Einreihen' });
+    expect(queueButton).not.toHaveClass('primary');
+    await userEvent.click(queueButton);
     expect(send).not.toHaveBeenCalled();
-    expect(screen.getByText('1 Nachricht(en) in der Warteschlange')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Stopp' }));
-    expect(interrupt).toHaveBeenCalledWith(DEMO_VIDEO_ID);
+    // Warteschlange über dem Text: Kopf, Zeile mit Klartext, „Jetzt senden“ (deaktiviert, solange der Director arbeitet)
+    expect(screen.getByText('1 in Warteschlange')).toBeInTheDocument();
+    const queue = screen.getByRole('list', { name: 'Warteschlange' });
+    expect(within(queue).getByText('Danach bitte Musik')).toBeInTheDocument();
+    expect(within(queue).getByRole('button', { name: 'Jetzt senden' })).toBeDisabled();
     act(() => studio.api.debug.emit({ type: 'run_state', projectId: DEMO_VIDEO_ID, runId: 'run_x', state: 'idle' }));
     await waitFor(() => expect(send).toHaveBeenCalledTimes(1));
     expect(send.mock.calls[0]![1].segments).toEqual([{ type: 'text', text: 'Danach bitte Musik' }]);
     expect(studio.store.getState().queue).toEqual([]);
+    expect(screen.queryByText('1 in Warteschlange')).toBeNull();
+  });
+
+  it('Warteschlange: × entfernt eine Nachricht, „Jetzt senden“ schickt sie, sobald der Director bereit ist', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    const send = vi.spyOn(studio.api, 'sendMessage').mockResolvedValue();
+    renderStudio(<Composer />, studio);
+    act(() => studio.store.setState({ queue: [{ segments: [{ type: 'text', text: 'Erste' }] }, { segments: [{ type: 'text', text: 'Zweite' }, { type: 'ref', ref: TIME_REF }] }] }));
+    expect(screen.getByText('2 in Warteschlange')).toBeInTheDocument();
+    const queue = screen.getByRole('list', { name: 'Warteschlange' });
+    // Klartext ohne Emoji (displayText)
+    expectNoEmoji(queue.textContent);
+    await userEvent.click(within(queue).getAllByRole('button', { name: 'Aus der Warteschlange entfernen' })[0]!);
+    expect(studio.store.getState().queue).toHaveLength(1);
+    await userEvent.click(within(queue).getByRole('button', { name: 'Jetzt senden' }));
+    await waitFor(() => expect(send).toHaveBeenCalledTimes(1));
+    expect(send.mock.calls[0]![1].segments[0]).toEqual({ type: 'text', text: 'Zweite' });
+  });
+
+  it('Senden-Zustände: Tungsten-Primär nur mit Inhalt, bereitem Director und ohne offene Entscheidung', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    renderStudio(<Composer />, studio);
+    const button = () => screen.getByRole('button', { name: /^(Senden|Einreihen)$/ });
+    // Leer: secondary, deaktiviert – kein Tungsten im Composer
+    expect(button()).toHaveAccessibleName('Senden');
+    expect(button()).toBeDisabled();
+    expect(button()).not.toHaveClass('primary');
+    // Inhalt, Director bereit: primary
+    act(() => studio.store.getState().insertSegments([{ type: 'text', text: 'Los' }]));
+    expect(button()).toHaveAccessibleName('Senden');
+    expect(button()).toHaveClass('primary');
+    // Offene Entscheidung (z. B. Rückfrage): Senden bleibt aktiv, aber secondary – das Dock hat den Primärknopf
+    act(() => studio.store.setState({ question: { questionId: 'q1', questions: [], runId: null } }));
+    expect(button()).toHaveAccessibleName('Senden');
+    expect(button()).toBeEnabled();
+    expect(button()).not.toHaveClass('primary');
+    act(() => studio.store.setState({ question: null, checkpoints: studio.store.getState().checkpoints.map((c, i) => (i === 0 ? { ...c, status: 'proposed' as const } : c)) }));
+    expect(button()).not.toHaveClass('primary');
+    // Director arbeitet: „Einreihen“, secondary
+    act(() => studio.store.setState({ checkpoints: [], runState: 'running' }));
+    expect(button()).toHaveAccessibleName('Einreihen');
+    expect(button()).toBeEnabled();
+    expect(button()).not.toHaveClass('primary');
+  });
+
+  it('Positionsknopf und Alt+Enter setzen einen Marker am Abspielkopf (Chip am Caret), mit Anzahl', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    renderStudio(<Composer />, studio);
+    const editor = screen.getByTestId('composer-editor');
+    const user = userEvent.setup();
+    await user.click(editor);
+    await user.keyboard('Ab hier wärmer');
+    act(() => studio.store.getState().requestSeek(372));
+    // Alt+Enter im Composer: Marker am Caret (hinter „Ab hier“), kein Zeilenumbruch
+    act(() => studio.store.getState().setCaret(7));
+    setCaretPosition(editor, 7);
+    fireEvent.keyDown(editor, { key: 'Enter', altKey: true });
+    expect(studio.store.getState().composer).toEqual([
+      { type: 'text', text: 'Ab hier' },
+      { type: 'ref', ref: { kind: 'time', frame: 372 } },
+      { type: 'text', text: ' wärmer' },
+    ]);
+    expect(studio.store.getState().playhead).toBe(372);
+    // Der Knopf zeigt die Anzahl; ein Klick setzt einen weiteren Marker am Abspielkopf
+    const marker = screen.getByRole('button', { name: /^Marker/ });
+    expect(marker).toHaveAccessibleName('Marker, 1 gesetzt');
+    act(() => studio.store.getState().requestSeek(600));
+    await user.click(marker);
+    expect(studio.store.getState().refNumbers).toEqual({ 'time:372': 1, 'time:600': 2 });
+    expect(marker).toHaveTextContent('Marker2');
+    expect(editor.querySelectorAll('.chip-time')).toHaveLength(2);
+  });
+
+  it('Positionsknopf je Kategorie: Folie und Seite referenzieren die aktuelle Stelle; Grafik hat keinen', async () => {
+    const deck = await setupStudio({ project: DEMO_DECK_PATH });
+    const { unmount } = renderStudio(<Composer />, deck);
+    const slide = deck.store.getState().document!;
+    if (slide.kind !== 'deck') throw new Error('Deck erwartet');
+    expect(screen.getByTestId('composer-editor').parentElement).toHaveTextContent('Zeige auf Folien');
+    act(() => deck.store.getState().selectSlide(slide.slides[2]!.id));
+    await userEvent.click(screen.getByRole('button', { name: 'Folie' }));
+    expect(deck.store.getState().composer).toEqual([{ type: 'ref', ref: { kind: 'slide', slideId: slide.slides[2]!.id } }]);
+    // Alt+Enter: dieselbe Folie ist schon referenziert – kein Duplikat
+    fireEvent.keyDown(screen.getByTestId('composer-editor'), { key: 'Enter', altKey: true });
+    expect(deck.store.getState().composer.filter((s) => s.type === 'ref')).toHaveLength(1);
+    unmount();
+
+    const web = await setupStudio({ project: DEMO_WEB_PATH });
+    const second = renderStudio(<Composer />, web);
+    await userEvent.click(screen.getByRole('button', { name: 'Seite' }));
+    const ref = web.store.getState().composer[0];
+    expect(ref?.type === 'ref' && ref.ref.kind === 'element' && ref.ref.selector === 'body').toBe(true);
+    expect(screen.getByTestId('composer-editor').querySelector<HTMLElement>('.chip')!.dataset.refKey).toMatch(/^page:\//);
+    second.unmount();
+
+    const canvas = await setupStudio({ project: DEMO_CANVAS_PATH });
+    renderStudio(<Composer />, canvas);
+    expect(screen.queryByRole('button', { name: /^(Marker|Folie|Seite)/ })).toBeNull();
+  });
+
+  it('„+“: Datei einfügen verknüpft und setzt Asset-Chips; Asset einfügen fokussiert die Asset-Suche', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    const importFiles = vi.spyOn(studio.api, 'importFiles');
+    renderStudio(
+      <>
+        <section className="assets">
+          <input type="search" aria-label="Assets durchsuchen" />
+        </section>
+        <Composer />
+      </>,
+      studio,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Einfügen' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Datei einfügen …' }));
+    await waitFor(() => expect(studio.store.getState().composer.filter((s) => s.type === 'ref')).toHaveLength(2));
+    expect(importFiles).toHaveBeenCalledWith(DEMO_VIDEO_ID, expect.any(Array), 'link');
+    expect(screen.getByTestId('composer-editor').querySelectorAll('.chip-asset')).toHaveLength(2);
+
+    await user.click(screen.getByRole('button', { name: 'Einfügen' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Asset einfügen …' }));
+    await waitFor(() => expect(screen.getByRole('searchbox', { name: 'Assets durchsuchen' })).toHaveFocus());
+  });
+
+  it('Werkzeugleiste ohne Keycaps in Knöpfen; Kürzel stehen in der Beschreibung', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    renderStudio(<Composer />, studio);
+    const composer = screen.getByRole('region', { name: 'Nachricht an den Director' });
+    expect(composer.querySelector('button kbd, button .kbd')).toBeNull();
+    expect(screen.getByTestId('composer-editor')).toHaveAccessibleDescription(/Strg\+Enter sendet · Alt\+Enter referenziert die aktuelle Stelle/);
+    // Modellwahl als Zusammenfassung in der Leiste
+    expect(within(composer).getByRole('button', { name: 'Modelle' })).toHaveAttribute('aria-haspopup', 'dialog');
   });
 });
 

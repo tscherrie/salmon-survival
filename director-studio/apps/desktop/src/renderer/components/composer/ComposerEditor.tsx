@@ -25,7 +25,21 @@ import {
  * Verknüpfung (DESIGN.md §9.4): Hover über einen Chip meldet seinen Schlüssel, Gegenstücke melden ihn zurück
  * (`.is-linked`); ein Blitz (`.is-flash`) zeigt, welcher Chip gemeint ist; ein Klick zeigt die Stelle.
  */
-export function ComposerEditor({ onSubmit, disabled }: { onSubmit: () => void; disabled?: boolean }) {
+export function ComposerEditor({
+  onSubmit,
+  disabled,
+  onPositionRef,
+  placeholder,
+  describedBy,
+}: {
+  onSubmit: () => void;
+  disabled?: boolean;
+  /** Alt+Enter: Position der Kategorie referenzieren (Marker am Abspielkopf, aktuelle Folie bzw. Seite; §7.7.3). */
+  onPositionRef?: (() => void) | undefined;
+  placeholder?: string;
+  /** ID der Beschreibung (Tastenkürzel) für `aria-describedby`. */
+  describedBy?: string;
+}) {
   const t = useT();
   const actions = useActions();
   const store = useStudioStore();
@@ -113,6 +127,13 @@ export function ComposerEditor({ onSubmit, disabled }: { onSubmit: () => void; d
       event.preventDefault();
       commitFromDom();
       onSubmit();
+      return;
+    }
+    if (event.key === 'Enter' && event.altKey && !event.ctrlKey && !event.metaKey) {
+      // Position referenzieren: Der Chip landet am Caret. `preventDefault` hält globale Alt+Enter-Kürzel fern.
+      event.preventDefault();
+      commitFromDom();
+      onPositionRef?.();
       return;
     }
     if (event.code === 'Space' && event.shiftKey && (event.ctrlKey || event.metaKey)) {
@@ -228,7 +249,7 @@ export function ComposerEditor({ onSubmit, disabled }: { onSubmit: () => void; d
     <div className={`composer-editor-wrap${dragOver ? ' is-drag-over' : ''}`}>
       {empty && (
         <div className="composer-placeholder" aria-hidden="true">
-          {dragOver ? t('composer.dropHint') : t('composer.placeholder')}
+          {dragOver ? t('composer.dropHint') : (placeholder ?? t('composer.placeholder'))}
         </div>
       )}
       <div
@@ -239,7 +260,7 @@ export function ComposerEditor({ onSubmit, disabled }: { onSubmit: () => void; d
         role="textbox"
         aria-multiline="true"
         aria-label={t('composer.label')}
-        aria-describedby="composer-hint"
+        aria-describedby={describedBy}
         spellCheck
         data-testid="composer-editor"
         onInput={commitFromDom}
