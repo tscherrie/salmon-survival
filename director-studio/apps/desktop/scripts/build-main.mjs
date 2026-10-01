@@ -41,18 +41,6 @@ await build({
 
 await build({
   ...common,
-  entryPoints: [join(root, 'src/main/render-worker.ts')],
-  outfile: join(root, 'out/main/render-worker.js'),
-  format: 'esm',
-  banner: {
-    js: "import { createRequire as __studioCreateRequire } from 'node:module'; const require = __studioCreateRequire(import.meta.url);",
-  },
-}).catch((error) => {
-  if (!String(error).includes('render-worker.ts')) throw error;
-});
-
-await build({
-  ...common,
   plugins: [],
   entryPoints: [join(root, 'src/preload/index.ts')],
   outfile: join(root, 'out/preload/index.cjs'),

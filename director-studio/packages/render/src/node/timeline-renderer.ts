@@ -54,6 +54,12 @@ export interface TimelineRendererOptions {
   failOnComponentError?: boolean;
   /** Zeitlimit je Frame in ms (Remotion `timeoutInMilliseconds`, Standard 30000). */
   timeoutMs?: number;
+  /**
+   * Pfad zu `browser.ts` dieses Pakets (Quelltext, den das Remotion-Bündel einbindet). Standard: neben
+   * diesem Modul bzw. `STUDIO_RENDER_BROWSER_ENTRY`. Nötig, wenn dieses Modul in ein anderes Bündel
+   * (z. B. Electron-Main) eingebettet ist und `import.meta.url` nicht mehr auf die Paketquellen zeigt.
+   */
+  browserEntry?: string;
 }
 
 export interface RenderInputBase {
@@ -147,6 +153,10 @@ export class TimelineRenderer {
     return promise;
   }
 
+  private browserEntry(): string {
+    return this.opts.browserEntry ?? process.env.STUDIO_RENDER_BROWSER_ENTRY ?? path.join(SRC_DIR, 'browser.ts');
+  }
+
   private async doBundle(hash: string, compiled: Record<string, string>): Promise<string> {
     const dir = path.join(path.resolve(this.opts.workDir), 'bundles', hash);
     const outDir = path.join(dir, 'out');
@@ -172,7 +182,7 @@ export class TimelineRenderer {
         resolve: {
           ...config.resolve,
           modules: ['node_modules', nodeModules, ...((config.resolve?.modules as string[] | undefined) ?? [])],
-          alias: { ...(config.resolve?.alias as Record<string, string> | undefined), '@studio/render-browser': path.join(SRC_DIR, 'browser.ts') },
+          alias: { ...(config.resolve?.alias as Record<string, string> | undefined), '@studio/render-browser': this.browserEntry() },
         },
       }),
     });
