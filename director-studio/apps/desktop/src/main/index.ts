@@ -16,6 +16,9 @@ import { PreviewController } from './preview.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const isSmokeTest = process.env.STUDIO_SMOKE_TEST === '1';
 
+// Isolierter Datenordner (Tests, mehrere Profile).
+if (process.env.STUDIO_USER_DATA) app.setPath('userData', process.env.STUDIO_USER_DATA);
+
 protocol.registerSchemesAsPrivileged([
   { scheme: ASSET_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true } },
 ]);
