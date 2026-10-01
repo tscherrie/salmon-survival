@@ -21,9 +21,10 @@ let fallback: Promise<StudioApi> | null = null;
 export function getStudioApi(): Promise<StudioApi> {
   if (typeof window !== 'undefined' && window.studio) return Promise.resolve(window.studio);
   fallback ??= import('./fake/FakeStudioApi.ts').then(({ FakeStudioApi }) => {
-    // `?large=1` legt zusätzlich ein 5-Minuten-Stresstest-Projekt an (Performance der Timeline).
-    const large = typeof location !== 'undefined' && new URLSearchParams(location.search).has('large');
-    const fake = new FakeStudioApi({ largeDemo: large });
+    // `?large=1` legt zusätzlich ein 5-Minuten-Stresstest-Projekt an (Performance der Timeline),
+    // `?empty=1` startet ohne Demo-Projekte (Leerzustand des Startbildschirms).
+    const params = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+    const fake = new FakeStudioApi({ largeDemo: params.has('large'), ...(params.has('empty') ? { seed: false } : {}) });
     if (typeof window !== 'undefined') window.__studioFake = fake;
     return fake;
   });

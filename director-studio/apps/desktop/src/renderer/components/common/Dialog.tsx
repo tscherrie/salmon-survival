@@ -5,13 +5,16 @@ import { Icon } from './Icon.tsx';
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Modaler Dialog mit Fokusfalle, Escape zum Schließen und Fokus-Rückgabe. */
+/**
+ * Modaler Dialog (DESIGN.md §7.11): 420 px (Einstellungen 560), Radius 12, `--raised`, Scrim. Fokusfalle, Escape
+ * bricht ab, danach kehrt der Fokus zum Auslöser zurück. Aktionen rechtsbündig: secondary links, primary rechts.
+ */
 export function Dialog({
   title,
   onClose,
   children,
   footer,
-  width = 520,
+  width = 420,
   className,
 }: {
   title: string;
@@ -103,7 +106,6 @@ export function ConfirmDialog({
     <Dialog
       title={title}
       onClose={onCancel}
-      width={440}
       footer={
         <>
           <button type="button" className="btn" onClick={onCancel}>

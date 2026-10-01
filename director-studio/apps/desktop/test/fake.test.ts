@@ -29,6 +29,17 @@ describe('FakeStudioApi', () => {
     expect(models.find((m) => m.recommended)?.id).toBe('minimax/h3-max/text-to-video');
   });
 
+  it('„Zuletzt geöffnet“ wie in Main: Checkpoint und Budget, Standbild nur bei verwendetem Video oder Bild (§7.12)', async () => {
+    const api = new FakeStudioApi({ delayMs: 0 });
+    const recent = await api.listRecentProjects();
+    const video = recent.find((r) => r.category === 'video')!;
+    expect(video.checkpoint).toEqual({ index: 1, total: 5, title: 'Treatment', status: 'pending' });
+    expect(video.budget!.approvedUsd).toBeGreaterThan(0);
+    expect(video.poster).toMatch(/^data:image\//);
+    // Podcast ohne Bild im Dokument: kein erfundenes Standbild
+    expect(recent.find((r) => r.category === 'audio')!.poster).toBeUndefined();
+  });
+
   it('geskripteter Director: Planung → Rückfrage → Checkpoint → Freigabe → neue Version', async () => {
     const api = new FakeStudioApi({ delayMs: 0 });
     const events = record(api);

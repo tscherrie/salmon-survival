@@ -149,8 +149,10 @@ export const MarkerStrip = memo(function MarkerStrip({
   );
   const tabKey = activeKey && rovingKeys.includes(activeKey) ? activeKey : (rovingKeys[0] ?? null);
 
-  // Neuer Marker „setzt sich“ (§5): nur der Tag, der gerade erst erschienen ist und zuletzt gesetzt wurde
-  useEffect(() => {
+  // Neuer Marker „setzt sich“ (§5): nur der Tag, der gerade erst erschienen ist und zuletzt gesetzt wurde. Vor dem
+  // ersten Zeichnen (Layout-Effekt), damit der Tag nicht erst in voller Größe aufblitzt und im selben Frame wie der
+  // neue Chip im Composer einsetzt.
+  useLayoutEffect(() => {
     const seen = seenKeys.current;
     const fresh = markers.some((m) => m.key === lastMarkerKey && !seen.has(m.key));
     seenKeys.current = new Set(markers.map((m) => m.key));

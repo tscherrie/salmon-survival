@@ -65,8 +65,17 @@ export function ComposerEditor({
     const json = JSON.stringify(segments);
     const prev = rendered.current;
     if (prev && prev.json === json && prev.revision === revision && prev.chips === chipsKey) return;
+    const before = new Set(Array.from(el.querySelectorAll<HTMLElement>('.chip'), (chip) => chip.dataset.refKey));
     renderSegments(el, segments, ctx, (label) => t('composer.removeChip', { label }), chipOptions);
     rendered.current = { revision, json, chips: chipsKey };
+    // Neu hinzugekommene Chips setzen ein (§5: 180 ms, Deckkraft plus 4 px Weg) – im selben Frame wie ein neuer Marker
+    if (prev) {
+      for (const chip of Array.from(el.querySelectorAll<HTMLElement>('.chip'))) {
+        if (before.has(chip.dataset.refKey)) continue;
+        chip.classList.add('is-entering');
+        chip.addEventListener('animationend', () => chip.classList.remove('is-entering'), { once: true });
+      }
+    }
     if (document.activeElement === el) setCaretPosition(el, store.getState().caret);
   }, [segments, revision, chipsKey, ctx, chipOptions, t, store]);
 

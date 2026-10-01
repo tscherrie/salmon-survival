@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import type { StudioApi } from '@studio/core';
+import { Shortcuts } from './components/common/ShortcutsDialog.tsx';
 import { Toasts } from './components/common/Toasts.tsx';
 import { StartScreen } from './components/start/StartScreen.tsx';
 import { Workspace } from './components/workspace/Workspace.tsx';
@@ -15,6 +16,7 @@ function Screens() {
   return (
     <>
       {screen === 'start' ? <StartScreen /> : <Workspace />}
+      <Shortcuts />
       <Toasts />
     </>
   );

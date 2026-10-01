@@ -8,14 +8,15 @@ import { Icon } from '../common/Icon.tsx';
 const CATEGORIES: Array<ProjectCategory | 'open'> = ['video', 'audio', 'slides', 'graphic', 'web', 'open'];
 const FORMAT_IDS = ['16:9', '9:16', '1:1', '4:5'] as const;
 
-export function NewProjectDialog({ onClose }: { onClose: () => void }) {
+/** Neues Projekt; aus „Neu aus Kategorie“ ist die Kategorie schon gewählt (`initialCategory`). */
+export function NewProjectDialog({ onClose, initialCategory = 'video' }: { onClose: () => void; initialCategory?: ProjectCategory }) {
   const t = useT();
   const api = useApi();
   const actions = useActions();
   const settings = useStudio((s) => s.settings);
   const titleId = useId();
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<ProjectCategory | 'open'>('video');
+  const [category, setCategory] = useState<ProjectCategory | 'open'>(initialCategory);
   const [formats, setFormats] = useState<string[]>(['16:9']);
   const [directory, setDirectory] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,7 +43,7 @@ export function NewProjectDialog({ onClose }: { onClose: () => void }) {
     <Dialog
       title={t('newProject.title')}
       onClose={onClose}
-      width={600}
+      width={420}
       footer={
         <>
           <button type="button" className="btn" onClick={onClose}>
