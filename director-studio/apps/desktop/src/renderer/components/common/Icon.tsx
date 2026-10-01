@@ -60,6 +60,9 @@ const PATHS = {
   budget: 'M12 3v18M16 7c0-1.7-1.8-3-4-3s-4 1.3-4 3 1.8 2.5 4 3 4 1.3 4 3-1.8 3-4 3-4-1.3-4-3',
   fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
   monitor: 'M3 4h18v12H3zM8 20h8',
+  // Viewports der Web-Vorschau (§7.4; Desktop = monitor)
+  mobile: 'M8 3h8v18H8zM11 17.5h2',
+  tablet: 'M5 3h14v18H5zM11 17.5h2',
   // Seitenleisten und Bühne ein-/ausblenden
   sideLeft: 'M4 5h16v14H4zM9.5 5v14',
   sideRight: 'M4 5h16v14H4zM14.5 5v14',

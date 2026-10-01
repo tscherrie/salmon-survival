@@ -21,11 +21,11 @@ describe('App (Integration mit Fake-Backend)', () => {
     expect(screen.getByRole('region', { name: 'Nachricht an den Director' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Asset-Browser' })).toBeInTheDocument();
 
-    // Bühnenklick → Chip
-    const lane = document.querySelector('[data-lane-track="V1"]')!;
+    // Klick in die Markerleiste → Marker = Zeit-Chip (DESIGN.md §8.4); Frame 300 liegt auf einem Schlag
+    const strip = document.querySelector('[data-marker-strip]')!;
     const x = TIMELINE_PAD + (300 / 30) * DEFAULT_PX_PER_SECOND;
-    fireEvent.mouseDown(lane, { clientX: x, button: 0 });
-    fireEvent.mouseUp(lane, { clientX: x });
+    fireEvent.mouseDown(strip, { clientX: x, clientY: 8, button: 0 });
+    fireEvent.mouseUp(strip, { clientX: x, clientY: 8, button: 0 });
     const editor = screen.getByTestId('composer-editor');
     // Nummerierter Zeit-Chip ohne Emoji (DESIGN.md §7.7.2): Nummer 1, Timecode MM:SS:FF
     const chip = editor.querySelector<HTMLElement>('.chip')!;

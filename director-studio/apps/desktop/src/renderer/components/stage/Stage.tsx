@@ -3,11 +3,11 @@ import type { StudioDocument } from '@studio/core';
 import { useT } from '../../i18n.ts';
 import { countLayers, useLayout } from '../../lib/layout.ts';
 import { tcParts } from '../../lib/timecode.ts';
-import { useActions, useStudio, useViewDocument } from '../../state/context.tsx';
+import { useStudio, useViewDocument } from '../../state/context.tsx';
 import { Icon, type IconName } from '../common/Icon.tsx';
 import { ariaKeyShortcuts } from '../common/Kbd.tsx';
 import { Tooltip } from '../common/Tooltip.tsx';
-import { CanvasStage, DeckStage, SiteStage } from './DocStages.tsx';
+import { CanvasStage, DeckStage, SiteStage, StageEmpty } from './DocStages.tsx';
 import { StageToolsProvider } from './StageTools.tsx';
 import { TimelineStage, useTimelineShortcuts } from './TimelineStage.tsx';
 
@@ -96,7 +96,6 @@ function StageBar({ doc, audioProject, onTools }: { doc: StudioDocument | null; 
 /** Bühne (volle Breite, nur lesbar): Leiste plus Timeline, Folienstreifen, Ebenenliste oder Seitenkarte. */
 export function Stage() {
   const t = useT();
-  const actions = useActions();
   const doc = useViewDocument();
   const viewing = useStudio((s) => s.viewing);
   const category = useStudio((s) => s.manifest?.category ?? null);
@@ -123,15 +122,14 @@ export function Stage() {
       content =
         category === null ? (
           // Projekt ohne Kategorie: Der Director klärt sie im Planungsgespräch (Director-Panel), danach erscheint die Bühne.
+          // Leerstil (§11): Icon, Titel, ein Satz; links bündig in einer zentrierten Spalte
           <div className="stage-empty stage-planning" role="status" data-testid="stage-planning">
             <Icon name="director" size={20} />
-            <div>
-              <strong className="stage-planning-title">{t('stage.planningTitle')}</strong>
-              <p className="stage-planning-hint">{t('stage.planningHint')}</p>
-            </div>
+            <strong className="stage-planning-title">{t('stage.planningTitle')}</strong>
+            <p className="stage-planning-hint">{t('stage.planningHint')}</p>
           </div>
         ) : (
-          <div className="stage-empty">{t('stage.preparing')}</div>
+          <StageEmpty icon="document" title={t('stage.preparing')} />
         );
   }
   return (
@@ -139,18 +137,8 @@ export function Stage() {
       <StageBar doc={doc} audioProject={category === 'audio'} onTools={setTools} />
       {!collapsed && (
         <StageToolsProvider value={tools}>
-          <div className="stage-body">
-            {viewing && (
-              <div className="version-banner" role="status">
-                <Icon name="eye" size={14} />
-                <span>{t('versions.viewingBanner', { number: viewing.number })}</span>
-                <button type="button" className="btn sm" onClick={() => actions.exitVersionView()}>
-                  {t('versions.backToCurrent')}
-                </button>
-              </div>
-            )}
-            {content}
-          </div>
+          {/* Das Banner für alte Versionen steht im Monitor (§7.4); die Bühne zeigt nur `is-viewing-old` */}
+          <div className="stage-body">{content}</div>
         </StageToolsProvider>
       )}
     </section>

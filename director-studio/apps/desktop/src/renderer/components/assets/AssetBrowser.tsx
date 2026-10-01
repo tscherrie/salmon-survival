@@ -7,7 +7,7 @@ import { useDebounced } from '../../lib/hooks.ts';
 import { useLayout } from '../../lib/layout.ts';
 import { useActions, useAssetUrl, useStudio } from '../../state/context.tsx';
 import { ASSET_KIND_ICONS, Icon } from '../common/Icon.tsx';
-import { ariaKeyShortcuts } from '../common/Kbd.tsx';
+import { ariaKeyShortcuts, isMacPlatform } from '../common/Kbd.tsx';
 import { Popover } from '../common/Popover.tsx';
 import { Tooltip } from '../common/Tooltip.tsx';
 import { AssetCard, type AssetView } from './AssetCard.tsx';
@@ -299,21 +299,24 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
     return list;
   }, [assets, activeKind, used, status, source, model, debouncedQuery, sort]);
 
+  const usageGroupOf = useCallback(
+    (a: Asset): UsageGroup => {
+      if (a.status === 'rejected' || a.status === 'archived') return 'rejected';
+      if (inComposer.has(a.id)) return 'inComposer';
+      return used.has(a.id) ? 'used' : 'unused';
+    },
+    [inComposer, used],
+  );
   const groups = useMemo<Group[]>(() => {
     if (groupBy === 'none') return [{ key: 'all', label: null, items: visible }];
     if (groupBy === 'kind') {
       return KIND_ORDER.map((k) => ({ key: k, label: t(`assetKind.${k}`), items: visible.filter((a) => a.kind === k) })).filter((g) => g.items.length > 0);
     }
-    const usageGroup = (a: Asset): UsageGroup => {
-      if (a.status === 'rejected' || a.status === 'archived') return 'rejected';
-      if (inComposer.has(a.id)) return 'inComposer';
-      return used.has(a.id) ? 'used' : 'unused';
-    };
-    return USAGE_GROUPS.map((g) => ({ key: g, label: t(`assets.group.${g}`), items: visible.filter((a) => usageGroup(a) === g) })).filter(
+    return USAGE_GROUPS.map((g) => ({ key: g, label: t(`assets.group.${g}`), items: visible.filter((a) => usageGroupOf(a) === g) })).filter(
       (g) => g.items.length > 0,
     );
     // `lang`: Gruppennamen nach einem Sprachwechsel neu
-  }, [groupBy, visible, inComposer, used, lang, t]);
+  }, [groupBy, visible, usageGroupOf, lang, t]);
   // „Verworfen“ ist standardmäßig eingeklappt – außer es ist die einzige Gruppe (z. B. Filter „Verworfen“)
   const isCollapsed = (g: Group) => toggledGroups[g.key] ?? (g.key === 'rejected' && groups.length > 1);
 
@@ -348,9 +351,7 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
     const widths = [...measure.children].map((el) => el.getBoundingClientRect().width);
     const allW = widths[0] ?? 0;
     const moreW = widths[widths.length - 1] ?? 0;
-    const gap = 2;
-    const fits = (n: number, withMore: boolean) =>
-      allW + widths.slice(1, n + 1).reduce((sum, w) => sum + w + gap, 0) + (withMore ? moreW + gap : 0) <= tabsWidth;
+    const fits = (n: number, withMore: boolean) => allW + widths.slice(1, n + 1).reduce((sum, w) => sum + w, 0) + (withMore ? moreW : 0) <= tabsWidth + 0.5;
     if (presentKinds.length <= MAX_INLINE_KINDS && fits(presentKinds.length, false)) {
       setInlineCount(presentKinds.length);
       return;
@@ -364,8 +365,46 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
   const activeInMore = activeKind !== 'all' && moreKinds.includes(activeKind);
   const pickKind = (k: AssetKind | 'all') => setKind((cur) => (k !== 'all' && cur === k ? 'all' : k));
 
+  // Zeigen eines Asset-Chips (§9.4): Ist die Karte ausgefiltert oder ihre Gruppe eingeklappt, wird sie sichtbar gemacht
+  const flashKey = useStudio((s) => s.flash?.key ?? null);
+  const flashNonce = useStudio((s) => s.flash?.nonce ?? 0);
+  useEffect(() => {
+    if (!flashKey?.startsWith('asset:')) return;
+    const asset = assets.find((a) => a.id === flashKey.slice('asset:'.length));
+    if (!asset) return;
+    if (!visible.includes(asset)) {
+      setQuery('');
+      setKind('all');
+      setStatus('all');
+      setSource('all');
+      setModel('all');
+    }
+    const groupKey = groupBy === 'none' ? 'all' : groupBy === 'kind' ? asset.kind : usageGroupOf(asset);
+    setToggledGroups((cur) => (cur[groupKey] === false ? cur : { ...cur, [groupKey]: false }));
+    // Nur beim Blitz selbst (neue Nonce), nicht bei jeder Änderung der Liste
+  }, [flashKey, flashNonce]);
+
+  // mod+K fokussiert die Suche (§13.4), solange die Leiste offen ist
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = isMacPlatform() ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey;
+      if (e.defaultPrevented || !mod || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'k') return;
+      const input = sectionRef.current?.querySelector<HTMLInputElement>('input[type="search"]');
+      if (!input) return;
+      e.preventDefault();
+      input.focus();
+      input.select();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const selected = selectedId ? assets.find((a) => a.id === selectedId) : undefined;
-  const onOpen = useCallback((id: string) => setSelectedId((cur) => (cur === id ? null : id)), []);
+  const [drawerFocus, setDrawerFocus] = useState(false);
+  const onOpen = useCallback((id: string, viaKeyboard: boolean) => {
+    setDrawerFocus(viaKeyboard);
+    setSelectedId((cur) => (cur === id ? null : id));
+  }, []);
   const onInsert = useCallback((id: string) => actions.insertRef({ kind: 'asset', assetId: id }), [actions]);
   const onRelink = useCallback((id: string) => void actions.relinkAsset(id), [actions]);
   const closeDrawer = useCallback(
@@ -547,7 +586,14 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
           anchor={
             <div className="field assets-search">
               <Icon name="search" size={14} />
-              <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('assets.searchPlaceholder')} aria-label={t('assets.search')} />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('assets.searchPlaceholder')}
+                aria-label={t('assets.search')}
+                aria-keyshortcuts={ariaKeyShortcuts(['mod', 'K'])}
+              />
               {filterButton}
             </div>
           }
@@ -655,7 +701,7 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
                 {t(`assetKind.${k}`)}
               </span>
             ))}
-            <span className="assets-tab">
+            <span className="assets-tab assets-tab-more">
               {t('assets.more')}
               <Icon name="chevronDown" size={12} />
             </span>
@@ -706,7 +752,17 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
         </div>
       )}
 
-      {selected && <AssetDrawer asset={selected} usage={usage.get(selected.id) ?? EMPTY} inComposer={inComposer.has(selected.id)} onClose={closeDrawer} onSelect={setSelectedId} containerRef={sectionRef} />}
+      {selected && (
+        <AssetDrawer
+          asset={selected}
+          usage={usage.get(selected.id) ?? EMPTY}
+          inComposer={inComposer.has(selected.id)}
+          autoFocus={drawerFocus}
+          onClose={closeDrawer}
+          onSelect={setSelectedId}
+          containerRef={sectionRef}
+        />
+      )}
     </section>
   );
 }

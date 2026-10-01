@@ -78,6 +78,7 @@ export function AssetDrawer({
   asset,
   usage,
   inComposer,
+  autoFocus = false,
   onClose,
   onSelect,
   containerRef,
@@ -85,6 +86,8 @@ export function AssetDrawer({
   asset: Asset;
   usage: readonly string[];
   inComposer: boolean;
+  /** Per Tastatur geöffnet: Fokus in die Detailansicht (sonst bleibt er auf der Karte). */
+  autoFocus?: boolean;
   /** `true`: Fokus zurück auf die Karte (Esc, Schließen-Knopf). */
   onClose: (restoreFocus: boolean) => void;
   onSelect: (id: string) => void;
@@ -105,6 +108,9 @@ export function AssetDrawer({
   const titleOf = (id: string) => assets.find((a) => a.id === id)?.title ?? id;
 
   useClickOutside([containerRef, drawerRef], () => onClose(false), true);
+  useEffect(() => {
+    if (autoFocus) drawerRef.current?.focus({ preventScroll: true });
+  }, [autoFocus, asset.id]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return;
@@ -164,7 +170,7 @@ export function AssetDrawer({
   const proxyUrl = asset.kind === 'video' ? assetUrl(asset.id, 'proxy') : '';
 
   return (
-    <aside ref={drawerRef} className="asset-drawer" aria-label={`${t('assets.details')}: ${asset.title}`}>
+    <aside ref={drawerRef} className="asset-drawer" tabIndex={-1} aria-label={`${t('assets.details')}: ${asset.title}`}>
       <div className="asset-drawer-preview always-dark" key={previewKey}>
         <AssetPreview asset={asset} thumbUrl={thumbUrl} proxyUrl={proxyUrl} />
       </div>

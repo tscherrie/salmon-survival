@@ -79,19 +79,19 @@ export function QuestionCard({ question, onLater }: { question: PendingQuestion;
                 const shown = splitRecommendation(option.label, option.description);
                 return (
                   <label key={option.label} className={`option${checked ? ' is-checked' : ''}`}>
-                    <input
-                      type={type}
-                      name={name}
-                      checked={checked}
-                      onChange={() =>
-                        update(q, (cur) =>
-                          q.multiSelect
-                            ? { ...cur, selected: checked ? cur.selected.filter((s) => s !== option.label) : [...cur.selected, option.label] }
-                            : { selected: [option.label], other: cur.other, otherOn: false },
-                        )
-                      }
-                    />
-                    <span className={`opt-mark opt-${type}`} aria-hidden="true">
+                    <span className={`opt-mark opt-${type}`}>
+                      <input
+                        type={type}
+                        name={name}
+                        checked={checked}
+                        onChange={() =>
+                          update(q, (cur) =>
+                            q.multiSelect
+                              ? { ...cur, selected: checked ? cur.selected.filter((s) => s !== option.label) : [...cur.selected, option.label] }
+                              : { selected: [option.label], other: cur.other, otherOn: false },
+                          )
+                        }
+                      />
                       {q.multiSelect && <Icon name="check" size={10} />}
                     </span>
                     <span className="option-text">
@@ -105,13 +105,13 @@ export function QuestionCard({ question, onLater }: { question: PendingQuestion;
                 );
               })}
               <label className={`option option-other${a?.otherOn ? ' is-checked' : ''}`}>
-                <input
-                  type={type}
-                  name={name}
-                  checked={!!a?.otherOn}
-                  onChange={() => update(q, (cur) => (q.multiSelect ? { ...cur, otherOn: !cur.otherOn } : { selected: [], other: cur.other, otherOn: true }))}
-                />
-                <span className={`opt-mark opt-${type}`} aria-hidden="true">
+                <span className={`opt-mark opt-${type}`}>
+                  <input
+                    type={type}
+                    name={name}
+                    checked={!!a?.otherOn}
+                    onChange={() => update(q, (cur) => (q.multiSelect ? { ...cur, otherOn: !cur.otherOn } : { selected: [], other: cur.other, otherOn: true }))}
+                  />
                   {q.multiSelect && <Icon name="check" size={10} />}
                 </span>
                 <span className="option-text">
@@ -181,7 +181,8 @@ function ClampedSummary({ text }: { text: string }) {
 
 /**
  * Checkpoint zur Freigabe: Kicker „Checkpoint 3 von 5“ mit neutraler Pill, Titel, Zusammenfassung, bis zu vier Belege,
- * Budgetzeile mit editierbarem Mono-Betrag, Aufschlüsselung (eingeklappt), Freigeben (primär) und Ändern …
+ * Budgetzeile mit editierbarem Mono-Betrag und darunter dem Schalter für die Aufschlüsselung (eingeklappt, §10),
+ * Freigeben (primär) und Ändern … So bleibt die Karte im Dock kurz.
  */
 export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
   const t = useT();
@@ -191,7 +192,10 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
   const checkpoints = useStudio((s) => s.checkpoints);
   const budgetSummary = useStudio((s) => s.budget);
   const inputId = useId();
+  const breakdownId = useId();
+  const errorId = useId();
   const [budget, setBudget] = useState(() => String(checkpoint.budgetRequestedUsd ?? 0));
+  const [breakdown, setBreakdown] = useState(false);
   const [changes, setChanges] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [busy, setBusy] = useState(false);
@@ -252,6 +256,10 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
       )}
       <div className="cp-budget">
         <label htmlFor={inputId}>{next ? t('dock.budgetFor', { title: next.title }) : t('dock.budget')}</label>
+        <button type="button" className="cp-breakdown-toggle" aria-expanded={breakdown} aria-controls={breakdown ? breakdownId : undefined} onClick={() => setBreakdown((v) => !v)}>
+          {t('dock.breakdown')}
+          <Icon name="chevronDown" size={12} />
+        </button>
         <span className="money-input">
           <span aria-hidden="true">$</span>
           <input
@@ -263,55 +271,43 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
             value={budget}
             aria-label={t('director.budgetRequested')}
             aria-invalid={!valid}
+            aria-describedby={valid ? undefined : errorId}
             onChange={(e) => setBudget(e.target.value)}
           />
         </span>
+        {!valid && (
+          <p className="field-error cp-budget-error" id={errorId}>
+            {t('dock.budgetInvalid')}
+          </p>
+        )}
       </div>
-      <details className="cp-breakdown">
-        <summary>
-          {t('dock.breakdown')}
-          <Icon name="chevronDown" size={12} />
-        </summary>
-        <dl>
-          <div>
-            <dt>{t('dock.breakdown.approved')}</dt>
-            <dd className="mono">{formatUsd(approvedSoFar)}</dd>
+      {breakdown && (
+        <div className="cp-breakdown" id={breakdownId}>
+          <dl>
+            <div>
+              <dt>{t('dock.breakdown.approved')}</dt>
+              <dd className="mono">{formatUsd(approvedSoFar)}</dd>
+            </div>
+            <div>
+              <dt>{t('dock.breakdown.request')}</dt>
+              <dd className="mono">{amountText}</dd>
+            </div>
+            <div>
+              <dt>{t('dock.breakdown.spent')}</dt>
+              <dd className="mono">{formatUsd(spent)}</dd>
+            </div>
+          </dl>
+          <div className="cp-after">
+            <span>{t('dock.breakdown.after')}</span>
+            <span className="cp-meter" aria-hidden="true">
+              <i style={{ width: `${after > 0 ? Math.min(100, (spent / after) * 100) : 0}%` }} />
+            </span>
+            <span className="mono">
+              {formatUsd(spent)} <span className="cp-after-total">/ {formatUsd(after)}</span>
+            </span>
           </div>
-          <div>
-            <dt>{t('dock.breakdown.request')}</dt>
-            <dd className="mono">{amountText}</dd>
-          </div>
-          <div>
-            <dt>{t('dock.breakdown.spent')}</dt>
-            <dd className="mono">{formatUsd(spent)}</dd>
-          </div>
-        </dl>
-        <div className="cp-after">
-          <span>{t('dock.breakdown.after')}</span>
-          <span className="cp-meter" aria-hidden="true">
-            <i style={{ width: `${after > 0 ? Math.min(100, (spent / after) * 100) : 0}%` }} />
-          </span>
-          <span className="mono">
-            {formatUsd(spent)} <span className="cp-after-total">/ {formatUsd(after)}</span>
-          </span>
         </div>
-      </details>
-      <div className="card-actions">
-        <button
-          type="button"
-          className="btn primary"
-          onClick={() => void approve()}
-          disabled={!valid || busy}
-          aria-busy={busy || undefined}
-          aria-label={t('director.approve', { amount: amountText })}
-        >
-          <Icon name="check" size={14} />
-          {t('dock.approve')} · <span className="mono">{amountText}</span>
-        </button>
-        <button type="button" className="btn" aria-expanded={changes} onClick={() => setChanges((v) => !v)}>
-          {t('dock.change')}
-        </button>
-      </div>
+      )}
       {changes && (
         <div className="cp-feedback">
           <textarea
@@ -328,6 +324,26 @@ export function CheckpointCard({ checkpoint }: { checkpoint: Checkpoint }) {
           </button>
         </div>
       )}
+      <div className="card-actions">
+        <button
+          type="button"
+          className="btn primary"
+          onClick={() => void approve()}
+          disabled={!valid || busy}
+          aria-busy={busy || undefined}
+          aria-label={t('director.approve', { amount: amountText })}
+        >
+          {busy ? <span className="spin" aria-hidden="true" /> : <Icon name="check" size={14} />}
+          <span>{t('dock.approve')}</span>
+          <span className="btn-sep" aria-hidden="true">
+            ·
+          </span>
+          <span className="mono">{amountText}</span>
+        </button>
+        <button type="button" className="btn" aria-expanded={changes} onClick={() => setChanges((v) => !v)}>
+          {t('dock.change')}
+        </button>
+      </div>
     </article>
   );
 }
@@ -362,10 +378,12 @@ export function ApprovalCard({ request }: { request: ApprovalRequest }) {
           aria-busy={busy || undefined}
           aria-label={amount ? `${t('director.grant')} (${amount})` : undefined}
         >
-          {t('director.grant')}
+          <span>{t('director.grant')}</span>
           {amount && (
             <>
-              {' · '}
+              <span className="btn-sep" aria-hidden="true">
+                ·
+              </span>
               <span className="mono">{amount}</span>
             </>
           )}

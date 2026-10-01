@@ -144,7 +144,8 @@ export const AssetCard = memo(function AssetCard({
   proxyUrl: string;
   selected: boolean;
   view: AssetView;
-  onOpen: (id: string) => void;
+  /** `viaKeyboard`: per Enter/Leertaste geöffnet – der Fokus wandert dann in die Detailansicht. */
+  onOpen: (id: string, viaKeyboard: boolean) => void;
   onInsert: (id: string) => void;
   onRelink: (id: string) => void;
 }) {
@@ -187,7 +188,7 @@ export const AssetCard = memo(function AssetCard({
       <button
         type="button"
         className="asset-card-main"
-        onClick={() => onOpen(asset.id)}
+        onClick={(e) => onOpen(asset.id, e.detail === 0)}
         onKeyDown={(e) => {
           // mod+Enter auf der fokussierten Karte fügt einen Asset-Chip ein (§7.3)
           const mod = isMacPlatform() ? e.metaKey : e.ctrlKey;
@@ -200,32 +201,34 @@ export const AssetCard = memo(function AssetCard({
       >
         <span className="asset-preview">
           <AssetPreview asset={asset} thumbUrl={thumbUrl} proxyUrl={proxyUrl} />
-          <span className="media-tag media-kind" aria-hidden="true">
-            <Icon name={ASSET_KIND_ICONS[asset.kind]} size={11} />
-          </span>
-          {view === 'grid' && duration && <span className="media-tag media-duration">{duration}</span>}
+          {/* In der Liste zeigt das kleine Thumb nur die Dauer; der Typ ist dort am Bild selbst zu erkennen */}
+          {(view === 'grid' || !duration) && (
+            <span className="media-tag media-kind" aria-hidden="true">
+              <Icon name={ASSET_KIND_ICONS[asset.kind]} size={11} />
+            </span>
+          )}
+          {duration && <span className="media-tag media-duration">{duration}</span>}
           {view === 'grid' && <UsageTags usage={usage} className="media-usage" />}
         </span>
         <span className="asset-text">
           <span className="asset-title">{asset.title}</span>
-          {!missing && (
-            <span className="asset-meta">
-              {meta.map((part, i) => (
-                <span key={i}>
-                  {i > 0 && ' · '}
-                  {part}
-                </span>
-              ))}
-              {view === 'list' && duration && (
-                <>
-                  {' · '}
-                  <span className="mono">{duration}</span>
-                </>
-              )}
-            </span>
+          {/* Meta-Zeile; in der Liste stehen die Verwendungsorte rechts daneben, damit der Titel die ganze Breite hat */}
+          {(!missing || view === 'list') && (
+          <span className="asset-meta-row">
+            {!missing && (
+              <span className="asset-meta">
+                {meta.map((part, i) => (
+                  <span key={i} className={i === 0 ? 'asset-meta-lead' : 'asset-meta-part'}>
+                    {i > 0 && ' · '}
+                    {part}
+                  </span>
+                ))}
+              </span>
+            )}
+            {view === 'list' && <UsageTags usage={usage} className="asset-usage-list" />}
+          </span>
           )}
         </span>
-        {view === 'list' && <UsageTags usage={usage} className="asset-usage-list" />}
       </button>
       {missing && (
         <button type="button" className="asset-missing-link" onClick={() => onRelink(asset.id)}>

@@ -38,7 +38,7 @@ export const FLASH_MS = 600;
 export interface StudioActions {
   init(): Promise<void>;
   handleEvent(event: StudioEvent): void;
-  toast(kind: Toast['kind'], text: string): void;
+  toast(kind: Toast['kind'], text: string, action?: Toast['action']): void;
   dismissToast(id: number): void;
   announce(text: string): void;
   pushOverlay(): void;
@@ -292,9 +292,9 @@ export function createStudioStore(api: StudioApi): StudioStore {
         }
       },
 
-      toast(kind, text) {
+      toast(kind, text, action) {
         const id = ++toastCounter;
-        set((s) => ({ toasts: [...s.toasts, { id, kind, text }].slice(-5) }));
+        set((s) => ({ toasts: [...s.toasts, { id, kind, text, ...(action ? { action } : {}) }].slice(-5) }));
       },
 
       dismissToast(id) {

@@ -90,11 +90,12 @@ function useWorkspaceShortcuts(layout: WorkspaceLayout) {
           break;
         case 'ArrowLeft':
         case 'ArrowRight': {
+          // Umschalt+←/→ (Schlag bzw. ±1 s) gehört der Timeline (useTimelineShortcuts), hier nur ±1 Frame
+          if (event.shiftKey) return;
           if (target?.closest('[role="separator"], [role="slider"], [role="application"]:not(.tl-scroll)')) return;
           event.preventDefault();
-          const step = (event.shiftKey ? doc.fps : 1) * (event.key === 'ArrowLeft' ? -1 : 1);
           state.transport?.pause();
-          actions.requestSeek(state.playhead + step);
+          actions.requestSeek(state.playhead + (event.key === 'ArrowLeft' ? -1 : 1));
           break;
         }
         case 'Home':

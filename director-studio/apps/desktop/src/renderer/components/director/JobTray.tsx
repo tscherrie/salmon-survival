@@ -61,7 +61,7 @@ function JobRow({ job, now, models, onDismiss, more }: { job: Job; now: number; 
   const started = Date.parse(g.submittedAt ?? g.createdAt);
   const elapsedMs = Math.max(0, now - (Number.isFinite(started) ? started : now));
   const seconds = outputSeconds(g);
-  const model = `${shortModelName(g.endpointId, models)}${seconds ? ` · ${Math.round(seconds)} s` : ''}`;
+  const model = `${shortModelName(g.endpointId, models)}${seconds ? ` · ${Math.round(seconds)}\u00A0s` : ''}`;
   // Fortschritt nur mit Schätzung (Restdauer); sonst statisch 0 %
   const progress = job.state === 'running' && g.etaSec !== undefined ? Math.min(1, elapsedMs / 1000 / (elapsedMs / 1000 + Math.max(0, g.etaSec))) : 0;
   return (
@@ -75,7 +75,7 @@ function JobRow({ job, now, models, onDismiss, more }: { job: Job; now: number; 
           <Icon name={g.status === 'canceled' ? 'minus' : 'check'} size={12} />
         )}
       </span>
-      <span className="job-what" title={g.purpose}>
+      <span className="job-what" title={`${g.purpose} · ${model}`}>
         {g.purpose}
       </span>
       <span className="job-model">{model}</span>

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { currentCheckpoint, formatUsd, type BudgetSummary, type Checkpoint, type ProjectCategory } from '@studio/core';
 import { formatDateTime, useLanguage, useT } from '../../i18n.ts';
 import { useLayout } from '../../lib/layout.ts';
@@ -8,7 +8,8 @@ import { BrandMark, Icon } from '../common/Icon.tsx';
 import { Popover } from '../common/Popover.tsx';
 import { ThemeToggle } from '../common/ThemeToggle.tsx';
 import { Tooltip } from '../common/Tooltip.tsx';
-import { BudgetMeter } from '../director/BudgetMeter.tsx';
+import { BudgetMeter, OPEN_BUDGET_EVENT } from '../director/BudgetMeter.tsx';
+import { focusDecision } from '../director/DecisionDock.tsx';
 import { SettingsDialog } from '../start/SettingsDialog.tsx';
 
 /** Ab dieser Director-Breite steht die rechte Zone voll da; darunter klappt sie stufenweise ein (§7.2). */
@@ -75,20 +76,21 @@ function CheckpointSteps({ checkpoints }: { checkpoints: Checkpoint[] }) {
     const list = listRef.current;
     if (!zone || !list || zoneW === 0) return true;
     const style = getComputedStyle(zone);
-    const inner = zone.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const inner = zone.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
     return list.scrollWidth <= inner + 0.5;
   });
 
-  // Klick: Entscheidung im Dock bzw. Systemzeile des Checkpoints im Verlauf zeigen
+  // Klick: offene Entscheidung im Dock zeigen, sonst den Verlauf zur Systemzeile dieses Checkpoints scrollen
   const reveal = (c: Checkpoint) => {
     if (layout?.collapsed.director) layout.setCollapsed('director', false);
     actions.announce(t('header.stepTip', { title: c.title, status: t(`cpStatus.${c.status}`) }));
     requestAnimationFrame(() => {
-      const target = document.querySelector<HTMLElement>(`[data-checkpoint-id="${CSS.escape(c.id)}"]`);
-      if (!target) return;
-      target.scrollIntoView?.({ block: 'nearest' });
-      const focusable = target.matches('button, [tabindex]') ? target : target.querySelector<HTMLElement>('button, input, [tabindex]');
-      focusable?.focus({ preventScroll: true });
+      if (focusDecision(c.id)) return;
+      const id = CSS.escape(c.id);
+      const line = document.querySelector<HTMLElement>(
+        `[data-sys="cp-done:${id}"], [data-sys="cp-changes:${id}"], [data-sys="cp-skip:${id}"], [data-sys="cp-pinned:${id}"]`,
+      );
+      line?.scrollIntoView?.({ block: 'center' });
     });
   };
 
@@ -328,6 +330,15 @@ function ExportMenu({ iconOnly }: { iconOnly: boolean }) {
 function BudgetButton({ budget, level }: { budget: BudgetSummary; level: number }) {
   const t = useT();
   const [open, setOpen] = useState(false);
+  // „Kosten …“ im ⋯-Menü des Directors öffnet dieses Popover (Ereignis aus BudgetMeter.tsx)
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      event.preventDefault();
+      setOpen(true);
+    };
+    window.addEventListener(OPEN_BUDGET_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_BUDGET_EVENT, onOpen);
+  }, []);
   const total = Math.max(budget.approvedUsd, budget.spentUsd + budget.reservedUsd, 0.0001);
   const committed = budget.spentUsd + budget.reservedUsd;
   const over = committed > budget.approvedUsd + 1e-9;
@@ -389,6 +400,15 @@ export function Header() {
   const head = useStudio((s) => s.documentVersion);
   const [settings, setSettings] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const projectRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const projectW = useWidth(projectRef);
+  // Reicht der Platz links nicht für den ganzen Titel, tritt die Kategorie zurück (bleibt für Screenreader und im Tooltip)
+  const hideCategory =
+    useCollapseLevel(1, `${projectW}|${manifest?.title ?? ''}|${manifest?.category ?? ''}|${lang}`, () => {
+      const h1 = titleRef.current;
+      return !h1 || projectW === 0 || h1.scrollWidth <= h1.clientWidth + 0.5;
+    }) === 1;
   const sideR = layout?.sideR ?? null;
   const budgetKey = budget ? `${budget.spentUsd}/${budget.reservedUsd}/${budget.approvedUsd}` : '-';
   const level = useCollapseLevel(3, `${sideR}|${budgetKey}|${viewing ?? head}|${lang}|${manifest?.category ?? ''}`, () => {
@@ -398,9 +418,10 @@ export function Header() {
     return el.getBoundingClientRect().width + ACTIONS_PAD <= sideR;
   });
   if (!manifest) return null;
+  const categoryLabel = manifest.category ? t(`category.${manifest.category}`) : t('category.unset');
   return (
     <header className="app-header">
-      <div className="hdr-zone hdr-project">
+      <div ref={projectRef} className="hdr-zone hdr-project">
         <Tooltip label={t('header.projectsTip')} placement="bottom">
           <button type="button" className="hdr-home" onClick={() => actions.closeProject()} aria-label={t('header.projects')}>
             <Icon name="chevronLeft" size={14} />
@@ -408,8 +429,10 @@ export function Header() {
           </button>
         </Tooltip>
         <div className="project-title">
-          <h1 title={manifest.title}>{manifest.title}</h1>
-          <span className="badge badge-category">{manifest.category ? t(`category.${manifest.category}`) : t('category.unset')}</span>
+          <h1 ref={titleRef} title={`${manifest.title} · ${categoryLabel}`}>
+            {manifest.title}
+          </h1>
+          <span className={`badge badge-category${hideCategory ? ' sr-only' : ''}`}>{categoryLabel}</span>
         </div>
       </div>
       <CheckpointSteps checkpoints={checkpoints} />

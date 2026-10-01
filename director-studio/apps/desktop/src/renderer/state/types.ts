@@ -26,6 +26,8 @@ export interface Toast {
   id: number;
   kind: 'info' | 'success' | 'error';
   text: string;
+  /** Optionale Aktion im Toast, z. B. „Rückgängig“ nach einer Referenz aus dem Monitor (DESIGN.md §7.4, §7.11). */
+  action?: { label: string; run: () => void };
 }
 
 export interface ProgressNote {

@@ -1,6 +1,19 @@
 import { formatUsd, type BudgetSummary } from '@studio/core';
 import { useT } from '../../i18n.ts';
 
+/**
+ * Das Budget steht nur noch in der Kopfzeile (DESIGN.md §7.6.4). „Kosten …“ im ⋯-Menü des Directors öffnet deren
+ * Budget-Popover über dieses Ereignis; die Kopfzeile ruft `preventDefault()`, wenn sie es geöffnet hat.
+ */
+export const OPEN_BUDGET_EVENT = 'studio:open-budget';
+
+export function openBudgetPopover(): void {
+  const event = new CustomEvent(OPEN_BUDGET_EVENT, { cancelable: true });
+  const handled = !window.dispatchEvent(event);
+  // Ohne Empfänger (noch kein Budget in der Kopfzeile): wenigstens den Budget-Auslöser fokussieren, falls es ihn gibt
+  if (!handled) document.querySelector<HTMLElement>('.hdr-budget')?.focus();
+}
+
 /** Kostenleiste: verbraucht / reserviert / freigegeben (kompakt in der Kopfzeile, ausführlich im Panel). */
 export function BudgetMeter({ budget, detailed = false }: { budget: BudgetSummary | null; detailed?: boolean }) {
   const t = useT();

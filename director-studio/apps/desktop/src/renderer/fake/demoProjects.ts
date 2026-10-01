@@ -457,7 +457,7 @@ function videoProject(): DemoProjectSeed {
         id: 'msg_demo_1',
         role: 'director',
         text:
-          'Hallo! Ich habe den Song analysiert: **120 BPM**, der erste Refrain beginnt bei 00:24.000, die Bridge bei 00:40.000.\n\nDas Storyboard liegt als Animatic in der Timeline. Erzähl mir, was dir für das Video vorschwebt – du kannst jederzeit auf Stellen in der Timeline klicken.',
+          'Hallo! Ich habe den Song analysiert: **120 BPM**, der erste Refrain beginnt bei 00:24.000, die Bridge bei 00:40.000.\n\nDas Storyboard liegt als Animatic in der Timeline. Erzähl mir, was dir für das Video vorschwebt – mit einem Klick in die Markerleiste oder mit Enter setzt du Marker, auf die du dich beziehen kannst.',
         createdAt: '2026-09-28T11:45:00.000Z',
       },
     ],

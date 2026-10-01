@@ -74,7 +74,7 @@ export function groupSummary(activities: readonly ToolActivity[]): string {
 /** Dauer kurz: „2 s“, ab einer Minute „1:05“ (geschütztes Leerzeichen zwischen Zahl und Einheit, §13.8). */
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.round(ms / 1000));
-  if (total < 60) return `${total} s`;
+  if (total < 60) return `${total}\u00A0s`;
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = String(total % 60).padStart(2, '0');
@@ -136,7 +136,7 @@ export function buildFeed(input: FeedInput): FeedItem[] {
     ...input.approvals.map((a): FeedItem => ({
       kind: 'system',
       at: a.createdAt,
-      line: { id: `apr-pinned:${a.id}`, icon: 'pin', text: t('dock.pinnedNote', { title: t('dock.approvalNamed', { title: a.title }) }), tone: 'pinned' },
+      line: { id: `apr-pinned:${a.id}`, icon: 'pin', text: t('dock.pinnedNote', { title: t('dock.approvalShort') }), tone: 'pinned' },
     })),
     ...input.decidedApprovals.map(({ request, approved, decidedAt }): FeedItem => ({
       kind: 'system',

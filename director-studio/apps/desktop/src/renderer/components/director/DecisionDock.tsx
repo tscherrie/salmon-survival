@@ -16,6 +16,17 @@ import { checkpointNumber } from './history.ts';
 /** Unter dieser Spaltenhöhe wird das Dock automatisch zur Zeile. */
 export const DOCK_COMPACT_BELOW = 420;
 
+/** Ereignis für den Stepper der Kopfzeile (§7.2): die Entscheidung eines Checkpoints im Dock zeigen. */
+export const FOCUS_DECISION_EVENT = 'studio:focus-decision';
+
+/**
+ * Zeigt die offene Entscheidung des Checkpoints im Dock (kompakt: als Sheet). Liefert `false`, wenn der Checkpoint
+ * keine offene Entscheidung hat; dann kann der Aufrufer den Verlauf zur Systemzeile `[data-sys="cp-done:<id>"]` scrollen.
+ */
+export function focusDecision(checkpointId: string): boolean {
+  return !window.dispatchEvent(new CustomEvent(FOCUS_DECISION_EVENT, { cancelable: true, detail: { checkpointId } }));
+}
+
 export type Decision =
   | { kind: 'question'; key: string; question: PendingQuestion }
   | { kind: 'approval'; key: string; request: ApprovalRequest }
@@ -134,12 +145,30 @@ export function DecisionDock({ columnHeight }: { columnHeight: number }) {
 
   const compact = later || (columnHeight > 0 && columnHeight < DOCK_COMPACT_BELOW);
 
-  // Sheet: Fokus hinein beim Öffnen, Esc schließt und gibt den Fokus an „Prüfen“ zurück
+  // Sheet: Fokus auf das Sheet selbst (Tab führt zum ersten Bedienelement), Esc schließt und gibt ihn an „Prüfen“ zurück
   useEffect(() => {
-    if (!sheet || !compact) return;
-    const first = sheetRef.current?.querySelector<HTMLElement>('input:not([disabled]), textarea, button:not([disabled])');
-    (first ?? sheetRef.current)?.focus();
+    if (sheet && compact) sheetRef.current?.focus();
   }, [sheet, compact]);
+
+  // Klick auf einen Schritt im Stepper (Kopfzeile): diese Entscheidung zeigen; kompakt öffnet das Sheet
+  const compactRef = useRef(compact);
+  const dockRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    compactRef.current = compact;
+  });
+  useEffect(() => {
+    const onFocus = (event: Event) => {
+      const id = (event as CustomEvent<{ checkpointId: string }>).detail?.checkpointId;
+      const target = latest.current.decisions.find((d) => d.kind === 'checkpoint' && d.checkpoint.id === id);
+      if (!target) return;
+      event.preventDefault();
+      setSelectedKey(target.key);
+      if (compactRef.current) setSheet(true);
+      else requestAnimationFrame(() => dockRef.current?.querySelector<HTMLElement>('input, button')?.focus());
+    };
+    window.addEventListener(FOCUS_DECISION_EVENT, onFocus);
+    return () => window.removeEventListener(FOCUS_DECISION_EVENT, onFocus);
+  }, []);
 
   if (!current) return null;
 
@@ -158,7 +187,7 @@ export function DecisionDock({ columnHeight }: { columnHeight: number }) {
 
   if (!compact) {
     return (
-      <section className="dock" aria-label={t('dock.label')}>
+      <section ref={dockRef} className="dock" aria-label={t('dock.label')}>
         <Pager index={index} total={decisions.length} onStep={step} />
         <DecisionCard key={current.key} decision={current} onLater={onLater} />
       </section>
@@ -171,7 +200,7 @@ export function DecisionDock({ columnHeight }: { columnHeight: number }) {
     <section className={`dock is-compact${sheet ? ' has-sheet' : ''}`} aria-label={t('dock.label')}>
       <div className="dock-row">
         <Icon name={ICONS[current.kind]} size={14} className={`dock-row-icon dock-icon-${current.kind}`} />
-        <span className="dock-row-label" role="status">
+        <span className="dock-row-label" role="status" title={text.row(current)}>
           {text.row(current)}
         </span>
         {more > 0 && <span className="dock-row-more mono">+{more}</span>}
@@ -183,7 +212,7 @@ export function DecisionDock({ columnHeight }: { columnHeight: number }) {
       {sheet && (
         <div
           ref={sheetRef}
-          className="dock-sheet"
+          className={`dock-sheet${decisions.length > 1 ? '' : ' no-pager'}`}
           role="dialog"
           aria-label={t('dock.label')}
           tabIndex={-1}

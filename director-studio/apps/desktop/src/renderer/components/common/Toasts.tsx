@@ -23,6 +23,18 @@ export function Toasts() {
           <div key={toast.id} className={`toast toast-${toast.kind}`} role={toast.kind === 'error' ? 'alert' : undefined}>
             <Icon name={toast.kind === 'error' ? 'warning' : toast.kind === 'success' ? 'check' : 'dot'} />
             <span>{toast.text}</span>
+            {toast.action && (
+              <button
+                type="button"
+                className="btn ghost sm"
+                onClick={() => {
+                  toast.action!.run();
+                  actions.dismissToast(toast.id);
+                }}
+              >
+                {toast.action.label}
+              </button>
+            )}
             <button type="button" className="ibtn" onClick={() => actions.dismissToast(toast.id)} aria-label={t('common.close')}>
               <Icon name="close" size={14} />
             </button>

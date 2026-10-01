@@ -16,7 +16,7 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
-test('Demo-Projekt: Timeline-Klick → Chip → Senden → Rückfrage → Checkpoint → neue Version', async ({ page }) => {
+test('Demo-Projekt: Marker setzen → Chip → Senden → Rückfrage → Checkpoint → neue Version', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/');
   await page.getByRole('button', { name: /Musikvideo „Nachtfahrt“/ }).click();
@@ -24,16 +24,33 @@ test('Demo-Projekt: Timeline-Klick → Chip → Senden → Rückfrage → Checkp
   const timeline = page.getByTestId('timeline');
   await expect(timeline).toBeVisible();
 
-  // Klick auf die Videospur → Zeit-Referenz als Chip im Composer
+  // Ein Klick in die Spuren scrubbt nur (DESIGN.md §8.4): kein Chip
   const lane = page.locator('[data-lane-track="V1"]');
-  const box = await lane.boundingBox();
-  if (!box) throw new Error('Spur V1 nicht sichtbar');
-  await page.mouse.click(box.x + 260, box.y + box.height / 2);
+  const laneBox = await lane.boundingBox();
+  if (!laneBox) throw new Error('Spur V1 nicht sichtbar');
+  await page.mouse.click(laneBox.x + 420, laneBox.y + laneBox.height / 2);
   const editor = page.getByTestId('composer-editor');
+  await expect(editor.locator('.chip')).toHaveCount(0);
+
+  // Klick in die Markerleiste → nummerierter Marker = Zeit-Chip im Composer, Tag in der Leiste
+  const strip = page.locator('[data-marker-strip]');
+  const box = await strip.boundingBox();
+  if (!box) throw new Error('Markerleiste nicht sichtbar');
+  await page.mouse.click(box.x + 260, box.y + 8);
   await expect(editor.locator('.chip')).toHaveCount(1);
   // Nummerierter Zeit-Chip ohne Emoji (DESIGN.md §7.7.2): Nummer 1, Timecode MM:SS:FF
   await expect(editor.locator('.chip-time .n')).toHaveText('1');
   await expect(editor.locator('.chip-time .chip-label')).toHaveText(/^00:\d\d:\d\d$/);
+  await expect(strip.getByRole('button', { name: /^Marker 1 bei / })).toBeVisible();
+
+  // Enter (außerhalb von Textfeldern) setzt einen zweiten Marker am Abspielkopf (dort, wo der Spurklick ihn hingesetzt
+  // hat; der Leistenklick bewegt ihn nicht); × am Chip entfernt ihn wieder
+  await page.keyboard.press('Enter');
+  await expect(editor.locator('.chip')).toHaveCount(2);
+  await expect(strip.getByRole('button', { name: /^Marker 2 bei / })).toBeVisible();
+  await editor.locator('.chip[data-ref-n="2"]').getByRole('button', { name: /^Referenz entfernen/ }).click();
+  await expect(editor.locator('.chip')).toHaveCount(1);
+  await expect(strip.getByRole('button', { name: /^Marker 2 bei / })).toHaveCount(0);
 
   // Text dahinter tippen und senden
   await editor.click();
@@ -121,6 +138,13 @@ test('Neues Projekt anlegen und Präsentation: Folienklick erzeugt Folien-Chip',
   await page.getByRole('button', { name: /Pitch-Deck Q4/ }).click();
   await page.getByRole('button', { name: /Folie 2: Wo wir stehen/ }).click();
   await expect(page.getByTestId('composer-editor').locator('.chip-slide')).toContainText('Folie 2');
+
+  // Web: Klick auf die Seitenkarte zeigt die Seite und referenziert sie (DESIGN.md §7.10, §15)
+  await page.getByRole('button', { name: 'Projekte' }).click();
+  await page.getByRole('button', { name: /Café Morgenrot/ }).click();
+  await page.getByRole('button', { name: /^Seite Speisekarte \(\/karte\)/ }).click();
+  await expect(page.getByTestId('composer-editor').locator('.chip[data-ref-key="page:/karte"]')).toContainText('/karte');
+  await expect(page.locator('.page-card.is-selected')).toContainText('Speisekarte');
   expect(errors).toEqual([]);
 });
 
