@@ -229,6 +229,42 @@ describe('StudioBackend – Medien, Vorschau, Export', () => {
     await backend.shutdown();
   });
 
+  it('„Zuletzt geöffnet“: Checkpoint, Budget und Standbild; das Standbild bleibt nach dem Schließen erreichbar (§7.12)', async () => {
+    const backend = makeBackend({ media: defaultMediaToolkit() });
+    const snap = await backend.createProject({ title: 'Startbild', category: 'video', directory: root });
+    const id = snap.manifest.id;
+    // Ohne verwendete Medien und ohne Budget: nur der Checkpoint, nichts erfunden
+    expect((await backend.listRecentProjects())[0]).toEqual({
+      path: snap.path,
+      title: 'Startbild',
+      category: 'video',
+      updatedAt: snap.manifest.updatedAt,
+      checkpoint: { index: 1, total: 5, title: 'Treatment', status: 'pending' },
+    });
+    const [video] = await backend.importFiles(id, [videoFile], 'link');
+    expect(await backend.resolveAssetFile(id, video!.id, 'thumb')).not.toBeNull();
+    const open = (backend as unknown as { projects: Map<string, OpenProject> }).projects.get(id)!;
+    await open.store.commitOps(
+      [
+        { op: 'update_timeline', patch: { durationFrames: 50 } },
+        { op: 'insert_clip', trackId: 'V1', clip: { id: 'c1', assetId: video!.id, start: 0, duration: 50 } },
+      ],
+      { note: 'Test', author: 'director' },
+    );
+    await backend.closeProject(id);
+    const [entry] = await backend.listRecentProjects();
+    const poster = `studio-asset://${id}/${video!.id}?v=thumb`;
+    expect(entry).toMatchObject({ title: 'Startbild', poster, checkpoint: { index: 1, total: 5 } });
+    expect(entry).not.toHaveProperty('posterFile');
+    // Geschlossen: nur das Standbild, keine anderen Varianten
+    const thumb = await backend.resolveAssetFile(id, video!.id, 'thumb');
+    expect(thumb?.mime).toBe('image/jpeg');
+    expect((await stat(thumb!.path)).size).toBeGreaterThan(100);
+    expect(await backend.resolveAssetFile(id, video!.id, 'original')).toBeNull();
+    expect(await backend.resolveAssetFile(id, 'ast_andere', 'thumb')).toBeNull();
+    await backend.shutdown();
+  });
+
   it('exports an audio timeline as loudness-normalized WAV', async () => {
     const backend = makeBackend({ media: defaultMediaToolkit() });
     const snap = await backend.createProject({ title: 'Podcast', category: 'audio', directory: root });

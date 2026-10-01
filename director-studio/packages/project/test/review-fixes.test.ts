@@ -2,7 +2,7 @@ import { appendFile, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } fr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createDocument, sequentialIds, type Generation, type Site, type Timeline } from '@studio/core';
+import { createDocument, sequentialIds, type Checkpoint, type Generation, type Site, type Timeline } from '@studio/core';
 import {
   appendJsonLine,
   FileVersionStore,
@@ -10,6 +10,7 @@ import {
   ProjectStore,
   readJson,
   readJsonLines,
+  recentCheckpoint,
   RecentProjects,
   resolveStoredPath,
   sha256Buffer,
@@ -417,5 +418,76 @@ describe('RecentProjects', () => {
     await recent.remove(store.dir);
     expect((await recent.list()).map((r) => r.title)).toEqual(['Film']);
     await store.close();
+  });
+
+  it('speichert Standbild, Checkpoint und Budget (DESIGN.md §7.12); die Bilddatei bleibt intern', async () => {
+    const a = await ProjectStore.create(root, { title: 'A', category: 'video' }, quiet);
+    const b = await ProjectStore.create(root, { title: 'B', category: 'slides' }, quiet);
+    const recent = new RecentProjects(join(root, 'appdata'));
+    const poster = 'studio-asset://prj_a/ast_1?v=thumb';
+    await recent.touch({
+      path: a.dir,
+      title: 'A',
+      category: 'video',
+      updatedAt: 't1',
+      poster,
+      posterFile: join(a.dir, 'thumb.jpg'),
+      posterMime: 'image/jpeg',
+      checkpoint: { index: 3, total: 5, title: 'Storyboard & Animatic', status: 'proposed' },
+      budget: { spentUsd: 6.84, approvedUsd: 20 },
+    });
+    await recent.touch({ path: b.dir, title: 'B', category: 'slides', updatedAt: 't2' });
+    const [first, second] = await recent.list();
+    expect(first).toEqual({ path: b.dir, title: 'B', category: 'slides', updatedAt: 't2' });
+    expect(second).toEqual({
+      path: a.dir,
+      title: 'A',
+      category: 'video',
+      updatedAt: 't1',
+      poster,
+      checkpoint: { index: 3, total: 5, title: 'Storyboard & Animatic', status: 'proposed' },
+      budget: { spentUsd: 6.84, approvedUsd: 20 },
+    });
+    expect(await recent.posterFile(poster)).toEqual({ path: join(a.dir, 'thumb.jpg'), mime: 'image/jpeg' });
+    expect(await recent.posterFile('studio-asset://prj_a/ast_2?v=thumb')).toBeNull();
+    // Schließen aktualisiert an Ort und Stelle (die Reihenfolge bleibt), ohne Standbild fällt auch die Datei weg
+    await recent.update({ path: a.dir, title: 'A', category: 'video', updatedAt: 't3', checkpoint: { index: 4, total: 5, title: 'Produktion', status: 'pending' } });
+    expect((await recent.list()).map((r) => [r.title, r.updatedAt, r.checkpoint?.index, r.poster])).toEqual([
+      ['B', 't2', undefined, undefined],
+      ['A', 't3', 4, undefined],
+    ]);
+    expect(await recent.posterFile(poster)).toBeNull();
+    // Unbekanntes Projekt: keine neue Zeile
+    await recent.update({ path: join(root, 'x.dstudio'), title: 'X', category: null, updatedAt: 't' });
+    expect(await recent.list()).toHaveLength(2);
+    await a.close();
+    await b.close();
+  });
+
+  it('verwirft unbrauchbare optionale Felder einzeln und erfindet nichts', async () => {
+    const store = await ProjectStore.create(root, { title: 'Alt', category: 'audio' }, quiet);
+    await writeJsonAtomic(join(root, 'appdata', 'recent-projects.json'), [
+      {
+        path: store.dir,
+        title: 'Alt',
+        category: 'audio',
+        updatedAt: 't',
+        poster: 'studio-asset://p/a?v=thumb',
+        checkpoint: { index: 7, total: 5, title: 'x', status: 'proposed' },
+        budget: { spentUsd: -1, approvedUsd: 4 },
+      },
+      { title: 'ohne Pfad' },
+    ]);
+    const recent = new RecentProjects(join(root, 'appdata'));
+    // Standbild ohne Datei, Schritt außerhalb der Spanne, negatives Budget: alles weg; die Zeile ohne Pfad auch
+    expect(await recent.list()).toEqual([{ path: store.dir, title: 'Alt', category: 'audio', updatedAt: 't' }]);
+    await store.close();
+  });
+
+  it('recentCheckpoint: erster offener Schritt, sonst der letzte', () => {
+    const cp = (title: string, status: Checkpoint['status']) => ({ id: title, kind: 'treatment', title, status }) as Checkpoint;
+    expect(recentCheckpoint([])).toBeUndefined();
+    expect(recentCheckpoint([cp('T', 'approved'), cp('S', 'skipped'), cp('B', 'proposed'), cp('P', 'pending')])).toEqual({ index: 3, total: 4, title: 'B', status: 'proposed' });
+    expect(recentCheckpoint([cp('T', 'approved'), cp('F', 'approved')])).toEqual({ index: 2, total: 2, title: 'F', status: 'approved' });
   });
 });

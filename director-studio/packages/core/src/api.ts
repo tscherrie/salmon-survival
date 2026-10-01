@@ -1,6 +1,6 @@
 import type { Asset, AssetQuery, LineageEdge } from './assets.ts';
 import type { BudgetSummary } from './budget.ts';
-import type { Checkpoint, CheckpointDecision } from './checkpoints.ts';
+import type { Checkpoint, CheckpointDecision, CheckpointStatus } from './checkpoints.ts';
 import type { ComposerMessage } from './composer.ts';
 import type { FormatSpec, ProjectCategory, StudioDocument } from './documents/index.ts';
 import type { ApprovalRequest, ChatMessage, DirectorQuestion, RunState, StudioEvent, ToolActivity } from './events.ts';
@@ -43,6 +43,12 @@ export interface RecentProject {
   title: string;
   category: ProjectCategory | null;
   updatedAt: string;
+  /** Standbild für den Startbildschirm (`studio-asset:`-URL); fehlt, solange das Projekt kein Bild verwendet. */
+  poster?: string | undefined;
+  /** Stand der Checkpoints: aktueller Schritt (`index` 1-basiert) von `total`, mit Titel und Status. */
+  checkpoint?: { index: number; total: number; title: string; status: CheckpointStatus } | undefined;
+  /** Budget beim letzten Schließen bzw. Öffnen. */
+  budget?: { spentUsd: number; approvedUsd: number } | undefined;
 }
 
 export type DirectorRuntimeId = 'anthropic' | 'fal' | 'agent-sdk';

@@ -44,7 +44,7 @@ import {
   type WebPort,
 } from '@studio/director';
 import { defaultMediaToolkit, type MediaToolkit } from '@studio/media';
-import { ProjectStore, RecentProjects } from '@studio/project';
+import { ProjectStore, recentCheckpoint, RecentProjects, type RecentEntry } from '@studio/project';
 import type { MediaErrorInfo } from '@studio/render/browser';
 import { buildAssetUrl, type AssetVariant, type ResolvedAssetFile } from './asset-protocol.ts';
 import { exportProject as runExport } from './exporter.ts';
@@ -335,8 +335,39 @@ export class StudioBackend implements StudioApi {
   }
 
   private async touchRecent(open: OpenProject): Promise<void> {
-    const m = open.store.manifest;
-    await this.recent.touch({ path: open.store.dir, title: m.title, category: m.category, updatedAt: m.updatedAt });
+    await this.recent.touch(await this.recentEntry(open));
+  }
+
+  /**
+   * Eintrag für „Zuletzt geöffnet“ (DESIGN.md §7.12): Titel und Kategorie, dazu – nur wenn vorhanden – der aktuelle
+   * Checkpoint, das Budget und ein Standbild. Das Standbild ist das erste im Dokument verwendete Video (dessen schon
+   * erzeugtes Thumbnail) bzw. Bild; es wird hier nichts neu gerechnet.
+   */
+  private async recentEntry(open: OpenProject): Promise<RecentEntry> {
+    const { store } = open;
+    const m = store.manifest;
+    const entry: RecentEntry = { path: store.dir, title: m.title, category: m.category, updatedAt: m.updatedAt };
+    const checkpoint = recentCheckpoint(m.checkpoints);
+    if (checkpoint) entry.checkpoint = checkpoint;
+    const budget = store.budgetSummary();
+    if (budget.approvedUsd > 0 || budget.spentUsd > 0) entry.budget = { spentUsd: budget.spentUsd, approvedUsd: budget.approvedUsd };
+    const poster = await this.posterOf(store).catch(() => null);
+    if (poster) {
+      entry.poster = buildAssetUrl(open.id, poster.assetId, 'thumb');
+      entry.posterFile = poster.path;
+      entry.posterMime = poster.mime;
+    }
+    return entry;
+  }
+
+  private async posterOf(store: ProjectStore): Promise<{ assetId: string; path: string; mime: string } | null> {
+    const used = await store.usedAssetIds();
+    const assets = store.allAssets().filter((a) => used.has(a.id) && a.status === 'active' && a.metadata?.missing !== true);
+    for (const asset of [...assets.filter((a) => a.kind === 'video'), ...assets.filter((a) => a.kind === 'image')]) {
+      const path = asset.kind === 'video' ? join(store.derivedDir(asset.id), 'thumb.jpg') : store.assetFilePath(asset);
+      if (path && (await hasFile(path))) return { assetId: asset.id, path, mime: asset.kind === 'video' ? 'image/jpeg' : (asset.mime ?? 'image/jpeg') };
+    }
+    return null;
   }
 
   private async snapshot(open: OpenProject): Promise<ProjectSnapshot> {
@@ -557,7 +588,8 @@ export class StudioBackend implements StudioApi {
   /** Für das `studio-asset://`-Protokoll. */
   async resolveAssetFile(projectId: string, assetId: string, variant: AssetVariant): Promise<ResolvedAssetFile | null> {
     const open = this.projects.get(projectId);
-    if (!open) return null;
+    // Geschlossenes Projekt: nur das Standbild aus „Zuletzt geöffnet“ (Startbildschirm), sonst nichts
+    if (!open) return variant === 'thumb' ? this.recent.posterFile(buildAssetUrl(projectId, assetId, 'thumb')) : null;
     const asset = open.store.getAsset(assetId);
     if (!asset) return null;
     const original = open.store.assetFilePath(asset);
@@ -735,6 +767,8 @@ export class StudioBackend implements StudioApi {
     await step(() => open.session?.close());
     await step(() => open.site?.stop());
     await step(() => this.deps.preview?.close(projectId));
+    // „Zuletzt geöffnet“ mit dem Stand beim Schließen (Checkpoint, Budget, Standbild), ohne die Reihenfolge zu ändern
+    await step(async () => this.recent.update(await this.recentEntry(open)));
     await step(() => open.store.close());
     if (errors.length > 0) throw errors[0];
   }

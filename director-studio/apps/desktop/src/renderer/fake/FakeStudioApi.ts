@@ -832,9 +832,31 @@ export class FakeStudioApi implements StudioApi {
   async listRecentProjects(): Promise<RecentProject[]> {
     await this.ready;
     this.log('listRecentProjects', []);
-    return [...this.projects.values()]
-      .map((p) => ({ path: p.path, title: p.manifest.title, category: p.manifest.category, updatedAt: p.manifest.updatedAt }))
-      .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    const entries = await Promise.all([...this.projects.values()].map((p) => this.recentEntry(p)));
+    return entries.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+  }
+
+  /**
+   * Eintrag wie in Main (DESIGN.md §7.12): Checkpoint, Budget und Standbild nur, wenn es sie gibt. Standbild = erstes
+   * im Dokument verwendetes Video bzw. Bild.
+   */
+  private async recentEntry(p: FakeProject): Promise<RecentProject> {
+    const m = p.manifest;
+    const entry: RecentProject = { path: p.path, title: m.title, category: m.category, updatedAt: m.updatedAt };
+    if (m.checkpoints.length > 0) {
+      const open = m.checkpoints.findIndex((c) => c.status !== 'approved' && c.status !== 'skipped');
+      const at = open === -1 ? m.checkpoints.length - 1 : open;
+      const cp = m.checkpoints[at]!;
+      entry.checkpoint = { index: at + 1, total: m.checkpoints.length, title: cp.title, status: cp.status };
+    }
+    const budget = p.ledger.summary();
+    if (budget.approvedUsd > 0 || budget.spentUsd > 0) entry.budget = { spentUsd: budget.spentUsd, approvedUsd: budget.approvedUsd };
+    const document = await this.head(p);
+    const used = document ? documentAssetIds(document) : new Set<string>();
+    const media = p.assets.filter((a) => used.has(a.id) && a.status === 'active' && a.metadata?.missing !== true);
+    const poster = media.find((a) => a.kind === 'video') ?? media.find((a) => a.kind === 'image');
+    if (poster) entry.poster = this.assetUrl(m.id, poster.id, 'thumb');
+    return entry;
   }
 
   async createProject(input: CreateProjectInput): Promise<ProjectSnapshot> {
