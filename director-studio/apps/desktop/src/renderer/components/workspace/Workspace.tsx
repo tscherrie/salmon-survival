@@ -127,6 +127,15 @@ export function Workspace() {
   const category = useStudio((s) => s.manifest?.category ?? null);
   const layout = useWorkspaceLayout({ category, doc });
   useWorkspaceShortcuts(layout);
+  // Ein Asset zeigen (Chip-Klick, §9.4) öffnet die eingeklappte Asset-Leiste; die Karte scrollt sich selbst ins Bild
+  const flashKey = useStudio((s) => s.flash?.key ?? null);
+  const layoutRef = useRef(layout);
+  useLayoutEffect(() => {
+    layoutRef.current = layout;
+  });
+  useEffect(() => {
+    if (flashKey?.startsWith('asset:') && layoutRef.current.collapsed.assets) layoutRef.current.setCollapsed('assets', false);
+  }, [flashKey]);
 
   const style = {
     '--side-l': px(layout.sideL),

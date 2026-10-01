@@ -1,5 +1,7 @@
-import { normalizeSegments, type ComposerSegment, type Ref, type RefLabelContext } from '@studio/core';
-import { refChipLabel, refChipTitle } from '../../lib/labels.ts';
+import { normalizeSegments, type ComposerSegment, type Ref } from '@studio/core';
+import { refChipParts, refChipTitle, type ChipLabelContext } from '../../lib/labels.ts';
+import { isNumbered, refKey } from '../../lib/refNumbers.ts';
+import { createIconElement } from '../common/Icon.tsx';
 
 /**
  * DOM-Hilfen für den contenteditable-Composer. Chips sind `<span contenteditable="false" data-ref="…">`.
@@ -22,38 +24,100 @@ function visibleLength(text: string): number {
   return cleanText(text).length;
 }
 
-export function createChip(ref: Ref, ctx: RefLabelContext, removeLabel: (label: string) => string): HTMLElement {
-  const label = refChipLabel(ref, ctx);
+/** Zusätze beim Bauen der Chips: Nummern aus dem Store und Thumbnails für Bild- und Video-Assets. */
+export interface ChipRenderOptions {
+  /** Nummer je Referenz-Schlüssel (`refNumbers`); Assets und Versionen bleiben ohne Nummer. */
+  numbers?: Readonly<Record<string, number>> | undefined;
+  thumbUrl?: ((assetId: string) => string | null) | undefined;
+}
+
+function chipNumber(ref: Ref, opts: ChipRenderOptions): number | undefined {
+  return isNumbered(ref) ? opts.numbers?.[refKey(ref)] : undefined;
+}
+
+/** Signatur eines Chips (Nummer und Beschriftung): Weicht sie vom DOM ab, baut der Editor neu auf. */
+export function chipSignature(ref: Ref, ctx: ChipLabelContext, opts: ChipRenderOptions = {}): string {
+  const parts = refChipParts(ref, ctx);
+  return `${chipNumber(ref, opts) ?? ''}|${parts.text}${parts.secondary ?? ''}`;
+}
+
+/**
+ * Chip nach DESIGN.md §7.7.2: `[Nummer] [Icon oder Thumb] Label [×]`. Zeit-Chips zeigen statt eines Icons den
+ * Timecode in Mono mit gedämpften Frames. `data-ref-key` und `data-ref-n` verbinden den Chip mit seinen
+ * Gegenstücken auf Bühne und Monitor (Hover `.is-linked`, Blitz `.is-flash`).
+ */
+export function createChip(ref: Ref, ctx: ChipLabelContext, removeLabel: (label: string) => string, opts: ChipRenderOptions = {}): HTMLElement {
+  const parts = refChipParts(ref, ctx);
+  const label = parts.text + (parts.secondary ?? '');
+  const n = chipNumber(ref, opts);
   const chip = document.createElement('span');
   chip.className = `chip chip-${ref.kind}`;
   chip.contentEditable = 'false';
   chip.title = refChipTitle(ref, ctx);
   chip.dataset.ref = JSON.stringify(ref);
+  chip.dataset.refKey = refKey(ref);
+  if (n !== undefined) chip.dataset.refN = String(n);
+  chip.dataset.sig = chipSignature(ref, ctx, opts);
+  if (n !== undefined) {
+    const num = document.createElement('span');
+    num.className = 'n';
+    num.textContent = String(n);
+    chip.append(num);
+  }
+  const thumb = parts.thumbAssetId ? opts.thumbUrl?.(parts.thumbAssetId) : null;
+  if (thumb) {
+    const th = document.createElement('span');
+    th.className = 'th';
+    th.style.backgroundImage = `url("${thumb}")`;
+    chip.append(th);
+  } else if (parts.icon) {
+    chip.append(createIconElement(parts.icon, 12, 'chip-icon'));
+  }
   const text = document.createElement('span');
-  text.className = 'chip-label';
-  text.textContent = label;
+  text.className = parts.mono ? 'chip-label tc' : 'chip-label';
+  text.textContent = parts.text;
+  if (parts.secondary) {
+    const ff = document.createElement('span');
+    ff.className = 'ff';
+    ff.textContent = parts.secondary;
+    text.append(ff);
+  }
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.className = 'chip-remove';
   remove.tabIndex = -1;
   remove.setAttribute('aria-label', removeLabel(label));
-  remove.textContent = '×';
+  remove.append(createIconElement('close', 10));
   chip.append(text, remove);
   return chip;
 }
 
 /** Baut den Editor-Inhalt aus Segmenten neu auf. */
-export function renderSegments(root: HTMLElement, segments: readonly ComposerSegment[], ctx: RefLabelContext, removeLabel: (label: string) => string): void {
+export function renderSegments(
+  root: HTMLElement,
+  segments: readonly ComposerSegment[],
+  ctx: ChipLabelContext,
+  removeLabel: (label: string) => string,
+  opts: ChipRenderOptions = {},
+): void {
   root.textContent = '';
   segments.forEach((seg, i) => {
     if (seg.type === 'text') {
       root.appendChild(document.createTextNode(seg.text));
     } else {
-      root.appendChild(createChip(seg.ref, ctx, removeLabel));
+      root.appendChild(createChip(seg.ref, ctx, removeLabel, opts));
       const next = segments[i + 1];
       if (!next || next.type === 'ref') root.appendChild(document.createTextNode(ZWSP));
     }
   });
+}
+
+/** Signaturen der Chips im DOM, in Dokumentreihenfolge (Gegenstück zu `chipSignature`). */
+export function domChipSignatures(root: HTMLElement): string {
+  return Array.from(root.querySelectorAll<HTMLElement>('.chip'))
+    .filter(isChip)
+    .map((chip) => chip.dataset.sig ?? '')
+    .join('\n');
 }
 
 /** Liest Segmente aus dem DOM (Text, Chips, Zeilenumbrüche). */

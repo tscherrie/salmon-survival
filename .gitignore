@@ -1,1 +1,4 @@
 .DS_Store
+
+# Temporäre Git-Worktrees der Agenten-Workflows
+.claude/worktrees/

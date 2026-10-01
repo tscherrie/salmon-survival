@@ -113,6 +113,30 @@ export function Icon({ name, size = 16, title, className }: { name: IconName; si
   );
 }
 
+/** Dasselbe Icon als DOM-Element, für Inhalte außerhalb von React (Chips im contenteditable-Composer). */
+export function createIconElement(name: IconName, size = 16, className?: string): SVGSVGElement {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  const attrs: Record<string, string> = {
+    class: className ? `icon ${className}` : 'icon',
+    width: String(size),
+    height: String(size),
+    viewBox: '0 0 24 24',
+    fill: FILLED.has(name) ? 'currentColor' : 'none',
+    stroke: 'currentColor',
+    'stroke-width': '1.5',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
+    'aria-hidden': 'true',
+    focusable: 'false',
+  };
+  for (const [key, value] of Object.entries(attrs)) svg.setAttribute(key, value);
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', PATHS[name]);
+  svg.appendChild(path);
+  return svg;
+}
+
 /**
  * Bildmarke: Sucherklammern plus Tally-Punkt (§5). Der Punkt ist `--text`; Tungsten nur, solange der Director
  * arbeitet (`live`).

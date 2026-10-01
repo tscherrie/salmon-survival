@@ -146,17 +146,10 @@ describe('reduceEvent', () => {
     expect(patch.checkpoints).toBe(manifest.checkpoints);
   });
 
-  it('preview_pick: fügt die Element-Referenz an der Cursorposition ein', () => {
+  it('preview_pick: schreibt nicht selbst in den Composer (das übernimmt insertRef im Store)', () => {
     const state = base({ composer: [{ type: 'text', text: 'Mach das rot' }], caret: 7 });
     const ref = { kind: 'element' as const, doc: 'site' as const, page: '/', selector: 'h1' };
-    const patch = reduceEvent(state, { type: 'preview_pick', projectId: P, ref, label: 'Überschrift' })!;
-    expect(patch.composer).toEqual([
-      { type: 'text', text: 'Mach da' },
-      { type: 'ref', ref },
-      { type: 'text', text: 's rot' },
-    ]);
-    expect(patch.caret).toBe(8);
-    expect(patch.composerRevision).toBe(1);
+    expect(reduceEvent(state, { type: 'preview_pick', projectId: P, ref, label: 'Überschrift' })).toBeNull();
   });
 
   it('preview_state: übernimmt URL/Status/Fehler', () => {

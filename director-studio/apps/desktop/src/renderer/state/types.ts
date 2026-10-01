@@ -20,6 +20,7 @@ import type {
   VersionMeta,
   VoiceClick,
 } from '@studio/core';
+import { defaultCoach, type CoachState } from '../lib/coach.ts';
 
 export interface Toast {
   id: number;
@@ -96,11 +97,20 @@ export interface StudioData {
   /** Ältere Version im Nur-Ansehen-Modus. */
   viewing: { number: number; document: StudioDocument } | null;
 
+  /** Composer-Inhalt. Geschrieben wird nur über `writeComposer` im Store (Nummern, Revision; DESIGN.md §8.7). */
   composer: ComposerSegment[];
   /** Einfügeposition (Zeichen zählen 1, Chips zählen 1 – wie `insertRefAt`). */
   caret: number;
-  /** Erhöht sich bei externen Einfügungen, damit der Editor sein DOM neu aufbaut. */
+  /** Erhöht sich bei jedem Schreiben des Composers; der Editor baut sein DOM neu auf, wenn er die Änderung nicht selbst verursacht hat. */
   composerRevision: number;
+  /** Nummer je Referenz-Schlüssel (`refKey`) der Chips im Composer (§9.3); Assets und Versionen haben keine. */
+  refNumbers: Record<string, number>;
+  /** Schlüssel der Referenz unter dem Pointer (Chip, Marker, Clip …): Gegenstücke bekommen `.is-linked` (§9.4). */
+  hoveredRefKey: string | null;
+  /** Verknüpfungs-Blitz (600 ms) auf allen Gegenstücken einer Referenz. */
+  flash: { key: string; nonce: number } | null;
+  /** Zuletzt gesetzter Marker (Settle-Animation, §5). */
+  lastMarkerKey: string | null;
   queue: ComposerMessage[];
 
   playhead: number;
@@ -116,6 +126,8 @@ export interface StudioData {
   viewport: PreviewViewport;
 
   voice: VoiceState;
+  /** Einmalige Hinweise (§8.6); der Store liest und speichert sie in `lib/coach.ts`. */
+  coach: CoachState;
 }
 
 export const initialVoice: VoiceState = { recording: false, startedAt: 0, clicks: [], transcribing: false, level: 0 };
@@ -155,6 +167,10 @@ export function initialData(): StudioData {
     composer: [],
     caret: 0,
     composerRevision: 0,
+    refNumbers: {},
+    hoveredRefKey: null,
+    flash: null,
+    lastMarkerKey: null,
     queue: [],
     playhead: 0,
     playing: false,
@@ -168,5 +184,6 @@ export function initialData(): StudioData {
     activeTrackId: null,
     viewport: 'desktop',
     voice: initialVoice,
+    coach: defaultCoach(),
   };
 }

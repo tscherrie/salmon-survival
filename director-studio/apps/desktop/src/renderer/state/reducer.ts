@@ -1,4 +1,4 @@
-import { insertRefAt, normalizeRef, type ChatMessage, type StudioEvent } from '@studio/core';
+import type { ChatMessage, StudioEvent } from '@studio/core';
 import type { StudioData } from './types.ts';
 
 /**
@@ -80,10 +80,9 @@ export function reduceEvent(state: StudioData, event: StudioEvent, now: string =
     }
     case 'manifest':
       return { manifest: event.manifest, checkpoints: event.manifest.checkpoints };
-    case 'preview_pick': {
-      const ref = normalizeRef(event.ref);
-      return { composer: insertRefAt(state.composer, state.caret, ref), caret: state.caret + 1, composerRevision: state.composerRevision + 1 };
-    }
+    case 'preview_pick':
+      // Der Store fügt den Pick über `insertRef` ein (einziger Schreibweg des Composers: Nummern, Duplikatschutz)
+      return null;
     case 'preview_state':
       return { preview: { url: event.url, status: event.status, error: event.error ?? null } };
   }

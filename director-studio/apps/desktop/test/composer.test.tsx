@@ -10,6 +10,11 @@ import { DEMO_VIDEO_ID, DEMO_VIDEO_PATH, renderStudio, setupStudio } from './hel
 const TIME_REF = { kind: 'time' as const, frame: 372 };
 const ASSET_REF = { kind: 'asset' as const, assetId: 'ast_char_mira' };
 
+/** Keine Emoji in Chips (DESIGN.md §17 P1.5): keine Codepoints ab U+1F000 und kein ⏱. */
+function expectNoEmoji(text: string | null) {
+  expect([...(text ?? '')].filter((c) => c.codePointAt(0)! >= 0x1f000 || c === '⏱')).toEqual([]);
+}
+
 describe('Composer', () => {
   it('sendet die Segmente (Text + Chips) an api.sendMessage und leert sich', async () => {
     const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
@@ -21,11 +26,17 @@ describe('Composer', () => {
       { type: 'ref', ref: ASSET_REF },
       { type: 'text', text: '.  ' },
     ];
-    act(() => studio.store.setState({ composer: segments, caret: 0, composerRevision: 1 }));
+    act(() => studio.store.getState().setComposer(segments, 0));
     renderStudio(<Composer />, studio);
     const editor = screen.getByTestId('composer-editor');
-    expect(editor.querySelectorAll('.chip')).toHaveLength(2);
-    expect(editor).toHaveTextContent('Mach ⏱ 00:12.400–00:18.000 · Video');
+    const chips = editor.querySelectorAll<HTMLElement>('.chip');
+    expect(chips).toHaveLength(2);
+    // Spanne (alt): Nummer und MM:SS:FF–MM:SS:FF; Asset: ohne Nummer
+    expect(chips[0]!.querySelector('.n')).toHaveTextContent('1');
+    expect(chips[0]!.querySelector('.chip-label')).toHaveTextContent('00:12:12–00:18:00 · Video');
+    expect(chips[1]!.querySelector('.n')).toBeNull();
+    expect(chips[1]!.querySelector('.chip-label')).toHaveTextContent('Mira – Charakterblatt v3');
+    expectNoEmoji(editor.textContent);
     await userEvent.click(screen.getByRole('button', { name: 'Senden' }));
     expect(send).toHaveBeenCalledTimes(1);
     const [projectId, message] = send.mock.calls[0]!;
@@ -41,6 +52,8 @@ describe('Composer', () => {
       'Mach <ref id="r1" type="range" from="00:12.400" to="00:18.000" fromFrame="372" toFrame="540" track="V1"/> dunkler, nimm <ref id="r2" type="asset" asset="ast_char_mira"/>.',
     );
     expect(studio.store.getState().composer).toEqual([]);
+    // Senden setzt die Nummern zurück (DESIGN.md §9.3)
+    expect(studio.store.getState().refNumbers).toEqual({});
     expect(editor.querySelectorAll('.chip')).toHaveLength(0);
   });
 
@@ -76,33 +89,109 @@ describe('Composer', () => {
     expect(editor.querySelectorAll('.chip')).toHaveLength(1);
   });
 
-  it('entfernt Chips per ×-Knopf und per Rücktaste', async () => {
+  it('entfernt Chips per ×-Knopf und per Rücktaste über removeComposerSegment, ohne direktes setState', async () => {
     const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
     act(() =>
-      studio.store.setState({
-        composer: [
-          { type: 'text', text: 'A ' },
-          { type: 'ref', ref: TIME_REF },
-          { type: 'text', text: ' B ' },
-          { type: 'ref', ref: ASSET_REF },
-        ],
-        composerRevision: 1,
-      }),
+      studio.store.getState().setComposer([
+        { type: 'text', text: 'A ' },
+        { type: 'ref', ref: TIME_REF },
+        { type: 'text', text: ' B ' },
+        { type: 'ref', ref: ASSET_REF },
+      ]),
     );
     renderStudio(<Composer />, studio);
     const editor = screen.getByTestId('composer-editor');
-    // × am ersten Chip
-    fireEvent.mouseDown(screen.getByRole('button', { name: 'Referenz entfernen: ⏱ 00:12.400' }));
+    const setState = vi.spyOn(studio.store, 'setState');
+    const remove = vi.spyOn(studio.store.getState(), 'removeComposerSegment');
+    expect(studio.store.getState().refNumbers).toEqual({ 'time:372': 1 });
+    // × am ersten Chip: der Zeit-Chip (= Marker) verschwindet samt Nummer
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Referenz entfernen: 00:12:12' }));
     expect(studio.store.getState().composer).toEqual([
       { type: 'text', text: 'A  B ' },
       { type: 'ref', ref: ASSET_REF },
     ]);
+    expect(studio.store.getState().refNumbers).toEqual({});
+    expect(studio.store.getState().announcement).toBe('Marker 1 entfernt');
     // Rücktaste direkt hinter dem letzten Chip
     editor.focus();
     setCaretPosition(editor, 6);
     fireEvent.keyDown(editor, { key: 'Backspace' });
     expect(studio.store.getState().composer).toEqual([{ type: 'text', text: 'A  B ' }]);
     expect(editor.querySelectorAll('.chip')).toHaveLength(0);
+    expect(remove).toHaveBeenCalledTimes(2);
+    expect(setState).not.toHaveBeenCalled();
+  });
+
+  it('Duplikatschutz: dieselbe Stelle wird nicht zweimal eingefügt, der vorhandene Chip blitzt', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    renderStudio(<Composer />, studio);
+    const editor = screen.getByTestId('composer-editor');
+    let inserted = false;
+    act(() => void (inserted = studio.store.getState().insertRef(TIME_REF)));
+    expect(inserted).toBe(true);
+    act(() => void (inserted = studio.store.getState().insertRef({ kind: 'time', frame: 372 })));
+    expect(inserted).toBe(false);
+    expect(studio.store.getState().composer).toEqual([{ type: 'ref', ref: TIME_REF }]);
+    expect(studio.store.getState().announcement).toBe('Marker 1 ist bereits gesetzt');
+    expect(studio.store.getState().flash).toEqual({ key: 'time:372', nonce: expect.any(Number) });
+    expect(editor.querySelector('.chip')).toHaveClass('is-flash');
+    // Auch Assets werden nicht doppelt eingefügt
+    act(() => void studio.store.getState().insertRef(ASSET_REF));
+    act(() => void studio.store.getState().insertRef(ASSET_REF));
+    expect(studio.store.getState().composer.filter((seg) => seg.type === 'ref')).toHaveLength(2);
+    expect(studio.store.getState().announcement).toBe('Mira – Charakterblatt v3 ist bereits referenziert');
+  });
+
+  it('nummeriert Chips (kleinste freie Nummer, stabil) und trägt Schlüssel und Nummer am Chip', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    renderStudio(<Composer />, studio);
+    const editor = screen.getByTestId('composer-editor');
+    const s = () => studio.store.getState();
+    act(() => void s().insertRef({ kind: 'time', frame: 372 }));
+    act(() => void s().insertRef({ kind: 'time', frame: 600 }));
+    act(() => void s().insertRef({ kind: 'clip', clipId: 'c_sb03', trackId: 'V1' }));
+    expect(s().refNumbers).toEqual({ 'time:372': 1, 'time:600': 2, 'clip:c_sb03': 3 });
+    // Den ersten entfernen: die anderen behalten ihre Nummern, die Lücke wird neu vergeben
+    act(() => s().removeComposerSegment(0, 0));
+    expect(s().refNumbers).toEqual({ 'time:600': 2, 'clip:c_sb03': 3 });
+    act(() => void s().insertRef({ kind: 'time', frame: 900 }));
+    expect(s().refNumbers).toEqual({ 'time:600': 2, 'clip:c_sb03': 3, 'time:900': 1 });
+    const chips = Array.from(editor.querySelectorAll<HTMLElement>('.chip'));
+    expect(chips.map((c) => [c.dataset.refKey, c.dataset.refN, c.querySelector('.n')?.textContent])).toEqual([
+      ['time:900', '1', '1'],
+      ['time:600', '2', '2'],
+      ['clip:c_sb03', '3', '3'],
+    ]);
+    // Zeit-Chips: Timecode in Mono mit gedämpften Frames, kein Icon; Clips: Filmstreifen-Icon
+    expect(chips[1]!.querySelector('.chip-label.tc')).toHaveTextContent('00:20:00');
+    expect(chips[1]!.querySelector('.ff')).toHaveTextContent(':00');
+    expect(chips[1]!.querySelector('.chip-icon')).toBeNull();
+    expect(chips[2]!.querySelector('.chip-icon')).not.toBeNull();
+    expect(chips[2]!.title).toBe('Strophe: Tunnel');
+    expectNoEmoji(editor.textContent);
+  });
+
+  it('verknüpft Chips in beide Richtungen: Hover meldet den Schlüssel, Gegenstücke schalten .is-linked; Klick zeigt die Stelle', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    renderStudio(<Composer />, studio);
+    const editor = screen.getByTestId('composer-editor');
+    act(() => void studio.store.getState().insertRef(TIME_REF));
+    const chip = () => editor.querySelector<HTMLElement>('.chip')!;
+    fireEvent.mouseOver(chip().querySelector('.chip-label')!);
+    expect(studio.store.getState().hoveredRefKey).toBe('time:372');
+    expect(chip()).toHaveClass('is-linked');
+    fireEvent.mouseLeave(editor);
+    expect(studio.store.getState().hoveredRefKey).toBeNull();
+    expect(chip()).not.toHaveClass('is-linked');
+    // Umgekehrt: ein Gegenstück (z. B. der Marker auf der Bühne) setzt den Schlüssel
+    act(() => studio.store.getState().setHoveredRef('time:372'));
+    expect(chip()).toHaveClass('is-linked');
+    act(() => studio.store.getState().setHoveredRef(null));
+    // Klick auf den Chip (nicht auf das ×): Abspielkopf springt, der Chip blitzt
+    fireEvent.click(chip().querySelector('.chip-label')!);
+    expect(studio.store.getState().playhead).toBe(372);
+    expect(studio.store.getState().flash?.key).toBe('time:372');
+    expect(studio.store.getState().announcement).toBe('Angezeigt: Marker 1 bei 00:12:12');
   });
 
   it('fügt beim Einfügen nur Klartext ein', async () => {
@@ -143,8 +232,11 @@ describe('Composer-DOM und -Operationen', () => {
       { type: 'ref', ref: TIME_REF },
       { type: 'ref', ref: ASSET_REF },
     ];
-    renderSegments(root, segments, {}, (l) => l);
+    renderSegments(root, segments, {}, (l) => l, { numbers: { 'time:372': 4 } });
     expect(parseDom(root)).toEqual(segments);
+    // Nummer und Beschriftung gehen nicht in den Inhalt ein; nur Bühnen-Referenzen sind nummeriert
+    expect(root.querySelector<HTMLElement>('.chip-time')!.dataset.refN).toBe('4');
+    expect(root.querySelector<HTMLElement>('.chip-asset')!.dataset.refN).toBeUndefined();
     root.appendChild(document.createElement('br'));
     root.appendChild(document.createTextNode('Zeile'));
     root.appendChild(document.createElement('br'));

@@ -27,7 +27,11 @@ describe('App (Integration mit Fake-Backend)', () => {
     fireEvent.mouseDown(lane, { clientX: x, button: 0 });
     fireEvent.mouseUp(lane, { clientX: x });
     const editor = screen.getByTestId('composer-editor');
-    expect(editor.querySelector('.chip')).toHaveTextContent('⏱ 00:10.000');
+    // Nummerierter Zeit-Chip ohne Emoji (DESIGN.md §7.7.2): Nummer 1, Timecode MM:SS:FF
+    const chip = editor.querySelector<HTMLElement>('.chip')!;
+    expect(chip.querySelector('.n')).toHaveTextContent('1');
+    expect(chip.querySelector('.chip-label')).toHaveTextContent('00:10:00');
+    expect(chip.dataset.refKey).toBe('time:300');
     await user.click(editor);
     await user.keyboard(' heller');
     expect(editor).toHaveTextContent('heller');

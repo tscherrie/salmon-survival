@@ -10,7 +10,11 @@ describe('Director-Panel', () => {
     renderStudio(<DirectorPanel />, studio);
     const panel = screen.getByRole('complementary', { name: 'Director' });
     expect(within(panel).getByText('120 BPM').tagName).toBe('STRONG');
-    await userEvent.click(within(panel).getByRole('button', { name: 'Zu 00:24.000 springen' }));
+    // Der Director schreibt mm:ss.mmm; angezeigt wird das Chip-Format MM:SS:FF (DESIGN.md §9.2)
+    const link = within(panel).getByRole('button', { name: 'Zu 00:24:00 springen' });
+    expect(link).toHaveTextContent('00:24:00');
+    expect(link.querySelector('.ff')).toHaveTextContent(':00');
+    await userEvent.click(link);
     expect(studio.store.getState().playhead).toBe(720);
     expect(studio.store.getState().seekRequest?.frame).toBe(720);
   });

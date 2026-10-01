@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Composer } from '../src/renderer/components/composer/Composer.tsx';
 import { Stage } from '../src/renderer/components/stage/Stage.tsx';
 import { DEFAULT_PX_PER_SECOND, TIMELINE_PAD } from '../src/renderer/lib/timelineGeometry.ts';
+import { selectUserMarkers } from '../src/renderer/state/selectors.ts';
 import { DEMO_VIDEO_PATH, renderStudio, setupStudio } from './helpers.tsx';
 import { MediaRecorderStub } from './setup.ts';
 
@@ -68,7 +69,39 @@ describe('Push-to-Talk', () => {
       { type: 'text', text: ' lauter' },
     ]);
     expect(studio.store.getState().voice.recording).toBe(false);
-    expect(screen.getByTestId('composer-editor').querySelectorAll('.chip')).toHaveLength(2);
+    const chips = Array.from(screen.getByTestId('composer-editor').querySelectorAll('.chip'));
+    // Nummerierte Zeit-Chips ohne Emoji (DESIGN.md §7.7.2)
+    expect(chips.map((c) => [c.querySelector('.n')?.textContent, c.querySelector('.chip-label')?.textContent])).toEqual([
+      ['1', '00:12:12'],
+      ['2', '00:20:00'],
+    ]);
+  });
+
+  it('während der Aufnahme gibt es keinen Duplikatschutz: Marker schweben, gleiche Stellen teilen sich danach eine Nummer', async () => {
+    const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
+    studio.api.debug.setTranscript(WORDS);
+    let now = 10_000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    renderStudio(<Composer />, studio);
+    const mic = screen.getByRole('button', { name: 'Halten zum Sprechen' });
+    fireEvent.pointerDown(mic);
+    await waitFor(() => expect(studio.store.getState().voice.recording).toBe(true));
+    now = 10_900;
+    act(() => studio.store.getState().addMarkerAt(372));
+    now = 12_000;
+    act(() => void studio.store.getState().insertRef({ kind: 'time', frame: 372 }));
+    expect(studio.store.getState().voice.clicks).toHaveLength(2);
+    // Schwebende Marker (Umriss, ohne Nummer), auf der Leiste nur einmal
+    expect(selectUserMarkers(studio.store.getState())).toEqual([{ key: 'time:372', frame: 372, n: 0, pending: true }]);
+    now = 12_600;
+    fireEvent.pointerUp(mic);
+    await waitFor(() => expect(studio.store.getState().composer.length).toBeGreaterThan(0));
+    const refs = studio.store.getState().composer.filter((seg) => seg.type === 'ref');
+    expect(refs).toHaveLength(2);
+    expect(studio.store.getState().refNumbers).toEqual({ 'time:372': 1 });
+    const numbers = Array.from(screen.getByTestId('composer-editor').querySelectorAll('.chip .n')).map((n) => n.textContent);
+    expect(numbers).toEqual(['1', '1']);
+    expect(selectUserMarkers(studio.store.getState())).toEqual([{ key: 'time:372', frame: 372, n: 1, pending: false }]);
   });
 
   it('Strg+Shift+Leertaste startet und beendet die Aufnahme; Diktat wird am Cursor eingefügt', async () => {

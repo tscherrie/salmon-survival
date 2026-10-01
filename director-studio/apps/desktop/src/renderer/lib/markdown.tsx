@@ -12,7 +12,10 @@ export interface MarkdownProps {
   /** Klick auf einen Timecode (Sekunden). Ohne Handler werden Timecodes als Text gezeigt. */
   onTimecode?: ((seconds: number) => void) | undefined;
   onLink?: ((href: string) => void) | undefined;
-  timecodeLabel?: ((timecode: string) => string) | undefined;
+  /** Accessible Name eines Timecode-Knopfs (Rohtext und Sekunden). */
+  timecodeLabel?: ((timecode: string, seconds: number) => string) | undefined;
+  /** Anzeige eines Timecodes (z. B. `MM:SS:FF` mit gedämpften Frames); ohne Angabe der Rohtext `mm:ss.mmm`. */
+  renderTimecode?: ((seconds: number, timecode: string) => ReactNode) | undefined;
 }
 
 const INLINE = /(`[^`\n]+`)|(\*\*[^*\n]+?\*\*)|(\*[^*\s\n][^*\n]*?\*|_[^_\s\n][^_\n]*?_)|(\[[^\]\n]+\]\([^)\s]+\))|((?<![\d:.])(?:\d{1,2}:)?\d{1,2}:\d{2}(?:\.\d{1,3})?(?![\d:]))/g;
@@ -76,10 +79,10 @@ function renderInline(text: string, props: MarkdownProps, keyPrefix: string): Re
             key={key}
             type="button"
             className="tc-link"
-            aria-label={props.timecodeLabel ? props.timecodeLabel(token) : token}
+            aria-label={props.timecodeLabel ? props.timecodeLabel(token, s) : token}
             onClick={() => props.onTimecode?.(s)}
           >
-            {token}
+            {props.renderTimecode ? props.renderTimecode(s, token) : token}
           </button>,
         );
       } else {

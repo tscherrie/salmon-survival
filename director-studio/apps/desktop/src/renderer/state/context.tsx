@@ -1,8 +1,8 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useStore } from 'zustand';
-import type { RefLabelContext, StudioApi, StudioDocument } from '@studio/core';
+import type { StudioApi, StudioDocument } from '@studio/core';
 import { apiModeOf, type ApiMode } from '../api.ts';
-import { labelContextFor } from '../lib/labels.ts';
+import { labelContextFor, type ChipLabelContext } from '../lib/labels.ts';
 import type { StudioActions, StudioState, StudioStore } from './store.ts';
 
 const StoreContext = createContext<StudioStore | null>(null);
@@ -54,7 +54,7 @@ export function useViewDocument(): StudioDocument | null {
   return useStudio((s) => s.viewing?.document ?? s.document);
 }
 
-export function useLabelContext(): RefLabelContext {
+export function useLabelContext(): ChipLabelContext {
   const doc = useViewDocument();
   const assets = useStudio((s) => s.assets);
   return useMemo(() => labelContextFor(doc, assets), [doc, assets]);

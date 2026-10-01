@@ -1,11 +1,12 @@
 import { memo, useLayoutEffect, useMemo, useRef } from 'react';
-import type { ChatMessage, RefLabelContext, ToolActivity } from '@studio/core';
+import type { ChatMessage, ToolActivity } from '@studio/core';
 import { formatDateTime, useT } from '../../i18n.ts';
-import { refChipLabel, refChipTitle } from '../../lib/labels.ts';
+import type { ChipLabelContext } from '../../lib/labels.ts';
 import type { ProgressNote } from '../../state/types.ts';
 import { useActions, useLabelContext, useStudio } from '../../state/context.tsx';
 import { useLayout } from '../../lib/layout.ts';
 import { Icon } from '../common/Icon.tsx';
+import { StaticRefChip } from '../common/RefChip.tsx';
 import { ariaKeyShortcuts } from '../common/Kbd.tsx';
 import { Tooltip } from '../common/Tooltip.tsx';
 import { BudgetMeter } from './BudgetMeter.tsx';
@@ -17,7 +18,7 @@ type FeedItem =
   | { kind: 'progress'; at: string; note: ProgressNote }
   | { kind: 'tools'; at: string; activities: ToolActivity[] };
 
-const UserMessage = memo(function UserMessage({ message, ctx }: { message: ChatMessage; ctx: RefLabelContext }) {
+const UserMessage = memo(function UserMessage({ message, ctx }: { message: ChatMessage; ctx: ChipLabelContext }) {
   if (!message.segments?.length) return <p className="msg-text">{message.text}</p>;
   return (
     <p className="msg-text">
@@ -25,16 +26,14 @@ const UserMessage = memo(function UserMessage({ message, ctx }: { message: ChatM
         seg.type === 'text' ? (
           <span key={i}>{seg.text}</span>
         ) : (
-          <span key={i} className={`chip chip-static chip-${seg.ref.kind}`} title={refChipTitle(seg.ref, ctx)}>
-            {refChipLabel(seg.ref, ctx)}
-          </span>
+          <StaticRefChip key={i} value={seg.ref} ctx={ctx} />
         ),
       )}
     </p>
   );
 });
 
-function MessageView({ message, ctx, streaming = false }: { message: ChatMessage; ctx: RefLabelContext; streaming?: boolean }) {
+function MessageView({ message, ctx, streaming = false }: { message: ChatMessage; ctx: ChipLabelContext; streaming?: boolean }) {
   const t = useT();
   const who = message.role === 'user' ? t('director.you') : message.role === 'director' ? t('director.name') : t('director.system');
   return (

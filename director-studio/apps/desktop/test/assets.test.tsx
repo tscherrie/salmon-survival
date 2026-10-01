@@ -82,7 +82,10 @@ describe('Asset-Browser', () => {
     fireEvent.dragOver(editor, { dataTransfer: dt });
     fireEvent.drop(editor, { dataTransfer: dt });
     expect(studio.store.getState().composer).toEqual([{ type: 'ref', ref: { kind: 'asset', assetId: 'ast_char_mira' } }]);
-    expect(editor.querySelector('.chip')).toHaveTextContent('📎 Mira – Charakterblatt v3');
+    // Asset-Chips: Thumb und Titel, keine Nummer (DESIGN.md §7.7.2)
+    const chip = editor.querySelector('.chip')!;
+    expect(chip.querySelector('.chip-label')).toHaveTextContent('Mira – Charakterblatt v3');
+    expect(chip.querySelector('.n')).toBeNull();
   });
 
   it('Dateien vom Desktop werden verknüpft (importFiles „link“) und als Chips eingefügt', async () => {
@@ -99,19 +102,23 @@ describe('Asset-Browser', () => {
     fireEvent.drop(screen.getByTestId('composer-editor'), { dataTransfer: dt });
     await waitFor(() => expect(studio.store.getState().composer).toHaveLength(1));
     expect(importFiles).toHaveBeenCalledWith(DEMO_VIDEO_ID, ['Referenz Hafen.jpg'], 'link');
-    expect(screen.getByTestId('composer-editor').querySelector('.chip')).toHaveTextContent('📎 Referenz Hafen');
+    expect(screen.getByTestId('composer-editor').querySelector('.chip .chip-label')).toHaveTextContent('Referenz Hafen');
     expect(await screen.findByText('19 von 19')).toBeInTheDocument();
   });
 
-  it('Doppelklick und „In Composer“ fügen Chips ein; Drawer zeigt Herkunft und „Im Ordner zeigen“', async () => {
+  it('Doppelklick fügt einen Chip ein, „In Composer“ erkennt das Duplikat; Drawer zeigt Herkunft und „Im Ordner zeigen“', async () => {
     const studio = await setupStudio({ project: DEMO_VIDEO_PATH });
     const reveal = vi.spyOn(studio.api, 'revealAsset');
     renderStudio(<AssetBrowser searchDelayMs={0} />, studio);
     const user = userEvent.setup();
     const card = document.querySelector<HTMLElement>('[data-asset-id="ast_sb_02"]')!;
     await user.dblClick(card);
+    expect(studio.store.getState().composer.filter((s) => s.type === 'ref')).toHaveLength(1);
+    // Duplikatschutz gilt auch für Assets (DESIGN.md §9.3): nichts einfügen, stattdessen blitzen und ansagen
     await user.click(within(card).getByRole('button', { name: 'In Composer' }));
-    expect(studio.store.getState().composer.filter((s) => s.type === 'ref')).toHaveLength(2);
+    expect(studio.store.getState().composer.filter((s) => s.type === 'ref')).toHaveLength(1);
+    expect(studio.store.getState().flash?.key).toBe('asset:ast_sb_02');
+    expect(studio.store.getState().announcement).toBe('Storyboard 02 – Mira ist bereits referenziert');
 
     await user.click(within(card).getByRole('button', { name: /Storyboard 02 – Mira – Details/ }));
     const drawer = screen.getByRole('complementary', { name: 'Details: Storyboard 02 – Mira' });

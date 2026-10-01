@@ -276,6 +276,15 @@ a {
     box-shadow: 0 0 0 2px transparent;
   }
 }
+/* Blitz am Chip: Der innere Rand bleibt stehen, nur der äußere Ring blendet aus */
+@keyframes chip-flash {
+  from {
+    box-shadow: inset 0 0 0 1px var(--ref-line), 0 0 0 2px var(--ref);
+  }
+  to {
+    box-shadow: inset 0 0 0 1px var(--ref-line), 0 0 0 2px transparent;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -692,14 +701,16 @@ textarea.field {
   font-size: 10px;
 }
 
-/* Chips (Daylight) – Composer, Verlauf, Warteschlange (§7.7.2) */
+/* Chips (Daylight) – Composer, Verlauf, Warteschlange (§7.7.2): [Nummer] [Icon oder Thumb] Label [×] */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   height: var(--chip-h);
+  max-width: 100%;
   margin: 0 1px;
-  padding: 0 5px;
+  padding: 0 5px 0 3px;
+  border: 0;
   border-radius: var(--r-sm);
   background: var(--ref-soft);
   box-shadow: inset 0 0 0 1px var(--ref-line);
@@ -709,8 +720,14 @@ textarea.field {
   white-space: nowrap;
   vertical-align: 1px;
   user-select: none;
+  transition: box-shadow var(--t-fast) var(--ease);
+}
+/* Ohne Nummer (Assets, Versionen) beginnt der Chip mit Icon oder Thumb: etwas mehr Luft links */
+.chip:not(:has(> .n)) {
+  padding-left: 5px;
 }
 .chip .n {
+  flex: none;
   min-width: 16px;
   height: 16px;
   padding: 0 3px;
@@ -720,38 +737,72 @@ textarea.field {
   font: 600 10px/16px var(--font-mono);
   text-align: center;
 }
+.chip .chip-icon {
+  flex: none;
+  color: var(--ref-text);
+}
+.chip .th {
+  flex: none;
+  width: 22px;
+  height: 16px;
+  border-radius: var(--r-xs);
+  background: var(--raised) center / cover no-repeat;
+  box-shadow: inset 0 0 0 1px var(--img-edge);
+}
+/* Die Grundlinie des Chips kommt vom Label, nicht vom (leeren) Thumb oder Icon davor */
+.chip-label {
+  align-self: baseline;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .chip .tc {
   font: 500 11.5px/var(--chip-h) var(--font-mono);
 }
+/* Frames (:FF) immer gedämpft (§9.2) */
+.chip .ff,
+.tc-link .ff {
+  opacity: 0.7;
+}
 .chip-remove {
   display: inline-grid;
+  flex: none;
   place-items: center;
   width: 14px;
   height: 14px;
+  margin-left: -1px;
   padding: 0;
   border: 0;
   border-radius: 2px;
   background: transparent;
   color: inherit;
-  font-size: 13px;
-  line-height: 1;
   opacity: 0.55;
   cursor: pointer;
+  transition: opacity var(--t-fast) var(--ease);
 }
 .chip-remove:hover,
+.chip:hover .chip-remove,
 .chip[data-force='hover'] .chip-remove {
   opacity: 1;
 }
+/* Statische Chips im Verlauf: anklickbar (zeigt die Stelle), ohne × */
 .chip-static {
   height: 20px;
   font-size: 11.5px;
   line-height: 20px;
+  cursor: pointer;
+}
+.chip-static .tc {
+  line-height: 20px;
+}
+.chip-static:hover {
+  box-shadow: inset 0 0 0 1px var(--ref);
 }
 .chip.is-linked {
   box-shadow: inset 0 0 0 1.5px var(--ref);
 }
 .chip.is-flash {
-  animation: ref-flash 600ms var(--ease) both;
+  animation: chip-flash 600ms var(--ease);
 }
 
 /* Tasten (§4.4): nur in Tooltips, Menüs und im Kürzel-Überblick */
@@ -1708,6 +1759,13 @@ textarea.field {
 }
 .asset-card.is-rejected .asset-preview {
   opacity: 0.45;
+}
+/* Verknüpfung mit einem Asset-Chip (§9.4): Ring beim Hover, Blitz beim Zeigen */
+.asset-card.is-linked .asset-preview {
+  box-shadow: 0 0 0 1.5px var(--ref);
+}
+.asset-card.is-flash .asset-preview {
+  animation: ref-flash 600ms var(--ease) both;
 }
 .asset-card-main {
   display: flex;

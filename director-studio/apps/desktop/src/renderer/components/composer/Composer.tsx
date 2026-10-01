@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { composerToDisplayText, isComposerEmpty } from '@studio/core';
+import { isComposerEmpty } from '@studio/core';
 import { useT } from '../../i18n.ts';
 import { formatElapsed } from '../../lib/hooks.ts';
+import { displayText } from '../../lib/labels.ts';
 import { useActions, useLabelContext, useStudio } from '../../state/context.tsx';
 import { Icon } from '../common/Icon.tsx';
 import { Popover } from '../common/Popover.tsx';
@@ -136,7 +137,7 @@ export function Composer() {
             <span>{t('composer.queued', { count: queue.length })}</span>
             {queue.map((message, i) => (
               <span key={i} className="queue-item">
-                <span className="queue-text">{composerToDisplayText(message.segments, ctx)}</span>
+                <span className="queue-text">{displayText(message.segments, ctx)}</span>
                 <button type="button" className="btn sm" onClick={() => void actions.sendQueued(i)} disabled={running}>
                   {t('composer.sendNow')}
                 </button>

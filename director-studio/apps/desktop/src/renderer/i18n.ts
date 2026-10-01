@@ -246,6 +246,10 @@ const de = {
   'stage.ariaTimeline':
     'Timeline. Pfeiltasten bewegen den Abspielkopf, Enter fügt den Zeitpunkt als Referenz ein, Alt+Enter den Clip der gewählten Spur, Pfeil hoch/runter wählt die Spur.',
   'stage.refAdded': 'Referenz hinzugefügt: {label}',
+  'stage.markerSet': 'Marker {n} bei {time} gesetzt',
+  'stage.markerRemoved': 'Marker {n} entfernt',
+  'stage.markerExists': 'Marker {n} ist bereits gesetzt',
+  'stage.noMoreMarkers': 'Kein weiterer Marker',
   'stage.muted': 'stumm',
   'stage.track.video': 'Videospur',
   'stage.track.overlay': 'Overlay-Spur',
@@ -290,6 +294,14 @@ const de = {
   'voice.failed': 'Transkription fehlgeschlagen: {error}',
   'voice.level': 'Eingangspegel',
   'voice.clicks': '{count} Referenz(en) markiert',
+
+  // ── 9 Referenzen: Beschriftung, Nummern, Verknüpfung ──
+  'ref.slide': 'Folie {n}',
+  'ref.element': 'Element',
+  'ref.markerLabel': 'Marker {n} bei {time}',
+  'ref.exists': '{label} ist bereits referenziert',
+  'ref.removed': 'Referenz entfernt: {label}',
+  'ref.revealed': 'Angezeigt: {label}',
 
   // ── 7.8 Modellwahl (inklusive Denktiefe) ──
   'effort.label': 'Denktiefe',
@@ -679,6 +691,10 @@ const en: Record<MessageKey, string> = {
   'stage.ariaTimeline':
     'Timeline. Arrow keys move the playhead, Enter inserts the time as a reference, Alt+Enter the clip of the selected track, Up/Down selects the track.',
   'stage.refAdded': 'Reference added: {label}',
+  'stage.markerSet': 'Marker {n} set at {time}',
+  'stage.markerRemoved': 'Marker {n} removed',
+  'stage.markerExists': 'Marker {n} is already set',
+  'stage.noMoreMarkers': 'No further marker',
   'stage.muted': 'muted',
   'stage.track.video': 'Video track',
   'stage.track.overlay': 'Overlay track',
@@ -723,6 +739,14 @@ const en: Record<MessageKey, string> = {
   'voice.failed': 'Transcription failed: {error}',
   'voice.level': 'Input level',
   'voice.clicks': '{count} reference(s) marked',
+
+  // ── 9 Referenzen: Beschriftung, Nummern, Verknüpfung ──
+  'ref.slide': 'Slide {n}',
+  'ref.element': 'Element',
+  'ref.markerLabel': 'Marker {n} at {time}',
+  'ref.exists': '{label} is already referenced',
+  'ref.removed': 'Reference removed: {label}',
+  'ref.revealed': 'Showing: {label}',
 
   // ── 7.8 Modellwahl (inklusive Denktiefe) ──
   'effort.label': 'Thinking depth',

@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { refLabel, type Asset, type Ref, type StudioApi, type StudioEvent } from '@studio/core';
+import type { Asset, Ref, StudioApi, StudioEvent } from '@studio/core';
 import { App } from '../src/renderer/App.tsx';
 import { AssetBrowser } from '../src/renderer/components/assets/AssetBrowser.tsx';
 import { ComposerEditor } from '../src/renderer/components/composer/ComposerEditor.tsx';
@@ -9,7 +9,7 @@ import { Monitor } from '../src/renderer/components/monitor/Monitor.tsx';
 import { Stage } from '../src/renderer/components/stage/Stage.tsx';
 import { FakeStudioApi } from '../src/renderer/fake/FakeStudioApi.ts';
 import { probeLinkedFile } from '../src/renderer/lib/assets.ts';
-import { refChipLabel, refChipTitle } from '../src/renderer/lib/labels.ts';
+import { refChipLabel, refChipParts, refChipTitle } from '../src/renderer/lib/labels.ts';
 import { PICK_MESSAGE } from '../src/renderer/lib/previewMessages.ts';
 import { createStudioStore, type StudioStore } from '../src/renderer/state/store.ts';
 import { DEMO_VIDEO_ID, DEMO_VIDEO_PATH, DEMO_WEB_PATH, renderStudio, setupStudio } from './helpers.tsx';
@@ -340,16 +340,19 @@ describe('Vertrag B: Element-Referenzen mit Text und Tag', () => {
 
   it('Chip-Beschriftung nutzt Tag und Text, wenn die Element-ID keinen Namen hat', () => {
     const ctx = { names: { el_title: 'Titel' } };
-    expect(refChipLabel(site, ctx)).toBe('◳ / · h1 „Guten Morgen aus der Rösterei“');
-    expect(refChipTitle(site, ctx).split('\n')).toEqual(['◳ / · h1 „Guten Morgen aus der Rösterei“', '<h1> „Guten Morgen aus der Rösterei“', 'main > h1', 'src/pages/Home.tsx:7:7']);
-    // Bekannter Elementname hat Vorrang
+    // Ohne Emoji (DESIGN.md §9.1); der Seitenpfad steht im Tooltip, nicht im Chip
+    expect(refChipLabel(site, ctx)).toBe('h1 „Guten Morgen aus der Rösterei“');
+    expect(refChipTitle(site, ctx).split('\n')).toEqual(['h1 „Guten Morgen aus der Rösterei“', '/', '<h1> „Guten Morgen aus der Rösterei“', 'main > h1', 'src/pages/Home.tsx:7:7']);
+    expect(refChipParts(site, ctx)).toEqual({ icon: 'cursor', text: 'h1 „Guten Morgen aus der Rösterei“' });
+    // Bekannter Elementname hat Vorrang; auf Folien steht der Ort davor
     const deck: Ref = { kind: 'element', doc: 'deck', slideId: 's1', elementId: 'el_title', tag: 'text', text: 'Q4-Zahlen' };
-    expect(refChipLabel(deck, ctx)).toBe(refLabel(deck, ctx));
-    expect(refChipLabel(deck, ctx)).toBe('◳ s1 · Titel');
-    // Ohne Text unverändert wie refLabel; andere Referenzen: Tooltip = Beschriftung
+    expect(refChipLabel(deck, ctx)).toBe('s1 · Titel');
+    expect(refChipLabel(deck, { ...ctx, slideNumbers: { s1: 3 } })).toBe('Folie 3 · Titel');
+    // Ohne Text: Selektor; andere Referenzen: Tooltip = Beschriftung
     const plain: Ref = { kind: 'element', doc: 'site', page: '/', selector: 'main h1' };
-    expect(refChipLabel(plain, ctx)).toBe(refLabel(plain, ctx));
-    expect(refChipTitle({ kind: 'time', frame: 30 }, ctx)).toBe(refLabel({ kind: 'time', frame: 30 }, ctx));
+    expect(refChipLabel(plain, ctx)).toBe('main h1');
+    expect(refChipTitle({ kind: 'time', frame: 30 }, ctx)).toBe('00:01:00');
+    expect(refChipTitle({ kind: 'time', frame: 30 }, ctx)).toBe(refChipLabel({ kind: 'time', frame: 30 }, ctx));
   });
 
   it('Pick aus der Vorschau: Chip zeigt Tag und (gekürzten) Text, der Tooltip den vollen Text', async () => {
@@ -364,8 +367,12 @@ describe('Vertrag B: Element-Referenzen mit Text und Tag', () => {
       }),
     );
     const chip = screen.getByTestId('composer-editor').querySelector('.chip')!;
-    expect(chip.querySelector('.chip-label')!.textContent).toMatch(/^◳ \/karte · p „Frisch gerösteter Kaffee aus der .*…“$/);
+    expect(chip.querySelector('.chip-label')!.textContent).toMatch(/^p „Frisch gerösteter Kaffee aus der .*…“$/);
     expect(chip.getAttribute('title')).toContain(`„${text}“`);
+    expect(chip.getAttribute('title')).toContain('/karte');
+    // Web-Elemente sind Bühnen-Referenzen: nummeriert, Schlüssel nach Element-ID
+    expect(chip.querySelector('.n')).toHaveTextContent('1');
+    expect(chip.getAttribute('data-ref-key')).toBe('element:{"doc":"site","elementId":"menu-intro","page":"/karte"}');
     expect(studio.store.getState().announcement).toContain('„Frisch gerösteter');
   });
 

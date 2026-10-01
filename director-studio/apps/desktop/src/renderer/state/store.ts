@@ -4,6 +4,8 @@ import {
   insertRefAt,
   isComposerEmpty,
   normalizeRef,
+  normalizeSegments,
+  removeSegment,
   type AppSettings,
   type CheckpointDecision,
   type ComposerMessage,
@@ -21,10 +23,17 @@ import {
   type VoiceClick,
 } from '@studio/core';
 import { setLanguage, t } from '../i18n.ts';
+import { defaultCoach, readCoach, writeCoach, type CoachKey } from '../lib/coach.ts';
 import { insertSegmentsAt, trimSegments } from '../lib/composerOps.ts';
 import { labelContextFor, refChipLabel } from '../lib/labels.ts';
+import { reconcileRefNumbers, refKey } from '../lib/refNumbers.ts';
+import { formatTc } from '../lib/timecode.ts';
 import { reduceEvent } from './reducer.ts';
+import { selectUserMarkers } from './selectors.ts';
 import { initialData, initialVoice, type StudioData, type Toast, type Transport } from './types.ts';
+
+/** Dauer des Verknüpfungs-Blitzes (DESIGN.md §5). */
+export const FLASH_MS = 600;
 
 export interface StudioActions {
   init(): Promise<void>;
@@ -48,11 +57,16 @@ export interface StudioActions {
   setSecret(name: 'anthropic' | 'fal', value: string | null): Promise<void>;
   loadAuthStatus(): Promise<void>;
 
-  // Composer
+  // Composer (alle Schreibzugriffe laufen über `writeComposer`, DESIGN.md §8.7)
   setComposer(segments: ComposerSegment[], caret?: number): void;
   setCaret(position: number): void;
-  insertRef(ref: Ref): void;
+  /** Fügt eine Referenz am Caret ein. Steht ihr Schlüssel schon im Composer, blitzt der Chip stattdessen (`false`). */
+  insertRef(ref: Ref): boolean;
   insertSegments(segments: ComposerSegment[]): void;
+  /** Entfernt das Segment an `index` (Chip-×, Rücktaste, Entf) und setzt den Caret. */
+  removeComposerSegment(index: number, caret: number): void;
+  /** Entfernt alle Chips mit diesem Schlüssel (Marker entfernen, Kontextmenü). */
+  removeRefByKey(key: string): void;
   send(): Promise<void>;
   sendQueued(index?: number): Promise<void>;
   removeQueued(index: number): void;
@@ -72,6 +86,20 @@ export interface StudioActions {
   selectPage(pageId: string | null): void;
   setActiveTrack(trackId: string | null): void;
   setViewport(viewport: PreviewViewport): void;
+
+  // Referenzen und Marker (§8.7, §9.4)
+  /** Marker = Zeit-Chip am Frame (begrenzt auf 0…Dauer). Der Abspielkopf bleibt stehen. */
+  addMarkerAt(frame: number): void;
+  /** Abspielkopf zum vorigen (-1) bzw. nächsten (1) Nutzer-Marker; am Ende nur die Ansage. */
+  jumpToMarker(direction: -1 | 1): void;
+  /** Zeigt, worauf eine Referenz zeigt (Abspielkopf, Folie, Seite …), und lässt die Gegenstücke blitzen. */
+  revealRef(ref: Ref): void;
+  setHoveredRef(key: string | null): void;
+  flashRef(key: string): void;
+
+  // Einmalige Hinweise (§8.6)
+  completeCoach(key: CoachKey): void;
+  resetCoach(): void;
 
   // Versionen
   viewVersion(number: number): Promise<void>;
@@ -119,6 +147,7 @@ function viewDocument(state: StudioData): StudioDocument | null {
 export function createStudioStore(api: StudioApi): StudioStore {
   let toastCounter = 0;
   let seekNonce = 0;
+  let flashNonce = 0;
 
   const store = createStore<StudioState>()((set, get) => {
     const projectId = () => {
@@ -137,6 +166,72 @@ export function createStudioStore(api: StudioApi): StudioStore {
       }
     };
 
+    const labelContext = () => labelContextFor(viewDocument(get()), get().assets);
+    const fpsOf = () => {
+      const doc = viewDocument(get());
+      return doc?.kind === 'timeline' ? doc.fps : 30;
+    };
+
+    /**
+     * Einziger Schreibweg für den Composer (§8.7): gleicht die Nummern ab (§9.3), erhöht `composerRevision` und
+     * schließt den Marker-Hinweis, sobald es einen Zeit-Chip gibt. `numbers` ersetzt die bisherigen Nummern als
+     * Ausgangspunkt (Snapshot neu laden), `patch` wird im selben Schritt mitgeschrieben.
+     */
+    const writeComposer = (segments: ComposerSegment[], caret: number, opts: { numbers?: Record<string, number>; patch?: Partial<StudioData> } = {}) => {
+      const s = get();
+      const coach = opts.patch?.coach ?? s.coach;
+      const markerDone = coach.markerStrip === 'open' && segments.some((seg) => seg.type === 'ref' && seg.ref.kind === 'time');
+      set({
+        ...opts.patch,
+        composer: segments,
+        caret: Math.max(0, caret),
+        refNumbers: reconcileRefNumbers(opts.numbers ?? s.refNumbers, segments),
+        composerRevision: s.composerRevision + 1,
+        ...(markerDone ? { coach: { ...coach, markerStrip: 'done' as const } } : {}),
+      });
+      if (markerDone) writeCoach(get().coach);
+    };
+
+    /** Gesprochene Beschriftung: Zeit-Chips als „Marker 2 bei 00:24:00“, sonst die Chip-Beschriftung. */
+    const spokenLabel = (ref: Ref): string => {
+      if (ref.kind === 'time') {
+        const n = get().refNumbers[refKey(ref)];
+        const time = formatTc(ref.frame, fpsOf(), 'short');
+        return n ? t('ref.markerLabel', { n, time }) : time;
+      }
+      return refChipLabel(ref, labelContext());
+    };
+
+    const removedText = (ref: Ref): string => {
+      const n = get().refNumbers[refKey(ref)];
+      return ref.kind === 'time' && n ? t('stage.markerRemoved', { n }) : t('ref.removed', { label: spokenLabel(ref) });
+    };
+
+    /**
+     * Fügt eine Referenz am Caret ein (während der Aufnahme: als Klick vormerken, ohne Duplikatprüfung, §9.3).
+     * Steht der Schlüssel schon im Composer, wird nichts eingefügt: Der Chip blitzt, und die Ansage nennt ihn.
+     */
+    const addRef = (input: Ref, opts: { label?: string | undefined; announceAdded?: boolean } = {}): boolean => {
+      const ref = normalizeRef(input);
+      const state = get();
+      const announceAdded = opts.announceAdded ?? true;
+      if (state.voice.recording) {
+        get().addVoiceClick({ atMs: performance.now() - state.voice.startedAt, ref });
+        if (announceAdded) get().announce(t('stage.refAdded', { label: opts.label ?? spokenLabel(ref) }));
+        return true;
+      }
+      const key = refKey(ref);
+      if (state.composer.some((seg) => seg.type === 'ref' && refKey(seg.ref) === key)) {
+        const n = state.refNumbers[key];
+        get().flashRef(key);
+        get().announce(ref.kind === 'time' && n ? t('stage.markerExists', { n }) : t('ref.exists', { label: spokenLabel(ref) }));
+        return false;
+      }
+      writeComposer(insertRefAt(state.composer, state.caret, ref), state.caret + 1);
+      if (announceAdded) get().announce(t('stage.refAdded', { label: opts.label ?? spokenLabel(ref) }));
+      return true;
+    };
+
     const refreshDocument = async (number: number) => {
       const id = get().projectId;
       if (!id) return;
@@ -151,6 +246,7 @@ export function createStudioStore(api: StudioApi): StudioStore {
 
     return {
       ...initialData(),
+      coach: readCoach(),
 
       async init() {
         const [settings, authStatus, recent] = await Promise.all([
@@ -164,8 +260,9 @@ export function createStudioStore(api: StudioApi): StudioStore {
 
       handleEvent(event) {
         const state = get();
-        if (event.type === 'preview_pick' && state.voice.recording && event.projectId === state.projectId) {
-          get().addVoiceClick({ atMs: performance.now() - state.voice.startedAt, ref: event.ref });
+        if (event.type === 'preview_pick') {
+          // Picks aus der Web-Vorschau laufen wie Bühnenklicks über insertRef (Aufnahme, Duplikatschutz, Nummern)
+          if (state.projectId && event.projectId === state.projectId) addRef(event.ref, { label: event.label });
           return;
         }
         const patch = reduceEvent(state, event);
@@ -182,11 +279,6 @@ export function createStudioStore(api: StudioApi): StudioStore {
           case 'run_state':
             if (event.state === 'idle' && get().queue.length > 0) void get().sendQueued(0);
             break;
-          case 'preview_pick': {
-            const doc = viewDocument(get());
-            get().announce(t('stage.refAdded', { label: event.label ?? refChipLabel(event.ref, labelContextFor(doc, get().assets)) }));
-            break;
-          }
           default:
             break;
         }
@@ -242,36 +334,40 @@ export function createStudioStore(api: StudioApi): StudioStore {
         const doc = snapshot.document;
         const head = snapshot.versions.reduce((max, v) => Math.max(max, v.number), 0);
         const formats = doc?.kind === 'timeline' ? doc.formats : [];
-        set({
-          ...initialData(),
-          settings: get().settings,
-          authStatus: get().authStatus,
-          recent: get().recent,
-          models: get().models,
-          transport: get().transport,
-          overlays: get().overlays,
-          screen: 'workspace',
-          projectId: snapshot.manifest.id,
-          path: snapshot.path,
-          manifest: snapshot.manifest,
-          document: doc,
-          documentVersion: head,
-          versions: [...snapshot.versions].sort((a, b) => a.number - b.number),
-          assets: snapshot.assets,
-          usedAssetIds: snapshot.usedAssetIds,
-          budget: snapshot.budget,
-          checkpoints: snapshot.checkpoints,
-          messages: snapshot.messages,
-          generations: snapshot.generations,
-          runState: snapshot.runState,
-          question: snapshot.pendingQuestion
-            ? { questionId: snapshot.pendingQuestion.questionId, questions: snapshot.pendingQuestion.questions, runId: snapshot.pendingQuestion.runId || null }
-            : null,
-          approvals: snapshot.pendingApprovals,
-          activities: snapshot.activities,
-          formatId: formats[0]?.id ?? null,
-          selectedSlideId: doc?.kind === 'deck' ? (doc.slides[0]?.id ?? null) : null,
-          selectedPageId: doc?.kind === 'site' ? (doc.pages[0]?.id ?? null) : null,
+        writeComposer([], 0, {
+          numbers: {},
+          patch: {
+            ...initialData(),
+            settings: get().settings,
+            authStatus: get().authStatus,
+            recent: get().recent,
+            models: get().models,
+            transport: get().transport,
+            overlays: get().overlays,
+            coach: get().coach,
+            screen: 'workspace',
+            projectId: snapshot.manifest.id,
+            path: snapshot.path,
+            manifest: snapshot.manifest,
+            document: doc,
+            documentVersion: head,
+            versions: [...snapshot.versions].sort((a, b) => a.number - b.number),
+            assets: snapshot.assets,
+            usedAssetIds: snapshot.usedAssetIds,
+            budget: snapshot.budget,
+            checkpoints: snapshot.checkpoints,
+            messages: snapshot.messages,
+            generations: snapshot.generations,
+            runState: snapshot.runState,
+            question: snapshot.pendingQuestion
+              ? { questionId: snapshot.pendingQuestion.questionId, questions: snapshot.pendingQuestion.questions, runId: snapshot.pendingQuestion.runId || null }
+              : null,
+            approvals: snapshot.pendingApprovals,
+            activities: snapshot.activities,
+            formatId: formats[0]?.id ?? null,
+            selectedSlideId: doc?.kind === 'deck' ? (doc.slides[0]?.id ?? null) : null,
+            selectedPageId: doc?.kind === 'site' ? (doc.pages[0]?.id ?? null) : null,
+          },
         });
       },
 
@@ -280,13 +376,17 @@ export function createStudioStore(api: StudioApi): StudioStore {
         if (!id) return;
         const snapshot = await guarded(() => api.getSnapshot(id));
         if (!snapshot || get().projectId !== id) return;
-        const { composer, caret, queue } = get();
+        const { composer, caret, queue, refNumbers } = get();
         get().loadSnapshot(snapshot);
-        set({ composer, caret, queue, composerRevision: get().composerRevision + 1 });
+        // Composer samt Nummern übernehmen: Die Chips behalten ihre Nummern
+        writeComposer(composer, caret, { numbers: refNumbers, patch: { queue } });
       },
 
       closeProject() {
-        set({ ...initialData(), settings: get().settings, authStatus: get().authStatus, recent: get().recent, models: get().models, overlays: get().overlays });
+        writeComposer([], 0, {
+          numbers: {},
+          patch: { ...initialData(), settings: get().settings, authStatus: get().authStatus, recent: get().recent, models: get().models, overlays: get().overlays, coach: get().coach },
+        });
         void get().loadRecent();
       },
 
@@ -319,7 +419,7 @@ export function createStudioStore(api: StudioApi): StudioStore {
       // ───────────── Composer ─────────────
 
       setComposer(segments, caret) {
-        set((s) => ({ composer: segments, caret: caret ?? s.caret }));
+        writeComposer(segments, caret ?? get().caret);
       },
 
       setCaret(position) {
@@ -327,27 +427,51 @@ export function createStudioStore(api: StudioApi): StudioStore {
       },
 
       insertRef(input) {
-        const ref = normalizeRef(input);
-        const state = get();
-        if (state.voice.recording) {
-          get().addVoiceClick({ atMs: performance.now() - state.voice.startedAt, ref });
-        } else {
-          set({ composer: insertRefAt(state.composer, state.caret, ref), caret: state.caret + 1, composerRevision: state.composerRevision + 1 });
-        }
-        get().announce(t('stage.refAdded', { label: refChipLabel(ref, labelContextFor(viewDocument(get()), get().assets)) }));
+        return addRef(input);
       },
 
       insertSegments(segments) {
+        // Diktat: keine Duplikatprüfung; gleiche Schlüssel teilen sich eine Nummer (§9.3)
         const state = get();
         const result = insertSegmentsAt(state.composer, state.caret, segments);
-        set({ composer: result.segments, caret: result.caret, composerRevision: state.composerRevision + 1 });
+        writeComposer(result.segments, result.caret);
+      },
+
+      removeComposerSegment(index, caret) {
+        const segment = get().composer[index];
+        if (!segment) return;
+        const spoken = segment.type === 'ref' ? removedText(segment.ref) : null;
+        writeComposer(removeSegment(get().composer, index), caret);
+        if (spoken) get().announce(spoken);
+      },
+
+      removeRefByKey(key) {
+        const state = get();
+        const kept: ComposerSegment[] = [];
+        let removed: Ref | null = null;
+        let caret = state.caret;
+        let pos = 0;
+        for (const seg of state.composer) {
+          if (seg.type === 'ref' && refKey(seg.ref) === key) {
+            removed = seg.ref;
+            if (pos < state.caret) caret -= 1;
+          } else {
+            kept.push(seg);
+          }
+          pos += seg.type === 'text' ? seg.text.length : 1;
+        }
+        if (!removed) return;
+        const spoken = removedText(removed);
+        writeComposer(normalizeSegments(kept), caret, state.hoveredRefKey === key ? { patch: { hoveredRefKey: null } } : {});
+        get().announce(spoken);
       },
 
       async send() {
         const state = get();
         if (!state.projectId || isComposerEmpty(state.composer)) return;
         const message: ComposerMessage = { segments: trimSegments(state.composer) };
-        set({ composer: [], caret: 0, composerRevision: state.composerRevision + 1 });
+        // Nach dem Senden ist der Composer leer, also auch die Markerleiste; die Nummern beginnen neu
+        writeComposer([], 0, { patch: { hoveredRefKey: null } });
         if (state.runState === 'running') {
           set((s) => ({ queue: [...s.queue, message] }));
           return;
@@ -355,7 +479,7 @@ export function createStudioStore(api: StudioApi): StudioStore {
         try {
           await api.sendMessage(state.projectId, message);
         } catch (error) {
-          set((s) => ({ composer: message.segments, caret: 0, composerRevision: s.composerRevision + 1 }));
+          writeComposer(message.segments, 0);
           get().toast('error', errorText(error));
         }
       },
@@ -445,6 +569,119 @@ export function createStudioStore(api: StudioApi): StudioStore {
 
       setViewport(viewport) {
         set({ viewport });
+      },
+
+      // ───────────── Referenzen und Marker ─────────────
+
+      addMarkerAt(frame) {
+        const doc = viewDocument(get());
+        if (doc?.kind !== 'timeline') return;
+        const ref: Ref = { kind: 'time', frame: Math.max(0, Math.min(Math.round(frame), doc.durationFrames)) };
+        if (get().voice.recording) {
+          // Schwebender Marker: Die Nummer kommt mit der Transkription
+          addRef(ref);
+          return;
+        }
+        if (!addRef(ref, { announceAdded: false })) return;
+        const key = refKey(ref);
+        set({ lastMarkerKey: key });
+        get().announce(t('stage.markerSet', { n: get().refNumbers[key] ?? '', time: formatTc(ref.frame, doc.fps, 'short') }));
+      },
+
+      jumpToMarker(direction) {
+        const state = get();
+        const doc = viewDocument(state);
+        if (doc?.kind !== 'timeline') return;
+        const markers = selectUserMarkers(state);
+        let target = direction > 0 ? markers.find((m) => m.frame > state.playhead) : undefined;
+        if (direction < 0) for (const m of markers) if (m.frame < state.playhead) target = m;
+        if (!target) {
+          get().announce(t('stage.noMoreMarkers'));
+          return;
+        }
+        get().requestSeek(target.frame);
+        get().flashRef(target.key);
+        const time = formatTc(target.frame, doc.fps, 'short');
+        get().announce(t('ref.revealed', { label: target.n ? t('ref.markerLabel', { n: target.n, time }) : time }));
+      },
+
+      revealRef(ref) {
+        const doc = viewDocument(get());
+        const seek = (frame: number) => {
+          if (doc?.kind === 'timeline') get().requestSeek(frame);
+        };
+        switch (ref.kind) {
+          case 'time':
+            seek(ref.frame);
+            break;
+          case 'range':
+            seek(ref.from);
+            break;
+          case 'marker': {
+            const marker = doc?.kind === 'timeline' ? doc.markers.find((m) => m.id === ref.markerId) : undefined;
+            if (marker) seek(marker.frame);
+            break;
+          }
+          case 'clip': {
+            if (doc?.kind !== 'timeline') break;
+            for (const track of doc.tracks) {
+              const clip = track.clips.find((c) => c.id === ref.clipId);
+              if (!clip) continue;
+              seek(clip.start);
+              get().setActiveTrack(track.id);
+              break;
+            }
+            break;
+          }
+          case 'slide':
+            get().selectSlide(ref.slideId);
+            break;
+          case 'element':
+          case 'region': {
+            if (ref.slideId) get().selectSlide(ref.slideId);
+            else if (ref.page && doc?.kind === 'site') {
+              const page = doc.pages.find((p) => p.path === ref.page);
+              if (page) get().selectPage(page.id);
+            }
+            if (ref.kind === 'region' && ref.doc === 'timeline' && ref.frame !== undefined) seek(ref.frame);
+            break;
+          }
+          case 'version':
+            void get().viewVersion(ref.versionNumber);
+            break;
+          case 'asset':
+            // Assets: Die Asset-Leiste öffnet sich und zeigt die Karte (reagiert auf den Blitz)
+            break;
+        }
+        get().flashRef(refKey(ref));
+        get().announce(t('ref.revealed', { label: spokenLabel(ref) }));
+      },
+
+      setHoveredRef(key) {
+        if (get().hoveredRefKey !== key) set({ hoveredRefKey: key });
+      },
+
+      flashRef(key) {
+        flashNonce += 1;
+        const nonce = flashNonce;
+        set({ flash: { key, nonce } });
+        setTimeout(() => {
+          if (get().flash?.nonce === nonce) set({ flash: null });
+        }, FLASH_MS);
+      },
+
+      // ───────────── Hinweise ─────────────
+
+      completeCoach(key) {
+        const coach = get().coach;
+        if (coach[key] === 'done') return;
+        set({ coach: { ...coach, [key]: 'done' } });
+        writeCoach(get().coach);
+      },
+
+      resetCoach() {
+        set({ coach: defaultCoach() });
+        writeCoach(get().coach);
       },
 
       // ───────────── Versionen ─────────────

@@ -1,9 +1,10 @@
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { formatUsd, type Asset } from '@studio/core';
 import { useT } from '../../i18n.ts';
 import type { AssetUiStatus } from '../../lib/assets.ts';
 import { setRefDragData } from '../../lib/dnd.ts';
 import { formatDurationMs, usePeaks, waveformPath } from '../../lib/hooks.ts';
+import { refKey } from '../../lib/refNumbers.ts';
 import { useApi, useStudio } from '../../state/context.tsx';
 import { ASSET_KIND_ICONS, Icon } from '../common/Icon.tsx';
 
@@ -89,12 +90,22 @@ export const AssetCard = memo(function AssetCard({
   onInsert: (id: string) => void;
 }) {
   const t = useT();
+  // Verknüpfung (§9.4): Hover über einen Asset-Chip hebt die Karte hervor; „Zeigen“ scrollt sie ins Bild und blitzt
+  const key = refKey({ kind: 'asset', assetId: asset.id });
+  const hovered = useStudio((s) => s.hoveredRefKey === key);
+  const flashing = useStudio((s) => s.flash?.key === key);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (flashing) cardRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [flashing]);
   return (
     <div
+      ref={cardRef}
       role="listitem"
-      className={`asset-card${selected ? ' is-selected' : ''}${status === 'rejected' ? ' is-rejected' : ''}`}
+      className={`asset-card${selected ? ' is-selected' : ''}${status === 'rejected' ? ' is-rejected' : ''}${hovered ? ' is-linked' : ''}${flashing ? ' is-flash' : ''}`}
       draggable
       data-asset-id={asset.id}
+      data-ref-key={key}
       onDragStart={(e) => setRefDragData(e.dataTransfer, { kind: 'asset', assetId: asset.id }, asset.title)}
       onDoubleClick={() => onInsert(asset.id)}
     >

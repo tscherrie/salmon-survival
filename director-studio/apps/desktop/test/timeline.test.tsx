@@ -32,7 +32,10 @@ describe('Timeline-Bühne', () => {
     click(lane(container, 'V1'), xFor(372));
     expect(studio.store.getState().composer).toEqual([{ type: 'ref', ref: { kind: 'time', frame: 372 } }]);
     const editor = screen.getByTestId('composer-editor');
-    expect(editor.querySelector('.chip')).toHaveTextContent('⏱ 00:12.400');
+    const chip = editor.querySelector<HTMLElement>('.chip')!;
+    expect(chip.querySelector('.n')).toHaveTextContent('1');
+    expect(chip.querySelector('.chip-label')).toHaveTextContent('00:12:12');
+    expect(chip.dataset.refN).toBe('1');
     // Abspielkopf folgt dem Klick
     expect(studio.store.getState().playhead).toBe(372);
   });
@@ -88,7 +91,10 @@ describe('Timeline-Bühne', () => {
     fireEvent.mouseDown(clip, { clientX: xFor(500), button: 0, altKey: true });
     fireEvent.mouseUp(clip, { clientX: xFor(500), altKey: true });
     expect(studio.store.getState().composer).toEqual([{ type: 'ref', ref: { kind: 'clip', clipId: 'c_sb03', trackId: 'V1' } }]);
-    expect(screen.getByTestId('composer-editor').querySelector('.chip')).toHaveTextContent('🎬 Strophe: Tunnel');
+    const chip = screen.getByTestId('composer-editor').querySelector<HTMLElement>('.chip')!;
+    expect(chip.querySelector('.chip-label')).toHaveTextContent('Strophe: Tunnel');
+    expect(chip.querySelector('.chip-icon')).not.toBeNull();
+    expect(chip.dataset.refKey).toBe('clip:c_sb03');
   });
 
   it('Klick auf einen Marker fügt eine Marker-Referenz ein', async () => {

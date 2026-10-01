@@ -31,7 +31,9 @@ test('Demo-Projekt: Timeline-Klick → Chip → Senden → Rückfrage → Checkp
   await page.mouse.click(box.x + 260, box.y + box.height / 2);
   const editor = page.getByTestId('composer-editor');
   await expect(editor.locator('.chip')).toHaveCount(1);
-  await expect(editor.locator('.chip-time')).toContainText('⏱ 00:');
+  // Nummerierter Zeit-Chip ohne Emoji (DESIGN.md §7.7.2): Nummer 1, Timecode MM:SS:FF
+  await expect(editor.locator('.chip-time .n')).toHaveText('1');
+  await expect(editor.locator('.chip-time .chip-label')).toHaveText(/^00:\d\d:\d\d$/);
 
   // Text dahinter tippen und senden
   await editor.click();
