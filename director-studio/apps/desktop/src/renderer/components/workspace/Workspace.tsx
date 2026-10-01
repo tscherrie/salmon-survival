@@ -137,6 +137,14 @@ export function Workspace() {
   useEffect(() => {
     if (flashKey?.startsWith('asset:') && layoutRef.current.collapsed.assets) layoutRef.current.setCollapsed('assets', false);
   }, [flashKey]);
+  // Toasts stehen unten links in der Mittelzone (§7.11); sie liegen außerhalb des Rasters und lesen die Kante von hier
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--toast-x', px(layout.sideL + 16));
+    return () => {
+      root.style.removeProperty('--toast-x');
+    };
+  }, [layout.sideL]);
 
   const style = {
     '--side-l': px(layout.sideL),

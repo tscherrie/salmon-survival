@@ -1,8 +1,10 @@
 import { useEffect, useId, useState } from 'react';
 import { DIRECTOR_EFFORTS, type AppSettings, type AuthStatus, type DirectorEffort, type DirectorRuntimeId } from '@studio/core';
 import { useT, type Language } from '../../i18n.ts';
+import { useContrastMode, useThemeMode } from '../../lib/theme.ts';
 import { useActions, useStudio } from '../../state/context.tsx';
 import { Dialog } from '../common/Dialog.tsx';
+import { setTechDetails, useTechDetails } from '../director/techDetails.ts';
 import { AuthStatusPanel } from './AuthStatusPanel.tsx';
 
 const RUNTIMES: Array<DirectorRuntimeId | 'auto'> = ['auto', 'anthropic', 'agent-sdk', 'fal'];
@@ -53,6 +55,70 @@ function SecretField({ name, label, configured }: { name: 'anthropic' | 'fal'; l
         </button>
       </div>
     </div>
+  );
+}
+
+/** Segment-Auswahl (Theme, Kontrast): wirkt sofort und wird gespeichert, unabhängig von „Speichern“. */
+function Segment<V extends string>({ label, value, options, onChange }: { label: string; value: V; options: ReadonlyArray<{ id: V; label: string }>; onChange: (v: V) => void }) {
+  return (
+    <div className="settings-row">
+      <span className="settings-row-label">{label}</span>
+      <div className="seg" role="group" aria-label={label}>
+        {options.map((o) => (
+          <button key={o.id} type="button" aria-pressed={value === o.id} onClick={() => onChange(o.id)}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Gruppe „Darstellung“ (DESIGN.md §7.13): Theme, erhöhter Kontrast, technische Details im Verlauf und das Zurücksetzen
+ * der einmaligen Hinweise (§8.6). Alles wirkt sofort.
+ */
+function AppearanceSection() {
+  const t = useT();
+  const actions = useActions();
+  const [theme, setTheme] = useThemeMode();
+  const [contrast, setContrast] = useContrastMode();
+  const tech = useTechDetails();
+  const techId = useId();
+  return (
+    <section className="settings-section">
+      <h3>{t('theme.label')}</h3>
+      <Segment
+        label={t('settings.theme')}
+        value={theme}
+        options={(['dark', 'light', 'system'] as const).map((id) => ({ id, label: t(`theme.${id}`) }))}
+        onChange={setTheme}
+      />
+      <Segment
+        label={t('settings.contrast')}
+        value={contrast}
+        options={(['system', 'more', 'normal'] as const).map((id) => ({ id, label: t(`contrast.${id}`) }))}
+        onChange={setContrast}
+      />
+      <div className="toggle-row">
+        <input id={techId} type="checkbox" role="switch" checked={tech} onChange={(e) => setTechDetails(e.target.checked)} />
+        <label htmlFor={techId}>{t('settings.techDetails')}</label>
+      </div>
+      <div className="settings-row">
+        <p className="hint">{t('settings.resetHintsText')}</p>
+        <button
+          type="button"
+          className="btn sm"
+          onClick={() => {
+            actions.resetCoach();
+            actions.announce(t('settings.hintsReset'));
+            actions.toast('success', t('settings.hintsReset'));
+          }}
+        >
+          {t('settings.resetHints')}
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -139,6 +205,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               {t('settings.subscriptionHint')}
             </p>
           </section>
+          <AppearanceSection />
           <section className="settings-section settings-grid">
             <label>
               <span>{t('settings.language')}</span>

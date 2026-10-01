@@ -38,6 +38,11 @@ const de = {
   'contrast.system': 'Systemstandard',
   'contrast.more': 'An',
   'contrast.normal': 'Aus',
+  'settings.theme': 'Theme',
+  'settings.techDetails': 'Technische Details im Verlauf',
+  'settings.resetHints': 'Hinweise zurücksetzen',
+  'settings.resetHintsText': 'Die einmaligen Hinweise (Markerleiste, Zeigen im Monitor, Alt+Klick) erscheinen noch einmal.',
+  'settings.hintsReset': 'Hinweise werden wieder angezeigt.',
 
   // ── Kategorien ──
   'category.video': 'Video',
@@ -706,6 +711,11 @@ const en: Record<MessageKey, string> = {
   'contrast.system': 'System default',
   'contrast.more': 'On',
   'contrast.normal': 'Off',
+  'settings.theme': 'Theme',
+  'settings.techDetails': 'Technical details in the history',
+  'settings.resetHints': 'Reset hints',
+  'settings.resetHintsText': 'The one-time hints (marker strip, pointing in the monitor, Alt+click) appear once more.',
+  'settings.hintsReset': 'Hints will be shown again.',
 
   // ── Kategorien ──
   'category.video': 'Video',

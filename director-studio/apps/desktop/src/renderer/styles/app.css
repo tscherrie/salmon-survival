@@ -6575,7 +6575,10 @@ button.step-btn:hover {
   background: var(--hover);
 }
 
-/* Toasts (Übergang: Ort und Rückgängig folgen in §7.11) */
+/*
+ * Toasts (§7.11): im Arbeitsbereich unten links über der Bühne (`--toast-x` setzt Workspace.tsx aus --side-l), damit
+ * Monitor und Senden frei bleiben; auf dem Startbildschirm unten rechts. Icon in der Bedeutungsfarbe.
+ */
 .toasts {
   position: fixed;
   right: 16px;
@@ -6583,30 +6586,42 @@ button.step-btn:hover {
   z-index: 200;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
   max-width: 420px;
+}
+.toasts.is-workspace {
+  right: auto;
+  left: var(--toast-x, 16px);
+}
+.toasts:not(.is-workspace) {
+  align-items: flex-end;
 }
 .toast {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 6px 7px 12px;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 4px 4px 4px 12px;
   border-radius: var(--r-lg);
   background: var(--raised);
   box-shadow: var(--shadow-pop);
   font-size: 12.5px;
   animation: rise-in var(--t-med) var(--ease);
 }
-.toast span {
+.toast-text {
   flex: 1;
+  min-width: 0;
 }
-.toast .icon {
+.toast > .icon {
+  flex: none;
   color: var(--ref);
 }
-.toast-error .icon {
+.toast-error > .icon {
   color: var(--danger);
 }
-.toast-success .icon {
+.toast-success > .icon {
   color: var(--ok);
 }
 
@@ -6699,6 +6714,26 @@ button.step-btn:hover {
   width: 16px;
   height: 16px;
   accent-color: var(--text);
+}
+/* Darstellung: Zeilen aus Beschriftung links und Segment bzw. Knopf rechts */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 32px;
+  margin-top: 6px;
+}
+.settings-row-label {
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.settings-row .hint {
+  margin: 0;
+}
+.settings-row .btn {
+  flex: none;
 }
 
 /* === Entwickler-Ansicht: Bausteine (nur Dev, ?story=bausteine) === */

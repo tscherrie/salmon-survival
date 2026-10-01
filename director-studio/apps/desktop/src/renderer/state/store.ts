@@ -294,7 +294,8 @@ export function createStudioStore(api: StudioApi): StudioStore {
 
       toast(kind, text, action) {
         const id = ++toastCounter;
-        set((s) => ({ toasts: [...s.toasts, { id, kind, text, ...(action ? { action } : {}) }].slice(-5) }));
+        // Höchstens drei gleichzeitig (DESIGN.md §7.11); der älteste weicht
+        set((s) => ({ toasts: [...s.toasts, { id, kind, text, ...(action ? { action } : {}) }].slice(-3) }));
       },
 
       dismissToast(id) {
