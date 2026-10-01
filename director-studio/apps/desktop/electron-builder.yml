@@ -1,24 +1,39 @@
-# Paketierung (electron-builder). Signierung/Notarisierung über Umgebungsvariablen (CSC_LINK, APPLE_ID, …).
+# Paketierung (electron-builder). Aufruf über die Skripte im Wurzel-package.json (npm run dist, dist:dir, dist:mac,
+# dist:win), die scripts/dist.mjs nutzen: bauen → Staging (scripts/stage-app.mjs) → electron-builder → Prüfung
+# (scripts/verify-app.mjs). dist.mjs ergänzt zur Laufzeit electronVersion/electronDist, die Architektur des
+# Build-Rechners, die Electron-Fuses (kein RunAsNode/NODE_OPTIONS/--inspect, nur app.asar mit Integritätsprüfung),
+# unter macOS @loader_path für den Remotion-Compositor (afterPack) und die macOS-Signierung (ad hoc „-“ mit
+# build/entitlements.mac.adhoc.plist ohne Developer ID; mit CSC_LINK/CSC_NAME echte Signierung, mit
+# APPLE_ID/APPLE_APP_SPECIFIC_PASSWORD/APPLE_TEAM_ID bzw. APPLE_API_KEY zusätzlich Notarisierung).
+# Ein direkter Aufruf von electron-builder (ohne dist.mjs) ließe Fuses und @loader_path aus – nicht für Installationen.
 appId: studio.director.desktop
+# Muss der installierten Electron-Version entsprechen (Test: test-main/packaging.test.ts); dist.mjs setzt sie ohnehin
+# aus node_modules/electron. Steht hier, damit auch ein direkter Aufruf von electron-builder funktioniert.
+electronVersion: 44.5.1
 productName: Director Studio
+copyright: Copyright © 2026 Director Studio
+# Icons (build/icon.icns, build/icon.ico, build/icons/) erzeugt scripts/make-icons.mjs aus build/icon.svg.
 directories:
   output: release
   buildResources: build
+  # Staging-Ordner: package.json ohne dependencies + out/ (siehe scripts/stage-app.mjs).
+  app: dist/stage/app
 files:
   - out/**
   - package.json
   - "!**/*.map"
 asar: true
-asarUnpack:
-  # Native Binaries dürfen nicht im asar-Archiv liegen (Remotion-Compositor, esbuild, Claude-Code-Binary).
-  - "**/node_modules/@remotion/compositor-*/**"
-  - "**/node_modules/@esbuild/**"
-  - "**/node_modules/@anthropic-ai/claude-agent-sdk-*/**"
-  - "**/node_modules/playwright-core/**"
-  # Remotion bündelt die Komposition zur Laufzeit aus den Workspace-Quellen.
-  - "**/node_modules/@studio/**"
+# Keine Node-Module im asar: Die Laufzeitpakete liegen als resources/node_modules daneben (extraResources unten).
+# Remotion (webpack, Compositor), esbuild und der Claude-Agent-SDK starten Binaries über echte Dateipfade.
+npmRebuild: false
+nodeGypRebuild: false
 extraResources:
-  # Eigene ffmpeg/ffprobe-Builds je Plattform (LGPL, OS-Encoder) – siehe docs/director-studio/PLAN.md 19a.
+  # Laufzeitpakete in den Versionen des Lockfiles, nur mit den Plattform-Binaries des Build-Rechners.
+  - from: dist/stage/node_modules
+    to: node_modules
+    filter: ["**/*"]
+  # Optional: eigene ffmpeg/ffprobe-Builds je Plattform (LGPL, OS-Encoder) – siehe docs/director-studio/PLAN.md 19a.
+  # Fehlt der Ordner, warnt electron-builder nur („file source doesn't exist“); die App sucht ffmpeg dann im System.
   - from: vendor/ffmpeg/${os}-${arch}
     to: ffmpeg
     filter: ["**/*"]
@@ -29,19 +44,35 @@ extraResources:
     filter: ["OFL-*.txt"]
 mac:
   category: public.app-category.video
-  target:
-    - target: dmg
-      arch: [arm64]
+  # Architektur setzt dist.mjs (Build-Rechner); die nativen Pakete stammen von dort.
+  target: [dmg]
   hardenedRuntime: true
+  # Signatur-Identität setzt dist.mjs: ohne CSC_LINK/CSC_NAME ad hoc („-“, dann mit entitlements.mac.adhoc.plist),
+  # sonst die Developer ID mit diesen Entitlements.
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
+  # Das Claude-Code-Binary behält Anthropics Signatur (Notarisierung, eigene Entitlements, Code-Identität).
+  signIgnore:
+    - "/node_modules/@anthropic-ai/claude-agent-sdk-darwin-[^/]+/claude$"
   extendInfo:
     NSMicrophoneUsageDescription: "Push-to-Talk: Director Studio nimmt deine Sprachanweisungen nur auf, solange du die Taste hältst."
+dmg:
+  artifactName: "Director-Studio-${version}-${arch}.${ext}"
 win:
-  target:
-    - target: nsis
-      arch: [x64]
+  target: [nsis]
+  # Ohne Zertifikat (CSC_LINK/WIN_CSC_LINK) bleibt der Installer unsigniert – SmartScreen warnt dann (README).
 nsis:
   oneClick: false
+  perMachine: false
   allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Director Studio
+  artifactName: "Director-Studio-Setup-${version}-${arch}.${ext}"
+linux:
+  # Nur für die Prüfung der Paketierung unter Linux (keine Zielplattform des Produkts).
+  target: [tar.gz]
+  icon: build/icons
+  category: Video
+  executableName: director-studio
 publish: null

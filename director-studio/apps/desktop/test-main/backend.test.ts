@@ -7,7 +7,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { StudioEvent } from '@studio/core';
 import { DirectorSession, FakeTransport, fakeText, fakeToolUse, type FakeStep } from '@studio/director';
 import { defaultMediaToolkit } from '@studio/media';
-import { StudioBackend, type BackendDeps, type OpenProject, type PreviewPort } from '../src/main/backend.ts';
+import { spawnNodeLauncher, type NodeLauncher } from '@studio/render';
+import { StudioBackend, VITE_MISSING_NOTICE, type BackendDeps, type OpenProject, type PreviewPort } from '../src/main/backend.ts';
 import type { SecretCipher } from '../src/main/secrets.ts';
 import { CombinedCatalog, FalHub } from '../src/main/services.ts';
 
@@ -40,6 +41,7 @@ function makeBackend(extra: Partial<BackendDeps['overrides']> = {}, deps: Partia
     },
     emit: (e) => events.push(e),
     ...(deps.preview ? { preview: deps.preview } : {}),
+    ...(deps.runtime ? { runtime: deps.runtime } : {}),
     overrides: {
       agentSdkAvailable: false,
       env: {},
@@ -328,6 +330,47 @@ describe('StudioBackend – Medien, Vorschau, Export', () => {
     expect(existsSync(zip.path)).toBe(true);
     await backend.previewOpenExternal(id);
     expect(opened).toContain(url);
+    await backend.shutdown();
+  }, 60000);
+
+  it('Vite-Website ohne installiertes Vite (ausgelieferte App): statische Vorschau und ein Hinweis, warum', async () => {
+    const backend = makeBackend({ findViteBin: () => undefined });
+    const snap = await backend.createProject({ title: 'Vite ohne Vite', category: 'web', directory: root });
+    const id = snap.manifest.id;
+    const open = (backend as unknown as { projects: Map<string, OpenProject> }).projects.get(id)!;
+    await mkdir(open.store.siteDir, { recursive: true });
+    await writeFile(join(open.store.siteDir, 'package.json'), '{"name":"site","private":true,"devDependencies":{"vite":"*"}}');
+    await writeFile(join(open.store.siteDir, 'index.html'), '<html><body><h1>Statisch</h1></body></html>');
+    const { url } = await backend.previewOpen(id, { viewport: 'desktop' });
+    expect(await (await fetch(url)).text()).toContain('Statisch');
+    const notices = (await open.store.listMessages()).filter((m) => m.role === 'system' && m.text === VITE_MISSING_NOTICE);
+    expect(notices).toHaveLength(1);
+    expect(VITE_MISSING_NOTICE).toContain('npm install');
+    expect(VITE_MISSING_NOTICE).not.toMatch(/Monorepo/);
+    await backend.shutdown();
+  }, 60000);
+
+  it('Vite-Website mit Vite: startet über den Launcher der Laufzeit (in Electron: utilityProcess)', async () => {
+    const calls: string[] = [];
+    const inner = spawnNodeLauncher();
+    const nodeLauncher: NodeLauncher = (script, args, options) => {
+      calls.push(script);
+      return inner(script, args, options);
+    };
+    const backend = makeBackend({}, { runtime: { nodeLauncher } });
+    const snap = await backend.createProject({ title: 'Vite', category: 'web', directory: root });
+    const id = snap.manifest.id;
+    const open = (backend as unknown as { projects: Map<string, OpenProject> }).projects.get(id)!;
+    await mkdir(open.store.siteDir, { recursive: true });
+    await writeFile(join(open.store.siteDir, 'package.json'), '{"name":"site","private":true}');
+    await writeFile(join(open.store.siteDir, 'index.html'), '<html><body><h1>Mit Vite</h1></body></html>');
+    const { url } = await backend.previewOpen(id, { viewport: 'desktop' });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatch(/vite\.js$/);
+    const html = await (await fetch(url)).text();
+    expect(html).toContain('Mit Vite');
+    expect(html).toContain('/@vite/client');
+    expect((await open.store.listMessages()).some((m) => m.text === VITE_MISSING_NOTICE)).toBe(false);
     await backend.shutdown();
   }, 60000);
 

@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Entitlements für App und Helfer (Hardened Runtime) bei Signierung mit Developer ID. electron-builder signiert damit
+  die App (entitlements) und alle eingebetteten Programme (entitlementsInherit): Electron-Helfer, Remotion-Compositor
+  samt ffmpeg/ffprobe und dylibs, esbuild und das rspack-Binding in resources/node_modules. Alles davon bekommt dabei
+  dieselbe Team-ID, Library Validation bleibt also an. Das Claude-Code-Binary behält seine eigene Signatur
+  (signIgnore in scripts/dist.mjs).
+
+  Lokale Builds ohne Developer ID (ad hoc) nutzen entitlements.mac.adhoc.plist (zusätzlich disable-library-validation).
+-->
 <plist version="1.0">
   <dict>
-    <!-- Electron/V8 und das optionale Claude-Code-Binary (JavaScriptCore) brauchen JIT -->
+    <!-- V8 (Electron) braucht JIT -->
     <key>com.apple.security.cs.allow-jit</key>
-    <true/>
-    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
     <true/>
     <!-- Push-to-Talk -->
     <key>com.apple.security.device.audio-input</key>

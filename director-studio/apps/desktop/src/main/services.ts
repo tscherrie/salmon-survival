@@ -157,6 +157,17 @@ export interface RenderServiceOptions {
   browserExecutable?: string | undefined;
   /** Quelltext-Einstieg der Remotion-Komposition (`@studio/render/browser`); Standard: Modulauflösung. */
   browserEntry?: string | undefined;
+  /**
+   * Ausgelieferte App: Fehlt ein Chromium (`STUDIO_CHROMIUM_PATH`), lädt Remotion beim ersten Rendern seine
+   * Headless-Shell (einmalig, in den Arbeitsordner der App) und Playwright (Folien, Leinwand, Screenshots) nutzt
+   * dieselbe Datei. In der Entwicklung bleibt es bei Playwrights eigenem Browser.
+   */
+  provisionChromium?: boolean | undefined;
+  /**
+   * Stellt die Headless-Shell bereit und liefert ihren Pfad – in der App ein Hilfsprozess (`runChromiumWorker`,
+   * siehe chromium.ts: Remotions `ensureBrowser` darf nicht im Hauptprozess laufen). Pflicht mit `provisionChromium`.
+   */
+  ensureBrowser?: (() => Promise<string | undefined>) | undefined;
 }
 
 /** Findet `packages/render/src/browser.ts` (das Remotion-Bündel kompiliert die Komposition aus den Quellen). */
@@ -175,8 +186,39 @@ type RenderModule = typeof import('@studio/render');
 export class RenderService {
   private module: Promise<RenderModule> | null = null;
   private renderer: InstanceType<RenderModule['TimelineRenderer']> | null = null;
+  private chromium: Promise<string | undefined> | null = null;
 
   constructor(private readonly options: RenderServiceOptions) {}
+
+  /**
+   * Sorgt für ein Chromium vor Renderings im Browser. Mit ausdrücklichem Pfad (Option oder `STUDIO_CHROMIUM_PATH`)
+   * oder ohne `provisionChromium` passiert nichts. Sonst wird die Headless-Shell über Remotion bereitgestellt
+   * (Download nur beim ersten Mal) und als `STUDIO_CHROMIUM_PATH` für Remotion und Playwright gesetzt.
+   */
+  async ensureChromium(): Promise<string | undefined> {
+    const explicit = this.options.browserExecutable || process.env.STUDIO_CHROMIUM_PATH;
+    if (explicit) return explicit;
+    if (!this.options.provisionChromium) return undefined;
+    const ensureBrowser = this.options.ensureBrowser;
+    if (!ensureBrowser) throw new Error('Chromium für das Rendern ist nicht eingerichtet (STUDIO_CHROMIUM_PATH setzen)');
+    this.chromium ??= (async () => {
+      let path: string | undefined;
+      try {
+        path = await ensureBrowser();
+      } catch (error) {
+        throw new Error(
+          `Chromium für das Rendern konnte nicht geladen werden (einmalig ca. 100 MB, Internetverbindung nötig – danach einfach erneut versuchen): ${(error as Error).message}`,
+        );
+      }
+      if (!path) throw new Error('Chromium für das Rendern ist nicht verfügbar');
+      process.env.STUDIO_CHROMIUM_PATH = path;
+      return path;
+    })();
+    this.chromium.catch(() => {
+      this.chromium = null;
+    });
+    return this.chromium;
+  }
 
   load(): Promise<RenderModule> {
     this.module ??= import('@studio/render');
@@ -184,6 +226,7 @@ export class RenderService {
   }
 
   async timelineRenderer(): Promise<InstanceType<RenderModule['TimelineRenderer']>> {
+    await this.ensureChromium();
     const mod = await this.load();
     this.renderer ??= new mod.TimelineRenderer({
       workDir: join(this.options.workDir, 'remotion'),
@@ -276,6 +319,7 @@ export class RenderService {
   async renderDocumentPng(store: ProjectStore, input: { slideId?: string | undefined; out: string }): Promise<string> {
     const doc = await store.getDocument();
     if (!doc) throw new Error('Das Projekt hat noch kein Dokument');
+    if (doc.kind === 'deck' || doc.kind === 'canvas') await this.ensureChromium();
     const mod = await this.load();
     const assetUrl = (id: string) => assetFileUrl(store, id);
     await mkdir(dirname(input.out), { recursive: true });
@@ -297,6 +341,7 @@ export class RenderService {
   }
 
   async screenshotSite(url: string, input: { viewports: SiteViewport[]; outDir: string; path?: string | undefined }) {
+    await this.ensureChromium();
     const mod = await this.load();
     const target = input.path ? new URL(input.path, url).href : url;
     const result = await mod.screenshotSite(target, { viewports: input.viewports, outDir: input.outDir });

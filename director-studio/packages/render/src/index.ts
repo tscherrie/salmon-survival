@@ -19,7 +19,7 @@ export {
   type RenderCanvasOptions,
 } from './node/html-render.ts';
 export { deckToPptx, toPptxColor, type DeckToPptxOptions } from './node/pptx.ts';
-export { SiteServer, screenshotSite, scrubEnv, injectPickerIntoHtml, findViteBin, type SiteServerOptions, type ScreenshotSiteOptions, type ScreenshotSiteResult, type SiteViewport } from './node/site-server.ts';
+export { SiteServer, screenshotSite, scrubEnv, injectPickerIntoHtml, findViteBin, spawnNodeLauncher, type NodeChild, type NodeLauncher, type SiteServerOptions, type ScreenshotSiteOptions, type ScreenshotSiteResult, type SiteViewport } from './node/site-server.ts';
 export { buildSiteZip, createZip, type ZipEntry } from './node/zip.ts';
 export { AssetFileServer, sendFile, resolveSafePath, parseRange, mimeTypeFor, MIME_TYPES, PathError } from './node/static-server.ts';
 export { readPngSize, encodePng, makeTestPattern } from './node/png.ts';

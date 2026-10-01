@@ -74,6 +74,7 @@ export class SettingsStore {
 
 function sanitize(value: AppSettings, defaults: AppSettings): AppSettings {
   const defaultPickers = parsePickerState(value.defaultPickers);
+  const ffmpegPath = typeof value.ffmpegPath === 'string' ? value.ffmpegPath.trim() : '';
   return {
     language: value.language === 'en' ? 'en' : 'de',
     defaultEffort: (DIRECTOR_EFFORTS as readonly string[]).includes(value.defaultEffort) ? value.defaultEffort : defaults.defaultEffort,
@@ -81,5 +82,7 @@ function sanitize(value: AppSettings, defaults: AppSettings): AppSettings {
     projectsDir: typeof value.projectsDir === 'string' && value.projectsDir ? value.projectsDir : defaults.projectsDir,
     allowClaudeSubscription: value.allowClaudeSubscription === true,
     ...(Object.keys(defaultPickers).length > 0 ? { defaultPickers } : {}),
+    // Leerer Wert = automatisch suchen (siehe ffmpeg.ts); ein leerer String im Patch löscht die Angabe.
+    ...(ffmpegPath ? { ffmpegPath } : {}),
   };
 }

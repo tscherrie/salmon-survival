@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- App-Icon: Bildmarke (DESIGN.md §5) auf dunkler Kachel im macOS-Raster (824 px Kachel, 100 px Rand). -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#202023"/>
+      <stop offset="1" stop-color="#0F0F10"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.09" stroke-width="3"/>
+  <!-- Sucherklammern (24er-Raster der Bildmarke, Faktor 30) -->
+  <g transform="translate(152 152) scale(30)">
+    <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="#ECE9E4" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Tally-Punkt in Tungsten (--accent) -->
+    <circle cx="12" cy="12" r="2.6" fill="#F0A458"/>
+  </g>
+</svg>

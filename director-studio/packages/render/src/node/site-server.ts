@@ -26,22 +26,62 @@ import { PathError, resolveSafePath, sendFile } from './static-server.ts';
  *   einer app-eigenen Konfigurationsdatei in einem Temp-Ordner. Diese lädt die Konfiguration der Site
  *   (falls vorhanden), erzwingt `host: 127.0.0.1`, festen Port, `server.fs.strict` und hängt ein kleines
  *   Vite-Plugin an, das den Picker per `transformIndexHtml` einfügt. Die URL wird aus stdout gelesen.
- *   In Electron: `nodePath` auf eine Node-Laufzeit setzen (oder `ELECTRON_RUN_AS_NODE` erlauben) –
- *   langfristig im `utilityProcess` über die Vite-JS-API starten.
+ *   Den Kindprozess startet ein {@link NodeLauncher}: Standard ist `child_process.spawn` mit `nodePath`
+ *   bzw. `process.execPath` (in Electron mit `ELECTRON_RUN_AS_NODE`); die ausgelieferte App übergibt einen
+ *   Launcher mit Electrons `utilityProcess`, weil dort die Fuse `RunAsNode` aus ist.
  */
 
 export interface SiteServerOptions {
   port?: number;
   injectPicker?: boolean;
   framework?: 'html' | 'vite-react';
-  /** Nur `vite-react`: Node-Binary (Standard: `process.execPath`). */
+  /** Nur `vite-react`: Node-Binary für den Standard-Launcher (Standard: `process.execPath`). */
   nodePath?: string;
+  /** Nur `vite-react`: startet den Node-Kindprozess (Standard: {@link spawnNodeLauncher}). */
+  launcher?: NodeLauncher;
   /** Nur `vite-react`: Pfad zu `vite/bin/vite.js` (Standard: automatisch gesucht). */
   viteBin?: string;
   /** Nur `vite-react`: Startzeitlimit in ms (Standard 30000). */
   startTimeoutMs?: number;
   /** Zusätzliche (unkritische) Umgebungsvariablen für den Dev-Server. */
   env?: Record<string, string>;
+}
+
+/** Laufender Node-Kindprozess (Vite), unabhängig davon, wie er gestartet wurde. */
+export interface NodeChild {
+  readonly stdout: NodeJS.ReadableStream | null;
+  readonly stderr: NodeJS.ReadableStream | null;
+  /** Erfüllt sich mit dem Exit-Code, sobald der Prozess beendet ist; lehnt ab, wenn er gar nicht startet. */
+  readonly exited: Promise<number | null>;
+  /** Beenden (`force`: sofort, z. B. SIGKILL). */
+  kill(force?: boolean): void;
+}
+
+/** Startet `script` mit einer Node-Laufzeit (`cwd`, vollständige Umgebung `env`, stdout/stderr als Pipes). */
+export type NodeLauncher = (script: string, args: string[], options: { cwd: string; env: Record<string, string> }) => NodeChild;
+
+/** Standard-Launcher: `child_process.spawn` mit `nodePath` bzw. `process.execPath` (Electron: als Node). */
+export function spawnNodeLauncher(nodePath?: string): NodeLauncher {
+  return (script, args, { cwd, env }) => {
+    const child: ChildProcess = spawn(nodePath ?? process.execPath, [script, ...args], {
+      cwd,
+      env: { ...env, ...(process.versions.electron && !nodePath ? { ELECTRON_RUN_AS_NODE: '1' } : {}) },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    const exited = new Promise<number | null>((resolve, reject) => {
+      child.once('exit', (code) => resolve(code));
+      child.once('error', reject);
+    });
+    // Ein Startfehler wird über `exited` gemeldet; ohne Zuhörer keine „unhandled rejection“.
+    exited.catch(() => undefined);
+    return {
+      stdout: child.stdout,
+      stderr: child.stderr,
+      exited,
+      kill: (force) => void child.kill(force ? 'SIGKILL' : 'SIGTERM'),
+    };
+  };
 }
 
 const SECRET_ENV = /KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|PRIVATE|AUTH|SESSION|COOKIE/i;
@@ -151,14 +191,19 @@ export class SiteServer {
   /** Ausgaben des Dev-Servers (nur `vite-react`). */
   readonly logs: string[] = [];
   private readonly httpServer: Server | undefined;
-  private readonly child: ChildProcess | undefined;
+  private readonly child: NodeChild | undefined;
+  private childExited = false;
   private readonly tmpDir: string | undefined;
 
-  private constructor(init: { url: string; framework: 'html' | 'vite-react'; httpServer?: Server; child?: ChildProcess; tmpDir?: string; logs?: string[] }) {
+  private constructor(init: { url: string; framework: 'html' | 'vite-react'; httpServer?: Server; child?: NodeChild; tmpDir?: string; logs?: string[] }) {
     this.url = init.url;
     this.framework = init.framework;
     this.httpServer = init.httpServer;
     this.child = init.child;
+    this.child?.exited.then(
+      () => (this.childExited = true),
+      () => (this.childExited = true),
+    );
     this.tmpDir = init.tmpDir;
     if (init.logs) this.logs = init.logs;
   }
@@ -184,7 +229,7 @@ export class SiteServer {
 
   private static async startVite(root: string, opts: SiteServerOptions): Promise<SiteServer> {
     const viteBin = opts.viteBin ?? findViteBin(root);
-    if (!viteBin) throw new Error('Vite wurde nicht gefunden (weder im Site-Ordner noch im Monorepo)');
+    if (!viteBin) throw new Error('Vite ist nicht installiert – im Site-Ordner einmal „npm install“ ausführen (Node.js nötig).');
     const port = opts.port ?? (await freePort());
     const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'studio-vite-'));
     const configFile = path.join(tmpDir, 'vite.config.studio.mjs');
@@ -195,14 +240,15 @@ export class SiteServer {
       BROWSER: 'none',
       NO_COLOR: '1',
       FORCE_COLOR: '0',
-      ...(process.versions.electron && !opts.nodePath ? { ELECTRON_RUN_AS_NODE: '1' } : {}),
     };
-    const child = spawn(opts.nodePath ?? process.execPath, [viteBin, '--config', configFile, '--port', String(port), '--strictPort', '--host', '127.0.0.1'], {
-      cwd: root,
-      env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    });
+    const launch = opts.launcher ?? spawnNodeLauncher(opts.nodePath);
+    let child: NodeChild;
+    try {
+      child = launch(viteBin, ['--config', configFile, '--port', String(port), '--strictPort', '--host', '127.0.0.1'], { cwd: root, env });
+    } catch (error) {
+      await rm(tmpDir, { recursive: true, force: true });
+      throw error;
+    }
     const logs: string[] = [];
     try {
       const url = await new Promise<string>((resolve, reject) => {
@@ -221,18 +267,20 @@ export class SiteServer {
         };
         child.stdout?.on('data', onData);
         child.stderr?.on('data', onData);
-        child.once('exit', (code) => {
-          clearTimeout(timer);
-          reject(new Error(`Vite wurde beendet (Code ${code}):\n${logs.join('').slice(-2000)}`));
-        });
-        child.once('error', (err) => {
-          clearTimeout(timer);
-          reject(err);
-        });
+        child.exited.then(
+          (code) => {
+            clearTimeout(timer);
+            reject(new Error(`Vite wurde beendet (Code ${code}):\n${logs.join('').slice(-2000)}`));
+          },
+          (err: unknown) => {
+            clearTimeout(timer);
+            reject(err);
+          },
+        );
       });
       return new SiteServer({ url, framework: 'vite-react', child, tmpDir, logs });
     } catch (error) {
-      child.kill('SIGKILL');
+      child.kill(true);
       await rm(tmpDir, { recursive: true, force: true });
       throw error;
     }
@@ -246,17 +294,18 @@ export class SiteServer {
       });
     }
     const child = this.child;
-    if (child && child.exitCode === null && child.signalCode === null) {
+    if (child && !this.childExited) {
       await new Promise<void>((resolve) => {
         const timer = setTimeout(() => {
-          child.kill('SIGKILL');
+          child.kill(true);
           resolve();
         }, 3000);
-        child.once('exit', () => {
+        const done = () => {
           clearTimeout(timer);
           resolve();
-        });
-        child.kill('SIGTERM');
+        };
+        child.exited.then(done, done);
+        child.kill();
       });
     }
     if (this.tmpDir) await rm(this.tmpDir, { recursive: true, force: true });

@@ -12,11 +12,17 @@
     "app": "node apps/desktop/scripts/dev.mjs",
     "demo": "npm run -w @studio/desktop dev:web",
     "build": "node apps/desktop/scripts/build-main.mjs && npm run -w @studio/desktop build:renderer",
+    "dist": "node apps/desktop/scripts/dist.mjs",
+    "dist:dir": "node apps/desktop/scripts/dist.mjs --dir",
+    "dist:mac": "node apps/desktop/scripts/dist.mjs --mac",
+    "dist:win": "node apps/desktop/scripts/dist.mjs --win",
+    "dist:test": "node apps/desktop/scripts/dist.mjs --dir --test-fuses",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "npm run -w @studio/desktop test:e2e",
-    "test:electron": "cd apps/desktop && playwright test -c e2e-electron/playwright.config.ts"
+    "test:electron": "cd apps/desktop && playwright test -c e2e-electron/playwright.config.ts",
+    "test:packaged": "cd apps/desktop && playwright test -c e2e-electron/playwright.packaged.config.ts"
   },
   "engines": {
     "node": ">=22.13"
@@ -39,6 +45,7 @@
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "electron": "^44.5.1",
+    "electron-builder": "^26.17.0",
     "esbuild": "^0.28.2",
     "jsdom": "^30.1.1",
     "playwright": "^1.56.1",
