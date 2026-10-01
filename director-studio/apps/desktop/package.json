@@ -1,0 +1,12 @@
+{
+  "name": "@studio/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev:web": "vite --config vite.renderer.config.ts",
+    "build:renderer": "vite build --config vite.renderer.config.ts",
+    "test:e2e": "playwright test -c e2e/playwright.config.ts"
+  }
+}

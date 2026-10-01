@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+coverage/
+*.log
+.vite/
+test-results/
+playwright-report/
+.tmp/
