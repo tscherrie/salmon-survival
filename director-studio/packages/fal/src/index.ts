@@ -10,7 +10,7 @@ import { FalStorage, type FalStorageOptions } from './storage.ts';
 
 export * from './config.ts';
 export * from './errors.ts';
-export { readBody, requestJson, sleep, withQuery, type HttpResult, type RequestOptions } from './http.ts';
+export { readBody, requestJson, retryDelay, sleep, withQuery, type HttpResult, type RequestOptions } from './http.ts';
 export * from './platform.ts';
 export * from './schema.ts';
 export * from './validate.ts';

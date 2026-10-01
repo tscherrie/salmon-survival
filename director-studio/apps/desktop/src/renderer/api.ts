@@ -18,7 +18,9 @@ let fallback: FakeStudioApi | null = null;
 export function getStudioApi(): StudioApi {
   if (typeof window !== 'undefined' && window.studio) return window.studio;
   if (!fallback) {
-    fallback = new FakeStudioApi();
+    // `?large=1` legt zusätzlich ein 5-Minuten-Stresstest-Projekt an (Performance der Timeline).
+    const large = typeof location !== 'undefined' && new URLSearchParams(location.search).has('large');
+    fallback = new FakeStudioApi({ largeDemo: large });
     if (typeof window !== 'undefined') window.__studioFake = fallback;
   }
   return fallback;

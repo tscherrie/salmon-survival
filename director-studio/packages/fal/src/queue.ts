@@ -9,7 +9,7 @@ import {
   trimSlash,
 } from './config.ts';
 import { abortError, FalError, isAbortError } from './errors.ts';
-import { requestJson, sleep, withQuery } from './http.ts';
+import { requestJson, retryDelay, sleep, withQuery } from './http.ts';
 
 /**
  * Queue-Runner (submit → status → result, mit Abbruch und Wiederaufnahme). Webhooks erreichen keine lokale App,
@@ -79,6 +79,8 @@ export interface RunResult {
 }
 
 const ENDPOINT_NAMESPACES = ['workflows', 'comfy'];
+/** Echtzeit-Endpoints (WebRTC/`fal.realtime`), die laut fal-Doku nicht über die Queue laufen dürfen. */
+export const REALTIME_ONLY_ENDPOINTS: ReadonlySet<string> = new Set(['minimax/h3-max/director']);
 /** Fehlertypen, bei denen ein erneuter Versuch sinnvoll ist (fal-Doku „Request errors“). */
 const RETRYABLE_ERROR_TYPES = new Set(['request_timeout', 'startup_timeout', 'runner_disconnected', 'runner_error', 'internal_error', 'runner_scheduling_failure']);
 
@@ -192,22 +194,23 @@ export class FalQueueClient {
 
   async submit(endpointId: string, input: Record<string, unknown>, opts: { signal?: AbortSignal } = {}): Promise<QueueHandle> {
     assertEndpointId(endpointId);
+    if (REALTIME_ONLY_ENDPOINTS.has(endpointId)) {
+      throw new FalError(`„${endpointId}“ ist ein Echtzeit-Endpoint (WebRTC) und nicht über die Queue nutzbar – z. B. minimax/h3-max/text-to-video verwenden`, {
+        code: 'validation',
+      });
+    }
     const url = `${this.cfg.queueBaseUrl}/${endpointId}`;
-    const { data } = await requestJson(this.cfg, url, {
-      method: 'POST',
-      body: input ?? {},
-      headers: this.submitHeaders(),
-      signal: opts.signal,
-      context: `Einreichen bei ${endpointId}`,
-      // Nur 429 wiederholen: Bei 5xx ist unklar, ob fal den Auftrag angenommen hat (Doppelkosten vermeiden).
-      retries: 0,
-    }).catch(async (error: unknown) => {
-      if (error instanceof FalError && error.code === 'rate_limit' && !opts.signal?.aborted) {
-        await sleep(2000, opts.signal);
-        return requestJson(this.cfg, url, { method: 'POST', body: input ?? {}, headers: this.submitHeaders(), signal: opts.signal, context: `Einreichen bei ${endpointId}` });
-      }
-      throw error;
-    });
+    const send = () =>
+      requestJson(this.cfg, url, { method: 'POST', body: input ?? {}, headers: this.submitHeaders(), signal: opts.signal, context: `Einreichen bei ${endpointId}` });
+    let data: unknown;
+    try {
+      ({ data } = await send());
+    } catch (error) {
+      // Nur 429 einmal wiederholen: Bei 5xx/Netzwerkfehlern ist unklar, ob fal den Auftrag angenommen hat (Doppelkosten).
+      if (!(error instanceof FalError) || error.code !== 'rate_limit' || opts.signal?.aborted) throw error;
+      await sleep(retryDelay(error, 2000, 0), opts.signal);
+      ({ data } = await send());
+    }
     const parsed = submitResponseSchema.safeParse(data);
     if (!parsed.success) {
       throw new FalError(`fal hat beim Einreichen keine request_id geliefert (${endpointId})`, { code: 'bad_response', body: data });

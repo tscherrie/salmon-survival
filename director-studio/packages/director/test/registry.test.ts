@@ -41,7 +41,7 @@ describe('Tool-Registry', () => {
     expect(schema.type).toBe('object');
     expect(schema.additionalProperties).toBe(false);
     const items = (schema.properties as Record<string, { items: Record<string, unknown> }>).items;
-    expect(items.items.additionalProperties).toBe(false);
+    expect(items!.items.additionalProperties).toBe(false);
     expect(schema.$schema).toBeUndefined();
   });
 

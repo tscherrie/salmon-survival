@@ -267,7 +267,8 @@ export class DirectorLoop implements DirectorRuntime {
   /** Führt Tools aus: 'none' parallel, 'local'/'paid' nacheinander; Ergebnisse in Aufrufreihenfolge. */
   private async executeTools(toolUses: CanonicalToolUse[], runId: string, signal: AbortSignal): Promise<CanonicalToolResult[]> {
     const ctx = this.options.makeToolContext(runId, signal);
-    const results: Array<CanonicalToolResult | undefined> = new Array(toolUses.length);
+    // Kein `new Array(n)`: `.map` überspringt Löcher in dünn besetzten Arrays.
+    const results: Array<CanonicalToolResult | undefined> = Array.from({ length: toolUses.length }, () => undefined);
     const runOne = async (tu: CanonicalToolUse, index: number): Promise<void> => {
       this.emit({ type: 'tool_start', id: tu.id, name: tu.name, input: tu.input });
       const tool = this.toolsByName.get(tu.name);

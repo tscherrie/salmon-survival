@@ -25,6 +25,8 @@ export interface FalErrorOptions {
   /** Einzelmeldungen (z. B. Validierungsdetails aus `detail[]`). */
   details?: string[] | undefined;
   requestId?: string | undefined;
+  /** Wartezeit laut `Retry-After` (Sekunden). */
+  retryAfterSec?: number | undefined;
   cause?: unknown;
 }
 
@@ -36,6 +38,7 @@ export class FalError extends Error {
   readonly code: FalErrorCode;
   readonly details: string[];
   readonly requestId?: string | undefined;
+  readonly retryAfterSec?: number | undefined;
 
   constructor(message: string, options: FalErrorOptions = {}) {
     super(message, options.cause !== undefined ? { cause: options.cause } : undefined);
@@ -45,6 +48,7 @@ export class FalError extends Error {
     this.retryable = options.retryable ?? false;
     this.details = options.details ?? [];
     this.requestId = options.requestId;
+    this.retryAfterSec = options.retryAfterSec;
   }
 }
 
@@ -123,13 +127,14 @@ export function falErrorFromStatus(
   status: number,
   body: unknown,
   context: string,
-  options: { retryableHeader?: string | null; requestId?: string | null; secret?: string } = {},
+  options: { retryableHeader?: string | null; requestId?: string | null; secret?: string; retryAfter?: string | null } = {},
 ): FalError {
   const details = errorDetails(body).map((line) => redact(line, options.secret));
   const suffix = details.length ? `: ${details.join('; ')}` : '';
   const headerRetryable = parseRetryableHeader(options.retryableHeader);
   const requestId = options.requestId ?? undefined;
-  const base = { status, body, details, requestId };
+  const retryAfter = options.retryAfter != null && options.retryAfter.trim() !== '' ? Number(options.retryAfter) : NaN;
+  const base = { status, body, details, requestId, retryAfterSec: Number.isFinite(retryAfter) && retryAfter >= 0 ? retryAfter : undefined };
   if (status === 401) {
     return new FalError(`fal-API-Key ungültig (401) – bitte in den Einstellungen prüfen. (${context})`, { ...base, code: 'unauthorized', retryable: false });
   }

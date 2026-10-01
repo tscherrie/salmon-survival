@@ -81,6 +81,12 @@ describe('FalQueueClient.submit', () => {
     await expect(queue.submit('single', {})).rejects.toThrow(/Ungültige fal-Endpoint-ID/);
   });
 
+  it('refuses realtime-only endpoints before touching the network', async () => {
+    const fake = queueFake({ app: 'minimax/h3-max', statuses: [] });
+    await expect(new FalQueueClient({ apiKey: API_KEY, fetch: fake.fetch }).submit('minimax/h3-max/director', {})).rejects.toThrow(/Echtzeit-Endpoint/);
+    expect(fake.requests).toHaveLength(0);
+  });
+
   it('requires an API key', async () => {
     const fake = queueFake({ app: 'a/b', statuses: [] });
     await expect(new FalQueueClient({ apiKey: ' ', fetch: fake.fetch }).submit('a/b', {})).rejects.toMatchObject({ code: 'missing_key' });

@@ -9,7 +9,7 @@ import { normalizeSegments, refLabel, type ComposerSegment, type Ref, type RefLa
 
 export const ZWSP = '​';
 
-export function isChip(node: Node | null): node is HTMLElement {
+export function isChip(node: Node | null): boolean {
   return !!node && node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).dataset.ref !== undefined;
 }
 

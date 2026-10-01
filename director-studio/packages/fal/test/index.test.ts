@@ -1,3 +1,4 @@
+import type { Modality, ModelInfo } from '@studio/core';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -24,6 +25,23 @@ describe('constants', () => {
 
   it('lists all hosts the app must reach', () => {
     for (const host of ['api.fal.ai', 'queue.fal.run', 'fal.run', 'rest.fal.ai', 'rest.alpha.fal.ai', 'fal.media', '*.fal.media']) expect(FAL_HOSTS).toContain(host);
+  });
+});
+
+describe('contract compatibility', () => {
+  it('ModelRegistry fits the director ModelCatalogPort shape (mirrored here)', async () => {
+    interface ModelCatalogPortMirror {
+      list(modality?: Modality): ModelInfo[];
+      get(id: string): ModelInfo | undefined;
+      search(q: { modality?: Modality; text?: string }): ModelInfo[];
+      describe(id: string): Promise<string>;
+      getInputSchema(id: string): Promise<Record<string, unknown>>;
+      validate(id: string, input: unknown): Promise<{ ok: boolean; errors: string[] }>;
+      estimate(id: string, input: unknown): Promise<{ usd: number; basis: string; exact: boolean }>;
+    }
+    const port: ModelCatalogPortMirror = new ModelRegistry();
+    expect(port.list('voice').length).toBeGreaterThan(0);
+    expect((await port.estimate('fal-ai/lyria2', {})).usd).toBeCloseTo(0.1);
   });
 });
 

@@ -65,8 +65,7 @@ export async function requestJson<T = unknown>(cfg: ResolvedFalConfig, url: stri
       return await requestOnce<T>(cfg, url, opts);
     } catch (error) {
       if (!(error instanceof FalError) || !error.retryable || attempt >= retries || opts.signal?.aborted) throw error;
-      const retryAfter = retryAfterMs(error);
-      await sleep(retryAfter ?? (opts.retryDelayMs ?? 500) * 2 ** attempt, opts.signal);
+      await sleep(retryDelay(error, opts.retryDelayMs ?? 500, attempt), opts.signal);
       attempt++;
     }
   }
@@ -107,21 +106,20 @@ async function requestOnce<T>(cfg: ResolvedFalConfig, url: string, opts: Request
     throw new FalError(`Antwort von fal unlesbar bei ${opts.context}`, { code: 'bad_response', status: response.status, retryable: true, cause: error });
   }
   if (!response.ok) {
-    const err = falErrorFromStatus(response.status, data, opts.context, {
+    throw falErrorFromStatus(response.status, data, opts.context, {
       retryableHeader: response.headers.get('x-fal-retryable'),
       requestId: response.headers.get('x-fal-request-id'),
+      retryAfter: response.headers.get('retry-after'),
       secret: cfg.apiKey,
     });
-    const retryAfter = response.headers.get('retry-after');
-    if (retryAfter) (err as FalError & { retryAfterSec?: number }).retryAfterSec = Number(retryAfter);
-    throw err;
   }
   return { data: data as T, status: response.status, headers: response.headers };
 }
 
-function retryAfterMs(error: FalError): number | undefined {
-  const seconds = (error as FalError & { retryAfterSec?: number }).retryAfterSec;
-  return seconds !== undefined && Number.isFinite(seconds) && seconds >= 0 ? Math.min(seconds, 60) * 1000 : undefined;
+/** Wartezeit vor einem neuen Versuch: `Retry-After` (max. 60 s), sonst exponentiell. */
+export function retryDelay(error: FalError, baseMs: number, attempt: number): number {
+  if (error.retryAfterSec !== undefined) return Math.min(error.retryAfterSec, 60) * 1000;
+  return baseMs * 2 ** attempt;
 }
 
 /** Hängt Query-Parameter an eine URL an (bestehende Query bleibt erhalten). */

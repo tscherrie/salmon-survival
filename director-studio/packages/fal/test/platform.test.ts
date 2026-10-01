@@ -199,6 +199,16 @@ describe('error mapping', () => {
     expect(requests).toHaveLength(3);
   });
 
+  it('honours Retry-After instead of the exponential backoff', async () => {
+    const { platform, requests } = client((_req, i) => (i === 0 ? json({ detail: 'rate' }, { status: 429, headers: { 'retry-after': '0' } }) : json({ models: [] })), {
+      retryDelayMs: 60_000,
+    });
+    const started = Date.now();
+    await platform.listModels();
+    expect(Date.now() - started).toBeLessThan(5_000);
+    expect(requests).toHaveLength(2);
+  });
+
   it('marks 429 as retryable when retries are exhausted', async () => {
     const { platform } = client(() => json({ detail: 'rate' }, { status: 429 }), { retries: 0 });
     await expect(platform.listModels()).rejects.toMatchObject({ code: 'rate_limit', retryable: true, status: 429 });
