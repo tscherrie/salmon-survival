@@ -3,8 +3,13 @@ import { z } from 'zod';
 import { Validator, type Schema } from '@cfworker/json-schema';
 import { ApiError, type WorkerEnv } from './storage.ts';
 import { handleApi, json, models, serviceFor, updateSettings } from './http.ts';
+import { NATIVE_UI_BUILD_ID } from './generated/ui-build.ts';
 
-export const EDITOR_RESOURCE = 'ui://director-studio/editor.html';
+export const LEGACY_EDITOR_RESOURCE = 'ui://director-studio/editor.html';
+export const EDITOR_RESOURCE = `ui://director-studio/editor-${NATIVE_UI_BUILD_ID}.html`;
+// MCP 2026-07-28 requires explicit caching hints on discovery and resource results.
+// Re-fetch within the requesting authorization context while native UI changes ship.
+const cacheHints = { ttlMs: 0, cacheScope: 'private' } as const;
 const s = { type: 'string' };
 const o = { type: 'object', additionalProperties: true };
 const a = { type: 'array', items: s };
@@ -75,18 +80,18 @@ export async function handleMcp(request: Request, env: WorkerEnv): Promise<Respo
     if (rpc.id === undefined) return new Response(null, { status: 202 });
     switch (rpc.method) {
       case 'initialize': result = { protocolVersion: args.protocolVersion === '2026-07-28' ? '2026-07-28' : '2025-11-25', serverInfo: { name: 'director-studio', version: '0.1.0' }, capabilities, instructions: 'You are the Director through this native host model and conversation. Read the project brief and current document/head before editing. Preserve questions and checkpoints; only the user approves them. Apply validated operations with expectedHead. Media generations use the separately installed official Fal plugin: obtain its current schema and quote, prepare_generation, wait for explicit user approval, submit through Fal, import outputs and record actual request receipts. Never substitute quoted estimates for actual billing. Do not read host Fal credentials, run a separate inference loop, or invent native Library/catalog access. Queued browser render jobs require the open editor; read their persistent completion/error receipts.' }; break;
-      case 'server/discover': result = { resultType: 'complete', supportedVersions: ['2026-07-28','2025-11-25'], _meta: { 'io.modelcontextprotocol/serverInfo': { name: 'director-studio', version: '0.1.0' } }, capabilities }; break;
+      case 'server/discover': result = { ...cacheHints, supportedVersions: ['2026-07-28','2025-11-25'], _meta: { 'io.modelcontextprotocol/serverInfo': { name: 'director-studio', version: '0.1.0' } }, capabilities }; break;
       case 'ping': result = {}; break;
-      case 'tools/list': result = { tools: MCP_TOOLS }; break;
-      case 'resources/list': result = { resources: [{ uri: EDITOR_RESOURCE, name: 'Studio Editor', mimeType: 'text/html;profile=mcp-app' }] }; break;
+      case 'tools/list': result = { ...cacheHints, tools: MCP_TOOLS }; break;
+      case 'resources/list': result = { ...cacheHints, resources: [{ uri: EDITOR_RESOURCE, name: 'Studio Editor', mimeType: 'text/html;profile=mcp-app' }] }; break;
       case 'resources/read': {
-        if (args.uri !== EDITOR_RESOURCE) throw new ApiError(404, 'RESOURCE_NOT_FOUND', 'Resource not found.');
+        if (args.uri !== EDITOR_RESOURCE && args.uri !== LEGACY_EDITOR_RESOURCE) throw new ApiError(404, 'RESOURCE_NOT_FOUND', 'Resource not found.');
         const staticBinding = env.ASSETS ?? env.UI; if (!staticBinding) throw new ApiError(503, 'UI_UNAVAILABLE', 'The deployed UI static binding is unavailable.');
         const url = new URL(request.url); const response = await staticBinding.fetch(new Request(new URL('/native.html', url))); if (!response.ok) throw new ApiError(503, 'UI_UNAVAILABLE', 'The deployed self-contained editor HTML is unavailable.');
         // The base only resolves package paths; no boot asset is fetched from it.
         const html = (await response.text()).replace(/<head>/i, `<head><base href="${url.origin}/">`);
-        console.info('director.ui.resource', {uri:EDITOR_RESOURCE,bytes:new TextEncoder().encode(html).byteLength,delivery:'self-contained'});
-        result = { contents: [{ uri: EDITOR_RESOURCE, mimeType: 'text/html;profile=mcp-app', text: html, _meta: { 'openai/ui': OpenAIUiResourceMetadataSchema.parse({ availableDisplayModes: ['fullscreen'], preferredDisplayMode: 'fullscreen' }), ui: { csp: { connectDomains: ['https://esm.sh'], resourceDomains: ['https://esm.sh'], frameDomains: [url.origin], baseUriDomains:[url.origin] } } } }] }; break;
+        console.info('director.ui.resource', {uri:args.uri,buildId:NATIVE_UI_BUILD_ID,bytes:new TextEncoder().encode(html).byteLength,delivery:'self-contained'});
+        result = { ...cacheHints, contents: [{ uri: args.uri, mimeType: 'text/html;profile=mcp-app', text: html, _meta: { 'openai/ui': OpenAIUiResourceMetadataSchema.parse({ availableDisplayModes: ['fullscreen'], preferredDisplayMode: 'fullscreen' }), ui: { csp: { connectDomains: ['https://esm.sh'], resourceDomains: ['https://esm.sh'], frameDomains: [url.origin], baseUriDomains:[url.origin] } } } }] }; break;
       }
       case 'tools/call': {
         const name = z.string().parse(args.name); const params = z.record(z.string(),z.unknown()).parse(args.arguments ?? {});
@@ -126,7 +131,7 @@ export async function handleMcp(request: Request, env: WorkerEnv): Promise<Respo
       }
       default: return json({ jsonrpc: '2.0', id: rpcId, error: { code: -32601, message: 'Method not found.' } });
     }
-    return json({ jsonrpc: '2.0', id: rpcId, result });
+    return json({ jsonrpc: '2.0', id: rpcId, result: { resultType: 'complete', ...result as Record<string, unknown> } });
   } catch (error) {
     const auth = error instanceof ApiError && error.status === 401;
     return json({ jsonrpc: '2.0', id: rpcId, error: { code: auth ? -32001 : -32602, message: error instanceof Error ? error.message : 'Invalid MCP request.' } }, auth ? 401 : 200);

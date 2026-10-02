@@ -45,7 +45,7 @@ export function selectionText(input: SelectionContext): string {
 }
 
 export class DirectorHostBridge {
-  readonly app = new App({ name: 'AI Director Studio', version: '0.1.0' });
+  readonly app = new App({ name: 'AI Director Studio', version: '0.1.0' }, { availableDisplayModes: ['inline', 'fullscreen'] });
   readonly extensions = new OpenAIExtensions(this.app);
   private listeners = new Set<() => void>();
   private ready: Promise<void> | undefined;
@@ -93,8 +93,10 @@ export class DirectorHostBridge {
       applyHost();
       const host = this.app.getHostContext();
       if (host?.displayMode === 'inline' && host.availableDisplayModes?.includes('fullscreen')) {
-        const displayed=await this.app.requestDisplayMode({ mode: 'fullscreen' });
-        this.updateStatus({displayMode:displayed.mode});
+        // Project data can load as soon as the handshake completes, even while the host changes its container.
+        void this.app.requestDisplayMode({ mode: 'fullscreen' }, { timeout: 5000 })
+          .then((displayed) => this.updateStatus({ displayMode: displayed.mode }))
+          .catch((error) => this.updateStatus({ error: error instanceof Error ? error.message : String(error) }));
       }
     } catch (error) {
       this.updateStatus({ error: error instanceof Error ? error.message : String(error) });

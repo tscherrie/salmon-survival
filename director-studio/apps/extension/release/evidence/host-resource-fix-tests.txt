@@ -1,0 +1,17 @@
+
+> director-studio@0.1.0 extension:test
+> npm run -w @studio/extension test
+
+
+> @studio/extension@0.1.0 test
+> vitest run --config vitest.config.ts
+
+
+ RUN  v5.0.3 <workspace>/director-studio/apps/extension
+
+
+ Test Files  4 passed (4)
+      Tests  54 passed (54)
+   Start at  04:23:29
+   Duration  2.74s (tests 37%, environment 29%, import 18%, transform 17%)
+

@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Validator, type Schema } from '@cfworker/json-schema';
 import { createDocument } from '@studio/core';
 import { CloudStore } from '../storage.ts';
 import { DirectorService, safeRemoteUrl } from '../service.ts';
 import worker from '../worker.ts';
 import { beginUpload,uploadChunk,completeUpload } from '../transfers.ts';
 import { handleApi } from '../http.ts';
-import { EDITOR_RESOURCE, handleMcp, MCP_TOOLS } from '../mcp.ts';
+import { EDITOR_RESOURCE, LEGACY_EDITOR_RESOURCE, handleMcp, MCP_TOOLS } from '../mcp.ts';
+import { NATIVE_UI_BUILD_ID } from '../generated/ui-build.ts';
+import cacheableResultSchemas from './fixtures/mcp-2026-07-28-cacheable-results.json';
 import { environment, request } from './emulator.ts';
 const owner = { id:'alice',email:'alice@example.test' };
 function service(env = environment(), who = owner) { return new DirectorService(new CloudStore(env.DB, who),env); }
@@ -77,6 +80,39 @@ describe('approval and Fal provenance',()=>{
  it('imports existing paid Fal receipt idempotently without approving or charging again',async()=>{const fetch=vi.fn(async()=>new Response(new Uint8Array([1,2,3,4]),{headers:{'content-type':'video/mp4'}}));vi.stubGlobal('fetch',fetch);const svc=service();const c=await create(svc);const receipt={url:'https://v3b.fal.media/files/test.mp4',endpointId:'minimax/h3-max/text-to-video',requestId:'prior-paid-job',estimateUsd:0.125};const first:any=await svc.action(c.manifest.id,'importFalResult',receipt);const again:any=await svc.action(c.manifest.id,'importFalResult',receipt);expect(again.alreadyImported).toBe(true);expect(again.assets[0].id).toBe(first.assets[0].id);expect(fetch).toHaveBeenCalledTimes(1);const s=await svc.get(c.manifest.id);expect(s.generations).toHaveLength(1);expect(s.assets).toHaveLength(1);expect(s.pendingApprovals).toEqual([]);expect(s.budget.spentUsd).toBe(0);expect(s.budget.reservedUsd).toBe(0);expect(first.actualBillingKnown).toBe(false);});
 });
 describe('persistent jobs, binary storage and platform contract',()=>{
+ it('returns cacheable envelopes accepted by the upstream MCP 2026-07-28 result schemas',async()=>{
+  const env=environment();env.ASSETS={fetch:async()=>new Response('<html><head></head><body>Editor</body></html>')};
+  const cases=[['server/discover','DiscoverResult',{}],['tools/list','ListToolsResult',{}],['resources/list','ListResourcesResult',{}],['resources/read','ReadResourceResult',{uri:EDITOR_RESOURCE}]] as const;
+  for(const [method,definition,input] of cases){
+   const {body}=await rpc(env,method,{...input,_meta:{'io.modelcontextprotocol/protocolVersion':'2026-07-28','io.modelcontextprotocol/clientCapabilities':{}}});
+   const validator=new Validator({...cacheableResultSchemas,$ref:`#/$defs/${definition}`} as Schema,'2020-12');
+   expect(body.result,method).toMatchObject({resultType:'complete',ttlMs:0,cacheScope:'private'});
+   expect(validator.validate(body.result),method).toMatchObject({valid:true});
+   for(const missing of ['ttlMs','cacheScope','resultType']){
+    const incomplete={...body.result};delete incomplete[missing];
+    expect(validator.validate(incomplete).valid,`${method} missing ${missing}`).toBe(false);
+   }
+   expect(validator.validate({...body.result,ttlMs:-1}).valid,`${method} negative TTL`).toBe(false);
+   expect(validator.validate({...body.result,cacheScope:'shared'}).valid,`${method} invalid scope`).toBe(false);
+  }
+  const called=(await rpc(env,'tools/call',{name:'list_projects'},'alice')).body.result;
+  expect(called.resultType).toBe('complete');expect(called.ttlMs).toBeUndefined();expect(called.cacheScope).toBeUndefined();
+ });
+ it('uses the native HTML build hash consistently and preserves reads of the legacy UI URI',async()=>{
+  const env=environment();env.ASSETS={fetch:async()=>new Response('<html><head></head><body>Editor</body></html>')};
+  expect(NATIVE_UI_BUILD_ID).toMatch(/^[a-f0-9]{64}$/);
+  expect(EDITOR_RESOURCE).toBe(`ui://director-studio/editor-${NATIVE_UI_BUILD_ID}.html`);
+  const listed=(await rpc(env,'resources/list')).body.result.resources;
+  expect(listed).toHaveLength(1);expect(listed[0].uri).toBe(EDITOR_RESOURCE);
+  const opening=(await rpc(env,'tools/list')).body.result.tools.find((t: {name:string})=>t.name==='director_open');
+  expect(opening._meta.ui.resourceUri).toBe(EDITOR_RESOURCE);
+  const current=(await rpc(env,'resources/read',{uri:EDITOR_RESOURCE})).body.result;
+  const legacy=(await rpc(env,'resources/read',{uri:LEGACY_EDITOR_RESOURCE})).body.result;
+  expect(current.contents[0].uri).toBe(EDITOR_RESOURCE);expect(legacy.contents[0].uri).toBe(LEGACY_EDITOR_RESOURCE);
+  expect(legacy.contents[0].text).toBe(current.contents[0].text);
+  expect(legacy).toMatchObject({resultType:'complete',ttlMs:0,cacheScope:'private'});
+  expect((await rpc(env,'resources/read',{uri:'ui://director-studio/unknown.html'})).body.error).toBeDefined();
+ });
  it('leases persistent job to one editor and rejects other executor completion',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const pid=c.manifest.id;const job:any=await svc.action(pid,'createJob',{kind:'render_still',input:{frame:0}});expect(job.projectVersion).toBe(1);expect(await svc.action(pid,'claimJob',{jobId:job.id,executorId:'editor-one'})).toMatchObject({claimed:true});expect(await service(env).action(pid,'claimJob',{jobId:job.id,executorId:'editor-two'})).toMatchObject({claimed:false});await expect(svc.action(pid,'updateJob',{jobId:job.id,executorId:'editor-two',patch:{status:'completed'}})).rejects.toMatchObject({code:'JOB_LEASE_LOST'});await svc.action(pid,'updateJob',{jobId:job.id,executorId:'editor-one',patch:{status:'completed',output:{assetIds:['a']}}});expect((await service(env).get(pid)).jobs[0]?.status).toBe('completed');expect(await svc.action(pid,'claimJob',{jobId:job.id,executorId:'editor-two'})).toMatchObject({claimed:false});});
  it('returns byte ranges and a repair error when binary is missing',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const a=await svc.upload(c.manifest.id,new Uint8Array([1,2,3,4,5]),'clip.mp4','video/mp4');const req=request(`/api/projects/${c.manifest.id}/assets/${a.id}`,'GET',undefined,'alice');req.headers.set('range','bytes=1-3');const range=await handleApi(req,env);expect(range.status).toBe(206);expect(range.headers.get('content-range')).toBe('bytes 1-3/5');expect([...new Uint8Array(await range.arrayBuffer())]).toEqual([2,3,4]);env.MEDIA.objects.clear();expect((await handleApi(request(`/api/projects/${c.manifest.id}/assets/${a.id}`,'GET',undefined,'alice'),env)).status).toBe(409);});
  it('deduplicates content and isolates user R2 object paths',async()=>{const env=environment();const a=service(env);const c=await create(a);const one=await a.upload(c.manifest.id,new Uint8Array([7,8]),'same.wav','audio/wav');const two=await a.upload(c.manifest.id,new Uint8Array([7,8]),'same.wav','audio/wav');expect(two.id).toBe(one.id);expect((await a.get(c.manifest.id)).assets).toHaveLength(1);const b=service(env,{id:'bob',email:'bob@example.test'});const other=await create(b);const item=await b.upload(other.manifest.id,new Uint8Array([7,8]),'same.wav','audio/wav');expect(item.path).not.toBe(one.path);});
