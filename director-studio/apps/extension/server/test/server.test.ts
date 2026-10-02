@@ -15,6 +15,105 @@ function service(env = environment(), who = owner) { return new DirectorService(
 async function create(svc: DirectorService, category = 'video') { return svc.create({ title:'Test Film',category }); }
 async function rpc(env: ReturnType<typeof environment>, method: string, params: unknown = {}, who?: string) { const response = await handleMcp(request('/mcp','POST',{jsonrpc:'2.0',id:1,method,params},who),env); return { response, body: await response.json() as any }; }
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+describe('OpenAI domain verification route', () => {
+ const challengePath = '/.well-known/openai-apps-challenge';
+ const syntheticChallenge = 'synthetic-domain-proof-Å-test';
+ function isolatedEnv() {
+  const env = environment();
+  env.DIRECTOR_OPENAI_APPS_CHALLENGE = syntheticChallenge;
+  const prepare = vi.spyOn(env.DB, 'prepare');
+  const batch = vi.spyOn(env.DB, 'batch');
+  const get = vi.spyOn(env.MEDIA, 'get');
+  const put = vi.spyOn(env.MEDIA, 'put');
+  const assets = vi.fn(async () => new Response('static fallback', { status: 404 }));
+  env.ASSETS = { fetch: assets };
+  return { env, assertNoStorageOrStatic() { for (const spy of [prepare, batch, get, put, assets]) expect(spy).not.toHaveBeenCalled(); } };
+ }
+ it('returns only the exact configured synthetic plaintext anonymously without touching storage', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  const response = await worker.fetch(request(challengePath), env);
+  expect(response.status).toBe(200);
+  expect(await response.text()).toBe(syntheticChallenge);
+  expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+  expect(response.headers.get('cache-control')).toBe('no-store');
+  expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+  expect(response.headers.get('content-length')).toBe(String(new TextEncoder().encode(syntheticChallenge).length));
+  expect(response.headers.get('set-cookie')).toBeNull();
+  assertNoStorageOrStatic();
+ });
+ it('returns the same proof headers for HEAD with no body or storage access', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  const get = await worker.fetch(request(challengePath), env);
+  const head = await worker.fetch(request(challengePath, 'HEAD'), env);
+  expect(head.status).toBe(200);
+  expect([...head.headers]).toEqual([...get.headers]);
+  expect(head.body).toBeNull();
+  expect(await head.text()).toBe('');
+  assertNoStorageOrStatic();
+ });
+ it('fails closed with 404 when the runtime key is absent or empty rather than serving the static fallback', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  for (const value of [undefined, '']) {
+   env.DIRECTOR_OPENAI_APPS_CHALLENGE = value;
+   for (const method of ['GET', 'HEAD']) {
+    const response = await worker.fetch(request(challengePath, method), env);
+    expect(response.status).toBe(404);
+    expect(response.body).toBeNull();
+    expect(response.headers.get('cache-control')).toBe('no-store');
+   }
+  }
+  assertNoStorageOrStatic();
+ });
+ it('rejects other methods with the exact allowed methods and no secret body', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
+   const response = await worker.fetch(request(challengePath, method), env);
+   expect(response.status).toBe(405);
+   expect(response.headers.get('allow')).toBe('GET, HEAD');
+   expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+   expect(response.body).toBeNull();
+  }
+  assertNoStorageOrStatic();
+ });
+ it('does not expose the proof on query-bearing URLs, including an empty query', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  for (const suffix of ['?', '?probe=1', '?token=synthetic', '#fragment']) {
+   for (const method of ['GET', 'HEAD']) {
+    const response = await worker.fetch(request(challengePath + suffix, method), env);
+    expect(response.status).toBe(404);
+    expect(response.body).toBeNull();
+   }
+  }
+  assertNoStorageOrStatic();
+ });
+ it('keeps nearby paths on the normal static route without exposing the configured proof', async () => {
+  const { env } = isolatedEnv();
+  for (const path of [challengePath + '/', challengePath + '.txt', '/.well-known/%6fpenai-apps-challenge', '/other/openai-apps-challenge']) {
+   const response = await worker.fetch(request(path), env);
+   expect(response.status).toBe(404);
+   expect(await response.text()).toBe('static fallback');
+  }
+  expect(env.ASSETS!.fetch).toHaveBeenCalledTimes(4);
+ });
+ it('keeps anonymous project APIs and an existing private asset unauthorized when the public proof is configured', async () => {
+  const env = environment(), svc = service(env), project = await create(svc);
+  const asset = await svc.upload(project.manifest.id, new Uint8Array([1, 2, 3]), 'private.wav', 'audio/wav');
+  env.DIRECTOR_OPENAI_APPS_CHALLENGE = syntheticChallenge;
+  const prepare = vi.spyOn(env.DB, 'prepare'), get = vi.spyOn(env.MEDIA, 'get');
+  const paths = ['/api/projects', '/api/settings', `/api/projects/${project.manifest.id}`, `/api/projects/${project.manifest.id}/assets/${asset.id}`];
+  for (const path of paths) {
+   const anonymous = request(path);
+   anonymous.headers.set('authorization', 'Bearer synthetic-untrusted-credential');
+   anonymous.headers.set('x-user-id', 'alice');
+   const response = await worker.fetch(anonymous, env);
+   expect(response.status).toBe(401);
+   expect(await response.json()).toMatchObject({ code: 'AUTH_REQUIRED' });
+  }
+  const partial = request(paths[3]!); partial.headers.set('oai-authenticated-user-id', 'alice');
+  expect((await worker.fetch(partial, env)).status).toBe(401);
+  expect(prepare).not.toHaveBeenCalled(); expect(get).not.toHaveBeenCalled();
+ });
+});
 describe('component source and cancellation history', () => {
  it('retains distinct identical component records and owned derived lineage', async () => {
   const env=environment(), svc=service(env), project=await create(svc), pid=project.manifest.id;

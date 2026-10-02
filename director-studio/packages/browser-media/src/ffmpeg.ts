@@ -3,9 +3,11 @@ import { BrowserCapabilityError, checkAbort } from './types.ts';
 import { hasBrowserRuntimeReader, readRuntimeFile } from './runtime.ts';
 import { ClassicFFmpeg, type MediaProcessor } from './classic-ffmpeg.ts';
 
-let runtime = { coreURL: '/runtime/ffmpeg/ffmpeg-core.js', classicCoreURL: '/runtime/ffmpeg/ffmpeg-core-classic.js', wasmURL: '/runtime/ffmpeg/ffmpeg-core.wasm.json', classWorkerURL: '/runtime/ffmpeg/worker.js' };
+let runtime = { coreURL: '/runtime/ffmpeg/ffmpeg-core.js', classicCoreURL: '/runtime/ffmpeg/ffmpeg-core-classic.js', wasmURL: '/runtime/ffmpeg/ffmpeg-core.wasm.json', classicWasmURL: '/runtime/ffmpeg/ffmpeg-core-classic.wasm.json', classWorkerURL: '/runtime/ffmpeg/worker.js' };
 /** The app ships these runtime assets on its own origin. No credential or CDN dependency. */
-export function configureMediaRuntime(value: Partial<typeof runtime>): void { runtime = { ...runtime, ...value }; }
+export function configureMediaRuntime(value: Partial<typeof runtime>): void {
+  runtime = { ...runtime, ...value, ...(value.wasmURL !== undefined && value.classicWasmURL === undefined ? { classicWasmURL: value.wasmURL } : {}) };
+}
 interface WasmChunk { url: string; bytes: number; sha256: string }
 interface WasmManifest { version: 1; bytes: number; sha256: string; chunks: WasmChunk[] }
 const hashPattern = /^[a-f0-9]{64}$/i;
@@ -24,7 +26,7 @@ function checkedManifest(raw: unknown): WasmManifest {
   if (bytes !== value.bytes) throw new Error('WASM-Manifest: Gesamtgröße stimmt nicht mit Teilstücken überein');
   return value as WasmManifest;
 }
-/** Assemble the owned runtime, verifying every chunk and the complete binary before execution. */
+/** Assemble the bundled runtime, verifying every chunk and the complete binary before execution. */
 export async function loadWasmRuntime(manifestUrl: URL, signal?: AbortSignal): Promise<Blob> {
   checkAbort(signal);
   const response = await readRuntimeFile(manifestUrl, signal);
@@ -58,7 +60,7 @@ export async function withFFmpeg<T>(task: (ffmpeg: MediaProcessor) => Promise<T>
     let loadTimer: ReturnType<typeof setTimeout> | undefined;
     const guardedLoad = (options: Parameters<FFmpeg['load']>[0]) => Promise.race([ff.load(options), new Promise<never>((_, reject) => { loadTimer = setTimeout(() => { reject(new Error('FFmpeg-Runtime konnte nach 30 Sekunden nicht starten (Worker-CSP, CORS oder WASM)')); ff.terminate(); }, 30000); })]);
     try {
-      const wasmBlob = await loadWasmRuntime(new URL(runtime.wasmURL, document.baseURI), signal), wasmUrl = URL.createObjectURL(wasmBlob); urls.push(wasmUrl);
+      const wasmBlob = await loadWasmRuntime(new URL(classic ? runtime.classicWasmURL : runtime.wasmURL, document.baseURI), signal), wasmUrl = URL.createObjectURL(wasmBlob); urls.push(wasmUrl);
       if (classic || new URL(runtime.classWorkerURL, document.baseURI).origin !== location.origin) await guardedLoad({ classWorkerURL: await loadUrl(runtime.classWorkerURL, 'text/javascript'), coreURL: await loadUrl(classic ? runtime.classicCoreURL : runtime.coreURL, 'text/javascript'), wasmURL: wasmUrl });
       else await guardedLoad({ classWorkerURL: new URL(runtime.classWorkerURL, document.baseURI).href, coreURL: new URL(runtime.coreURL, document.baseURI).href, wasmURL: wasmUrl });
     }

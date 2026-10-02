@@ -4,6 +4,18 @@ import type { WorkerEnv } from './storage.ts';
 export default {
   async fetch(request: Request, env: WorkerEnv): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === '/.well-known/openai-apps-challenge') {
+      const headers = new Headers({ 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        headers.set('allow', 'GET, HEAD');
+        return new Response(null, { status: 405, headers });
+      }
+      // Only this exact resource exposes the runtime secret. No static SPA fallback,
+      // identity lookup or project storage is involved, including when it is unset.
+      if (url.href !== `${url.origin}${url.pathname}` || !env.DIRECTOR_OPENAI_APPS_CHALLENGE) return new Response(null, { status: 404, headers });
+      headers.set('content-length', String(new TextEncoder().encode(env.DIRECTOR_OPENAI_APPS_CHALLENGE).length));
+      return new Response(request.method === 'HEAD' ? null : env.DIRECTOR_OPENAI_APPS_CHALLENGE, { headers });
+    }
     if (url.pathname === '/mcp') {
       if (request.method === 'POST') return handleMcp(request, env);
       // Stateless Streamable HTTP: no session or long lived SSE channel.

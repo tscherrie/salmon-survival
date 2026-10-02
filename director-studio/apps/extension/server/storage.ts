@@ -22,7 +22,7 @@ export interface R2Bucket {
   get(key: string, options?: { range?: Headers }): Promise<R2Object | null>;
 }
 export interface StaticFetcher { fetch(request: Request): Promise<Response>; }
-export interface WorkerEnv { DB: D1Database; MEDIA: R2Bucket; ASSETS?: StaticFetcher; UI?: StaticFetcher; MAX_IMPORT_BYTES?: string; }
+export interface WorkerEnv { DB: D1Database; MEDIA: R2Bucket; ASSETS?: StaticFetcher; UI?: StaticFetcher; MAX_IMPORT_BYTES?: string; DIRECTOR_OPENAI_APPS_CHALLENGE?: string; }
 export interface UserIdentity { id: string; email: string; }
 export class ApiError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message); }

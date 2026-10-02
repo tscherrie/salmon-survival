@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "variants": {
+    "esm": {
+      "jsSha256": "REPLACE_WITH_MANIFEST_ESM_JS_SHA256",
+      "wasmSha256": "REPLACE_WITH_MANIFEST_ESM_WASM_SHA256"
+    },
+    "classic": {
+      "jsSha256": "REPLACE_WITH_MANIFEST_CLASSIC_JS_SHA256",
+      "wasmSha256": "REPLACE_WITH_MANIFEST_CLASSIC_WASM_SHA256"
+    }
+  },
+  "checks": {
+    "opaqueClassic": true,
+    "esmRoundTrip": true,
+    "h264AacExport": true,
+    "cancelRecovery": true
+  }
+}

@@ -1,13 +1,17 @@
 import { build } from 'esbuild';
 import { build as viteBuild } from 'vite';
-import { mkdir, cp, readFile, writeFile, rm, access } from 'node:fs/promises';
+import { mkdir, cp, readFile, writeFile, access } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { loadCoreArtifacts, writeCoreRuntime } from './adopt-owned-core.mjs';
 const here = fileURLToPath(new URL('..', import.meta.url));
 const studio = path.resolve(here, '../..');
 const root = path.resolve(studio, '..');
 const dist = path.join(root, 'dist');
+// Validate owned inputs before altering dist. A broken vendor scope cannot fall back to npm.
+const core = await loadCoreArtifacts(studio);
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 await viteBuild({ configFile: path.join(here, 'vite.config.ts') });
 await mkdir(path.join(dist, 'server'), {recursive: true});
 await mkdir(path.join(dist, '.openai'), {recursive: true});
@@ -18,19 +22,9 @@ catch (error) {
   await cp(path.join(root, '.openai/hosting.example.json'), path.join(dist, '.openai/hosting.json'));
   console.log('Local build uses unbound hosting template. Provision your own Site before packaging a deployment.');
 }
-await cp(path.join(studio, 'node_modules/@ffmpeg/core/dist/esm'), path.join(dist, 'client/runtime/ffmpeg'), {recursive: true});
-await cp(path.join(studio, 'node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js'), path.join(dist, 'client/runtime/ffmpeg/ffmpeg-core-classic.js'));
-// Sites static files have a25MiB limit. Preserve the original WASM bytes while
-// transporting them in independently verified16MiB chunks.
-const wasmPath=path.join(dist,'client/runtime/ffmpeg/ffmpeg-core.wasm');
-const wasm=await readFile(wasmPath), hash=bytes=>createHash('sha256').update(bytes).digest('hex'), chunks=[];
-for(let offset=0,index=0;offset<wasm.length;offset+=16*1024*1024,index++) {
-  const bytes=wasm.subarray(offset,offset+16*1024*1024), url=`ffmpeg-core.wasm.part${index}`;
-  await writeFile(path.join(dist,'client/runtime/ffmpeg',url),bytes);
-  chunks.push({url,bytes:bytes.length,sha256:hash(bytes)});
-}
-await writeFile(path.join(dist,'client/runtime/ffmpeg/ffmpeg-core.wasm.json'),JSON.stringify({version:1,bytes:wasm.length,sha256:hash(wasm),chunks}));
-await rm(wasmPath);
+// Sites files have a25MiB limit;16MiB chunks preserve independently pinned variant bytes.
+await writeCoreRuntime(core, path.join(dist, 'client/runtime/ffmpeg'));
+console.log(`FFmpeg core source: ${core.sourceKind}.`);
 await cp(path.join(studio, 'node_modules/esbuild-wasm/esbuild.wasm'), path.join(dist, 'client/runtime/esbuild.wasm'));
 await build({entryPoints:[path.join(studio,'node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js')],outfile:path.join(dist,'client/runtime/ffmpeg/worker.js'),bundle:true,format:'esm',platform:'browser',target:'es2023'});
 await cp(path.join(here, 'public'), path.join(dist, 'client'), {recursive: true});
