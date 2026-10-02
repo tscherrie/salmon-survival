@@ -1,31 +1,31 @@
-# AI Director Studio — support page draft
+# AI Director Studio — support
 
-Status: unpublished copy prepared 2 October 2026. AI Director Studio is the user-confirmed independent project operated by **Jeremias Grenzebach**. The operator expressly confirmed **l@lll.uno** as the public support and privacy contact. Add any specifically required operator detail only after that requirement is established, and provide the approved public privacy and terms links before publication. The current development page remains private. No response-time or service-level commitment has been approved.
+AI Director Studio is an independent project operated by **Jeremias Grenzebach**. For support and privacy questions, contact **l@lll.uno**.
 
 ## Getting help
 
-For help with Director project storage, editing, previews, browser analysis or exports, contact **l@lll.uno**. For host sign-in, subscription or model limits, use your ChatGPT or Codex support route. For a paid Fal generation, provider billing, credits or refund question, use Fal support with the confirmed request receipt. Director does not access your payment account or private Fal token.
+For project storage, editing, previews, browser analysis or exports, use the contact above. For host sign-in, subscription or model limits, use your ChatGPT or Codex support route. For Fal generation, provider billing, credits or refunds, use Fal support with the confirmed request receipt. Director does not access your payment account or private Fal token.
 
-For a stored-data or deletion request, contact **l@lll.uno**. The current editor does not offer complete project/account deletion; disconnecting it or rejecting an asset does not verify erasure. The contact is confirmed, while the executable deletion process remains to be verified. Publish the agreed retention/request policy before offering a completion deadline.
+For stored-data or deletion requests, use **l@lll.uno**. The current editor has no complete project/account deletion workflow. Disconnecting it or rejecting an asset does not establish erasure. The [privacy policy](privacy.md) explains current storage and deletion limits. No completion deadline or support response-time guarantee is promised.
 
 ## What to include
 
-Include the host and browser, Director version, project type, requested format or operation, exact error text and a short sequence of steps. State whether the job is queued, running, failed, cancelled or has returned a real output file. A job record marked completed is helpful, but also inspect and identify the resulting file.
+Include your host and browser, Director version, project type, operation or requested format, exact error text and a short sequence of steps. State whether the job is queued, running, failed, cancelled or has returned a real output file. A completed job record is helpful; identify and inspect its actual output as well.
 
-Use a small non-sensitive sample when possible. Remove unrelated names, private media, source URLs with credentials and confidential document text. Never send passwords, authentication tokens, API keys or a full personal conversation. Supply project/job identifiers only through the confirmed private support channel when requested, rather than posting them publicly. Screenshots should show the relevant error and controls with other content hidden.
+Use a small non-sensitive sample where possible. Remove unrelated names, private media, source URLs containing credentials and confidential document text. Never send passwords, authentication tokens, API keys or a full personal conversation. Provide project/job identifiers privately only when needed, rather than posting them publicly. Screenshots should show the relevant error and controls with other content hidden.
 
 ## Common recovery steps
 
-- **Editor cannot be shown:** retry or reopen it from the connected plugin. The private native start was confirmed working after the resource-response fix. If the host still reports an error, record the host, time and exact text; do not assume the project was lost or reinstall an unrelated plugin.
-- **Missing material:** open the material card or details drawer and relink the missing file. Replacement keeps its asset identity so document references can remain valid. Confirm the repair alert clears, then preview and export again. Authentication and network failures are separate from confirmed missing bytes.
-- **Export appears stuck after closing the editor:** reopen the project and inspect its job receipt. Browser processing needs an open executor. Retry failed or cancelled work only after reading the recorded state; this does not automatically retry an external paid Fal generation.
-- **An edit reports a version conflict:** refresh the current document before applying the change again. Earlier versions can be inspected and restored; do not overwrite another editor's newer head blindly.
-- **Fal is unavailable:** connect the separately installed official Fal plugin before requesting new AI media. Existing project editing does not require a separate inference key in Director. Obtain a current quote and approval before a new paid request.
-- **Native Library controls are absent:** this host may not expose them. A supported export can still be stored in the project and downloaded; only a successful native upload confirms a Library item.
-- **A format fails:** include source-media details and the actual error. Browser codecs, fonts, memory and input formats affect output. Do not claim a fallback file is equivalent until its content has been checked.
+- **Editor cannot be shown:** retry or reopen it from the connected plugin. The native start was confirmed working after the resource-response fix. If the host still reports an error, record the host, time and exact text. Do not assume the project was lost.
+- **Missing material:** open the material card or details drawer and relink the missing file. Replacement preserves its asset identity. Confirm that the repair alert clears, then preview and export again. Authentication or network failures are separate from confirmed missing bytes.
+- **Export stopped after closing the editor:** reopen the project and inspect its job receipt. Browser processing needs an open executor. Read the recorded state before retrying failed or cancelled work; this does not automatically retry a paid Fal request.
+- **Version conflict:** refresh the current document before applying the change again. Inspect or restore earlier versions without overwriting another editor's newer head blindly.
+- **Fal unavailable:** connect the separate official Fal plugin before requesting new AI media. Obtain a current quote and approve a new paid request. Director editing does not require its own inference key.
+- **Native Library controls absent:** the host may not expose them. A supported export can still be stored and downloaded. Only a successful native upload establishes a Library item.
+- **Format fails:** provide source-media details and the actual error. Browser codecs, fonts, memory and input formats affect output. Check a fallback file's content before treating it as equivalent.
 
-## Service boundaries
+## Service scope
 
-Director Studio is free. Host access and approved Fal requests may have separate costs. Browser and hosting capacity are finite; no unlimited hosting, continuous background rendering or support SLA is promised. Authored website/component previews are isolated. Direct native `.dstudio` file entry is not implemented.
+Director Studio is free; host access and approved Fal requests may have separate costs. Browser and hosting capacity are finite. There is no promise of unlimited hosting, continuous background rendering or a support SLA. Direct native .dstudio file entry is not implemented.
 
-Source licensing is MIT for application-authored code, with separate dependency licenses. Refer to the approved product, privacy and terms pages **[CONFIRM public links]** for the final service scope. Preparation decisions are recorded in [publisher-approval.md](publisher-approval.md).
+Read the [product information](product.md), [privacy policy](privacy.md) and [terms of service](terms.md). Application-authored source uses MIT; dependencies retain separate licenses.

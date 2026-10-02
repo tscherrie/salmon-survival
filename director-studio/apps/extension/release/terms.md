@@ -1,43 +1,45 @@
-# AI Director Studio — terms of service draft
+# AI Director Studio — terms of service
 
-Status: unpublished terms proposed for operator review, prepared 2 October 2026. Effective date: **[CONFIRM after approval]**. Service operator: **Jeremias Grenzebach**, running the user-confirmed independent project. No unverified street address, jurisdiction or governing-law choice is inserted; any applicable additional identity requirement must be identified before requesting personal details. Public support and privacy contact: **l@lll.uno**, expressly confirmed by the operator. Complete the remaining fields and approve the remaining policy choices before publication.
+Last updated: 2 October 2026. Service operator: **Jeremias Grenzebach**, operating AI Director Studio as an independent project. Support and privacy contact: **l@lll.uno**.
 
 ## Service and access
 
-AI Director Studio provides a project editor for video, audio, presentations, graphics and websites in a supported native host. The selected ChatGPT Work or Codex model directs the conversation and project tools. Project records and material persist in storage associated with the authenticated owner. The service does not provide a separate inference account, model-provider API key or access to every conversation or hidden memory in the host.
+AI Director Studio provides a project editor for video, audio, presentations, graphics and websites in a supported ChatGPT Work or Codex host. The selected host model directs the conversation and project tools. Project records and material persist in storage associated with the authenticated owner.
 
-Users need authorized access to the host and plugin connection. Available host capabilities, browser resources, supported codecs and source formats affect functionality. Native file-library import or delivery is available only when the host exposes the corresponding capability; a browser download is not a confirmed Library save. Direct `.dstudio` native file entry is not implemented. The operator has expressly chosen availability in **all countries offered by OpenAI**; this does not expand OpenAI's own availability. **[CONFIRM any applicable eligibility or age conditions.]**
+Users need authorized access to the host and plugin connection. The current preview is restricted to authorized accounts; a public directory listing has not yet been published. Availability is selected for all countries offered by OpenAI and remains subject to OpenAI's availability and account requirements.
+
+Host capabilities, browser resources, source formats and supported codecs affect functionality. Native file-library import and delivery require the corresponding host capability. A download alone is not a Library save. Direct native opening of .dstudio files is not implemented.
 
 ## Price and separately paid services
 
-Director Studio is free and does not sell credits or accept payments. This does not grant free access to ChatGPT, Codex, Fal or unlimited hosting and device resources. The host's subscriptions, usage limits and terms apply separately.
+Director Studio is currently free and does not sell credits or accept payments. This does not provide free ChatGPT, Codex or Fal access, or unlimited hosting/device resources. Those services' subscriptions, limits and terms apply separately.
 
-New AI media generation or transcription uses the separately installed official Fal plugin and the user's connected Fal account. A current quote and user approval must precede a paid request. Director stores the approved scope, estimate and supplied receipt. An estimate is not a confirmed charge; actual cost remains unknown if the external receipt does not report it. External providers control their own billing, cancellations and refunds. Cancelling a Director browser job does not cancel a Fal request, and an external cancellation must be confirmed by that provider.
+New AI media generation and transcription use the separately installed official Fal plugin and the user's connected Fal account. Obtain a current quote and approve a paid request before submission. Director records the approved scope, estimate and supplied receipt. An estimate is not a confirmed charge; actual billing remains unknown unless the external receipt reports it. External providers control their billing, cancellations and refunds. Cancelling a Director browser job does not cancel a Fal request; external cancellation needs provider confirmation.
 
-No separate Director purchase flow is provided. Any proposed future change to Director pricing requires an explicit update and notice; this draft makes no perpetual-free or unlimited-capacity promise.
+Director does not operate a separate model inference account, collect a model-provider API key, extract Fal tokens or provide a payment-account management flow.
 
 ## Your material and permitted use
 
-Use files, code, prompts, likenesses and other material that you are entitled to process and share with the relevant services. Keep your account and source files secure. Avoid submitting credentials or material that is unnecessary for the project. Do not attempt to access another user's storage, bypass approval or ownership checks, or use authored code to escape the preview sandbox.
+Use files, code, prompts, likenesses and other material that you are entitled to process and share with the relevant services. Keep your account and source files secure. Avoid submitting credentials or information unnecessary for the project. Do not try to access another user's storage, bypass ownership/approval checks or escape the preview sandbox.
 
-These proposed terms do not transfer ownership of the user's source material to the operator. Rights in generated outputs depend on the material and the relevant provider's terms. Users remain responsible for checking outputs before relying on or publishing them, including accuracy, required permissions, attributions and suitability. The editor is not a copyright, likeness or legal-clearance service.
+These terms do not transfer ownership of your source material to the operator. Rights in generated output depend on the material and the relevant provider's terms. Check output before relying on or publishing it, including accuracy, required permissions, attribution and suitability. The editor does not provide copyright, likeness or legal clearance.
 
 ## Processing, exports and availability
 
-Preview, analysis and export jobs use the user's browser and device. The editor must remain open and able to execute the job. A saved running record does not guarantee that rendering continues after the editor closes. Reopening can expose interrupted or failed work for inspection and retry; an export is complete only when the actual file is returned and recorded.
+Preview, analysis and export jobs use your browser and device. The editor must remain open and able to execute the job. A saved running record does not guarantee that rendering continues after it closes. Inspect interrupted or failed work before retrying. An export is complete when its actual file has been returned and recorded.
 
-Exports and earlier versions should be checked against the intended document and media. Missing stored bytes require repair or relinking, and authenticated or network failures can prevent operations. Keep independent copies of important source media and completed exports. No uptime, processing-time, backup or recovery guarantee is established by this draft. **[CONFIRM final service limits, change/suspension policy and notice process.]**
+Check exports and restored versions against the intended document and media. Missing stored bytes need repair or relinking. Authentication and network failures can prevent operations. Keep independent copies of important source media and completed exports. No uptime, processing-time, unlimited-capacity, backup, recovery or support-SLA guarantee is offered. Supported operations remain subject to the host, browser and available resources.
 
-## Privacy and account requests
+## Privacy and stored-data requests
 
-The approved privacy policy will describe stored project data, local processing, host/Fal exchanges, providers, retention and requests. The current release has no complete user-facing project/account deletion function. Disconnecting the host, cancelling a job or rejecting material is not a complete data-deletion request. Use **l@lll.uno** for account or stored-data questions. The contact is confirmed, while the executable deletion process remains to be verified; no completion deadline is promised.
+The [privacy policy](privacy.md) describes stored project data, device processing, host/Fal exchanges, providers, rendering usage requests and current retention limits. The current release has no complete user-facing project/account deletion function. Disconnecting the host, cancelling a job or rejecting material is not a complete deletion request. Contact **l@lll.uno** for account or stored-data questions. No deletion completion deadline is promised.
 
 ## Source license and third-party software
 
-Application-authored source is offered under MIT with the repository's existing copyright notices preserved. Third-party software, fonts and codecs retain their own licenses. The MIT source license does not relicense Remotion, MPL-covered libraries or distributed GPL codec binaries, and does not make the hosted service wholly MIT. The operator confirms an independent project with at most three people in the entire operating entity; the Remotion free-license size criterion is therefore met, and a paid Remotion plan is not an unresolved release requirement on that basis. Other license and binary-distribution obligations remain separate and are described in [license-inventory.md](license-inventory.md). The source license and its warranty language govern the source grant.
+Application-authored source is offered under the repository's MIT license, with existing notices preserved. Third-party software, fonts and codecs retain their own licenses. The MIT grant does not relicense Remotion, MPL-covered libraries or GPL codec binaries, or make every part of the hosted service MIT. See the [license inventory](license-inventory.md) and the [source repository](https://github.com/tscherrie/salmon-survival/tree/codex/director-native-extension/director-studio).
 
-## Final legal terms and updates
+The source license, including its warranty provisions, governs that source grant. These service terms do not remove rights that applicable law makes mandatory.
 
-**[CONFIRM applicable service warranties, liability provisions, mandatory-rights treatment, termination process, governing law and dispute process for the actual operator and countries.]** The source license is not a substitute for those hosted-service decisions. Publish final terms with their effective date and a confirmed notice method for material changes.
+## Updates and contact
 
-This proposed text is not accepted public service terms or a legal attestation. [publisher-approval.md](publisher-approval.md) identifies the decisions still needed.
+Updates to these terms are published here with the last-updated date. For questions about the current service, contact **l@lll.uno**. [Product information](product.md) and [support](support.md) describe current access and recovery options.

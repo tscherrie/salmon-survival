@@ -16,6 +16,17 @@ const manifest = JSON.parse(await readFile(resolve(plugin, 'plugin.json'), 'utf8
 const openai = manifest.extensions?.['com.openai'];
 if (!openai) throw new Error('OpenAI Extension metadata is required.');
 const mcp = JSON.parse(await readFile(resolve(plugin, 'mcp.json'), 'utf8'));
+const publicPages = JSON.parse(await readFile(resolve(extension, 'release/evidence/public-information-pages.json'), 'utf8'));
+const publicSite = JSON.parse(await readFile(resolve(extension, 'info-site/site.json'), 'utf8'));
+if (!publicPages.allPublicPagesReachable || publicPages.hasMcp !== false || publicPages.checks?.length !== 4) throw new Error('Verified ordinary public information pages are required.');
+for (const [field, file] of [['websiteURL', 'index.html'], ['supportURL', 'support.html'], ['privacyPolicyURL', 'privacy.html'], ['termsOfServiceURL', 'terms.html']]) {
+  const check = publicPages.checks.find(entry => entry.field === field);
+  if (!check || check.status !== 200 || !check.mainContentMatchesPreparedSourceExactly || !check.requestHadNoCookieOrAuthorization || openai.interface[field] !== check.url) throw new Error(`Unverified publication URL: ${field}`);
+  const url = new URL(check.url);
+  if (url.protocol !== 'https:' || url.origin !== new URL(publicSite.url).origin) throw new Error(`Unexpected public information destination: ${field}`);
+  const htmlHash = createHash('sha256').update(await readFile(resolve(extension, 'info-site/public', file))).digest('hex');
+  if (htmlHash !== check.preparedHtmlSha256) throw new Error(`Public page changed after anonymous verification: ${field}`);
+}
 if (openai.interface.shortDescription.length > 30) throw new Error('Listing subtitle exceeds 30 characters.');
 if (Object.keys(mcp.mcpServers ?? {}).length !== 1) throw new Error('Expected one verified Director MCP server.');
 for (const server of Object.values(mcp.mcpServers)) if (server.type !== 'streamable-http' || new URL(server.url).protocol !== 'https:') throw new Error('A verified HTTPS MCP endpoint is required.');
@@ -33,7 +44,7 @@ await collect(plugin);
 if (openai.apps != null || manifest.apps != null) throw new Error('App bindings are not portable public upload fields.');
 if (manifest.lifecycleHooks != null || openai.lifecycleHooks != null) throw new Error('Lifecycle hooks are excluded from the public preparation package.');
 const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim();
-files[`${manifest.name}/SOURCE-CHECKPOINT.txt`] = strToU8(`${head}\nThis package is preparation material. It does not complete Portal promotion, public policy URLs, reviewer access or native demo verification. Individual Verified identity was confirmed in a read-only Portal view; canonical Sites-app/project mapping remains unresolved. No legal attestation is made. Sites owns the existing canonical private plugin; do not upload this as a duplicate private plugin.\n`);
+files[`${manifest.name}/SOURCE-CHECKPOINT.txt`] = strToU8(`${head}\nThis package is preparation material. Four public information/policy URLs are verified and included. It does not complete Portal promotion, reviewer access or native demo verification. Individual Verified identity was confirmed in a read-only Portal view; canonical Sites-app/project mapping remains unresolved. No legal attestation is made. Sites owns the existing canonical private plugin; do not upload this as a duplicate private plugin.\n`);
 await mkdir(output, { recursive: true });
 await writeFile(resolve(output, 'ai-director-studio-plugin.zip'), zipSync(files, { level: 9 }));
 execFileSync('git', ['archive', '--format=zip', '--prefix=ai-director-studio-source/', '-o', resolve(output, 'ai-director-studio-source.zip'), head, ...releasePaths], { cwd: repo });
@@ -50,7 +61,7 @@ ai-director-studio-source.zip: extract, enter director-studio, run npm ci then n
 
 dependency-licenses.json: exact complete workspace dependency inventory. MIT applies to application source, not all dependencies. Pinned codec/toolchain source archives, exact binary hashes and corresponding-source limits are in apps/extension/release/codec-sources and license-inventory.md. The independent operator with at most three people meets the Remotion Free criterion; no paid Remotion plan is pending. No third-party runtime WASM is vendored in the source ZIP.
 
-The source contains apps/extension/release/acceptance.md and function-coverage.md with precise test and live MCP evidence. The real native start was human-confirmed at cf761; complete native context/Library/category flows and a second real account remain unverified. A recorded SDK-browser demo is supporting evidence, not the required native reviewer walkthrough. Public support/privacy contact l@lll.uno and all countries offered by OpenAI are expressly confirmed; publication.countries is intentionally []. Public policy/support URLs, canonical reviewer access and Portal promotion remain unresolved. Individual Verified identity is observed in a read-only Portal view; no legal attestation is made.
+The source contains apps/extension/release/acceptance.md and function-coverage.md with precise test and live MCP evidence. The real native start was human-confirmed at cf761; complete native context/Library/category flows and a second real account remain unverified. A recorded SDK-browser demo is supporting evidence, not the required native reviewer walkthrough. Public support/privacy contact l@lll.uno and all countries offered by OpenAI are expressly confirmed; publication.countries is intentionally []. Four public information/support/privacy/terms URLs are verified with anonymous HTTP200 and included in metadata. Canonical reviewer access and Portal promotion remain unresolved. Individual Verified identity is observed in a read-only Portal view; no legal attestation is made.
 `);
 const artifacts = ['ai-director-studio-plugin.zip', 'ai-director-studio-source.zip', 'dependency-licenses.json', 'SOURCE-CHECKPOINT.txt', 'README.txt'];
 await writeFile(resolve(output, 'SHA256SUMS'), (await Promise.all(artifacts.map(async name => `${createHash('sha256').update(await readFile(resolve(output, name))).digest('hex')}  ${name}`))).join('\n')+'\n');
