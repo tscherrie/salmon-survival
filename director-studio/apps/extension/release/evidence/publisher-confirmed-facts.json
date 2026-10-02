@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-10-02T04:57:39.473101+00:00",
+  "scope": "Human-confirmed publication facts and prepared source metadata; no directory submission, legal attestation or email send",
+  "confirmedByHumanViaOriginChat": true,
+  "supportContact": "l@lll.uno",
+  "privacyContact": "l@lll.uno",
+  "publicEmailAuthorized": true,
+  "countryChoiceExact": "In allen von OpenAI angebotenen Ländern",
+  "metadataField": "extensions.com.openai.publication.countries",
+  "metadataValue": [],
+  "fieldSemantics": "An empty array intentionally removes country restrictions; availability remains limited to countries offered by OpenAI.",
+  "officialReference": "https://developers.openai.com/plugins/deploy/submission",
+  "contactIsNotPublicHttpsPolicyPage": true,
+  "anonymousPageChecks": [
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/",
+      "status": 401,
+      "finalUrl": "https://ai-director-studio.yearemia.chatgpt.site/"
+    },
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/support.html",
+      "status": 401,
+      "finalUrl": "https://ai-director-studio.yearemia.chatgpt.site/support.html"
+    },
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/privacy.html",
+      "status": 401,
+      "finalUrl": "https://ai-director-studio.yearemia.chatgpt.site/privacy.html"
+    },
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/terms.html",
+      "status": 401,
+      "finalUrl": "https://ai-director-studio.yearemia.chatgpt.site/terms.html"
+    }
+  ],
+  "messagesSentToContact": 0,
+  "legalAttestationsMade": false,
+  "siteAudienceChanged": false
+}

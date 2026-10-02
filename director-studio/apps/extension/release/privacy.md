@@ -4,7 +4,7 @@ Status: unpublished technical and policy draft, prepared 2 October 2026. The ope
 
 ## Who operates the service
 
-AI Director Studio is an independent project operated by **Jeremias Grenzebach**, as confirmed by the operator. No unverified street address or jurisdiction is inserted. Additional jurisdiction-specific identity details require a concrete applicable requirement; our template is not evidence of one. Contact for privacy questions or requests: **[CONFIRM monitored contact and public support page]**. The existing developer label uses the same name; the individual Verified identity is observed in a read-only Portal view, while the canonical Sites-app submission-project mapping remains unresolved. This draft makes no legal or Portal attestation.
+AI Director Studio is an independent project operated by **Jeremias Grenzebach**, as confirmed by the operator. No unverified street address or jurisdiction is inserted. Additional jurisdiction-specific identity details require a concrete applicable requirement; our template is not evidence of one. Contact for privacy questions or requests: **l@lll.uno**, expressly confirmed for public use by the operator. The existing developer label uses the same name; the individual Verified identity is observed in a read-only Portal view, while the canonical Sites-app submission-project mapping remains unresolved. This draft makes no legal or Portal attestation.
 
 ## Data used by Director Studio
 
@@ -44,6 +44,6 @@ The concrete proposal is to retain project history and files for reopening and p
 
 ## Requests and changes
 
-For a request concerning access, correction, export or deletion, use **[CONFIRM the privacy contact]** and provide only the information needed to locate and verify the relevant account. Never send passwords, API keys or unrelated private media. **[CONFIRM applicable rights, complaint route and the relevant authority for the selected operator/jurisdiction.]** Publish material policy changes with an effective date and an appropriate notice method **[CONFIRM]**.
+For a request concerning access, correction, export or deletion, use **l@lll.uno** and provide only the information needed to locate and verify the relevant account. Never send passwords, API keys or unrelated private media. The contact does not establish a complete deletion procedure or completion deadline. **[CONFIRM applicable rights, complaint route and the relevant authority for the selected operator/jurisdiction.]** Publish material policy changes with an effective date and an appropriate notice method **[CONFIRM]**.
 
 Preparation notes and unresolved decisions are in [publisher-approval.md](publisher-approval.md). This file is not a published policy or a legal attestation.

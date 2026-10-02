@@ -25,7 +25,7 @@ An automatic Sites grant to OpenAI reviewers is not documented by the exposed AP
 1. Open the existing canonical App/plugin in the intended verified publisher account; confirm adoption/update preserves its identity and MCP endpoint before uploading.
 2. Import the preparation metadata into that existing draft, read back the imported listing and five positive/three negative cases, and resolve setup/scan findings.
 3. Complete the canonical review-access method and run the cases using the reviewer identity and sample assets. Keep the owner account separate.
-4. Supply four approved public HTTPS listing/policy URLs, a verified native walkthrough URL and chosen country targeting. A browser-SDK recording is supporting evidence, not a recording of the native host or its model.
+4. Supply four approved public HTTPS listing/policy URLs and a verified native walkthrough URL. Country targeting is already expressly chosen: all countries offered by OpenAI, encoded as `publication.countries: []`; the public support/privacy contact is l@lll.uno. A browser-SDK recording is supporting evidence, not a recording of the native host or its model.
 5. The authorized publisher completes the portal's current legal/policy declarations. Submission starts review; publication is a separate action after approval.
 
 Publisher Verified is both human-confirmed and reported visible in the read-only portal verification view. The independent operator with at most three people is human-confirmed. The App's correct publisher/project mapping, canonical adoption, reviewer access and review state remain separate checks. No upload, review submission, public audience change or legal attestation is claimed here.

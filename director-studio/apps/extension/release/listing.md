@@ -49,15 +49,15 @@ This translation is a draft for a possible `de-DE` publication entry. It is not 
 
 ## Website copy and required URLs
 
-Use the English description above as the product page body, identifying Jeremias Grenzebach as the user-confirmed independent operator, with the approved contact, privacy and terms links. The monitored public contact still needs confirmation. Additional address/jurisdiction fields are conditional on a concrete applicable requirement, rather than assumed Portal fields. Preserve the canonical private App and MCP connection; a public information page does not require a second plugin wrapper or public access to private projects.
+Use the English description above as the product page body, identifying Jeremias Grenzebach as the user-confirmed independent operator, with the approved contact, privacy and terms links. The public support and privacy contact is **l@lll.uno**, expressly confirmed by the operator. The selected audience is **all countries offered by OpenAI**. Additional address/jurisdiction fields are conditional on a concrete applicable requirement, rather than assumed Portal fields. Preserve the canonical private App and MCP connection; a public information page does not require a second plugin wrapper or public access to private projects.
 
 | Required field | Current private destination | Publication state |
 | --- | --- | --- |
 | `websiteURL` | `https://ai-director-studio.yearemia.chatgpt.site/` | Private; not a public listing URL |
-| `supportURL` | `https://ai-director-studio.yearemia.chatgpt.site/support.html` | Private development page; no confirmed working support channel |
+| `supportURL` | `https://ai-director-studio.yearemia.chatgpt.site/support.html` | Private development page; confirmed public contact l@lll.uno |
 | `privacyPolicyURL` | `https://ai-director-studio.yearemia.chatgpt.site/privacy.html` | Private development draft |
 | `termsOfServiceURL` | `https://ai-director-studio.yearemia.chatgpt.site/terms.html` | Private development draft |
 
-All four destinations return HTTP 401 to an anonymous visitor in the 2 October preparation check. Their fields remain absent from `plugin.json`. Publish and inspect approved pages at actual public HTTPS destinations before populating these fields. Country targeting remains absent until the publisher explicitly chooses supported countries or all available countries.
+All four destinations return HTTP 401 to an anonymous visitor in the 2 October preparation check. Their URL fields remain absent from `plugin.json`. Publish and inspect approved pages at actual public HTTPS destinations before populating these fields. `extensions.com.openai.publication.countries` is intentionally `[]`: the operator expressly chose all available countries, and the documented empty array removes country restrictions. It does not grant access to the current private Site or create a public directory entry.
 
 The policy texts are [privacy.md](privacy.md), [terms.md](terms.md) and [support.md](support.md). [publisher-approval.md](publisher-approval.md) collects the remaining decisions. Root-owned review cases, demo, evidence and final archives are separate materials; these drafts do not certify them.

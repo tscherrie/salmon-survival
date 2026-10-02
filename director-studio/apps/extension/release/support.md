@@ -1,12 +1,12 @@
 # AI Director Studio — support page draft
 
-Status: unpublished copy prepared 2 October 2026. AI Director Studio is the user-confirmed independent project operated by **Jeremias Grenzebach**. Before publication, set **[CONFIRM a monitored support email or ticket/form URL]**, add any specifically required operator detail only after that requirement is established, and provide the approved privacy and terms links. The current private development page has no confirmed public support channel. No response-time or service-level commitment has been approved.
+Status: unpublished copy prepared 2 October 2026. AI Director Studio is the user-confirmed independent project operated by **Jeremias Grenzebach**. The operator expressly confirmed **l@lll.uno** as the public support and privacy contact. Add any specifically required operator detail only after that requirement is established, and provide the approved public privacy and terms links before publication. The current development page remains private. No response-time or service-level commitment has been approved.
 
 ## Getting help
 
-For help with Director project storage, editing, previews, browser analysis or exports, contact **[CONFIRM the working support channel]**. For host sign-in, subscription or model limits, use your ChatGPT or Codex support route. For a paid Fal generation, provider billing, credits or refund question, use Fal support with the confirmed request receipt. Director does not access your payment account or private Fal token.
+For help with Director project storage, editing, previews, browser analysis or exports, contact **l@lll.uno**. For host sign-in, subscription or model limits, use your ChatGPT or Codex support route. For a paid Fal generation, provider billing, credits or refund question, use Fal support with the confirmed request receipt. Director does not access your payment account or private Fal token.
 
-For a stored-data or deletion request, contact **[CONFIRM the privacy contact/process]**. The current editor does not offer complete project/account deletion; disconnecting it or rejecting an asset does not verify erasure. Publish the agreed retention/request policy before offering a completion deadline.
+For a stored-data or deletion request, contact **l@lll.uno**. The current editor does not offer complete project/account deletion; disconnecting it or rejecting an asset does not verify erasure. The contact is confirmed, while the executable deletion process remains to be verified. Publish the agreed retention/request policy before offering a completion deadline.
 
 ## What to include
 

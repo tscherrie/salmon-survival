@@ -23,6 +23,7 @@
         "composerIcon": "assets/composer.png"
       },
       "publication": {
+        "countries": [],
         "release_notes": "Initial native editor for saved video, audio, slides, graphics and website projects with version history, selection references and browser exports. Includes missing-file repair, persistent job receipts and authenticated self-contained UI/runtime delivery. Director is free; approved AI media generation and transcription use the separately installed official Fal plugin and its billing. No separate Director inference key is required."
       },
       "review": {

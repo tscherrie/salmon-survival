@@ -1,12 +1,12 @@
 # AI Director Studio — terms of service draft
 
-Status: unpublished terms proposed for operator review, prepared 2 October 2026. Effective date: **[CONFIRM after approval]**. Service operator: **Jeremias Grenzebach**, running the user-confirmed independent project. No unverified street address, jurisdiction or governing-law choice is inserted; any applicable additional identity requirement must be identified before requesting personal details. Contact: **[CONFIRM monitored support contact]**. Complete these fields and approve the remaining policy choices before publication.
+Status: unpublished terms proposed for operator review, prepared 2 October 2026. Effective date: **[CONFIRM after approval]**. Service operator: **Jeremias Grenzebach**, running the user-confirmed independent project. No unverified street address, jurisdiction or governing-law choice is inserted; any applicable additional identity requirement must be identified before requesting personal details. Public support and privacy contact: **l@lll.uno**, expressly confirmed by the operator. Complete the remaining fields and approve the remaining policy choices before publication.
 
 ## Service and access
 
 AI Director Studio provides a project editor for video, audio, presentations, graphics and websites in a supported native host. The selected ChatGPT Work or Codex model directs the conversation and project tools. Project records and material persist in storage associated with the authenticated owner. The service does not provide a separate inference account, model-provider API key or access to every conversation or hidden memory in the host.
 
-Users need authorized access to the host and plugin connection. Available host capabilities, browser resources, supported codecs and source formats affect functionality. Native file-library import or delivery is available only when the host exposes the corresponding capability; a browser download is not a confirmed Library save. Direct `.dstudio` native file entry is not implemented. **[CONFIRM supported countries and any applicable eligibility or age conditions; do not infer them from the service domain.]**
+Users need authorized access to the host and plugin connection. Available host capabilities, browser resources, supported codecs and source formats affect functionality. Native file-library import or delivery is available only when the host exposes the corresponding capability; a browser download is not a confirmed Library save. Direct `.dstudio` native file entry is not implemented. The operator has expressly chosen availability in **all countries offered by OpenAI**; this does not expand OpenAI's own availability. **[CONFIRM any applicable eligibility or age conditions.]**
 
 ## Price and separately paid services
 
@@ -30,7 +30,7 @@ Exports and earlier versions should be checked against the intended document and
 
 ## Privacy and account requests
 
-The approved privacy policy will describe stored project data, local processing, host/Fal exchanges, providers, retention and requests. The current release has no complete user-facing project/account deletion function. Disconnecting the host, cancelling a job or rejecting material is not a complete data-deletion request. Use **[CONFIRM contact/process]** for account or stored-data requests once that process is established.
+The approved privacy policy will describe stored project data, local processing, host/Fal exchanges, providers, retention and requests. The current release has no complete user-facing project/account deletion function. Disconnecting the host, cancelling a job or rejecting material is not a complete data-deletion request. Use **l@lll.uno** for account or stored-data questions. The contact is confirmed, while the executable deletion process remains to be verified; no completion deadline is promised.
 
 ## Source license and third-party software
 
