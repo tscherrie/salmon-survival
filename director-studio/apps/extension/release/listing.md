@@ -1,6 +1,6 @@
 # AI Director Studio — listing draft
 
-Status: listing revision 0.1.1 prepared on 2 October 2026 to address the existing Portal draft’s pricing-text and category findings. New scan outcome must be recorded separately. This is unpublished copy, not a directory listing or approval. The private native editor starts successfully in the user's current host after source checkpoint `cf761052228feedde11a590739cbf5d54767562e`; this does not establish every host interaction or export format as production-tested.
+Status: listing revision 0.1.2 prepared on 2 October 2026 to address the existing Portal draft’s pricing-text and category findings, followed by its platform-reference and generic unsupported-promise hints. New scan outcome must be recorded separately. This is unpublished copy, not a directory listing or approval. The private native editor starts successfully in the user's current host after source checkpoint `cf761052228feedde11a590739cbf5d54767562e`; this does not establish every host interaction or export format as production-tested.
 
 ## English listing
 
@@ -15,15 +15,11 @@ Status: listing revision 0.1.1 prepared on 2 October 2026 to address the existin
 
 ### Description
 
-AI Director Studio is a creative media editor for making video and audio projects, presentations, graphics and small websites inside ChatGPT Work or Codex. Use your selected host model to plan changes and the native editor to inspect and refine the result.
+AI Director Studio is a creative media editor for video, audio, presentations, graphics and small websites.
 
-Import your own media, arrange clips on a timeline, adjust clip timing and audio levels, and preview the result. Create editable slide text and shapes with speaker notes, work on a graphics canvas, or inspect website files in an isolated preview.
+Open a project, import source files and edit its timeline, slides, graphics canvas or website files. Inspect a preview, read document versions, restore an earlier version, and start a browser export from the editor. Keep the editor open while export processing runs. Available formats and processing capacity depend on the browser and source files.
 
-Keep the project brief, source material, document versions, checkpoints and processing receipts together. Reopen stored projects, inspect earlier versions and restore them while retaining history. Projects and uploaded files are stored privately for the authenticated owner. Completed media results from the separately installed official Fal plugin can be imported with their original request provenance.
-
-Selected clips, assets, markers and elements can provide precise project references for the next chat turn when the host supports context updates. Selection alone sends no message and starts no generation. A copyable context fallback is available.
-
-Exports are saved in the project and offered as downloads. Available formats include video MP4/MOV, audio WAV/MP3/M4A/FLAC, slides PDF/PPTX/PNG, graphics PNG/JPEG/PDF/SVG and website ZIP. Format support and capacity depend on the browser, source media and host. Keep the editor open during browser processing; stored job records let you inspect failed or interrupted work and retry it. Direct opening of .dstudio files through a native file entrypoint is not implemented.
+The editor keeps the project brief, assets, version history and processing records together. Selection can supply project references to the conversation when the host supports context updates; a copyable reference is available otherwise.
 
 Commercial disclosures remain in [support.md](support.md), [terms.md](terms.md) and `extensions.com.openai.review.commerce_description`. This function-focused listing contains no pricing or subscription copy. The public information pages are unchanged.
 
