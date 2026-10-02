@@ -147,6 +147,10 @@ export class DirectorHostBridge {
     const parsed = new URL(url, location.href);
     if (!['https:', 'http:', 'blob:'].includes(parsed.protocol)) throw new Error('Dieses Link-Protokoll ist nicht unterstützt.');
     if (fileHost()?.openExternal && parsed.protocol !== 'blob:') await fileHost()!.openExternal!({ href: parsed.href });
+    else if (this.status.connected && parsed.protocol !== 'blob:') {
+      const result = await this.app.openLink({ url: parsed.href }, { timeout: 10000 });
+      if (result.isError) throw new Error('Der Host hat das Öffnen dieses Links abgelehnt.');
+    }
     else window.open(parsed.href, '_blank', 'noopener,noreferrer');
   }
 }

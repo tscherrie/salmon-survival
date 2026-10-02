@@ -107,3 +107,17 @@ describe('versioned browser media jobs',()=>{
     expect(signal!.aborted).toBe(true);expect(patches).toContainEqual(expect.objectContaining({jobId:'job2',patch:expect.objectContaining({status:'canceled'})}));api.dispose();
   });
 });
+
+describe('Suno import retry transport', () => {
+  it('reuses already uploaded stem files after a stale timeline placement instead of creating duplicates', async () => {
+    const api = new BrowserStudioApi(host);
+    const files = [new File(['first'], 'vocals.wav', { type: 'audio/wav' }), new File(['second'], 'drums.wav', { type: 'audio/wav' })];
+    const upload = vi.spyOn(api, 'uploadFile').mockResolvedValueOnce({ id: 's1' } as Asset).mockResolvedValueOnce({ id: 's2' } as Asset);
+    const record = vi.spyOn(api, 'action').mockRejectedValueOnce(new Error('VERSION_CONFLICT')).mockResolvedValueOnce({ assets: [{ id: 's1' }, { id: 's2' }], groupId: 'group1' });
+    const receipt = { title: 'Music', planAtCreation: 'pro', intendedUse: 'commercial', rightsAcknowledged: true } as const;
+    await expect(api.importSunoFiles('p1', files, receipt, 'stems', { startFrame: 0, expectedHead: 1 })).rejects.toThrow('VERSION_CONFLICT');
+    expect(await api.importSunoFiles('p1', files, receipt, 'stems', { startFrame: 0, expectedHead: 2 })).toMatchObject({ groupId: 'group1' });
+    expect(upload).toHaveBeenCalledTimes(2); expect(record.mock.calls[1]?.[2]).toMatchObject({ assetIds: ['s1', 's2'], placement: { expectedHead: 2 } });
+    api.dispose();
+  });
+});

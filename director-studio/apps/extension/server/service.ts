@@ -8,6 +8,8 @@ import {
 } from '@studio/core';
 import { z } from 'zod';
 import { ApiError, CloudStore, documentOf, head, id, sha256, type CloudProject, type LoadedProject, type PersistentJob, type WorkerEnv } from './storage.ts';
+import { prepareSunoHandoff, recordSunoImport } from './suno.ts';
+import { SUNO_CAPABILITIES } from '../shared/suno.ts';
 
 const obj = z.record(z.string(), z.unknown());
 const string = z.string().min(1);
@@ -56,13 +58,27 @@ export class DirectorService {
     if (p.expectedRevision !== undefined && p.expectedRevision !== loaded.revision) throw new ApiError(409, 'PROJECT_CONFLICT', 'Project revision differs from expectedRevision.');
     switch (method) {
       case 'getSnapshot': return snapshot(loaded);
+      case 'getMusicProviders': return { defaultProvider: 'fal', providers: [SUNO_CAPABILITIES] };
+      case 'listSunoHandoffs': return state.musicHandoffs ?? [];
+      case 'prepareSunoMusic': { const { projectId: _projectId, ...input } = p; result = prepareSunoHandoff(state, input); break; }
+      case 'recordSunoImport': {
+        const { projectId: _projectId, ...input } = p;
+        const recorded = recordSunoImport(state, input);
+        if (recorded.alreadyRecorded) return recorded;
+        if (recorded.ops.length) {
+          const changed = applyDocumentOps(documentOf(state)!, recorded.ops, { assetKind: assetId => state.assets.find(a => a.id === assetId)?.kind });
+          commit(state, changed, recorded.ops, 'Imported Suno audio with common stem origin');
+        }
+        result = recorded; break;
+      }
+      case 'importSunoUrl': return this.importUrl(projectId, { url: p.url, title: p.title, expectedMimePrefix: 'audio/', metadata: { forceNewAssetRecord: true } });
       case 'searchAssets': return filterAssets(state.assets, (p.query ?? p) as AssetQuery);
       case 'getAsset': return asset(state, p.assetId ?? p.id);
       case 'getLineage': { const a = asset(state, p.assetId); return { parents: state.lineage.filter(e => e.childId === a.id), children: state.lineage.filter(e => e.parentId === a.id) }; }
       case 'getVersion': { const v = state.versions.find(v => v.number === z.number().int().positive().parse(p.number)); if (!v) throw new ApiError(404, 'VERSION_NOT_FOUND', 'Version not found.'); return v.document.kind === 'site' ? { ...v, siteFiles: structuredClone(state.siteVersions[String(v.number)] ?? {}) } : v; }
       case 'getDocument': return { document: documentOf(state), head: head(state)?.number ?? null, summary: documentOf(state) ? summarizeDocument(documentOf(state)!) : null, cloudRevision: loaded.revision };
       case 'assetPeaks': { const a = asset(state, p.assetId); const value = a.metadata?.peaks; if (Array.isArray(value)) return { peaks: value, durationMs: a.durationMs ?? 0 }; if (value && typeof value === 'object' && Array.isArray((value as { peaks?: unknown }).peaks)) return value; return null; }
-      case 'updateAsset': { const a = asset(state, p.assetId ?? p.id); const patch = obj.parse(p.patch); const protectedFields = ['id', 'path', 'sha256', 'source', 'generationId', 'costUsd', 'modelId', 'sourceUrl', 'createdAt']; if (protectedFields.some(k => k in patch)) throw new ApiError(400, 'PROTECTED_ASSET_FIELD', 'Provenance and storage fields cannot be edited.'); const metadataPatch = patch.metadata === undefined ? undefined : obj.parse(patch.metadata); if (metadataPatch && 'fal' in metadataPatch) throw new ApiError(400, 'PROTECTED_ASSET_FIELD', 'Fal receipt provenance can only be recorded through generation tools.'); result = assetSchema.parse({ ...a, ...patch, ...(metadataPatch ? { metadata: { ...a.metadata, ...metadataPatch } } : {}) }); state.assets = state.assets.map(v => v.id === a.id ? result as Asset : v); break; }
+      case 'updateAsset': { const a = asset(state, p.assetId ?? p.id); const patch = obj.parse(p.patch); const protectedFields = ['id', 'path', 'sha256', 'source', 'generationId', 'costUsd', 'modelId', 'sourceUrl', 'createdAt']; if (protectedFields.some(k => k in patch)) throw new ApiError(400, 'PROTECTED_ASSET_FIELD', 'Provenance and storage fields cannot be edited.'); const metadataPatch = patch.metadata === undefined ? undefined : obj.parse(patch.metadata); if (metadataPatch && ('fal' in metadataPatch || 'musicProvider' in metadataPatch)) throw new ApiError(400, 'PROTECTED_ASSET_FIELD', 'Provider provenance can only be recorded through the dedicated provider tools.'); result = assetSchema.parse({ ...a, ...patch, ...(metadataPatch ? { metadata: { ...a.metadata, ...metadataPatch } } : {}) }); state.assets = state.assets.map(v => v.id === a.id ? result as Asset : v); break; }
       case 'rejectAsset': { const a = asset(state, p.assetId ?? p.id); a.status = 'rejected'; result = a; break; }
       case 'setBrief': {
         state.manifest.brief = projectBriefSchema.parse(p.brief ?? p);
@@ -160,6 +176,8 @@ export class DirectorService {
   }
   async upload(projectId: string, bytes: Uint8Array, name: string, mime: string, metadata: Record<string, unknown> = {}): Promise<Asset> {
     const loaded = await this.store.load(projectId);
+    const provenance = metadata.metadata as Record<string, unknown> | undefined;
+    if (provenance && ('fal' in provenance || 'musicProvider' in provenance)) throw new ApiError(400, 'PROTECTED_ASSET_FIELD', 'Provider provenance requires its dedicated recording tool.');
     const cap = Number(this.env.MAX_IMPORT_BYTES ?? 134217728); if (bytes.length > cap) throw new ApiError(413, 'IMPORT_TOO_LARGE', `Maximum upload ${cap} bytes.`);
     const parents = z.array(z.object({assetId:string,relation:z.enum(['derived','extracted','input','reference'])})).parse(metadata.parents ?? []);
     for (const parent of parents) asset(loaded.state,parent.assetId);
@@ -195,6 +213,8 @@ export class DirectorService {
     const url = safeRemoteUrl(string.parse(value.url));
     const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(60000) });
     if (!response.ok || (response.status >= 300 && response.status < 400)) throw new ApiError(400, 'IMPORT_HTTP_ERROR', `Remote download returned HTTP ${response.status}. Redirects require their final URL.`);
+    const mime = response.headers.get('content-type')?.split(';')[0] || mimeFromExtension(url.pathname);
+    if (value.expectedMimePrefix && !mime.startsWith(String(value.expectedMimePrefix))) throw new ApiError(400, 'SUNO_AUDIO_REQUIRED', 'Use a direct downloadable audio URL, not a Suno song webpage.');
     const cap = Number(this.env.MAX_IMPORT_BYTES ?? 134217728);
     if (Number(response.headers.get('content-length') ?? 0) > cap) throw new ApiError(413, 'IMPORT_TOO_LARGE', 'Remote file is too large.');
     if (!response.body) throw new ApiError(400, 'IMPORT_EMPTY', 'Remote response has no body.');

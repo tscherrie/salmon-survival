@@ -1,0 +1,80 @@
+// Supporting loopback browser/real Worker proof. No Suno account or generation.
+// Prerequisites: extension:build, acceptance-server on 5202, installed Chrome + ffmpeg.
+import { chromium } from 'playwright';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+const base = process.env.DIRECTOR_SUNO_ACCEPTANCE_URL ?? 'http://127.0.0.1:5202';
+if (new URL(base).hostname !== '127.0.0.1') throw new Error('Loopback test only.');
+const out = path.resolve(process.argv[2] ?? '/tmp/director-suno-browser-acceptance');
+await mkdir(out, { recursive: true });
+for (const [name, hz] of [['vocals', 440], ['drums', 220]]) execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', `sine=frequency=${hz}:duration=2`, '-ar', '48000', '-ac', '2', `${out}/${name}.wav`]);
+const browser = await chromium.launch({ headless: true, executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' });
+const context = await browser.newContext({ viewport: { width: 1280, height: 960 }, permissions: ['clipboard-read', 'clipboard-write'], extraHTTPHeaders: { 'oai-authenticated-user-id': 'suno-acceptance-owner', 'oai-authenticated-user-email': 'suno-acceptance@example.test' } });
+const page = await context.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
+const report = { scope: 'actual built browser UI + actual Worker/D1/R2 emulator, synthetic owner and procedural audio; not native host or real Suno generation', checks: [], errors };
+async function json(response) { if (!response.ok()) throw new Error(`${response.status()} ${await response.text()}`); return response.json(); }
+try {
+  await json(await page.request.patch(`${base}/api/settings`, { data: { language: 'en' } }));
+  const project = await json(await page.request.post(`${base}/api/projects`, { data: { title: `Suno next-version acceptance ${Date.now()}`, category: 'audio' } }));
+  const pid = project.manifest.id; report.projectId = pid;
+  const prepared = await json(await page.request.post(`${base}/mcp`, { data: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'prepare_suno_music', arguments: { projectId: pid, title: 'Synthetic music import', prompt: 'Gentle strings with a steady rhythm', instrumental: true } } } }));
+  assert.equal(prepared.result.structuredContent.generationStarted, false);
+  await page.goto(base); await page.getByRole('button', { name: new RegExp(project.manifest.title) }).click();
+  await page.getByRole('button', { name: 'Suno', exact: true }).click();
+  await page.getByLabel('Music title').waitFor(); await page.waitForFunction(() => document.querySelector('.suno-music-form input')?.value === 'Synthetic music import');
+  report.checks.push('Native MCP-prepared prompt is persisted and loaded into the Suno dialog');
+  await page.getByRole('button', { name: 'Copy prompt', exact: true }).click();
+  await page.getByText('Saved and copied. Paste into Suno.').waitFor();
+  assert.match(await page.evaluate(() => navigator.clipboard.readText()), /Gentle strings/);
+  report.checks.push('Actual clipboard prompt handoff; no Suno generation or account login');
+  await page.getByLabel('Export kind').selectOption('stems');
+  await page.getByLabel('Audio file(s)').setInputFiles([`${out}/vocals.wav`, `${out}/drums.wav`]);
+  await page.getByLabel('Suno plan at creation').selectOption('pro');
+  await page.getByRole('combobox', { name: /^Intended use/ }).selectOption('commercial');
+  await page.getByLabel('Rights evidence or note (optional)').fill('Acceptance fixture only: these two tones were created locally, not by Suno.');
+  await page.getByLabel('I have the rights required for import and will check my intended use.').check();
+  await page.screenshot({ path: `${out}/suno-import-dialog.png` });
+  await page.getByRole('button', { name: 'Import Suno audio', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Music with Suno' }).waitFor({ state: 'hidden', timeout: 60000 });
+  const imported = await json(await page.request.get(`${base}/api/projects/${pid}`));
+  const assets = imported.assets.filter(a => a.metadata?.musicProvider?.provider === 'suno'); assert.equal(assets.length, 2);
+  assert.equal(assets[0].metadata.musicProvider.groupId, assets[1].metadata.musicProvider.groupId);
+  assert.equal(assets[0].metadata.musicProvider.rightsVerified, false);
+  const tracks = imported.document.tracks.filter(t => t.clips.some(c => assets.some(a => a.id === c.assetId)));
+  assert.equal(tracks.length, 2); assert.deepEqual(tracks.map(t => t.clips[0].start), [0, 0]); assert.deepEqual(tracks.map(t => t.clips[0].duration), [2000, 2000]);
+  assert.equal(imported.budget.spentUsd, 0); assert.equal(imported.generations.length, 0);
+  for (const a of assets) { const r = await page.request.get(`${base}/api/projects/${pid}/assets/${a.id}`); assert.equal(Buffer.compare(await r.body(), await readFile(`${out}/${a.title}`)), 0); }
+  report.checks.push('Two decoded 2-second WAV stems uploaded through the production dialog; exact stored bytes, common origin and separate audio tracks');
+  await page.screenshot({ path: `${out}/suno-import-timeline.png` });
+  await page.reload(); await page.getByRole('button', { name: new RegExp(project.manifest.title) }).click();
+  await page.locator('.native-header h1').waitFor();
+  const reopened = await json(await page.request.get(`${base}/api/projects/${pid}`));
+  assert.equal(reopened.assets.filter(a => a.metadata?.musicProvider?.provider === 'suno').length, 2);
+  assert.deepEqual(reopened.document, imported.document);
+  report.checks.push('Reload/reopen preserves timeline, provider declaration, original plan and stored stems');
+  await page.getByRole('button', { name: 'Export', exact: true }).click();
+  await page.getByRole('button', { name: 'WAV', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Export project' }).waitFor({ state: 'hidden', timeout: 120000 });
+  const exported = await json(await page.request.get(`${base}/api/projects/${pid}`));
+  const exportJob = exported.jobs.find(j => j.kind === 'export_project' && j.status === 'completed');
+  assert.ok(exportJob, 'Actual export completion receipt required');
+  const output = exported.assets.find(a => a.id === exportJob.output.assetIds[0]); assert.ok(output);
+  const outputResponse = await page.request.get(`${base}/api/projects/${pid}/assets/${output.id}`);
+  const outputPath = `${out}/suno-stem-mix.wav`; await writeFile(outputPath, await outputResponse.body());
+  const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', outputPath], { encoding: 'utf8' }));
+  assert.ok(Math.abs(Number(probe.format.duration) - 2) < .01); assert.equal(probe.streams[0].codec_type, 'audio');
+  const pcm = execFileSync('ffmpeg', ['-v', 'error', '-i', outputPath, '-t', '1', '-ac', '1', '-ar', '48000', '-f', 'f32le', '-']);
+  const magnitudes = {};
+  for (const hz of [220, 440]) { let real=0, imag=0; const count=pcm.length/4; for(let i=0;i<count;i++){const sample=pcm.readFloatLE(i*4); real+=sample*Math.cos(2*Math.PI*hz*i/48000);imag+=sample*Math.sin(2*Math.PI*hz*i/48000);}magnitudes[hz]=2*Math.hypot(real,imag)/count;assert.ok(magnitudes[hz]>.03, `${hz} Hz stem must be present in exported mix`); }
+  report.export = { file: outputPath, duration: probe.format.duration, codec: probe.streams[0].codec_name, magnitudes };
+  report.checks.push('Actual 2-second WAV export completes and decoded PCM contains both original 220 Hz and 440 Hz stems');
+  await page.setViewportSize({ width: 420, height: 850 });
+  await page.getByRole('button', { name: 'Suno', exact: true }).click();
+  await page.screenshot({ path: `${out}/suno-narrow.png` });
+  const widths = await page.evaluate(() => ({ viewport:innerWidth,width:document.documentElement.scrollWidth }));assert.ok(widths.width <= widths.viewport); report.checks.push('420px Suno dialog has no horizontal page overflow');
+  assert.deepEqual(errors, []); report.passed = true;
+} catch (e) { report.passed = false; report.error = e.stack; await page.screenshot({ path: `${out}/failure.png` }).catch(() => {}); }
+await writeFile(`${out}/report.json`, JSON.stringify(report, null, 2)); await browser.close();
+console.log(JSON.stringify(report, null, 2)); if (!report.passed) process.exitCode = 1;

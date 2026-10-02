@@ -63,3 +63,6 @@ html,body,#root { min-width:0; min-height:0; overflow:hidden; }
 .native-job-row>span { flex:1; min-width:0; }
 .native-job-row small { display:block; color:var(--danger); }
 .native-repair-banner { position:absolute; top:8px; left:10px; right:10px; padding:8px 12px; background:var(--raised); border:1px solid var(--danger); border-radius:8px; font-size:11px; }
+
+.suno-music-form details{display:grid;gap:12px;border-top:1px solid var(--border);padding-top:12px}.suno-music-form summary{cursor:pointer;font-weight:600;margin-bottom:12px}.suno-music-form .field-label{display:grid;gap:6px;margin-bottom:10px}.suno-music-form .suno-actions{display:flex;gap:8px;margin-top:12px}.suno-music-form input[type=checkbox]{margin-right:6px}
+.suno-music-form details > label:not(.field-label){display:block;margin:10px 0;line-height:1.5}
