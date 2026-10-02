@@ -10,6 +10,10 @@ export const EDITOR_RESOURCE = `ui://director-studio/editor-${NATIVE_UI_BUILD_ID
 // MCP 2026-07-28 requires explicit caching hints on discovery and resource results.
 // Re-fetch within the requesting authorization context while native UI changes ship.
 const cacheHints = { ttlMs: 0, cacheScope: 'private' } as const;
+const LEGACY_PROTOCOL_VERSION = '2025-11-25';
+const MODERN_PROTOCOL_VERSION = '2026-07-28';
+const supportedVersions = [MODERN_PROTOCOL_VERSION, LEGACY_PROTOCOL_VERSION];
+const serverInfo = { name: 'director-studio', version: '0.1.5' };
 const s = { type: 'string' };
 const o = { type: 'object', additionalProperties: true };
 const a = { type: 'array', items: s };
@@ -66,24 +70,73 @@ tool('director_ui_request', 'Authenticated private UI bridge to this server only
 const settingsProperties = { language: { type: 'string', title: 'Language', enum: ['de','en'] }, defaultEffort: { type: 'string', title: 'Default project effort', enum: ['low','medium','high','xhigh','max'] } };
 tool('settings.read', 'Read the authenticated user settings.', {}, [], true, { outputSchema: { type: 'object', properties: { schema: o, values: o, layout: { type: 'array', items: o } }, required: ['schema','values'] } });
 tool('settings.update', 'Persist partial authenticated user setting changes.', { set: { type: 'object', properties: settingsProperties, additionalProperties: false, minProperties: 1 } }, ['set'], false, { outputSchema: { type: 'object', properties: { values: o }, required: ['values'] } });
-for (const entry of tools) { if (['import_url','import_fal_result','director_ui_request'].includes(entry.name)) entry.annotations.openWorldHint = true; if (entry.name === 'import_fal_result') entry.annotations.idempotentHint = true; }
+// Version history makes edits recoverable, but replacing/removing current data
+// is still non-additive under the MCP destructiveHint definition.
+const nonAdditiveTools = new Set(['apply_document_ops','restore_version','write_site_file','merge_checkpoints','update_asset','reject_asset','set_brief','propose_checkpoint','record_generation','record_analysis','analyze_audio','cancel_job','import_url','import_fal_result','settings.update','director_ui_request']);
+for (const entry of tools) {
+  entry.annotations.destructiveHint = nonAdditiveTools.has(entry.name);
+  if (['import_url','import_fal_result','director_ui_request'].includes(entry.name)) entry.annotations.openWorldHint = true;
+  if (entry.name === 'import_fal_result') entry.annotations.idempotentHint = true;
+}
 export const MCP_TOOLS: readonly Tool[] = tools;
 const argumentValidators = new Map(tools.map(tool => [tool.name, new Validator(tool.inputSchema as Schema, '2020-12')]));
 const actions: Record<string, string> = { set_brief: 'setBrief', ask_user: 'askUser', propose_checkpoint: 'proposeCheckpoint', merge_checkpoints: 'mergeCheckpoints', post_update: 'postUpdate', get_document: 'getDocument', apply_document_ops: 'applyDocumentOps', restore_version: 'restoreVersion', get_version: 'getVersion', search_assets: 'searchAssets', get_asset: 'getAsset', update_asset: 'updateAsset', reject_asset: 'rejectAsset', get_lineage: 'getLineage', create_text_asset: 'createTextAsset', import_url: 'importUrl', import_fal_result: 'importFalResult', write_component: 'writeComponent', read_component: 'readComponent', write_site_file: 'writeSiteFile', read_site_file: 'readSiteFile', list_site_files: 'listSiteFiles', prepare_generation: 'prepareGeneration', record_generation: 'recordGeneration', await_generations: 'awaitGenerations', cancel_generation: 'cancelGeneration', record_analysis: 'recordAnalysis', transcribe: 'requestTranscription', list_jobs: 'listJobs', cancel_job: 'cancelJob', retry_job: 'retryJob' };
 const capabilities = { tools: {}, resources: {}, extensions: { 'openai/settings': { readTool: 'settings.read', updateTool: 'settings.update' } } };
 function toolResult(value: unknown, appOnly = false) { const structuredContent = value && typeof value === 'object' && !Array.isArray(value) ? value : { result: value ?? null }; return { content: appOnly ? [] : [{ type: 'text', text: JSON.stringify(value ?? null) }], structuredContent }; }
+class McpProtocolError extends Error {
+  constructor(readonly code: number, message: string, readonly data?: unknown) { super(message); }
+}
+function mirroredHeader(request: Request, name: string, expected: unknown, encoded = false) {
+  const header = request.headers.get(name);
+  if (header === null || !header || /[^\x09\x20-\x7e]/.test(header) || header.trim() !== header) throw new McpProtocolError(-32020, `Header mismatch: ${name} is missing or malformed.`);
+  let value = header;
+  if (encoded && header.startsWith('=?base64?') && header.endsWith('?=')) {
+    try {
+      const base64 = header.slice(9, -2);
+      if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64)) throw new Error('Invalid Base64.');
+      const bytes = Uint8Array.from(atob(base64), character => character.charCodeAt(0));
+      value = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    } catch { throw new McpProtocolError(-32020, `Header mismatch: ${name} is malformed.`); }
+  }
+  if (value !== expected) throw new McpProtocolError(-32020, `Header mismatch: ${name} does not match the request body.`);
+}
+function requestIsModern(request: Request, method: string, params: Record<string, unknown>) {
+  // initialize selects the legacy era even when its requested version is newer.
+  // Modern clients declare their version on each request without a handshake.
+  if (method === 'initialize') return false;
+  const rawMeta = params._meta;
+  const meta = rawMeta && typeof rawMeta === 'object' && !Array.isArray(rawMeta) ? rawMeta as Record<string, unknown> : undefined;
+  const version = meta?.['io.modelcontextprotocol/protocolVersion'];
+  const header = request.headers.get('MCP-Protocol-Version');
+  const hasProtocolMeta = meta && ('io.modelcontextprotocol/protocolVersion' in meta || 'io.modelcontextprotocol/clientCapabilities' in meta);
+  if (!hasProtocolMeta && (header === null || header === LEGACY_PROTOCOL_VERSION)) return false;
+  if (typeof version !== 'string') {
+    if (header && !supportedVersions.includes(header)) throw new McpProtocolError(-32022, 'Unsupported protocol version', { supported: supportedVersions, requested: header });
+    throw new McpProtocolError(-32602, 'Required per-request protocol metadata is missing or malformed.');
+  }
+  mirroredHeader(request, 'MCP-Protocol-Version', version);
+  if (!supportedVersions.includes(version)) throw new McpProtocolError(-32022, 'Unsupported protocol version', { supported: supportedVersions, requested: version });
+  if (version === LEGACY_PROTOCOL_VERSION) return false;
+  const capabilities = meta?.['io.modelcontextprotocol/clientCapabilities'];
+  if (!capabilities || typeof capabilities !== 'object' || Array.isArray(capabilities)) throw new McpProtocolError(-32602, 'Required per-request client capabilities are missing or malformed.');
+  mirroredHeader(request, 'Mcp-Method', method);
+  if (['tools/call','resources/read','prompts/get'].includes(method)) mirroredHeader(request, 'Mcp-Name', method === 'resources/read' ? params.uri : params.name, true);
+  return true;
+}
 export async function handleMcp(request: Request, env: WorkerEnv): Promise<Response> {
-  let rpcId: unknown = null;
+  let rpcId: unknown = null; let modern = false;
   try {
-    const rpc = z.object({ jsonrpc: z.literal('2.0'), id: z.union([z.string(),z.number(),z.null()]).optional(), method: z.string(), params: z.record(z.string(),z.unknown()).optional() }).parse(await request.json()); rpcId = rpc.id ?? null;
+    const rpc = z.object({ jsonrpc: z.literal('2.0'), id: z.union([z.string(),z.number(),z.null()]).optional(), method: z.string(), params: z.record(z.string(),z.unknown()).optional() }).parse(await request.json()); rpcId = rpc.id;
     const args = rpc.params ?? {}; let result: unknown;
+    modern = requestIsModern(request, rpc.method, args);
+    const resultCacheHints = modern ? cacheHints : {};
     if (rpc.id === undefined) return new Response(null, { status: 202 });
     switch (rpc.method) {
-      case 'initialize': result = { protocolVersion: args.protocolVersion === '2026-07-28' ? '2026-07-28' : '2025-11-25', serverInfo: { name: 'director-studio', version: '0.1.0' }, capabilities, instructions: 'You are the Director through this native host model and conversation. Read the project brief and current document/head before editing. Preserve questions and checkpoints; only the user approves them. Apply validated operations with expectedHead. Media generations use the separately installed official Fal plugin: obtain its current schema and quote, prepare_generation, wait for explicit user approval, submit through Fal, import outputs and record actual request receipts. Never substitute quoted estimates for actual billing. Do not read host Fal credentials, run a separate inference loop, or invent native Library/catalog access. Queued browser render jobs require the open editor; read their persistent completion/error receipts.' }; break;
-      case 'server/discover': result = { ...cacheHints, supportedVersions: ['2026-07-28','2025-11-25'], _meta: { 'io.modelcontextprotocol/serverInfo': { name: 'director-studio', version: '0.1.0' } }, capabilities }; break;
+      case 'initialize': result = { protocolVersion: LEGACY_PROTOCOL_VERSION, serverInfo, capabilities, instructions: 'You are the Director through this native host model and conversation. Read the project brief and current document/head before editing. Preserve questions and checkpoints; only the user approves them. Apply validated operations with expectedHead. Media generations use the separately installed official Fal plugin: obtain its current schema and quote, prepare_generation, wait for explicit user approval, submit through Fal, import outputs and record actual request receipts. Never substitute quoted estimates for actual billing. Do not read host Fal credentials, run a separate inference loop, or invent native Library/catalog access. Queued browser render jobs require the open editor; read their persistent completion/error receipts.' }; break;
+      case 'server/discover': result = { ...resultCacheHints, supportedVersions, _meta: { 'io.modelcontextprotocol/serverInfo': serverInfo }, capabilities }; break;
       case 'ping': result = {}; break;
-      case 'tools/list': result = { ...cacheHints, tools: MCP_TOOLS }; break;
-      case 'resources/list': result = { ...cacheHints, resources: [{ uri: EDITOR_RESOURCE, name: 'Studio Editor', mimeType: 'text/html;profile=mcp-app' }] }; break;
+      case 'tools/list': result = { ...resultCacheHints, tools: MCP_TOOLS }; break;
+      case 'resources/list': result = { ...resultCacheHints, resources: [{ uri: EDITOR_RESOURCE, name: 'Studio Editor', mimeType: 'text/html;profile=mcp-app' }] }; break;
       case 'resources/read': {
         if (args.uri !== EDITOR_RESOURCE && args.uri !== LEGACY_EDITOR_RESOURCE) throw new ApiError(404, 'RESOURCE_NOT_FOUND', 'Resource not found.');
         const staticBinding = env.ASSETS ?? env.UI; if (!staticBinding) throw new ApiError(503, 'UI_UNAVAILABLE', 'The deployed UI static binding is unavailable.');
@@ -91,7 +144,7 @@ export async function handleMcp(request: Request, env: WorkerEnv): Promise<Respo
         // The base only resolves package paths; no boot asset is fetched from it.
         const html = (await response.text()).replace(/<head>/i, `<head><base href="${url.origin}/">`);
         console.info('director.ui.resource', {uri:args.uri,buildId:NATIVE_UI_BUILD_ID,bytes:new TextEncoder().encode(html).byteLength,delivery:'self-contained'});
-        result = { ...cacheHints, contents: [{ uri: args.uri, mimeType: 'text/html;profile=mcp-app', text: html, _meta: { 'openai/ui': OpenAIUiResourceMetadataSchema.parse({ availableDisplayModes: ['fullscreen'], preferredDisplayMode: 'fullscreen' }), ui: { csp: { connectDomains: ['https://esm.sh', 'https://www.remotion.pro'], resourceDomains: ['https://esm.sh'], frameDomains: [url.origin], baseUriDomains:[url.origin] } } } }] }; break;
+        result = { ...resultCacheHints, contents: [{ uri: args.uri, mimeType: 'text/html;profile=mcp-app', text: html, _meta: { 'openai/ui': OpenAIUiResourceMetadataSchema.parse({ availableDisplayModes: ['fullscreen'], preferredDisplayMode: 'fullscreen' }), ui: { csp: { connectDomains: ['https://esm.sh', 'https://www.remotion.pro'], resourceDomains: ['https://esm.sh'], frameDomains: [url.origin], baseUriDomains:[url.origin] } } } }] }; break;
       }
       case 'tools/call': {
         const name = z.string().parse(args.name); const params = z.record(z.string(),z.unknown()).parse(args.arguments ?? {});
@@ -129,11 +182,12 @@ export async function handleMcp(request: Request, env: WorkerEnv): Promise<Respo
         } catch (error) { if (error instanceof ApiError && error.status === 401) throw error; result = { ...toolResult({ error: error instanceof Error ? error.message : 'Tool failed.', code: error instanceof ApiError ? error.code : 'INVALID_INPUT' }), isError: true }; }
         break;
       }
-      default: return json({ jsonrpc: '2.0', id: rpcId, error: { code: -32601, message: 'Method not found.' } });
+      default: return json({ jsonrpc: '2.0', id: rpcId, error: { code: -32601, message: 'Method not found.' } }, modern ? 404 : 200);
     }
-    return json({ jsonrpc: '2.0', id: rpcId, result: { resultType: 'complete', ...result as Record<string, unknown> } });
+    return json({ jsonrpc: '2.0', id: rpcId, result: { ...(modern ? { resultType: 'complete' } : {}), ...result as Record<string, unknown> } });
   } catch (error) {
+    if (error instanceof McpProtocolError) return json({ jsonrpc: '2.0', id: rpcId, error: { code: error.code, message: error.message, ...(error.data === undefined ? {} : { data: error.data }) } }, 400);
     const auth = error instanceof ApiError && error.status === 401;
-    return json({ jsonrpc: '2.0', id: rpcId, error: { code: auth ? -32001 : -32602, message: error instanceof Error ? error.message : 'Invalid MCP request.' } }, auth ? 401 : 200);
+    return json({ jsonrpc: '2.0', id: rpcId, error: { code: auth ? -32001 : -32602, message: error instanceof Error ? error.message : 'Invalid MCP request.' } }, auth ? 401 : modern ? 400 : 200);
   }
 }

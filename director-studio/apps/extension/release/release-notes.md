@@ -1,3 +1,9 @@
+## 0.1.5 MCP review corrections
+
+- Correct legacy initialize negotiation and validate modern per-request protocol metadata and transport headers with the specified HTTP/JSON-RPC errors.
+- Mark operations that replace or remove existing project data as destructive in MCP tool annotations, even when project versions allow recovery.
+- The public Portal draft 0.1.4 was uploaded and its domain is verified. Its Connect action fails before a Worker request with "OAuth client ID is required when using pre-defined OAuth client credentials." The visible OAuth selector is disabled and the supported Portal/Sites surfaces do not expose the required public-draft client configuration. These protocol corrections are independent of that configuration failure; no successful connection, scan or review submission is claimed.
+
 ## 0.1.4 prepared source
 
 - Exclude unused original Remotion AAC/MP3/FLAC fallback payloads from Extension builds with importer-scoped fail-closed bindings. Eight affected outputs decode successfully, including native sandbox and Vite video, cancellation and recovery; all export formats remain. Separate desktop builds retain distinct provenance scope.

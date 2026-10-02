@@ -13,7 +13,13 @@ import { environment, request } from './emulator.ts';
 const owner = { id:'alice',email:'alice@example.test' };
 function service(env = environment(), who = owner) { return new DirectorService(new CloudStore(env.DB, who),env); }
 async function create(svc: DirectorService, category = 'video') { return svc.create({ title:'Test Film',category }); }
-async function rpc(env: ReturnType<typeof environment>, method: string, params: unknown = {}, who?: string) { const response = await handleMcp(request('/mcp','POST',{jsonrpc:'2.0',id:1,method,params},who),env); return { response, body: await response.json() as any }; }
+async function rpc(env: ReturnType<typeof environment>, method: string, params: unknown = {}, who?: string) {
+ const req=request('/mcp','POST',{jsonrpc:'2.0',id:1,method,params},who);
+ const input=params as Record<string,any>;
+ const version=input?._meta?.['io.modelcontextprotocol/protocolVersion'];
+ if(version){req.headers.set('MCP-Protocol-Version',version);req.headers.set('Mcp-Method',method);if(method==='tools/call')req.headers.set('Mcp-Name',input.name);if(method==='resources/read')req.headers.set('Mcp-Name',input.uri);}
+ const response=await handleMcp(req,env);return{response,body:await response.json() as any};
+}
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 describe('OpenAI domain verification route', () => {
  const challengePath = '/.well-known/openai-apps-challenge';
@@ -194,7 +200,7 @@ describe('persistent jobs, binary storage and platform contract',()=>{
    expect(validator.validate({...body.result,ttlMs:-1}).valid,`${method} negative TTL`).toBe(false);
    expect(validator.validate({...body.result,cacheScope:'shared'}).valid,`${method} invalid scope`).toBe(false);
   }
-  const called=(await rpc(env,'tools/call',{name:'list_projects'},'alice')).body.result;
+  const called=(await rpc(env,'tools/call',{name:'list_projects',_meta:{'io.modelcontextprotocol/protocolVersion':'2026-07-28','io.modelcontextprotocol/clientCapabilities':{}}},'alice')).body.result;
   expect(called.resultType).toBe('complete');expect(called.ttlMs).toBeUndefined();expect(called.cacheScope).toBeUndefined();
  });
  it('uses the native HTML build hash consistently and preserves reads of the legacy UI URI',async()=>{
@@ -209,7 +215,7 @@ describe('persistent jobs, binary storage and platform contract',()=>{
   const legacy=(await rpc(env,'resources/read',{uri:LEGACY_EDITOR_RESOURCE})).body.result;
   expect(current.contents[0].uri).toBe(EDITOR_RESOURCE);expect(legacy.contents[0].uri).toBe(LEGACY_EDITOR_RESOURCE);
   expect(legacy.contents[0].text).toBe(current.contents[0].text);
-  expect(legacy).toMatchObject({resultType:'complete',ttlMs:0,cacheScope:'private'});
+  expect(legacy.resultType).toBeUndefined();expect(legacy.ttlMs).toBeUndefined();expect(legacy.cacheScope).toBeUndefined();
   expect((await rpc(env,'resources/read',{uri:'ui://director-studio/unknown.html'})).body.error).toBeDefined();
  });
  it('leases persistent job to one editor and rejects other executor completion',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const pid=c.manifest.id;const job:any=await svc.action(pid,'createJob',{kind:'render_still',input:{frame:0}});expect(job.projectVersion).toBe(1);expect(await svc.action(pid,'claimJob',{jobId:job.id,executorId:'editor-one'})).toMatchObject({claimed:true});expect(await service(env).action(pid,'claimJob',{jobId:job.id,executorId:'editor-two'})).toMatchObject({claimed:false});await expect(svc.action(pid,'updateJob',{jobId:job.id,executorId:'editor-two',patch:{status:'completed'}})).rejects.toMatchObject({code:'JOB_LEASE_LOST'});await svc.action(pid,'updateJob',{jobId:job.id,executorId:'editor-one',patch:{status:'completed',output:{assetIds:['a']}}});expect((await service(env).get(pid)).jobs[0]?.status).toBe('completed');expect(await svc.action(pid,'claimJob',{jobId:job.id,executorId:'editor-two'})).toMatchObject({claimed:false});});
