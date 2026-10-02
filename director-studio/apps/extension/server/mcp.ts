@@ -119,8 +119,12 @@ function requestIsModern(request: Request, method: string, params: Record<string
   if (version === LEGACY_PROTOCOL_VERSION) return false;
   const capabilities = meta?.['io.modelcontextprotocol/clientCapabilities'];
   if (!capabilities || typeof capabilities !== 'object' || Array.isArray(capabilities)) throw new McpProtocolError(-32602, 'Required per-request client capabilities are missing or malformed.');
-  mirroredHeader(request, 'Mcp-Method', method);
-  if (['tools/call','resources/read','prompts/get'].includes(method)) mirroredHeader(request, 'Mcp-Name', method === 'resources/read' ? params.uri : params.name, true);
+  // The managed Sites/native transport forwards protocol metadata and trusted
+  // identity, but currently omits these method/name mirrors at the Worker.
+  // Validate every supplied mirror; tolerate absent ones at this boundary.
+  // This compatibility allowance is not strict external HTTP conformance.
+  if (request.headers.has('Mcp-Method')) mirroredHeader(request, 'Mcp-Method', method);
+  if (['tools/call','resources/read','prompts/get'].includes(method) && request.headers.has('Mcp-Name')) mirroredHeader(request, 'Mcp-Name', method === 'resources/read' ? params.uri : params.name, true);
   return true;
 }
 export async function handleMcp(request: Request, env: WorkerEnv): Promise<Response> {

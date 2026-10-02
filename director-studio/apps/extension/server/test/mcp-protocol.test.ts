@@ -93,7 +93,7 @@ describe('MCP legacy and per-request protocol versions', () => {
   it.each([
     ['missing protocol', 'MCP-Protocol-Version', null],
     ['mismatched protocol', 'MCP-Protocol-Version', '2025-11-25'],
-    ['missing method', 'Mcp-Method', null],
+    ['malformed supplied method', 'Mcp-Method', ''],
     ['mismatched method', 'Mcp-Method', 'tools/call'],
     ['method value case differs', 'Mcp-Method', 'PING'],
   ])('rejects %s header before dispatch', async (_label, header, value) => {
@@ -104,9 +104,9 @@ describe('MCP legacy and per-request protocol versions', () => {
     expect(body.error.code).toBe(-32020);
   });
 
-  it.each([null, 'get_project', '=?base64?%%%?=', '=?base64?/w==?='])('rejects missing, mismatched or malformed tool-name header %s', async value => {
+  it.each(['', 'get_project', '=?base64?%%%?=', '=?base64?/w==?='])('rejects mismatched or malformed supplied tool-name header %s', async value => {
     const req = modernRequest('tools/call', { name: 'list_projects' }, 'alice');
-    if (value === null) req.headers.delete('Mcp-Name'); else req.headers.set('Mcp-Name', value);
+    req.headers.set('Mcp-Name', value);
     const { response, body } = await read(req);
     expect(response.status).toBe(400);
     expect(body.error.code).toBe(-32020);
@@ -131,6 +131,32 @@ describe('MCP legacy and per-request protocol versions', () => {
     resource.headers.set('Mcp-Name', 'ui://other/editor.html');
     expect((await read(resource)).body.error.code).toBe(-32020);
     const anonymous = await read(modernRequest('tools/call', { name: 'list_projects' }));
+    expect(anonymous.response.status).toBe(401);
+    expect(anonymous.body.error.code).toBe(-32001);
+  });
+
+  it('accepts the observed managed native request without method/name mirrors and retains owner isolation', async () => {
+    const env = environment();
+    for (const who of ['alice', 'bob']) {
+      const created = await read(modernRequest('tools/call', { name: 'create_project', arguments: { title: `${who} project`, category: 'video' } }, who), env);
+      expect(created.body.result).not.toHaveProperty('isError');
+    }
+    function managedRequest(who?: string) {
+      const req = request('/mcp', 'POST', { jsonrpc: '2.0', id: 'managed-native', method: 'tools/call', params: { name: 'list_projects', arguments: {}, _meta: modernMeta } }, who);
+      req.headers.set('MCP-Protocol-Version', '2026-07-28');
+      return req;
+    }
+    for (const who of ['alice', 'bob']) {
+      const req = managedRequest(who);
+      expect(req.headers.has('Mcp-Method')).toBe(false);
+      expect(req.headers.has('Mcp-Name')).toBe(false);
+      const listed = await read(req, env);
+      expect(listed.response.status).toBe(200);
+      expect(listed.body.result.resultType).toBe('complete');
+      expect(listed.body.result).not.toHaveProperty('isError');
+      expect(listed.body.result.structuredContent.result).toEqual([expect.objectContaining({ title: `${who} project` })]);
+    }
+    const anonymous = await read(managedRequest(), env);
     expect(anonymous.response.status).toBe(401);
     expect(anonymous.body.error.code).toBe(-32001);
   });
