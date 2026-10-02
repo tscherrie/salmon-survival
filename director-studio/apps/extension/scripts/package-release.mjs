@@ -33,7 +33,7 @@ await collect(plugin);
 if (openai.apps != null || manifest.apps != null) throw new Error('App bindings are not portable public upload fields.');
 if (manifest.lifecycleHooks != null || openai.lifecycleHooks != null) throw new Error('Lifecycle hooks are excluded from the public preparation package.');
 const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim();
-files[`${manifest.name}/SOURCE-CHECKPOINT.txt`] = strToU8(`${head}\nThis package is preparation material. It does not complete Portal promotion, public policy URLs, reviewer access or native demo verification. Publisher Verified is user-reported; no legal attestation is made. Sites owns the existing canonical private plugin; do not upload this as a duplicate private plugin.\n`);
+files[`${manifest.name}/SOURCE-CHECKPOINT.txt`] = strToU8(`${head}\nThis package is preparation material. It does not complete Portal promotion, public policy URLs, reviewer access or native demo verification. Individual Verified identity was confirmed in a read-only Portal view; canonical Sites-app/project mapping remains unresolved. No legal attestation is made. Sites owns the existing canonical private plugin; do not upload this as a duplicate private plugin.\n`);
 await mkdir(output, { recursive: true });
 await writeFile(resolve(output, 'ai-director-studio-plugin.zip'), zipSync(files, { level: 9 }));
 execFileSync('git', ['archive', '--format=zip', '--prefix=ai-director-studio-source/', '-o', resolve(output, 'ai-director-studio-source.zip'), head, ...releasePaths], { cwd: repo });
@@ -48,9 +48,9 @@ ai-director-studio-plugin.zip: portable metadata, native Director skill, verifie
 
 ai-director-studio-source.zip: extract, enter director-studio, run npm ci then npm run extension:build. The included .openai/hosting.example.json has no Site ID and is used for local builds. Deployment requires your own provisioned Site identity. Root drizzle migrations are included.
 
-dependency-licenses.json: exact complete workspace dependency inventory. MIT applies to application source, not all dependencies. Public FFmpeg/encoder binary distribution and Remotion eligibility still need clearance; no third-party runtime WASM is vendored in the source ZIP.
+dependency-licenses.json: exact complete workspace dependency inventory. MIT applies to application source, not all dependencies. Pinned codec/toolchain source archives, exact binary hashes and corresponding-source limits are in apps/extension/release/codec-sources and license-inventory.md. The independent operator with at most three people meets the Remotion Free criterion; no paid Remotion plan is pending. No third-party runtime WASM is vendored in the source ZIP.
 
-The source contains apps/extension/release/acceptance.md and function-coverage.md with precise test and live MCP evidence. Native visual UI/context/Library, a second real account, public policy/support URLs, reviewer login/demo, country targeting and Portal promotion are not accepted by these packages. Publisher Verified is user-reported.
+The source contains apps/extension/release/acceptance.md and function-coverage.md with precise test and live MCP evidence. The real native start was human-confirmed at cf761; complete native context/Library/category flows and a second real account remain unverified. A recorded SDK-browser demo is supporting evidence, not the required native reviewer walkthrough. Public policy/support URLs, canonical reviewer access, country targeting and Portal promotion remain unresolved. Individual Verified identity is observed in a read-only Portal view; no legal attestation is made.
 `);
 const artifacts = ['ai-director-studio-plugin.zip', 'ai-director-studio-source.zip', 'dependency-licenses.json', 'SOURCE-CHECKPOINT.txt', 'README.txt'];
 await writeFile(resolve(output, 'SHA256SUMS'), (await Promise.all(artifacts.map(async name => `${createHash('sha256').update(await readFile(resolve(output, name))).digest('hex')}  ${name}`))).join('\n')+'\n');

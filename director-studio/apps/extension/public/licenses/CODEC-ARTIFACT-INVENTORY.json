@@ -1,0 +1,364 @@
+{
+  "schemaVersion": 1,
+  "inspectedAtUtc": "2026-10-02T03:59:03.231Z",
+  "packageLockSha256": "430e61237c12f044deee32284e98f11d60bf65f77787f3fe7418a484b6bf6d46",
+  "packageVersions": [
+    {
+      "name": "@ffmpeg/core",
+      "version": "0.12.10",
+      "license": "GPL-2.0-or-later",
+      "npmArchive": "https://registry.npmjs.org/@ffmpeg/core/-/core-0.12.10.tgz",
+      "npmIntegrity": "sha512-dzNplnn2Nxle2c2i2rrDhqcB19q9cglCkWnoMTDN9Q9l3PvdjZWd1HfSPjCNWc/p8Q3CT+Es9fWOR0UhAeYQZA=="
+    },
+    {
+      "name": "@ffmpeg/ffmpeg",
+      "version": "0.12.15",
+      "license": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@ffmpeg/ffmpeg/-/ffmpeg-0.12.15.tgz",
+      "npmIntegrity": "sha512-1C8Obr4GsN3xw+/1Ww6PFM84wSQAGsdoTuTWPOj2OizsRDLT4CXTaVjPhkw6ARyDus1B9X/L2LiXHqYYsGnRFw=="
+    },
+    {
+      "name": "@ffmpeg/types",
+      "version": "0.12.4",
+      "license": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@ffmpeg/types/-/types-0.12.4.tgz",
+      "npmIntegrity": "sha512-k9vJQNBGTxE5AhYDtOYR5rO5fKsspbg51gbcwtbkw2lCdoIILzklulcjJfIDwrtn7XhDeF2M+THwJ2FGrLeV6A=="
+    },
+    {
+      "name": "mediabunny",
+      "version": "1.61.0",
+      "license": "MPL-2.0",
+      "npmArchive": "https://registry.npmjs.org/mediabunny/-/mediabunny-1.61.0.tgz",
+      "npmIntegrity": "sha512-WciPOYwKZwgYkoBKcEK6JzzIf+w5whypPzFdOihOylZ/5Qv19FmNfRnTcaprH+jD136YpEASU30Eb6VNCJiz3A=="
+    },
+    {
+      "name": "@mediabunny/aac-encoder",
+      "version": "1.56.1",
+      "license": "MPL-2.0",
+      "npmArchive": "https://registry.npmjs.org/@mediabunny/aac-encoder/-/aac-encoder-1.56.1.tgz",
+      "npmIntegrity": "sha512-a+OY/BctP7zC4G/prHikooOVaoWXMD4+bUyEwHg2dtQiQdIwC6TDJdVYJu5dfrdSNOiAFkv1HKcYEeROdwMezg=="
+    },
+    {
+      "name": "@mediabunny/mp3-encoder",
+      "version": "1.56.1",
+      "license": "MPL-2.0",
+      "npmArchive": "https://registry.npmjs.org/@mediabunny/mp3-encoder/-/mp3-encoder-1.56.1.tgz",
+      "npmIntegrity": "sha512-p66ovEq6mZt3ejje45NOju84hIJI4v8rHfsmc1D2J34ziV0USE8AdJBzmiwqxl6nZkIAQLNB19HzbVRcQfc51g=="
+    },
+    {
+      "name": "@mediabunny/flac-encoder",
+      "version": "1.56.1",
+      "license": "MPL-2.0",
+      "npmArchive": "https://registry.npmjs.org/@mediabunny/flac-encoder/-/flac-encoder-1.56.1.tgz",
+      "npmIntegrity": "sha512-zbmorMVlF1izwtlz5mWnu7A1rJLM+V26I0pEFr9Td1EDTwE5uAGRSW+/UZlnjwj1t00Woe3Zonfh9kb7lRRBqg=="
+    }
+  ],
+  "publishedFiles": [
+    {
+      "path": "node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.js",
+      "bytes": 111804,
+      "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+    },
+    {
+      "path": "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js",
+      "bytes": 112059,
+      "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+    },
+    {
+      "path": "node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.wasm",
+      "bytes": 32232419,
+      "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.js",
+      "bytes": 111804,
+      "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core-classic.js",
+      "bytes": 112059,
+      "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.json",
+      "bytes": 369,
+      "sha256": "b746f1cbd79e205e26c5813cc39ea60c458dd40cf002f85a8717e860f21908ac"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.part0",
+      "bytes": 16777216,
+      "sha256": "4ccba0c9cc7f019751a958ead3918cf51c9563ff2f8a76fb1f72ae492f66693b"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.part1",
+      "bytes": 15455203,
+      "sha256": "80e8b2ae7994e92102e048249ab0a6673480ca626c359b1d321b24f105f02e65"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/worker.js",
+      "bytes": 5388,
+      "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef"
+    }
+  ],
+  "encoderWasm": [
+    {
+      "package": "@mediabunny/aac-encoder",
+      "version": "1.56.1",
+      "bytes": 509386,
+      "sha256": "8488acb0bc9f43055b83600cc4c2c07d20f07675aa65671f91ac1d75515845d9",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": "Lavc62.23.103",
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    },
+    {
+      "package": "@mediabunny/mp3-encoder",
+      "version": "1.56.1",
+      "bytes": 223033,
+      "sha256": "d0b109db83c153b81ba0080fa2163664dff1e341b154edda6d40bc4b6fbc355e",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": null,
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    },
+    {
+      "package": "@mediabunny/flac-encoder",
+      "version": "1.56.1",
+      "bytes": 166140,
+      "sha256": "ea25f2da12550128391e0d83465deb887c3bef96b7ee4a9b34ebb1d8202fffbe",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": "reference libFLAC git-3f1ecff8 20260304",
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    }
+  ],
+  "remotionPackages": [
+    {
+      "path": "node_modules/@remotion/bundler",
+      "version": "4.0.532",
+      "declaredLicense": "SEE LICENSE IN LICENSE.md",
+      "npmArchive": "https://registry.npmjs.org/@remotion/bundler/-/bundler-4.0.532.tgz",
+      "npmIntegrity": "sha512-3F0yU4jw8I0VYr4CXznxqafCb0IcM5SlJjmt6bZfTPDIeP3in/CKU6ZL0L2xE4W0ppMUU6QFMroi0VnMi9NlSw=="
+    },
+    {
+      "path": "node_modules/@remotion/canvas",
+      "version": "4.0.532",
+      "declaredLicense": "Remotion License",
+      "npmArchive": "https://registry.npmjs.org/@remotion/canvas/-/canvas-4.0.532.tgz",
+      "npmIntegrity": "sha512-7HwcyUBCLmE1oQD+mtV7HjC/7d+jXEk3ZiX0XvdjuBBhTeb381jiC0LZoObEk307x6LV5d63B4ZNMAyA/Kapjw=="
+    },
+    {
+      "path": "node_modules/@remotion/captions",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/captions/-/captions-4.0.532.tgz",
+      "npmIntegrity": "sha512-1DzWEnv5DCGESIq1ux1C1M/z/sJMv08A7Z+1bHAnGW3gVrg37QtoRyhyDvWKJZHnNIYiEmBeICSeQpgu5p0Bdw=="
+    },
+    {
+      "path": "node_modules/@remotion/codemods",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/codemods/-/codemods-4.0.532.tgz",
+      "npmIntegrity": "sha512-WEOuUHYc6vNx4pheNsB0jqdfNuqgDk1Xz7cgCdHihPRpwZpUgJgl1mxH0f+KVIL3+ef9+gagqYScEkuS2q3pdw=="
+    },
+    {
+      "path": "node_modules/@remotion/compositor-darwin-arm64",
+      "version": "4.0.532",
+      "declaredLicense": null,
+      "npmArchive": "https://registry.npmjs.org/@remotion/compositor-darwin-arm64/-/compositor-darwin-arm64-4.0.532.tgz",
+      "npmIntegrity": "sha512-K/RID6hvhRqiE1q/DTurkmG/6SrD9b918fgqvmntFpFiU3bc8Ti9ZaYQCOwTwOA6mVBh6oneuHuoA2QpFlP0Qg=="
+    },
+    {
+      "path": "node_modules/@remotion/compositor-darwin-x64",
+      "version": "4.0.532",
+      "declaredLicense": null,
+      "npmArchive": "https://registry.npmjs.org/@remotion/compositor-darwin-x64/-/compositor-darwin-x64-4.0.532.tgz",
+      "npmIntegrity": "sha512-mggi24c5As/H6wYoCr22oTRPVeblvNMdenh+bi7316lvBpBDgSXeIUkXvUEG4379lJQtshks0UfwkBkqnePyvg=="
+    },
+    {
+      "path": "node_modules/@remotion/compositor-linux-arm64-gnu",
+      "version": "4.0.532",
+      "declaredLicense": null,
+      "npmArchive": "https://registry.npmjs.org/@remotion/compositor-linux-arm64-gnu/-/compositor-linux-arm64-gnu-4.0.532.tgz",
+      "npmIntegrity": "sha512-7ZPI1t6k0NEbJHP6fSjgdJJymyOQCtExeC6nqs6P5jYQ6UT5xKZyIEiytAAXJ6KQBOWlyuhvU1iHgYpAHYKXlA=="
+    },
+    {
+      "path": "node_modules/@remotion/compositor-linux-arm64-musl",
+      "version": "4.0.532",
+      "declaredLicense": null,
+      "npmArchive": "https://registry.npmjs.org/@remotion/compositor-linux-arm64-musl/-/compositor-linux-arm64-musl-4.0.532.tgz",
+      "npmIntegrity": "sha512-DatMaiMqiO+2rAXSgE+61V3WmmL6sRQPJd15PTI7k6F905ewM0TlXhyoEp1P/vCS1M0xBEgI/XNeEcr0yVEJXQ=="
+    },
+    {
+      "path": "node_modules/@remotion/compositor-linux-x64-gnu",
+      "version": "4.0.532",
+      "declaredLicense": null,
+      "npmArchive": "https://registry.npmjs.org/@remotion/compositor-linux-x64-gnu/-/compositor-linux-x64-gnu-4.0.532.tgz",
+      "npmIntegrity": "sha512-XmXrGroGga9pYJ4CfexCun2rh64WvsIVuTPYEWSpfFnHGsD9Pa7ljOio9A1B+6qAoz6iZeXZFKAOTH1COD5KJg=="
+    },
+    {
+      "path": "node_modules/@remotion/compositor-linux-x64-musl",
+      "version": "4.0.532",
+      "declaredLicense": null,
+      "npmArchive": "https://registry.npmjs.org/@remotion/compositor-linux-x64-musl/-/compositor-linux-x64-musl-4.0.532.tgz",
+      "npmIntegrity": "sha512-y05BgTyOw3KbavIWm3n8AxsnmIt2PgoqH1ZFuZySkEvrGWY2oq+t1i7kBqMvNvCDRzv+wca5wb0FaGi4GXXIjg=="
+    },
+    {
+      "path": "node_modules/@remotion/compositor-win32-x64-msvc",
+      "version": "4.0.532",
+      "declaredLicense": null,
+      "npmArchive": "https://registry.npmjs.org/@remotion/compositor-win32-x64-msvc/-/compositor-win32-x64-msvc-4.0.532.tgz",
+      "npmIntegrity": "sha512-OES5+mlcBTxcQc7VXszEqwbpnAU593P5uuXDGPz6VC/FMivFtOGmBObE8LQ3azAkVfls4Arjxh33U44inlCweg=="
+    },
+    {
+      "path": "node_modules/@remotion/elevenlabs",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/elevenlabs/-/elevenlabs-4.0.532.tgz",
+      "npmIntegrity": "sha512-WTnWQ+obrURlIXZqKaTehd69eYwMpWLwlVv/QRnd7XKicMzhIsxw6XXK3muFXn3kyltJV6A97NTiF0g7T92TQw=="
+    },
+    {
+      "path": "node_modules/@remotion/licensing",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/licensing/-/licensing-4.0.532.tgz",
+      "npmIntegrity": "sha512-rVFt+XpEn4X5aOiy1DDCjJeUKgGey1ftYK812W8iEBZkcl6hlb1eq9SyQTIX0JlTtMzdJrev6+jLSnLCOj69OQ=="
+    },
+    {
+      "path": "node_modules/@remotion/media",
+      "version": "4.0.532",
+      "declaredLicense": null,
+      "npmArchive": "https://registry.npmjs.org/@remotion/media/-/media-4.0.532.tgz",
+      "npmIntegrity": "sha512-tY8GhDaqwhPQz0/e2eioe2EBUSQsYhpkQSYvwBdl+VrhPFfJ3t4YpEIeUJx0rJm1rH1/zhQISkMIS92WHUMjRQ=="
+    },
+    {
+      "path": "node_modules/@remotion/media-parser",
+      "version": "4.0.532",
+      "declaredLicense": "Remotion License https://remotion.dev/license",
+      "npmArchive": "https://registry.npmjs.org/@remotion/media-parser/-/media-parser-4.0.532.tgz",
+      "npmIntegrity": "sha512-xOhwauHbVnXPRqyz5tI5tGtdacp1POZuFjAp8NALw/0g+8Bp99YXjgUjjkXBHNqV6r8Eym7eHA+EBWfmqvIJAQ=="
+    },
+    {
+      "path": "node_modules/@remotion/media-utils",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/media-utils/-/media-utils-4.0.532.tgz",
+      "npmIntegrity": "sha512-ZjHDqNxGYHj4rOMVDvQQaoc4pn4t1fmlemVcJCCKrElYUih/gn+bV8NlSddYnAB9KSS2GyRXbfqvYgUdQZbG1g=="
+    },
+    {
+      "path": "node_modules/@remotion/openai-whisper",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/openai-whisper/-/openai-whisper-4.0.532.tgz",
+      "npmIntegrity": "sha512-CXTAIabqX0pS38SOselqR0wM1OyKsnsDk+iLSVrALdD/47jajWV0t2Ap9nYtB441dzrpWINPvW5hIvmw4xVvZQ=="
+    },
+    {
+      "path": "node_modules/@remotion/paths",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/paths/-/paths-4.0.532.tgz",
+      "npmIntegrity": "sha512-JyO0zYT47lbqfsDriFl69RfmUmjXm4h/h1TAvDt5XnChIZMlf9DlpUdiBYkOUvO7NHOXku8XsG/LKyTP/jnZmg=="
+    },
+    {
+      "path": "node_modules/@remotion/player",
+      "version": "4.0.532",
+      "declaredLicense": "SEE LICENSE IN LICENSE.md",
+      "npmArchive": "https://registry.npmjs.org/@remotion/player/-/player-4.0.532.tgz",
+      "npmIntegrity": "sha512-McCswN8cb3Y6BEg1iCRc6yBUoxjODoStvOsAHZ6uReHEP+mqzor3p1qO9zKIm9aL/evEF7bumwo43nKoO1klxA=="
+    },
+    {
+      "path": "node_modules/@remotion/renderer",
+      "version": "4.0.532",
+      "declaredLicense": "SEE LICENSE IN LICENSE.md",
+      "npmArchive": "https://registry.npmjs.org/@remotion/renderer/-/renderer-4.0.532.tgz",
+      "npmIntegrity": "sha512-Iy5JVGKBglJNBzu5uT9qKG8ZK2HqK9dZWn1gVG+BjyH0QAlvry3E5drra6hRmI0e9nhu2HxT9MrKQ0oLIfX5hA=="
+    },
+    {
+      "path": "node_modules/@remotion/streaming",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/streaming/-/streaming-4.0.532.tgz",
+      "npmIntegrity": "sha512-1Lw5HQzznHEfSq2HjXEJHbWsXLHLjqiQ2CfUaeMHtpFCR2AqUle13vbnqw+yG96e2GmnHhRPwQONSMtGHSjnfw=="
+    },
+    {
+      "path": "node_modules/@remotion/studio",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/studio/-/studio-4.0.532.tgz",
+      "npmIntegrity": "sha512-GMxdgX5xhwcyXBdx0JKQs9qRN6zTVASFfBs5N6qcqgg1ep8GWI/7mGWSFoH9wYjB3YxtEAA2eo0+vb+0ZE+g/g=="
+    },
+    {
+      "path": "node_modules/@remotion/studio-protocol",
+      "version": "4.0.532",
+      "declaredLicense": "Remotion License",
+      "npmArchive": "https://registry.npmjs.org/@remotion/studio-protocol/-/studio-protocol-4.0.532.tgz",
+      "npmIntegrity": "sha512-rv+5OT6ORlQbTyWwvXngF8f81JJFbIy6HBYlT4uXELwcvODMkARs3yRa2WCxFyT8otd8HH9J0pcYQlfJkW/E9g=="
+    },
+    {
+      "path": "node_modules/@remotion/studio-shared",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/studio-shared/-/studio-shared-4.0.532.tgz",
+      "npmIntegrity": "sha512-wUgce2FQ56lDNlMXHyEjz2aAI7fFYyUTmNorjghOyC4pGt+lzcuNPifjNQivLi8OkWWdaUjZLeLLcHs8IkVLVA=="
+    },
+    {
+      "path": "node_modules/@remotion/timeline-utils",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/timeline-utils/-/timeline-utils-4.0.532.tgz",
+      "npmIntegrity": "sha512-DXWm1yoZ7lntTsk1syabokIfKgh8B3ivQbZb4qpJf+gO5mLltWr9O731T6ky3xE38WYl5IEREDgItjxQLM1ESQ=="
+    },
+    {
+      "path": "node_modules/@remotion/web-renderer",
+      "version": "4.0.532",
+      "declaredLicense": "SEE LICENSE IN LICENSE.md",
+      "npmArchive": "https://registry.npmjs.org/@remotion/web-renderer/-/web-renderer-4.0.532.tgz",
+      "npmIntegrity": "sha512-rA5Tbz+QLTMZbdJFP6XuBg/Xb5zSs6JxTCPuom3n+BFI/Wdzu63JhCjLe3MkIfEj38yQV0gvOcwFzvLcPFwmhA=="
+    },
+    {
+      "path": "node_modules/@remotion/zod-types",
+      "version": "4.0.532",
+      "declaredLicense": "MIT",
+      "npmArchive": "https://registry.npmjs.org/@remotion/zod-types/-/zod-types-4.0.532.tgz",
+      "npmIntegrity": "sha512-I/hKQp4UmrYKCjbOI/MBzojPbnwXW2lOPRhq6/AWBDdlNzxrgKz9cZV+R2jhzaXcjHQ+DgklixBhbROynIlDRw=="
+    },
+    {
+      "path": "node_modules/remotion",
+      "version": "4.0.532",
+      "declaredLicense": "SEE LICENSE IN LICENSE.md",
+      "npmArchive": "https://registry.npmjs.org/remotion/-/remotion-4.0.532.tgz",
+      "npmIntegrity": "sha512-YsxSVz4E7HDKhC9v+O9sNCA9ud05VuWbjTX/ko51lf4MV+uyyrvsAyVNbPW2pW9Nk5Ty+JPdW3osRr5A+hXOoA=="
+    }
+  ],
+  "method": "Read-only hashing and JavaScript AST literal decoding; no encoder JS or WASM executed",
+  "ffmpeg": {
+    "runtimeEqualsNpmWasm": true,
+    "version": "5.1.4",
+    "emscripten": "3.1.40",
+    "emscriptenCommit": "5c27e79dd0a9c4e27ef2326841698cdd4f6b5784",
+    "lameVersionString": true,
+    "x264GitVersion": null,
+    "customSections": [
+      "target_features"
+    ],
+    "buildConfiguration": "--target-os=none --arch=x86_32 --enable-cross-compile --disable-asm --disable-stripping --disable-programs --disable-doc --disable-debug --disable-runtime-cpudetect --disable-autodetect --nm=emnm --ar=emar --ranlib=emranlib --cc=emcc --cxx=em++ --objcc=emcc --dep-cc=emcc --extra-cflags='-I/opt/include -O3 -msimd128' --extra-cxxflags='-I/opt/include -O3 -msimd128' --disable-pthreads --disable-w32threads --disable-os2threads --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libopus --enable-zlib --enable-libwebp --enable-libfreetype --enable-libfribidi --enable-libass --enable-libzimg"
+  },
+  "mp3RelinkArchive": {
+    "path": "extracted/mediabunny-encoders/packages/mp3-encoder/build/libmp3lame.a",
+    "bytes": 344180,
+    "sha256": "73b562e4a14ec1c396044ad84b836a444794177bd4bce7956268de2fe84ca77d",
+    "lameVersion": "3.100",
+    "compiler": "clang22.0.0git (identifier present in archive)",
+    "llvmSourceRevision": "7f93487862d98bf1c168babba87daf6224d8a46f",
+    "originalCompilerBuildOrPatchsetRecorded": false
+  },
+  "remotionLicense": {
+    "version": "4.0.532",
+    "bytes": 2823,
+    "sha256": "bd65083b940f61904f6ef298aade918a7cad72a3e35bc406e36fab365844b673",
+    "userConfirmedIndependentOperatorAtMostThreePeople": true,
+    "confirmationSource": "Human user in parent conversation; not an inferred SkillMeNow affiliation",
+    "eligibilityCriterionMatchesInstalledLicense": true,
+    "legalAttestationProvided": false
+  }
+}

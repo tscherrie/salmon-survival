@@ -11,6 +11,10 @@ import { mixTimelineAudio } from './audio.ts';
 import { withFFmpeg } from './ffmpeg.ts';
 import { BrowserCapabilityError, MediaRepairError, type ExportRequest } from './types.ts';
 
+// The independent project's operator confirmed a total team size of at most three.
+// Remotion remains separately licensed; this setting does not disable its usage telemetry.
+const remotionLicenseKey = 'free-license' as const;
+
 /** Static checks never establish trust: arbitrary component code runs only behind the opaque iframe boundary. */
 export function assertComponentSandbox(): void {
   assertMediaSandboxRole();
@@ -34,7 +38,7 @@ export async function timelineRenderProps(request: ExportRequest) {
 export async function renderTimelineStill(request: ExportRequest): Promise<Blob> {
   const { composition, inputProps, issues } = await timelineRenderProps(request);
   request.onProgress?.('Standbild rendern', .2);
-  const result = await renderStillOnWeb({ composition, inputProps, frame: request.options?.frame ?? 0, signal: request.signal, allowHtmlInCanvas: false });
+  const result = await renderStillOnWeb({ composition, inputProps, frame: request.options?.frame ?? 0, signal: request.signal, allowHtmlInCanvas: false, licenseKey: remotionLicenseKey });
   if (issues.length) throw new MediaRepairError(issues);
   return result.blob({ format: request.format === 'jpg' || request.format === 'jpeg' ? 'jpeg' : 'png', quality: request.options?.quality ?? .95 });
 }
@@ -51,14 +55,14 @@ export async function renderTimelineVideo(request: ExportRequest): Promise<Blob>
   const support = await canRenderMediaOnWeb({ width: composition.width, height: composition.height, container: 'mp4', videoCodec: 'h264', muted: true });
   let silent: Blob;
   if (support.canRender) {
-    const render = await renderMediaOnWeb({ composition, inputProps, container: 'mp4', videoCodec: 'h264', muted: true, signal: request.signal, allowHtmlInCanvas: false, outputTarget: 'arraybuffer', onProgress: (p) => request.onProgress?.('Video', p.progress) }); silent = await render.getBlob();
+    const render = await renderMediaOnWeb({ composition, inputProps, container: 'mp4', videoCodec: 'h264', muted: true, signal: request.signal, allowHtmlInCanvas: false, outputTarget: 'arraybuffer', licenseKey: remotionLicenseKey, onProgress: (p) => request.onProgress?.('Video', p.progress) }); silent = await render.getBlob();
   } else {
     if (request.options?.visualOnly) throw new BrowserCapabilityError('video-codec', `Der isolierte Komponentenexport benötigt native H.264-Unterstützung: ${support.issues.map((i) => i.message).join('; ')}`);
     // Real codec fallback, using the same composition and per-frame images. Single-thread WASM has a 2 GiB address space.
     const estimated = composition.width * composition.height * 4 * composition.durationInFrames;
     if (estimated > 1_500_000_000) throw new BrowserCapabilityError('video-codec', `${support.issues.map((i) => i.message).join('; ')}. Der WASM-Ersatz benötigt für diese Timeline zu viel Arbeitsspeicher; native H.264-Unterstützung oder ein kürzerer Exportbereich ist erforderlich.`);
     silent = await withFFmpeg(async (ff) => {
-      for (let frame = 0; frame < composition.durationInFrames; frame++) { if (request.signal?.aborted) throw new DOMException('Abgebrochen', 'AbortError'); const image = await renderStillOnWeb({ composition, inputProps, frame, allowHtmlInCanvas: false, signal: request.signal }); const blob = await image.blob(); await ff.writeFile(`frame-${String(frame).padStart(8, '0')}.png`, new Uint8Array(await blob.arrayBuffer())); request.onProgress?.('Videoframes', frame / composition.durationInFrames); }
+      for (let frame = 0; frame < composition.durationInFrames; frame++) { if (request.signal?.aborted) throw new DOMException('Abgebrochen', 'AbortError'); const image = await renderStillOnWeb({ composition, inputProps, frame, allowHtmlInCanvas: false, signal: request.signal, licenseKey: remotionLicenseKey }); const blob = await image.blob(); await ff.writeFile(`frame-${String(frame).padStart(8, '0')}.png`, new Uint8Array(await blob.arrayBuffer())); request.onProgress?.('Videoframes', frame / composition.durationInFrames); }
       if (await ff.exec(['-framerate', String(composition.fps), '-i', 'frame-%08d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', 'silent.mp4'])) throw new Error('H.264-Browserexport fehlgeschlagen'); const bytes = await ff.readFile('silent.mp4'); if (typeof bytes === 'string') throw new Error('Ungültiges Video'); return new Blob([new Uint8Array(bytes)], { type: 'video/mp4' });
     }, request.signal);
   }

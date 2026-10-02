@@ -1,64 +1,70 @@
-# FFmpeg 0.12.10 source and build evidence
+# Exact codec source and build evidence
 
-## Verified binary and release facts
+## Shipped npm runtime
 
-- Installed npm package: `@ffmpeg/core@0.12.10`, license `GPL-2.0-or-later`, single-thread ESM.
-- Published npm archive: <https://registry.npmjs.org/@ffmpeg/core/-/core-0.12.10.tgz>.
-- npm integrity: `sha512-dzNplnn2Nxle2c2i2rrDhqcB19q9cglCkWnoMTDN9Q9l3PvdjZWd1HfSPjCNWc/p8Q3CT+Es9fWOR0UhAeYQZA==`.
-- Upstream release: <https://github.com/ffmpegwasm/ffmpeg.wasm/releases/tag/v12.15>.
-- Build recipe commit: `71aa99d37c02a7b4c435275ca9ef50e612f6efa1` (tag v12.15).
-- FFmpeg source tag `n5.1.4` resolves to commit `4729204c17f756e186d622060088371d10b34f7e`; annotated tag object `80e7806be7f10c038bef2e71905e91af174c28e9`.
-- The installed WASM strings identify version 5.1.4 and the production `-O3 -msimd128` configuration below. This verifies identifiable build facts, not byte-for-byte reproducibility.
+@ffmpeg/core **0.12.10**, GPL-2.0-or-later; @ffmpeg/ffmpeg **0.12.15** and @ffmpeg/types **0.12.4**, MIT wrappers. The [npm core archive](https://registry.npmjs.org/@ffmpeg/core/-/core-0.12.10.tgz) was published 2025-01-07. WASM identifies FFmpeg 5.1.4 and Emscripten 3.1.40, revision5c27e79dd0a9c4e27ef2326841698cdd4f6b5784. Exact npm integrities/runtime hashes are in [CODEC-ARTIFACT-INVENTORY.json](CODEC-ARTIFACT-INVENTORY.json).
 
-The included archives contain the immutable build recipe and identified FFmpeg source. Archive download URLs, byte sizes and SHA-256 are recorded in `inventory.json` and `SHA256SUMS`.
+The unmodified WASM is **32,232,419 bytes**, SHA-256 **9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7**. Sites transports16MiB and15,455,203-byte parts; reassembly is byte-for-byte checked against npm. ESM/classic JS remain unchanged npm glue. Chunk transport does not change source obligations.
 
-## Upstream build recipe
+The fixed recipe is [ffmpeg.wasm v12.15,71aa99d37c02a7b4c435275ca9ef50e612f6efa1](https://github.com/ffmpegwasm/ffmpeg.wasm/tree/71aa99d37c02a7b4c435275ca9ef50e612f6efa1), including Dockerfile, Makefile, build/ffmpeg.sh and build/ffmpeg-wasm.sh. Tag v0.12.10 has core 0.12.6 and is not the source association for core 0.12.10.
 
-Read the complete [Dockerfile](https://github.com/ffmpegwasm/ffmpeg.wasm/blob/71aa99d37c02a7b4c435275ca9ef50e612f6efa1/Dockerfile), [Makefile](https://github.com/ffmpegwasm/ffmpeg.wasm/blob/71aa99d37c02a7b4c435275ca9ef50e612f6efa1/Makefile), [configure script](https://github.com/ffmpegwasm/ffmpeg.wasm/blob/71aa99d37c02a7b4c435275ca9ef50e612f6efa1/build/ffmpeg.sh) and [WASM link script](https://github.com/ffmpegwasm/ffmpeg.wasm/blob/71aa99d37c02a7b4c435275ca9ef50e612f6efa1/build/ffmpeg-wasm.sh).
+Configuration actually present in shipped WASM:
 
-The recipe uses Emscripten SDK Docker image `emscripten/emsdk:3.1.40`. Its documented production single-thread build is:
-
-```sh
-git clone https://github.com/ffmpegwasm/ffmpeg.wasm.git
-cd ffmpeg.wasm
-git checkout 71aa99d37c02a7b4c435275ca9ef50e612f6efa1
-make prd
-```
-
-This is the upstream documented command. It has **not** been executed or claimed to reproduce the npm binary in this release preparation. Before a controlled rebuild, replace every mutable library source reference with the verified original revision or a deliberately selected new revision and record those changes. Rebuilding with newly selected revisions produces a new binary that needs new hashes and output regression tests.
-
-The binary's configure string is:
-
-```text
+~~~text
 --target-os=none --arch=x86_32 --enable-cross-compile --disable-asm --disable-stripping --disable-programs --disable-doc --disable-debug --disable-runtime-cpudetect --disable-autodetect --nm=emnm --ar=emar --ranlib=emranlib --cc=emcc --cxx=em++ --objcc=emcc --dep-cc=emcc --extra-cflags='-I/opt/include -O3 -msimd128' --extra-cxxflags='-I/opt/include -O3 -msimd128' --disable-pthreads --disable-w32threads --disable-os2threads --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libopus --enable-zlib --enable-libwebp --enable-libfreetype --enable-libfribidi --enable-libass --enable-libzimg
-```
+~~~
 
-## Source completeness still unresolved
+## Source material actually acquired
 
-The recipe references these sources; a GitHub source archive of the main repository does not include them:
+**26 verified archives / 241,265,704 bytes (230.09 MiB)**. Original recipe/FFmpeg/installed-MPL archives remain in sources unchanged. New large archives are separate from Git/static deployment. [The source manifest](CODEC-SOURCE-MANIFEST.json) supplies immutable primary URLs/lengths/hashes. The source repository's release/codec-sources/manage-sources.mjs fetches, verifies and extracts them; its README gives executable commands/local collection location. No public download URL for our separate local collection is asserted.
 
-| Library | Recipe repository/ref |
-| --- | --- |
-| FFmpeg | FFmpeg/FFmpeg, n5.1.4 |
-| x264 | ffmpegwasm/x264, **mutable branch 4-cores** |
-| x265 | ffmpegwasm/x265, 3.4 |
-| libvpx | ffmpegwasm/libvpx, v1.13.1 |
-| LAME | ffmpegwasm/lame, **mutable master** |
-| Ogg | ffmpegwasm/Ogg, v1.3.4 |
-| Theora | ffmpegwasm/theora, v1.1.1 |
-| Opus | ffmpegwasm/opus, v1.3.1 |
-| Vorbis | ffmpegwasm/vorbis, v1.3.3 |
-| zlib | ffmpegwasm/zlib, v1.2.11 |
-| libwebp | ffmpegwasm/libwebp, v1.3.2 |
-| FreeType | ffmpegwasm/freetype2, VER-2-10-4 |
-| FriBidi | fribidi/fribidi, v1.0.9 |
-| HarfBuzz | harfbuzz/harfbuzz, 5.2.0 |
-| libass | libass/libass, 0.15.0 |
-| zimg | sekrit-twc/zimg, release-3.0.5, recursively cloned |
-| SDL2/system libraries | supplied by the Emscripten build environment |
+| Core recipe component | Identified recipe ref / environment | Fixed primary source snapshot |
+| --- | --- | --- |
+| ffmpeg | n5.1.4 | [4729204c17f756e186d622060088371d10b34f7e](https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/4729204c17f756e186d622060088371d10b34f7e) |
+| x264 | 4-cores | [33cac6b77d5b9259c552156013a817ab23119612](https://codeload.github.com/ffmpegwasm/x264/tar.gz/33cac6b77d5b9259c552156013a817ab23119612) |
+| x265 | 3.4 | [2bb5520e9596f361bf0ed81b3b8da0d7fd999069](https://codeload.github.com/ffmpegwasm/x265/tar.gz/2bb5520e9596f361bf0ed81b3b8da0d7fd999069) |
+| libvpx | v1.13.1 | [10b9492dcf05b652e2e4b370e205bd605d421972](https://codeload.github.com/ffmpegwasm/libvpx/tar.gz/10b9492dcf05b652e2e4b370e205bd605d421972) |
+| lame | master | [2badea1974ae36cb8312afe99cff1e6b3b5decee](https://codeload.github.com/ffmpegwasm/lame/tar.gz/2badea1974ae36cb8312afe99cff1e6b3b5decee) |
+| ogg | v1.3.4 | [bada45718453ac27b56773ae663f7e65112f6a6e](https://codeload.github.com/ffmpegwasm/Ogg/tar.gz/bada45718453ac27b56773ae663f7e65112f6a6e) |
+| theora | v1.1.1 | [7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf](https://codeload.github.com/ffmpegwasm/theora/tar.gz/7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf) |
+| opus | v1.3.1 | [e85ed7726db5d677c9c0677298ea0cb9c65bdd23](https://codeload.github.com/ffmpegwasm/opus/tar.gz/e85ed7726db5d677c9c0677298ea0cb9c65bdd23) |
+| vorbis | v1.3.3 | [7798164043197d7e33f02de4353ce2aa5b248225](https://codeload.github.com/ffmpegwasm/vorbis/tar.gz/7798164043197d7e33f02de4353ce2aa5b248225) |
+| zlib | v1.2.11 | [cacf7f1d4e3d44d871b605da3b647f07d718623f](https://codeload.github.com/ffmpegwasm/zlib/tar.gz/cacf7f1d4e3d44d871b605da3b647f07d718623f) |
+| libwebp | v1.3.2 | [ca332209cb5567c9b249c86788cb2dbf8847e760](https://codeload.github.com/ffmpegwasm/libwebp/tar.gz/ca332209cb5567c9b249c86788cb2dbf8847e760) |
+| freetype2 | VER-2-10-4 | [6a2b3e4007e794bfc6c91030d0ed987f925164a8](https://codeload.github.com/ffmpegwasm/freetype2/tar.gz/6a2b3e4007e794bfc6c91030d0ed987f925164a8) |
+| fribidi | v1.0.9 | [f9e8e71a6fbf4a4619481284c9f484d10e559995](https://codeload.github.com/fribidi/fribidi/tar.gz/f9e8e71a6fbf4a4619481284c9f484d10e559995) |
+| harfbuzz | 5.2.0 | [4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde](https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde) |
+| libass | 0.15.0 | [d149636f502f5774ae1a8fb4c554b122674393b2](https://codeload.github.com/libass/libass/tar.gz/d149636f502f5774ae1a8fb4c554b122674393b2) |
+| zimg | release-3.0.5 | [e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87](https://codeload.github.com/sekrit-twc/zimg/tar.gz/e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87) |
+| zimg-googletest | Zimg recursive submodule test/extra/googletest | [703bd9caab50b139428cea1aaff9974ebee5742e](https://codeload.github.com/google/googletest/tar.gz/703bd9caab50b139428cea1aaff9974ebee5742e) |
+| emsdk | 3.1.40 | [ae245715ef50e036b68a2412a323129676bf8300](https://codeload.github.com/emscripten-core/emsdk/tar.gz/ae245715ef50e036b68a2412a323129676bf8300) |
+| emscripten | 3.1.40 | [5c27e79dd0a9c4e27ef2326841698cdd4f6b5784](https://codeload.github.com/emscripten-core/emscripten/tar.gz/5c27e79dd0a9c4e27ef2326841698cdd4f6b5784) |
+| sdl2 | Emscripten 3.1.40 port release-2.24.2 | [55b03c7493a7abed33cf803d1380a40fa8af903f](https://codeload.github.com/libsdl-org/SDL/tar.gz/55b03c7493a7abed33cf803d1380a40fa8af903f) |
 
-The exact historical source commits for mutable refs and any relevant patches/submodules/toolchain materials have not been established from the npm publication. The provided source download is therefore explicitly partial. Complete corresponding source requires the whole relevant source and build set, including modifications and required scripts, associated with the actual binary; upstream links alone are not a substitute for that verification. The [official FFmpeg legal page](https://ffmpeg.org/legal.html) explicitly calls for source corresponding to the distributed binary and build details.
+All recipe build scripts are preserved. Emscripten's SDL2 port selects 2.24.2; zimg's recursive googletest submodule is separately archived. prepare-recipe emits Dockerfile.pinned and SOURCE-LOCK.json, without compiling. Container image/frontend digests and apt versions remain unfixed original inputs.
 
-A concrete resolution is either obtain the original upstream build provenance/source set for core 0.12.10, or perform a controlled pinned rebuild and publish its complete source/build archive beside the new binary. Do not mark public codec-source compliance complete before this is done.
+Historical bounds are useful, without proving association: selected x2644-cores tip33cac6b… dates 2022-08-22; selected LAME master2badea1… is its2020-10-29 LAME 3.100 initial commit. Both predate the2025 core publication. Core contains3.100 and x264 - core0000, without usable x264 Git revision. No historical build receipt or bit-identical rebuild is claimed.
 
-The hosted runtime transports the same installed WASM bytes in16MiB static chunks because Sites limits each file to25MiB. ffmpeg-core.wasm.json records each chunk and the whole original length/SHA-256. The browser verifies both and reassembles the unmodified original module before loading. This packaging change does not fulfill or alter the remaining corresponding-source obligations above.
+## Mediabunny source mapping
+
+Mediabunny 1.61.0 npm gitHead is **0f91fe768e7ee42703f15e2b8845551b0f1028b3**. Nested1.56.1 and all three encoder 1.56.1 packages resolve to **cee57d1cdfd1776d515c081057b50eb337291e32**. Both complete archives are acquired, including shared TypeScript helpers, root build setup, C bridges, original glue/WASM and MP3 relink archive/header. They restore material omitted by npm's source-directory copy.
+
+Read-only AST literal decoding proves that installed encoder WASM equals its embedded module at that fixed upstream commit. No encoder JS/WASM was evaluated.
+
+| Encoder | WASM bytes | SHA-256 | Embedded source identifier |
+| --- | --- | --- | --- |
+| @mediabunny/aac-encoder@1.56.1 | 509386 | 8488acb0bc9f43055b83600cc4c2c07d20f07675aa65671f91ac1d75515845d9 | Lavc62.23.103 |
+| @mediabunny/mp3-encoder@1.56.1 | 223033 | d0b109db83c153b81ba0080fa2163664dff1e341b154edda6d40bc4b6fbc355e | LAME 3.100 in original static archive |
+| @mediabunny/flac-encoder@1.56.1 | 166140 | ea25f2da12550128391e0d83465deb887c3bef96b7ee4a9b34ebb1d8202fffbe | reference libFLAC git-3f1ecff8 20260304 |
+
+**AAC:** [original instructions](https://github.com/Vanilagy/mediabunny/blob/cee57d1cdfd1776d515c081057b50eb337291e32/packages/aac-encoder/README.md) build only avcodec/AAC+avutil, -Oz/-flto/-msimd128, disabled assembly/threads/other codecs, then single-file WASM C bridge. They pin neither FFmpeg nor Emscripten. Lavc62.23.103 was [introduced at 499b5f5…](https://github.com/FFmpeg/FFmpeg/commit/499b5f5f92f73e5b0e6108242983695fcb6409e2),2026-01-27, and [bumped at e245f4d…](https://github.com/FFmpeg/FFmpeg/commit/e245f4d5cf642faa6f43002654dfc84ba457b78c),2026-02-28. This interval cannot select original checkout/patchset/compiler. Core's5.1.4 source cannot substitute. Included generic FFmpeg LGPLv2.1 notice is a license text, not exact source attestation.
+
+**MP3:** [original instructions](https://github.com/Vanilagy/mediabunny/blob/cee57d1cdfd1776d515c081057b50eb337291e32/packages/mp3-encoder/README.md) identify SIMD LAME 3.100,-O3/-msimd128,NO_STDIO and no decoder/frontend/analyzer. [Official LAME 3.100 source](https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz) is acquired. Original344,180-byte libmp3lame.a is in the complete upstream archive, SHA-256 **73b562e4a14ec1c396044ad84b836a444794177bd4bce7956268de2fe84ca77d**. Its strings identify3.100 and clang 22.0.0git / [LLVM 7f934878…](https://github.com/llvm/llvm-project/tree/7f93487862d98bf1c168babba87daf6224d8a46f). This supplies the actual relink object; original patches/full compiler build are unrecorded.
+
+**FLAC:** identifier reference libFLAC git-3f1ecff8 20260304 selects [3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c](https://github.com/xiph/flac/tree/3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c); source/notices are acquired. [Recipe](https://github.com/Vanilagy/mediabunny/blob/cee57d1cdfd1776d515c081057b50eb337291e32/packages/flac-encoder/README.md) disables programs/C++/examples/tests/Ogg/shared/multithreading and uses-Oz/-flto/-msimd128. None of these 3 final WASM modules has compiler/producers custom metadata; exact compiler/rebuilt-byte association remains untested.
+
+## Minimal remaining provenance evidence
+
+Core needs its original upstream receipt fixing historical x264/LAME checkouts and container/apt inputs against core 0.12.10. AAC needs exact FFmpeg checkout/patchset and compiler/build record for the already matched encoder WASM. MP3 needs original patch/toolchain provenance; FLAC source is pinned but compiler/relink reproduction untested. An approved pinned rebuild could replace an historically unprovable binary, with new hashes/codec acceptance; none was performed.
+
+Original notices are under upstream with [source/hash mapping](UPSTREAM-NOTICES.json). Acquired material resolves previously missing components without claiming complete legal corresponding-source/relink approval or bit-identical reproduction. [Official FFmpeg guidance](https://ffmpeg.org/legal.html) remains applicable.
