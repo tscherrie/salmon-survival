@@ -1729,14 +1729,44 @@
   ],
   "ffmpegPublishedFiles": [
     {
-      "name": "ffmpeg-core.js",
-      "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3",
-      "bytes": 111804
+      "path": "../dist/client/runtime/ffmpeg/worker.js",
+      "bytes": 5388,
+      "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef"
     },
     {
-      "name": "ffmpeg-core.wasm",
-      "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
-      "bytes": 32232419
+      "path": "../dist/client/runtime/ffmpeg/runtime-provenance.json",
+      "bytes": 2358,
+      "sha256": "f644d25862dca34889954e1dcd052355bd984eaabcbe8ebad42e0d0d2dcd270a"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.js",
+      "bytes": 111804,
+      "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.json",
+      "bytes": 369,
+      "sha256": "b746f1cbd79e205e26c5813cc39ea60c458dd40cf002f85a8717e860f21908ac"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.part0",
+      "bytes": 16777216,
+      "sha256": "4ccba0c9cc7f019751a958ead3918cf51c9563ff2f8a76fb1f72ae492f66693b"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.part1",
+      "bytes": 15455203,
+      "sha256": "80e8b2ae7994e92102e048249ab0a6673480ca626c359b1d321b24f105f02e65"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core-classic.js",
+      "bytes": 112059,
+      "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core-classic.wasm.json",
+      "bytes": 369,
+      "sha256": "b746f1cbd79e205e26c5813cc39ea60c458dd40cf002f85a8717e860f21908ac"
     }
   ],
   "sourceCompleteness": "Identified source archives procured/verified and exact encoder WASM equality proven. Historical core build pins and AAC exact FFmpeg checkout/toolchain unrecorded; no legal-completeness or rebuilt-byte assertion.",
@@ -1774,5 +1804,24 @@
       "package": "https@1.0.0",
       "reason": "package.json only; PptxGenJS uses browser-disabled node:https; no executable browser code."
     }
-  ]
+  ],
+  "ownedCore": {
+    "status": "source-built-and-browser-accepted",
+    "version": "0.12.10-reproduced",
+    "sourceLock": "../codec-rebuild/source-lock.json",
+    "provenanceManifest": "packages/browser-media/vendor/ffmpeg-core/manifest.json",
+    "recipeCommit": "346ca50d088d49aa398010a7817234a83fe52db7",
+    "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+    "allFourFilesEqualPublishedCore": true,
+    "secondColdRebuildClaimed": false,
+    "historicalPublisherCheckoutTimelineAttested": false,
+    "standaloneEncoderProductIntegration": false,
+    "knownRuntimeLimits": {
+      "ffprobeBinding": "The pinned wrapper discards the C return; validated ffprobe JSON is produced while Module.ret remains -1.",
+      "vp9Encoder": "Auxiliary VP9 encode crashes memory-out-of-bounds with default, single-thread realtime and good parameters. Offered WebM import/VP9 decoding passes on a known synthetic input; offered exports use H264.",
+      "x265": "Separate one-frame single-thread browser diagnostic times out at60s, also observed on the byte-identical published baseline. No codec is removed; offered H264 exports pass."
+    },
+    "legalComplianceAttestation": false
+  },
+  "sourceCompletenessQualification": "Owned Core inputs/build/candidate bytes are source-supported and accepted; this does not attest legal compliance or original compiler correspondence of embedded Mediabunny encoders."
 }

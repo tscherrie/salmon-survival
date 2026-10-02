@@ -1,0 +1,78 @@
+{
+  "status": "owned-core-built-and-artifact-audited",
+  "sourceFilesVerified": 76,
+  "manifest": {
+    "schemaVersion": 1,
+    "provenance": "owned-build",
+    "build": {
+      "recipeCommit": "346ca50d088d49aa398010a7817234a83fe52db7",
+      "sourceLock": {
+        "path": "SOURCE-LOCK.json",
+        "bytes": 75772,
+        "sha256": "76d5178322770fec57703bdde3a43155f885b553dbcb19b7484278a287c1243d"
+      },
+      "receipt": {
+        "path": "build-receipt.json",
+        "bytes": 2656,
+        "sha256": "a8e37ccf329758c858692a8574b8a873d18f1f8d7d74fc30c456ca1df99bf3c7"
+      },
+      "acceptance": {
+        "path": "browser-acceptance.json",
+        "bytes": 615,
+        "sha256": "5a8a17d4ab27c955a7016637f373c4541a60d0cf0be10452974a4e79b98dcb88"
+      }
+    },
+    "variants": {
+      "esm": {
+        "js": {
+          "path": "esm/ffmpeg-core.js",
+          "bytes": 111804,
+          "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+        },
+        "wasm": {
+          "path": "esm/ffmpeg-core.wasm",
+          "bytes": 32232419,
+          "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+        }
+      },
+      "classic": {
+        "js": {
+          "path": "classic/ffmpeg-core.js",
+          "bytes": 112059,
+          "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+        },
+        "wasm": {
+          "path": "classic/ffmpeg-core.wasm",
+          "bytes": 32232419,
+          "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+        }
+      }
+    }
+  },
+  "canonicalEvidence": {
+    "umd": {
+      "path": "apps/extension/release/codec-rebuild/receipts/core-browser-acceptance.json",
+      "sha256": "0cfede63fea139f8cc5884d962fee3a408e840258e6368dd8a394f5cb07c9eff"
+    },
+    "esm": {
+      "path": "apps/extension/release/codec-rebuild/receipts/core-esm-browser-acceptance.json",
+      "sha256": "a0268dc988dc9e6efd9beb5fa9ad1c1555ae41d10e3ef7b4c1720a657a73bf6a"
+    }
+  },
+  "knownRuntimeLimits": {
+    "ffprobeBinding": "The pinned wrapper discards the C return; validated ffprobe JSON is produced while Module.ret remains -1.",
+    "vp9Encoder": "Auxiliary VP9 encode crashes memory-out-of-bounds with default, single-thread realtime and good parameters. Offered WebM import/VP9 decoding passes on a known synthetic input; offered exports use H264.",
+    "x265": "Separate one-frame single-thread browser diagnostic times out at60s, also observed on the byte-identical published baseline. No codec is removed; offered H264 exports pass."
+  },
+  "standaloneEncoderProductIntegration": false,
+  "artifactAudit": "release/evidence/owned-codec-artifact-audit.json",
+  "integratedRuntimeByteAcceptance": "UMD/ESM bytes equal accepted owned candidates and previous fully exercised npm baseline; new SRT dispatch covered separately",
+  "matchingCoreSourceBundle": {
+    "filename": "ai-director-studio-core-sources.zip",
+    "receipt": "codec-core-source-bundle.json",
+    "bytes": 179164096,
+    "sha256": "f54b6b009e4a49a2fdac5b5a22553931d299e3224f9bc44d29385b1dcad8d69b",
+    "zipEntries": 18509,
+    "readbackPassed": true
+  }
+}

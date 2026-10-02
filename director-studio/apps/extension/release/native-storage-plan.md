@@ -1,0 +1,34 @@
+# Native project storage rollout plan
+
+Status: an isolated `packages/native-project-files` adapter and synthetic tests exist. Production UI/MCP/server defaults have not changed; no D1/R2 data has been migrated or deleted. The target is canonical project JSON and media in the user's account-managed files where the actual host supports them, otherwise a complete portable local project. New temporary backend work must never become an automatic permanent project store.
+
+## Capability and proof boundaries
+
+The local SDK0.1.0 supports reading host-supplied resource URIs, inspecting `writable`/`etag`, and CAS writing with `ifMatch`. It returns saved/conflict/size-limit outcomes; extension support is optional. The [official extension guide](https://developers.openai.com/plugins/build/extensions#file-viewers-and-editors) describes file entrypoints. No resource-creation or file-ID-to-resource-URI API was found in the installed SDK.
+
+The [official File API reference](https://developers.openai.com/plugins/reference#file-apis) documents optional upload/library selection and temporary download URLs. Uploading with a library request does not confirm storage when that library is unavailable. This implementation records that uncertainty and never persists download URLs. Platform API files, project D1/R2, and widget state are not substitutes for the user's File Library.
+
+Before activation, prove a real project file can be created/opened by the host, edited with CAS and reopened with its media in a different chat by the same account. Obtain resource URIs only through actual host file input/read results and file IDs only from actual upload/selection/tool file input. Prove denial for another account, conflicts between two editors, revocation/expired media access, quota failure, and an account without File Library. The current ChatGPT browser security block remains in force; local mocks or an SDK harness do not satisfy these native gates.
+
+## Reviewable activation sequence
+
+1. Add a capability-detected file mode behind an explicit feature flag. Keep this module separate while tests and migration mapping are reviewed. Enable account-file saving only with an actual writable resource and etag. When unsupported, offer a complete portable file+media export/open path. Show unsaved/conflict/too-large failures directly; do not start a server autosave fallback.
+2. Implement the legacy mapper for the full project: manifest/brief/pickers/budget/checkpoints, every immutable version and operation, assets and metadata, lineage, generation receipts, decisions/questions/answers, updates, site files and historical site snapshots. Preserve all fields or report an unsupported migration before changing any source. Exclude credentials, owner/session identifiers and temporary processing leases from the canonical portable state. Reconcile running jobs separately; do not copy an active lease as resumable ownership.
+3. Export an owner-authorized, revision-pinned legacy snapshot and all asset originals/derived versions with hashes. Verify that every version's asset and site-file references resolve. Obtain a consistent snapshot by freezing edits briefly or rechecking revision before publication; retry if source changed. Do not use anonymous storage downloads or infer permission from IDs.
+4. Copy media first and verify destination bytes. Construct the target project manifest only after all media resolves. For portable mode, stage JSON+media and reopen the complete staged bundle before an atomic filesystem replacement or delivered archive. For account mode, publish the complete JSON with a single CAS write to a real host resource and then reread its JSON/media. Host uploads and server operations are separate transactions; do not claim a cross-provider atomic transaction.
+5. Cut over the editor's canonical project reference only after target verification and an explicit saved/delivered result. Preserve the original revision and export hash in a migration receipt. A file may be selected anew through the host; do not maintain a permanent server index as the sole way to find account-owned projects. Verify the new-chat reopen gate before labeling account storage durable.
+6. After verified target recovery, remove the migrated legacy content through an owner-scoped cleanup operation and produce a deletion receipt. This is a future implementation step, not an action performed by this change. Do not delete the only verified copy or apply a temporary-processing TTL to existing legacy originals.
+
+## Bounded processing backend
+
+Proposed policy, **not yet enforced by the current backend**: canonical files stay outside the processing backend. Upload staging and job coordination get a2-hour TTL, renewable only for an active authorized job with an absolute24-hour maximum. Temporary outputs expire within24hours; deliver them to account/local storage before reporting a durable save. Cleanup runs every15minutes and on cancel/completion, removes objects plus coordination rows, and verifies deletion. Reject new work if cleanup cannot enforce the expiry bound; never silently extend leases forever.
+
+Each temporary record needs owner-scoped authorization, creation/expiry, maximum expiry and a purpose. Reads and mutations reject expired records immediately, even before physical cleanup. Job payloads use current host authorization and transient access URLs in memory; do not log or durably store signed URLs, tokens or raw session headers. Cleanup receipts may retain minimal non-content status/hashes under a separate bounded retention policy. No worker default, owner fallback or account-wide shared credential bypass is added by the adapter.
+
+## Failure, conflict and recovery
+
+On host conflict, retain the working draft, reopen the current etag, display/merge differences and write once against the new observed base. On size/quota/authorization failure, return the draft and a complete local export option. An uncertain write response requires readback before retry or cutover. Upload-requested file IDs alone cannot justify deletion of source media.
+
+On interrupted migration, keep the source canonical reference unchanged and the partial target marked staging. Resume only from a verified revision/hash inventory; discard bounded temporary staging when expired. Existing legacy data stays recoverable until a complete export is verified; it becomes a read-only recovery source during cutover, not a new-writes fallback. If recovery cannot be completed, stop the migration and report what must be exported instead of claiming native storage. Failed or unsupported mapping must not drop unknown fields.
+
+Acceptance evidence must distinguish adapter tests, SDK harness checks, real native saved results, physical portable-file delivery, cross-chat reopen, account isolation, and actual backend expiry/deletion. None of the last five is established by this isolated preparation.

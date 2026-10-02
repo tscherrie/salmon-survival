@@ -1,0 +1,12 @@
+{
+  "repository": "emscripten/emsdk",
+  "selectedTag": "3.1.40",
+  "immutableImage": "emscripten/emsdk@sha256:c1e807a6e03ac5bd5b37bae2ace3c46c08579e2ddeb951037a3b8dac7067f2cc",
+  "platform": {
+    "os": "linux",
+    "architecture": "amd64"
+  },
+  "configDigest": "sha256:c1a168efe38b60659e72194a0ac0f70be920d7747d686f891d1d425e3bbc1f4b",
+  "observedAtUtc": "2026-10-02T04:14:59.942883+00:00",
+  "originalShippedImageDigestClaimed": false
+}

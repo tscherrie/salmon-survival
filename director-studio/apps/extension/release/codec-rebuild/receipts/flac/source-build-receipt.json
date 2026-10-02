@@ -1,0 +1,100 @@
+{
+  "status": "compiled",
+  "externalDirectory": "rebuild/flac-arm64-20261002",
+  "image": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+  "sourceDateEpoch": 1772582400,
+  "sources": [
+    "flac",
+    "mediabunny-encoders"
+  ],
+  "scripts": [
+    {
+      "filename": "build-flac.sh",
+      "bytes": 1946,
+      "sha256": "f097f0c3ef3192d0854958285dbbf31ed9acf99a8ed30530117670acd0d841f2"
+    },
+    {
+      "filename": "link-flac-classic.sh",
+      "bytes": 890,
+      "sha256": "fab22507bbd220bc68499132d9a92526da5f76a5958453e541503aae20287366"
+    }
+  ],
+  "outputs": [
+    {
+      "filename": "flac.js",
+      "bytes": 136681,
+      "sha256": "a5fb8e4c4d9f37c1eb4c585c8ee314a1bdbc557a1fe705c8e246a4db73414f47"
+    },
+    {
+      "filename": "flac-classic.js",
+      "bytes": 136942,
+      "sha256": "5f78bbb80f74574d3322bd97b46617da04eee3a83deed4a58edb47159915002d"
+    },
+    {
+      "filename": "flac.wasm",
+      "bytes": 110933,
+      "sha256": "da529aafa20610371e8c2206ce04e5734918d173e171048a0c6b35e3fbe4b549"
+    },
+    {
+      "filename": "flac-classic.wasm",
+      "bytes": 110933,
+      "sha256": "da529aafa20610371e8c2206ce04e5734918d173e171048a0c6b35e3fbe4b549"
+    },
+    {
+      "filename": "libFLAC.a",
+      "bytes": 544708,
+      "sha256": "de7e9001ba49714148d686287f116a444d375f96ec27f877072a77ac8e1016c0"
+    }
+  ],
+  "librarySourcePatches": [],
+  "networkDuringBuild": "none",
+  "replacedShippedRuntime": false,
+  "realNativeHostAcceptanceClaimed": false,
+  "outputAcceptance": {
+    "status": "passed",
+    "receipt": "receipts/flac-browser-acceptance.json"
+  },
+  "rawBuildEvidence": [
+    {
+      "filename": "build.log",
+      "bytes": 6802,
+      "sha256": "1270eac2593a8a82d196c8ded8d300b98b95c691181142643a1f1fbe51eee886"
+    },
+    {
+      "filename": "emcc-version.txt",
+      "bytes": 330,
+      "sha256": "0530ff58d00e4bdb8a881e93c386ac3422c1fd1ec22adbbdcb3de05ecc43c3cb"
+    },
+    {
+      "filename": "container-packages.lock",
+      "bytes": 7056,
+      "sha256": "d8b7885f00dbce5799f8da3d503ed21446c3fba6d8c556a86adb1dc66d0ce1c5"
+    },
+    {
+      "filename": "output.sha256",
+      "bytes": 160,
+      "sha256": "e0a026cdb0d45906de47f3c6d9c76d41020ffc5c70770976ee110e245cc734fa"
+    },
+    {
+      "filename": "classic-link.log",
+      "bytes": 3409,
+      "sha256": "0840ac726331b847a1d1f7f52824af7c08d5390ce4f78519a9c518d4a461b135"
+    },
+    {
+      "filename": "classic.sha256",
+      "bytes": 87,
+      "sha256": "520563d46cd89a986ec4a9dbe74a5218cc0188afbfc1ba4a7c814f828bc8189a"
+    },
+    {
+      "filename": "flac-CMakeCache.txt",
+      "bytes": 19661,
+      "sha256": "02fce2dd240ff4daa6a06e760f628a1792205dab7fa710629984143e2441fe8b"
+    },
+    {
+      "filename": "cmake-version.txt",
+      "bytes": 91,
+      "sha256": "d3d5b682f3f5ef5b24a79ed8cf4b8c5868fc950dad48cab1be0e3c060a77f8ee"
+    }
+  ],
+  "trackedTextCopiesWhitespaceNormalized": true
+}

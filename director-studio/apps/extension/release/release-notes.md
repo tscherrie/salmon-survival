@@ -1,3 +1,10 @@
+## 0.1.4 prepared source
+
+- Adopt the source-built, hash-verified FFmpeg Core UMD/ESM artifacts; retain explicit provenance and runtime limits. Embedded Mediabunny encoder modules remain the original baseline.
+- Add functional SRT export with timeline/trim/speed timing and clear missing-data errors.
+- Provide an isolated native project-file adapter and migration plan. The adapter is not wired into the current editor; cross-chat file continuity and backend TTL/deletion remain to be proven and implemented.
+- Publish the exact domain verification route using a runtime secret. Portal 0.1.3 now shows Domain verified on the same canonical Site, OAuth client and MCP resource. Its scan/Connect still fails; no submission or publication is claimed.
+
 # AI Director Studio 0.1.0 — release notes draft
 
 Status: prepared for the first public-review package, 2 October 2026. The current deployment remains private. No directory submission or public publication is claimed.

@@ -7,19 +7,21 @@ import { canvasImage, canvasSvg, deckImages, imagesPdf, browserDeckPptx } from '
 import { renderTimelineVideo, renderTimelineStill } from './timeline.tsx';
 import { assertComponentSandbox } from './timeline.tsx';
 import { checkAbort, type ExportRequest, type ExportResult } from './types.ts';
+import { timelineSrt } from './subtitles.ts';
 
-export const EXPORT_FORMATS = { timeline: ['mp4', 'mov', 'wav', 'mp3', 'm4a', 'flac', 'png', 'jpeg'], deck: ['pdf', 'pptx', 'png'], canvas: ['png', 'jpeg', 'pdf', 'svg'], site: ['zip'] } as const;
+export const EXPORT_FORMATS = { timeline: ['mp4', 'mov', 'wav', 'mp3', 'm4a', 'flac', 'png', 'jpeg', 'srt'], deck: ['pdf', 'pptx', 'png'], canvas: ['png', 'jpeg', 'pdf', 'svg'], site: ['zip'] } as const;
 export async function exportProject(raw: ExportRequest): Promise<ExportResult> {
   if (raw.document.kind === 'timeline' && ['mp4', 'mov', 'png', 'jpeg', 'jpg'].includes(raw.format.toLowerCase())) {
     try { assertComponentSandbox(); } catch { const { exportInSandbox } = await import('./sandbox-client.tsx'); return exportInSandbox(raw); }
   }
   checkAbort(raw.signal); const format = raw.format.toLowerCase().replace(/^jpg$/, 'jpeg');
   if (!(EXPORT_FORMATS[raw.document.kind] as readonly string[]).includes(format)) throw new Error(`Export ${format} passt nicht zu ${raw.document.kind}`);
-  raw.onProgress?.('Medien prüfen', 0);
-  const request: ExportRequest = { ...raw, format, assets: raw.document.kind === 'site' ? raw.assets : await materializeAssets(raw.document, raw.assets, raw.signal) }; const doc = request.document;
+  raw.onProgress?.(format === 'srt' ? 'Untertitel exportieren' : 'Medien prüfen', 0);
+  const request: ExportRequest = { ...raw, format, assets: raw.document.kind === 'site' || format === 'srt' ? raw.assets : await materializeAssets(raw.document, raw.assets, raw.signal) }; const doc = request.document;
   let blob: Blob, extension = format; const warnings: string[] = [];
   if (doc.kind === 'timeline') {
-    if (format === 'mp4' || format === 'mov') blob = await renderTimelineVideo(request);
+    if (format === 'srt') blob = timelineSrt(doc, request.words, request.assets);
+    else if (format === 'mp4' || format === 'mov') blob = await renderTimelineVideo(request);
     else if (format === 'png' || format === 'jpeg') blob = await renderTimelineStill(request);
     else { blob = await mixTimelineAudio(doc, request.assets, { sampleRate: request.options?.sampleRate, normalizeLufs: request.options?.normalizeLufs ?? (request.options?.formatId === 'podcast' ? -16 : -14), onProgress: request.onProgress, signal: request.signal }); if (format !== 'wav') blob = await transcodeBlob(blob, format as 'mp3' | 'm4a' | 'flac', request.signal); }
   } else if (doc.kind === 'canvas') {

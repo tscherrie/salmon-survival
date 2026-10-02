@@ -1,0 +1,11 @@
+{
+  "prepared": true,
+  "compileStarted": false,
+  "sourceTrees": 18,
+  "hashedDebPackages": 11,
+  "offlineBuildNetwork": "none",
+  "contextDockerfileSha256": "fe7cbc26d9cdd60af3d9ffa2b11ff1ee71761de34e298198abacde4e7ca6eeed",
+  "sourceLockSha256": "eada685d486eb3788c6493b9d036a462896a049166a326ab50dc4652c4312f8b",
+  "explicitImage": "emscripten/emsdk@sha256:c1e807a6e03ac5bd5b37bae2ace3c46c08579e2ddeb951037a3b8dac7067f2cc",
+  "readonlyIndependentRecipeReview": "No further concrete offline source/SDL transformation blockers observed; full build remains unrun"
+}

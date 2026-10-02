@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "preparedAtUtc": "2026-10-02T03:46:25.987Z",
-  "binaryPolicy": "No runtime codec rebuilt/replaced. Archives identify preferred source/build materials; exact binary-source completeness remains subject to documented gaps.",
+  "binaryPolicy": "Owned FFmpeg Core UMD/ESM selected by strict vendor manifest; Mediabunny encoder binaries remain the pinned npm baseline. Historical source-gap entries below are retained and qualified by ownedCore.",
   "archives": [
     {
       "name": "x264",
@@ -322,5 +322,23 @@
       "component": "Mediabunny FLAC1.56.1",
       "gap": "Embedded libFLAC commit identified and source supplied; final WASM has no compiler metadata, controlled rebuild not executed."
     }
-  ]
+  ],
+  "ownedCore": {
+    "status": "source-built-and-browser-accepted",
+    "version": "0.12.10-reproduced",
+    "sourceLock": "../codec-rebuild/source-lock.json",
+    "provenanceManifest": "packages/browser-media/vendor/ffmpeg-core/manifest.json",
+    "recipeCommit": "346ca50d088d49aa398010a7817234a83fe52db7",
+    "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+    "allFourFilesEqualPublishedCore": true,
+    "secondColdRebuildClaimed": false,
+    "historicalPublisherCheckoutTimelineAttested": false,
+    "standaloneEncoderProductIntegration": false,
+    "knownRuntimeLimits": {
+      "ffprobeBinding": "The pinned wrapper discards the C return; validated ffprobe JSON is produced while Module.ret remains -1.",
+      "vp9Encoder": "Auxiliary VP9 encode crashes memory-out-of-bounds with default, single-thread realtime and good parameters. Offered WebM import/VP9 decoding passes on a known synthetic input; offered exports use H264.",
+      "x265": "Separate one-frame single-thread browser diagnostic times out at60s, also observed on the byte-identical published baseline. No codec is removed; offered H264 exports pass."
+    },
+    "legalComplianceAttestation": false
+  }
 }

@@ -1,0 +1,32 @@
+{
+  "observedAtUtc": "2026-10-02T08:07:14.654706+00:00",
+  "status": "interrupted",
+  "terminationEventAtUtc": "2026-10-02T07:50:38Z",
+  "terminationSignal": "SIGTERM observed in Lima host-agent log",
+  "terminationSenderKnown": false,
+  "colimaStatus": "not running",
+  "dockerSocketExists": false,
+  "recordedProcessesExist": false,
+  "nodePid": 25209,
+  "dockerPid": 25237,
+  "lastBuildLogMtimeUtc": "2026-10-02T07:41:45.931054+00:00",
+  "lastStage": "FFmpeg configure; all prescribed library stages previously completed",
+  "originalReceipt": {
+    "filename": "run-receipt-before-interruption-observation.json",
+    "bytes": 1856,
+    "sha256": "96e04588688a58dc820649beeda53fb1306b425dae82052feb7127499f5ae797"
+  },
+  "buildLog": {
+    "filename": "build.log",
+    "bytes": 168158,
+    "sha256": "51f24d23263acc44cbeff72f6d4f95b5b8f7be86b1151148b119cb77d6cb06de"
+  },
+  "shutdownExcerpt": {
+    "filename": "colima-interruption.log",
+    "bytes": 981,
+    "sha256": "1c1a31bdd3e5b1f79f2170386e9dd58b0629356018d80c3e1cfd7ee4413eb876"
+  },
+  "restartPerformed": false,
+  "runtimeChanged": false,
+  "cacheRetentionVerifiedThroughDocker": false
+}

@@ -77,7 +77,7 @@ export class BrowserStudioApi implements StudioApi {
   listRecentProjects() { return this.request<RecentProject[]>('/api/projects'); }
   async createProject(input: CreateProjectInput) { const data = await this.request<CloudSnapshot>('/api/projects', 'POST', input); this.watch(data); return data; }
   async openProject(path: string) { const data = await this.getSnapshot(path); this.watch(data); return data; }
-  async getSnapshot(projectId: string) {
+  async getSnapshot(projectId: string, options: { loadAssetBytes?: boolean } = {}) {
     const snapshot = await this.request<CloudSnapshot>(`/api/projects/${encodeURIComponent(projectId)}`);
     for(const asset of snapshot.assets) {
       const key=`${projectId}:${asset.id}`,fileState=this.assetFileStates.get(key);
@@ -89,7 +89,7 @@ export class BrowserStudioApi implements StudioApi {
         this.assetFileStates.delete(key);this.missingAssets.delete(asset.id);
       }
     }
-    if (this.host.getStatus().connected) await Promise.all(snapshot.assets.filter((asset) => asset.path && !this.assetUrls.has(`${projectId}:${asset.id}`)).map(async (asset) => {
+    if (options.loadAssetBytes !== false && this.host.getStatus().connected) await Promise.all(snapshot.assets.filter((asset) => asset.path && !this.assetUrls.has(`${projectId}:${asset.id}`)).map(async (asset) => {
       try {
         const parts:BlobPart[]=[]; let mime=asset.mime ?? 'application/octet-stream'; const chunkSize=262144;
         for(let offset=0; offset<Math.max(1,asset.bytes ?? 1); offset+=chunkSize){
@@ -288,7 +288,7 @@ export class BrowserStudioApi implements StudioApi {
   async previewOpenExternal(projectId: string) { const pages=this.webPages.get(projectId);const html=pages?.[this.webPath]??pages?.['/'];if(!html)throw new Error('Website-Vorschau zuerst öffnen.');const url=URL.createObjectURL(new Blob([html],{type:'text/html'}));this.objectUrls.add(url);await this.openExternal(url); }
   async previewNavigate(projectId: string, path: string) { await this.renderSitePage(projectId,path); }
   async exportProject(projectId: string, options: ExportOptions): Promise<{ path: string }> {
-    const snapshot = await this.getSnapshot(projectId);
+    const snapshot = await this.getSnapshot(projectId, { loadAssetBytes: options.target.toLowerCase() !== 'srt' });
     const job = await this.action<BrowserJob>(projectId, 'createJob', { kind: 'export_project', input: { target: options.target, format: options.format, projectVersion: snapshot.versions.at(-1)?.number } });
     this.exportJobId=job.id;
     let output:Record<string,unknown>|null;
@@ -305,7 +305,11 @@ export class BrowserStudioApi implements StudioApi {
     const controller = new AbortController(); this.jobControllers.set(job.id,controller); const signal = controller.signal;
     const heartbeat = setInterval(() => { void this.action<{claimed:boolean}>(projectId, 'claimJob', {jobId:job.id,executorId:this.executorId,leaseMs:60000}).then((claim)=>{if(!claim.claimed)controller.abort(new DOMException('Medienjob beendet oder Lease verloren','AbortError'));}).catch(() => undefined); }, 20000);
     try {
-      const snapshot = await this.getSnapshot(projectId); signal.throwIfAborted();
+      const input={...job.input,...(job.input.params && typeof job.input.params === 'object' ? job.input.params as Record<string,unknown> : {})};
+      const exportFormat = String(input.target ?? (job.kind === 'render_still' ? 'png' : input.format ?? 'mp4')).toLowerCase();
+      const subtitlesOnly = (job.kind === 'export_project' || job.kind === 'render_still') && exportFormat === 'srt';
+      // Subtitle text and source-relative word timings are stored in the document/asset metadata.
+      const snapshot = await this.getSnapshot(projectId, { loadAssetBytes: !subtitlesOnly }); signal.throwIfAborted();
       const version = Number(job.input.projectVersion ?? snapshot.versions.at(-1)?.number);
       const selectedVersion = version && version !== snapshot.versions.at(-1)?.number ? await this.getVersion(projectId,version) as Version & {siteFiles?:Record<string,string>} : null;
       const document = selectedVersion?.document ?? snapshot.document;
@@ -315,15 +319,15 @@ export class BrowserStudioApi implements StudioApi {
       const media = await import('@studio/browser-media');
       const assets = Object.fromEntries(snapshot.assets.map((asset) => [asset.id, { ...asset, url: this.assetUrl(projectId,asset.id) }]));
       const components: Record<string,string> = {};
-      if (document.kind === 'timeline') for (const [componentId,component] of Object.entries(document.components)) {
+      const rendersTimeline = ((job.kind === 'export_project' || job.kind === 'render_still') && ['mp4','mov','png','jpeg','jpg'].includes(exportFormat)) || (job.kind === 'frames' && input.source === 'timeline');
+      if (document.kind === 'timeline' && rendersTimeline) for (const [componentId,component] of Object.entries(document.components)) {
         // A historical component is the immutable asset pinned by this document version.
         const response = await fetch(this.assetUrl(projectId,component.assetId,'original'),{credentials:'include',signal});
         if(!response.ok)throw new Error(`Komponente ${componentId}: Datei ${component.assetId} fehlt (${response.status}).`);
         components[componentId] = await response.text();
       }
-      const words = document.kind === 'timeline' ? media.wordsForTimeline(document,snapshot.assets) : [];
+      const words = document.kind === 'timeline' ? media.wordsForTimeline(document,snapshot.assets,{excludeMuted:subtitlesOnly}) : [];
       const result = await media.executeMediaJob(job, { document, assets, components, words, siteFiles, signal, onProgress: this.onExportProgress });
-      const input={...job.input,...(job.input.params && typeof job.input.params === 'object' ? job.input.params as Record<string,unknown> : {})};
       const sourceIds = [...new Set([input.assetId,input.videoAssetId,input.referenceAudioAssetId].filter((value):value is string=>typeof value==='string'))];
       const parents = (sourceIds.length ? sourceIds : (job.kind==='export_project'||job.kind==='render_still') ? media.usedAssets(document) : []).map(assetId=>({assetId,relation:job.kind==='frames'?'extracted':'derived'}));
       const outputMetadata=Object.fromEntries(Object.entries(result.result as Record<string,unknown>).filter(([key])=>['fromSec','toSec','handles','start','end','assetId','beatCount','bpm','method','warnings'].includes(key)));
@@ -362,7 +366,7 @@ export class BrowserStudioApi implements StudioApi {
       }
       signal.throwIfAborted();
       await this.action(projectId,'updateJob',{jobId:job.id,executorId:this.executorId,patch:{status:'completed',output}});
-      this.setJobs((await this.getSnapshot(projectId)).jobs ?? []); return output;
+      this.setJobs((await this.getSnapshot(projectId, { loadAssetBytes: !subtitlesOnly })).jobs ?? []); return output;
     } catch(error) {
       const issues=(error as {issues?:Array<{assetId:string;reason:string}>})?.issues;
       if(Array.isArray(issues))for(const issue of issues){const reason=confirmedMissingReason(issue.reason);const asset=this.current?.manifest.id===projectId?this.current.assets.find((item)=>item.id===issue.assetId):undefined;if(reason&&asset)this.recordAssetFileState(projectId,asset,reason);}

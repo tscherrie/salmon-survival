@@ -1,0 +1,2183 @@
+{
+  "passed": true,
+  "ownCore": true,
+  "fixtureValidationOnly": false,
+  "wasmBytes": 32232419,
+  "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+  "manifest": {
+    "version": 1,
+    "bytes": 32232419,
+    "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+    "chunks": [
+      {
+        "url": "ffmpeg-core.wasm.part0",
+        "bytes": 16777216,
+        "sha256": "4ccba0c9cc7f019751a958ead3918cf51c9563ff2f8a76fb1f72ae492f66693b"
+      },
+      {
+        "url": "ffmpeg-core.wasm.part1",
+        "bytes": 15455203,
+        "sha256": "80e8b2ae7994e92102e048249ab0a6673480ca626c359b1d321b24f105f02e65"
+      }
+    ]
+  },
+  "runtimeUnderTest": {
+    "sourcePathBase": "director-studio",
+    "fixtureBundleFilename": "acceptance-fixture.js",
+    "fixtureBundleBytes": 1739292,
+    "fixtureBundleSha256": "d0bdbdd9a87603eda1159ff73d36559540dc537a765a48989402a007561e92c2",
+    "dependencyLock": {
+      "path": "package-lock.json",
+      "bytes": 464033,
+      "sha256": "430e61237c12f044deee32284e98f11d60bf65f77787f3fe7418a484b6bf6d46"
+    },
+    "sources": [
+      {
+        "path": "packages/browser-media/src/ffmpeg.ts",
+        "bytes": 7210,
+        "sha256": "af6efa41dfe985ad1affa409db3dab50a7de97e1c3d01078e58bbdbf4af15c59"
+      },
+      {
+        "path": "packages/browser-media/src/audio.ts",
+        "bytes": 8136,
+        "sha256": "899970e73099dca4664f1e073e1ff4cd4d50d28989e96bd013fd120eb3b95e6a"
+      },
+      {
+        "path": "packages/browser-media/src/runtime.ts",
+        "bytes": 1950,
+        "sha256": "c8d9f63a6d9373f2b7b997f962c2db8308444577ad56c5072ece415b488091d9"
+      },
+      {
+        "path": "packages/browser-media/src/media.ts",
+        "bytes": 7831,
+        "sha256": "c5f20613b6511c8486fcc5af5813bab03abeb09f30081d6efb5296ecdb72e90e"
+      },
+      {
+        "path": "packages/browser-media/src/classic-ffmpeg.ts",
+        "bytes": 4115,
+        "sha256": "959a6f60e9cae26b86f5f88c76d45824d91dbb629734982e90046a0e5c6a8cf4"
+      },
+      {
+        "path": "packages/core/src/index.ts",
+        "bytes": 449,
+        "sha256": "4e02edace73c98b0914ff658eacee3f7c4d2901411468d9ee1311d1f53939da0"
+      }
+    ],
+    "classWorker": {
+      "repositoryRelativePath": "dist/client/runtime/ffmpeg/worker.js",
+      "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef"
+    },
+    "runtimeInventoryDoesNotClaimNativeBrowserPreviewSupport": true
+  },
+  "realNativeHostAcceptanceClaimed": false,
+  "checks": {
+    "origin": "null",
+    "parentAccess": false,
+    "strictNoUnsafeEval": true,
+    "classicBlobWorker": true,
+    "normalization": {
+      "integratedLufs": -16.02,
+      "truePeakDb": -11.99,
+      "rangeLu": 0,
+      "raw": {
+        "input_i": "-16.02",
+        "input_tp": "-11.99",
+        "input_lra": "0.00",
+        "input_thresh": "-26.02",
+        "output_i": "-15.99",
+        "output_tp": "-11.98",
+        "output_lra": "0.00",
+        "output_thresh": "-25.99",
+        "normalization_type": "linear",
+        "target_offset": "-0.01"
+      }
+    },
+    "signalDuck": {
+      "initial": 0.09561815592337393,
+      "ducked": 0.018417882616642487,
+      "released": 0.09563143754746846,
+      "duckDb": -14.306013259359688
+    },
+    "silentVideoAudio": true,
+    "corruptedChunkRejected": "Error: WASM-Teilstück ffmpeg-core.wasm.part0: SHA-256 stimmt nicht überein",
+    "cancelledAfterActualEncodeTimeUs": 33268,
+    "recoveryFlac": true,
+    "vp9OpusWebmImportedToH264Aac": true,
+    "webmInputEncodedByNativeFfmpeg": true,
+    "ownCoreVp9EncodeAccepted": false,
+    "pngImage2ToH264": true,
+    "syntheticPngBytes": 716,
+    "runtimeLosslessDecode": {
+      "lossless": [
+        {
+          "name": "source",
+          "pcmBytes": 384000,
+          "frames": 96000,
+          "channels": 2,
+          "sampleRate": 48000,
+          "equalsSyntheticSource": false
+        },
+        {
+          "name": "transcoded",
+          "pcmBytes": 384000,
+          "frames": 96000,
+          "channels": 2,
+          "sampleRate": 48000,
+          "equalsSyntheticSource": true
+        },
+        {
+          "name": "after-abort",
+          "pcmBytes": 384000,
+          "frames": 96000,
+          "channels": 2,
+          "sampleRate": 48000,
+          "equalsSyntheticSource": true
+        }
+      ],
+      "reimported": [
+        {
+          "sourceFormat": "mp3",
+          "filename": "reimported-mp3.wav",
+          "forcedWithFFmpeg": true
+        },
+        {
+          "sourceFormat": "m4a",
+          "filename": "reimported-m4a.wav",
+          "forcedWithFFmpeg": true
+        },
+        {
+          "sourceFormat": "flac",
+          "filename": "reimported-flac.wav",
+          "forcedWithFFmpeg": true
+        }
+      ]
+    },
+    "runtimeInventory": [
+      {
+        "command": "-version",
+        "exitCode": 0,
+        "listingValidated": true,
+        "nonzeroExitAcceptedWithValidatedListing": false,
+        "textFile": "core-version.txt",
+        "entryCount": 0
+      },
+      {
+        "command": "-codecs",
+        "exitCode": 0,
+        "listingValidated": true,
+        "nonzeroExitAcceptedWithValidatedListing": false,
+        "textFile": "core-codecs.txt",
+        "entryCount": 494
+      },
+      {
+        "command": "-encoders",
+        "exitCode": 0,
+        "listingValidated": true,
+        "nonzeroExitAcceptedWithValidatedListing": false,
+        "textFile": "core-encoders.txt",
+        "entryCount": 184
+      },
+      {
+        "command": "-decoders",
+        "exitCode": 0,
+        "listingValidated": true,
+        "nonzeroExitAcceptedWithValidatedListing": false,
+        "textFile": "core-decoders.txt",
+        "entryCount": 478
+      },
+      {
+        "command": "-formats",
+        "exitCode": 0,
+        "listingValidated": true,
+        "nonzeroExitAcceptedWithValidatedListing": false,
+        "textFile": "core-formats.txt",
+        "entryCount": 386
+      },
+      {
+        "command": "-filters",
+        "exitCode": 0,
+        "listingValidated": true,
+        "nonzeroExitAcceptedWithValidatedListing": false,
+        "textFile": "core-filters.txt",
+        "entryCount": 465
+      }
+    ],
+    "realNativeHostAcceptanceClaimed": false
+  },
+  "readCalls": 88,
+  "cacheBuffersIntact": true,
+  "files": [
+    {
+      "filename": "synthetic-source.wav",
+      "bytes": 384044,
+      "sha256": "24a5171447b00422985455f502b636b8b369ba070589bf7a5cf76b01e34fc282",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "pcm_s16le",
+            "codec_long_name": "PCM signed 16-bit little-endian",
+            "codec_type": "audio",
+            "codec_tag_string": "[1][0][0][0]",
+            "codec_tag": "0x0001",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "bits_per_sample": 16,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bit_rate": "1536000",
+            "nb_read_frames": "24",
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/synthetic-source.wav",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "wav",
+          "format_long_name": "WAV / WAVE (Waveform Audio)",
+          "duration": "2.000000",
+          "size": "384044",
+          "bit_rate": "1536176",
+          "probe_score": 99
+        }
+      }
+    },
+    {
+      "filename": "own-x264-aac.mp4",
+      "bytes": 121454,
+      "sha256": "9be74142f0e56f32bfe45ffdb9d70e920f47745307cb074bf02fe3be72f89b4f",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "Constrained Baseline",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "mime_codec_string": "avc1.42c00b",
+            "width": 160,
+            "height": 90,
+            "coded_width": 160,
+            "coded_height": 96,
+            "has_b_frames": 0,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": 11,
+            "chroma_location": "left",
+            "field_order": "progressive",
+            "refs": 1,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "30/1",
+            "avg_frame_rate": "30/1",
+            "time_base": "1/15360",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 30720,
+            "duration": "2.000000",
+            "bit_rate": "343676",
+            "bits_per_raw_sample": "8",
+            "nb_frames": "60",
+            "nb_read_frames": "60",
+            "extradata_size": 39,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "encoder": "Lavc59.37.100 libx264"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "mime_codec_string": "mp4a.40.2",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x2",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bit_rate": "128208",
+            "nb_frames": "95",
+            "nb_read_frames": "94",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "SoundHandler"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/own-x264-aac.mp4",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "2.000000",
+          "size": "121454",
+          "bit_rate": "485816",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "isom",
+            "minor_version": "512",
+            "compatible_brands": "isomiso2avc1mp41",
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "input-vp9-opus.webm",
+      "bytes": 70262,
+      "sha256": "ac51f513adde3a913fe81724853742d0b77fad3d519b85aac9a503f45a428160",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "vp9",
+            "codec_long_name": "Google VP9",
+            "profile": "Profile 0",
+            "codec_type": "video",
+            "codec_tag_string": "[0][0][0][0]",
+            "codec_tag": "0x0000",
+            "mime_codec_string": "vp09.00.10.08",
+            "width": 160,
+            "height": 90,
+            "coded_width": 160,
+            "coded_height": 90,
+            "has_b_frames": 0,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": -99,
+            "color_range": "tv",
+            "field_order": "progressive",
+            "refs": 1,
+            "r_frame_rate": "30/1",
+            "avg_frame_rate": "30/1",
+            "time_base": "1/1000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "nb_read_frames": "60",
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "ENCODER": "Lavc62.28.100 libvpx-vp9",
+              "DURATION": "00:00:02.000000000"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "opus",
+            "codec_long_name": "Opus (Opus Interactive Audio Codec)",
+            "codec_type": "audio",
+            "codec_tag_string": "[0][0][0][0]",
+            "codec_tag": "0x0000",
+            "mime_codec_string": "opus",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 312,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/1000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "nb_read_frames": "101",
+            "extradata_size": 19,
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "ENCODER": "Lavc62.28.100 libopus",
+              "DURATION": "00:00:02.008000000"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/input-vp9-opus.webm",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "matroska,webm",
+          "format_long_name": "Matroska / WebM",
+          "start_time": "0.000000",
+          "duration": "2.008000",
+          "size": "70262",
+          "bit_rate": "279928",
+          "probe_score": 100,
+          "tags": {
+            "ENCODER": "Lavf62.12.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "imported-webm-h264-aac.mp4",
+      "bytes": 128553,
+      "sha256": "be5c05fa3fed082a39cea8caaf45203c89ce739fa6062db82cb0bcfc02a83336",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "Constrained Baseline",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "mime_codec_string": "avc1.42c00b",
+            "width": 160,
+            "height": 90,
+            "coded_width": 160,
+            "coded_height": 96,
+            "has_b_frames": 0,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": 11,
+            "chroma_location": "left",
+            "field_order": "progressive",
+            "refs": 1,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "30/1",
+            "avg_frame_rate": "30/1",
+            "time_base": "1/15360",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 30720,
+            "duration": "2.000000",
+            "bit_rate": "372040",
+            "bits_per_raw_sample": "8",
+            "nb_frames": "60",
+            "nb_read_frames": "60",
+            "extradata_size": 39,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "encoder": "Lavc59.37.100 libx264"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "mime_codec_string": "mp4a.40.2",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x2",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 96336,
+            "duration": "2.007000",
+            "bit_rate": "128097",
+            "nb_frames": "95",
+            "nb_read_frames": "95",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "SoundHandler"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/imported-webm-h264-aac.mp4",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "2.007000",
+          "size": "128553",
+          "bit_rate": "512418",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "isom",
+            "minor_version": "512",
+            "compatible_brands": "isomiso2avc1mp41",
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "own-png-image2.mp4",
+      "bytes": 2337,
+      "sha256": "89e36b94b28623bd533b77dcbe7b50fbc4b0a572ebf76c57c2f9e9abec09364b",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "Constrained Baseline",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "mime_codec_string": "avc1.42c00b",
+            "width": 160,
+            "height": 90,
+            "coded_width": 160,
+            "coded_height": 96,
+            "has_b_frames": 0,
+            "pix_fmt": "yuv420p",
+            "level": 11,
+            "chroma_location": "left",
+            "field_order": "progressive",
+            "refs": 1,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "30/1",
+            "avg_frame_rate": "30/1",
+            "time_base": "1/15360",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 30720,
+            "duration": "2.000000",
+            "bit_rate": "5048",
+            "bits_per_raw_sample": "8",
+            "nb_frames": "60",
+            "nb_read_frames": "60",
+            "extradata_size": 38,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "encoder": "Lavc59.37.100 libx264"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/own-png-image2.mp4",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "2.000000",
+          "size": "2337",
+          "bit_rate": "9348",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "isom",
+            "minor_version": "512",
+            "compatible_brands": "isomiso2avc1mp41",
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "transcoded.mp3",
+      "bytes": 49581,
+      "sha256": "e1c45727f8fe2210070c1902e2b33cdefda5bcdcac5f80fa7a4f3c9796b91e5b",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "mp3",
+            "codec_long_name": "MP3 (MPEG audio layer 3)",
+            "codec_type": "audio",
+            "codec_tag_string": "[0][0][0][0]",
+            "codec_tag": "0x0000",
+            "mime_codec_string": "mp4a.40.34",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/14112000",
+            "start_pts": 324870,
+            "start_time": "0.023021",
+            "duration_ts": 28224000,
+            "duration": "2.000000",
+            "bit_rate": "192000",
+            "nb_read_frames": "85",
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "encoder": "Lavc59.37"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/transcoded.mp3",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "mp3",
+          "format_long_name": "MP2/3 (MPEG audio layer 2/3)",
+          "start_time": "0.023021",
+          "duration": "2.000000",
+          "size": "49581",
+          "bit_rate": "198324",
+          "probe_score": 51,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "transcoded.m4a",
+      "bytes": 49844,
+      "sha256": "e264208831a32b6c01b82f1325171690bf9643c65f802873b8bfb4887d546dfd",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "mime_codec_string": "mp4a.40.2",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x1",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bit_rate": "192573",
+            "nb_frames": "95",
+            "nb_read_frames": "94",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "SoundHandler"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/transcoded.m4a",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "2.000000",
+          "size": "49844",
+          "bit_rate": "199376",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "M4A ",
+            "minor_version": "512",
+            "compatible_brands": "M4A isomiso2",
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "transcoded.flac",
+      "bytes": 34196,
+      "sha256": "05d0202b8e048869120e0c5e197bc52ae809ed4b1afd763b1e449f46e18e5552",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "flac",
+            "codec_long_name": "FLAC (Free Lossless Audio Codec)",
+            "codec_type": "audio",
+            "codec_tag_string": "[0][0][0][0]",
+            "codec_tag": "0x0000",
+            "mime_codec_string": "flac",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bits_per_raw_sample": "16",
+            "nb_read_frames": "21",
+            "extradata_size": 34,
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/transcoded.flac",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "flac",
+          "format_long_name": "raw FLAC",
+          "start_time": "0.000000",
+          "duration": "2.000000",
+          "size": "34196",
+          "bit_rate": "136784",
+          "probe_score": 100,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "transcoded.mp4",
+      "bytes": 121521,
+      "sha256": "86121760d76ffb3a87ad62c91013df37fa27708e46887872605b189e3e11114c",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "Constrained Baseline",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "mime_codec_string": "avc1.42c00b",
+            "width": 160,
+            "height": 90,
+            "coded_width": 160,
+            "coded_height": 96,
+            "has_b_frames": 0,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": 11,
+            "chroma_location": "left",
+            "field_order": "progressive",
+            "refs": 1,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "30/1",
+            "avg_frame_rate": "30/1",
+            "time_base": "1/15360",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 30720,
+            "duration": "2.000000",
+            "bit_rate": "343676",
+            "bits_per_raw_sample": "8",
+            "nb_frames": "60",
+            "nb_read_frames": "60",
+            "extradata_size": 39,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "encoder": "Lavc59.37.100 libx264"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "mime_codec_string": "mp4a.40.2",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x2",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 96240,
+            "duration": "2.005000",
+            "bit_rate": "128167",
+            "nb_frames": "95",
+            "nb_read_frames": "94",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "SoundHandler"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/transcoded.mp4",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "2.005000",
+          "size": "121521",
+          "bit_rate": "484871",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "isom",
+            "minor_version": "512",
+            "compatible_brands": "isomiso2avc1mp41",
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "transcoded.mov",
+      "bytes": 121572,
+      "sha256": "973efb3eaedbb488c87ecefb110d5a5d6bc7cc8599a1b9d2f6fed22190449f92",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "Constrained Baseline",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "mime_codec_string": "avc1.42c00b",
+            "width": 160,
+            "height": 90,
+            "coded_width": 160,
+            "coded_height": 96,
+            "has_b_frames": 0,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": 11,
+            "chroma_location": "left",
+            "field_order": "progressive",
+            "refs": 1,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "30/1",
+            "avg_frame_rate": "30/1",
+            "time_base": "1/15360",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 30720,
+            "duration": "2.000000",
+            "bit_rate": "343676",
+            "bits_per_raw_sample": "8",
+            "nb_frames": "60",
+            "nb_read_frames": "60",
+            "extradata_size": 39,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "handler_name": "VideoHandler",
+              "vendor_id": "FFMP",
+              "encoder": "Lavc59.37.100 libx264"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "mime_codec_string": "mp4a.40.2",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x2",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 96240,
+            "duration": "2.005000",
+            "bit_rate": "128167",
+            "nb_frames": "95",
+            "nb_read_frames": "94",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "handler_name": "SoundHandler",
+              "vendor_id": "[0][0][0][0]"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/transcoded.mov",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "2.005000",
+          "size": "121572",
+          "bit_rate": "485075",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "qt  ",
+            "minor_version": "512",
+            "compatible_brands": "qt  ",
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "source-speed-fades-duck-normalized.wav",
+      "bytes": 384078,
+      "sha256": "b74b111fa52ab24327ec38a47fbd69d9e3957e4be5040f04d6314b660a3961ec",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "pcm_s16le",
+            "codec_long_name": "PCM signed 16-bit little-endian",
+            "codec_type": "audio",
+            "codec_tag_string": "[1][0][0][0]",
+            "codec_tag": "0x0001",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "bits_per_sample": 16,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bit_rate": "1536000",
+            "nb_read_frames": "24",
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/source-speed-fades-duck-normalized.wav",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "wav",
+          "format_long_name": "WAV / WAVE (Waveform Audio)",
+          "duration": "2.000000",
+          "size": "384078",
+          "bit_rate": "1536312",
+          "probe_score": 99,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "signal-duck.wav",
+      "bytes": 384078,
+      "sha256": "1551e9901a7d64cc06880dbdd06d3ea0716737e459d5c52659fd39667fdb843a",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "pcm_s16le",
+            "codec_long_name": "PCM signed 16-bit little-endian",
+            "codec_type": "audio",
+            "codec_tag_string": "[1][0][0][0]",
+            "codec_tag": "0x0001",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "bits_per_sample": 16,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bit_rate": "1536000",
+            "nb_read_frames": "24",
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/signal-duck.wav",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "wav",
+          "format_long_name": "WAV / WAVE (Waveform Audio)",
+          "duration": "2.000000",
+          "size": "384078",
+          "bit_rate": "1536312",
+          "probe_score": 99,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "after-abort.flac",
+      "bytes": 34196,
+      "sha256": "05d0202b8e048869120e0c5e197bc52ae809ed4b1afd763b1e449f46e18e5552",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "flac",
+            "codec_long_name": "FLAC (Free Lossless Audio Codec)",
+            "codec_type": "audio",
+            "codec_tag_string": "[0][0][0][0]",
+            "codec_tag": "0x0000",
+            "mime_codec_string": "flac",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bits_per_raw_sample": "16",
+            "nb_read_frames": "21",
+            "extradata_size": 34,
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/after-abort.flac",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "flac",
+          "format_long_name": "raw FLAC",
+          "start_time": "0.000000",
+          "duration": "2.000000",
+          "size": "34196",
+          "bit_rate": "136784",
+          "probe_score": 100,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "reimported-mp3.wav",
+      "bytes": 384078,
+      "sha256": "6a8bfaaaaab459688456176e9c542a2cd1e8155f74e178534ac34288af027787",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "pcm_s16le",
+            "codec_long_name": "PCM signed 16-bit little-endian",
+            "codec_type": "audio",
+            "codec_tag_string": "[1][0][0][0]",
+            "codec_tag": "0x0001",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "bits_per_sample": 16,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bit_rate": "1536000",
+            "nb_read_frames": "24",
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/reimported-mp3.wav",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "wav",
+          "format_long_name": "WAV / WAVE (Waveform Audio)",
+          "duration": "2.000000",
+          "size": "384078",
+          "bit_rate": "1536312",
+          "probe_score": 99,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "reimported-m4a.wav",
+      "bytes": 385102,
+      "sha256": "6fd9d86fef44647639acf264f2432cbbb87b517854152f8cbc6860d04d4cd3c3",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "pcm_s16le",
+            "codec_long_name": "PCM signed 16-bit little-endian",
+            "codec_type": "audio",
+            "codec_tag_string": "[1][0][0][0]",
+            "codec_tag": "0x0001",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "bits_per_sample": 16,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "duration_ts": 96256,
+            "duration": "2.005333",
+            "bit_rate": "1536000",
+            "nb_read_frames": "24",
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/reimported-m4a.wav",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "wav",
+          "format_long_name": "WAV / WAVE (Waveform Audio)",
+          "duration": "2.005333",
+          "size": "385102",
+          "bit_rate": "1536311",
+          "probe_score": 99,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    },
+    {
+      "filename": "reimported-flac.wav",
+      "bytes": 384078,
+      "sha256": "c24289bde2d8fe13370d28ae2245f45a3145690d8b8a3005a92531f60bc0e04f",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "pcm_s16le",
+            "codec_long_name": "PCM signed 16-bit little-endian",
+            "codec_type": "audio",
+            "codec_tag_string": "[1][0][0][0]",
+            "codec_tag": "0x0001",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "bits_per_sample": 16,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bit_rate": "1536000",
+            "nb_read_frames": "24",
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/reimported-flac.wav",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "wav",
+          "format_long_name": "WAV / WAVE (Waveform Audio)",
+          "duration": "2.000000",
+          "size": "384078",
+          "bit_rate": "1536312",
+          "probe_score": 99,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    }
+  ],
+  "inventoryFiles": [
+    {
+      "filename": "core-version.txt",
+      "bytes": 1206,
+      "sha256": "d0c004447f4b97c4dcf385db0b8f38ad24e2613fdbe0835c9a0155e2fcd96f98"
+    },
+    {
+      "filename": "core-codecs.txt",
+      "bytes": 28898,
+      "sha256": "6a221187a7f5c773e89e2b14c72c186aea6e4a72460cedf5c4f03b90ed9cd697"
+    },
+    {
+      "filename": "core-encoders.txt",
+      "bytes": 11377,
+      "sha256": "150a3165261d4d6961e1c03143adcfa5920d48c393a00ab9d48c010e2952747f"
+    },
+    {
+      "filename": "core-decoders.txt",
+      "bytes": 27025,
+      "sha256": "c3ff8b1012c5cfcd610f77d38a92aa59c36cae7ecf424f8abeaf357211cbd331"
+    },
+    {
+      "filename": "core-formats.txt",
+      "bytes": 16280,
+      "sha256": "d0c125f3e16bb707e35742467587bf75010f94c6c4e19e7c92ef56d2af1ba436"
+    },
+    {
+      "filename": "core-filters.txt",
+      "bytes": 34547,
+      "sha256": "3abafa68bed14ff74d81c25710832d32b79639a301ad2de797400ac1710904cc"
+    },
+    {
+      "filename": "wasm-ffprobe-call.json",
+      "bytes": 35214,
+      "sha256": "e4e412b83be2e9a565dff503fb3e86ba9a02911b3b4788c43e77f71a0062cd75"
+    },
+    {
+      "filename": "wasm-ffprobe.json",
+      "bytes": 2928,
+      "sha256": "f7cfc2245bddcf781f4b1e9ff6829b961e4eb65bb12f621550042ae58ff9c141"
+    },
+    {
+      "filename": "core-inventory.json",
+      "bytes": 531146,
+      "sha256": "cd4cd6d8e80b3311d1e32e2c085feb5166d2b4a6b27d65fbffa67e09897a5359"
+    }
+  ],
+  "browserErrors": [],
+  "ordinaryRuntimeHttpRequests": [],
+  "runtimeRelayChunks": 127,
+  "runtimeRelayChunkBytes": 262144,
+  "controlledLocalByteRelay": true,
+  "realMcpTransportClaimed": false,
+  "decodedChecks": {
+    "source": "native ffprobe/ffmpeg decoding actual browser-produced files",
+    "expectedInputFrames": 96000,
+    "expectedSampleRate": 48000,
+    "expectedChannels": 2,
+    "extendedFixturesRequired": true,
+    "files": [
+      {
+        "filename": "synthetic-source.wav",
+        "audioCodec": "pcm_s16le",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "87068fa192bb8ec15f6e4cceeab02343c0e7e997a21312ff8ef463bbc0099d8f",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10606458290773717,
+            "peak": 0.149993896484375
+          },
+          {
+            "channel": 1,
+            "rms": 0.10606458290773717,
+            "peak": 0.149993896484375
+          }
+        ]
+      },
+      {
+        "filename": "own-x264-aac.mp4",
+        "audioCodec": "aac",
+        "videoCodec": "h264",
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96256,
+        "decodedAudioDurationSeconds": 2.005333333333333,
+        "codecPaddingFrames": 256,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "04f646844c4a1f123038dffd8cff0efc8a7d81a50fad14452d79458a1b2694c6",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10600759201365553,
+            "peak": 0.15503498911857605
+          },
+          {
+            "channel": 1,
+            "rms": 0.10600759213259334,
+            "peak": 0.15502867102622986
+          }
+        ],
+        "decodedVideoFrames": 60,
+        "videoFrameRate": "30/1",
+        "width": 160,
+        "height": 90
+      },
+      {
+        "filename": "transcoded.mp3",
+        "audioCodec": "mp3",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "58884f78c5991d125a45d9cadf2b900a6bf03e7a5f301d5f3bba5bd77626c132",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10288565435622726,
+            "peak": 0.14552085101604462
+          },
+          {
+            "channel": 1,
+            "rms": 0.10288565435622726,
+            "peak": 0.14552085101604462
+          }
+        ]
+      },
+      {
+        "filename": "transcoded.m4a",
+        "audioCodec": "aac",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96256,
+        "decodedAudioDurationSeconds": 2.005333333333333,
+        "codecPaddingFrames": 256,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "c44100b3abbdf468174922eeb7b1b37718ae133ccb6d1a4111cadb578daaa67b",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10603358573051443,
+            "peak": 0.1550285667181015
+          },
+          {
+            "channel": 1,
+            "rms": 0.10603358573829608,
+            "peak": 0.15503007173538208
+          }
+        ]
+      },
+      {
+        "filename": "transcoded.flac",
+        "audioCodec": "flac",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "87068fa192bb8ec15f6e4cceeab02343c0e7e997a21312ff8ef463bbc0099d8f",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10606458290773717,
+            "peak": 0.149993896484375
+          },
+          {
+            "channel": 1,
+            "rms": 0.10606458290773717,
+            "peak": 0.149993896484375
+          }
+        ],
+        "decodedPcmEqualsSyntheticSource": true
+      },
+      {
+        "filename": "transcoded.mp4",
+        "audioCodec": "aac",
+        "videoCodec": "h264",
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2.005,
+        "decodedAudioFrames": 96256,
+        "decodedAudioDurationSeconds": 2.005333333333333,
+        "codecPaddingFrames": 256,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "9ed9a45e65dc1b3e0ca9b4753c556fe4166596c0333ded75dac04aeeffad9559",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10586495241404932,
+            "peak": 0.1571427583694458
+          },
+          {
+            "channel": 1,
+            "rms": 0.1059347011571728,
+            "peak": 0.15714123845100403
+          }
+        ],
+        "decodedVideoFrames": 60,
+        "videoFrameRate": "30/1",
+        "width": 160,
+        "height": 90
+      },
+      {
+        "filename": "transcoded.mov",
+        "audioCodec": "aac",
+        "videoCodec": "h264",
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2.005,
+        "decodedAudioFrames": 96256,
+        "decodedAudioDurationSeconds": 2.005333333333333,
+        "codecPaddingFrames": 256,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "9ed9a45e65dc1b3e0ca9b4753c556fe4166596c0333ded75dac04aeeffad9559",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10586495241404932,
+            "peak": 0.1571427583694458
+          },
+          {
+            "channel": 1,
+            "rms": 0.1059347011571728,
+            "peak": 0.15714123845100403
+          }
+        ],
+        "decodedVideoFrames": 60,
+        "videoFrameRate": "30/1",
+        "width": 160,
+        "height": 90
+      },
+      {
+        "filename": "source-speed-fades-duck-normalized.wav",
+        "audioCodec": "pcm_s16le",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "f49cb0b4f005f443e7bae01e91eed5c23beb08350a5a7b9607d2110277aa0692",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.12145224309766636,
+            "peak": 0.251373291015625
+          },
+          {
+            "channel": 1,
+            "rms": 0.12145225330658349,
+            "peak": 0.251373291015625
+          }
+        ]
+      },
+      {
+        "filename": "signal-duck.wav",
+        "audioCodec": "pcm_s16le",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "71791efc3ad2b1754e85702d8d3d6a018c4d82b72936863b902c0fcce323dacf",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.12432626666963346,
+            "peak": 0.2291259765625
+          },
+          {
+            "channel": 1,
+            "rms": 0.12432626666963346,
+            "peak": 0.2291259765625
+          }
+        ]
+      },
+      {
+        "filename": "after-abort.flac",
+        "audioCodec": "flac",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "87068fa192bb8ec15f6e4cceeab02343c0e7e997a21312ff8ef463bbc0099d8f",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10606458290773717,
+            "peak": 0.149993896484375
+          },
+          {
+            "channel": 1,
+            "rms": 0.10606458290773717,
+            "peak": 0.149993896484375
+          }
+        ],
+        "decodedPcmEqualsSyntheticSource": true
+      },
+      {
+        "filename": "input-vp9-opus.webm",
+        "audioCodec": "opus",
+        "videoCodec": "vp9",
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2.008,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "ca8abf172fbcae19fb6c055a635096f861df1530553650f4b0ddfe6d297db329",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.06240276285203229,
+            "peak": 0.08913315087556839
+          },
+          {
+            "channel": 1,
+            "rms": 0.06240276285203229,
+            "peak": 0.08913315087556839
+          }
+        ],
+        "decodedVideoFrames": 60,
+        "videoFrameRate": "30/1",
+        "width": 160,
+        "height": 90
+      },
+      {
+        "filename": "imported-webm-h264-aac.mp4",
+        "audioCodec": "aac",
+        "videoCodec": "h264",
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2.007,
+        "decodedAudioFrames": 96592,
+        "decodedAudioDurationSeconds": 2.0123333333333333,
+        "codecPaddingFrames": 592,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "05a169ce1dcfd242642b5f15631a3f79ea8afb090c25411f3d396a306dfa58c0",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.062139543782859664,
+            "peak": 0.09120511263608932
+          },
+          {
+            "channel": 1,
+            "rms": 0.0621395438677037,
+            "peak": 0.09120111912488937
+          }
+        ],
+        "decodedVideoFrames": 60,
+        "videoFrameRate": "30/1",
+        "width": 160,
+        "height": 90
+      },
+      {
+        "filename": "own-png-image2.mp4",
+        "videoCodec": "h264",
+        "decodedVideoFrames": 60,
+        "videoFrameRate": "30/1",
+        "width": 160,
+        "height": 90,
+        "firstFrameRgbSha256": "d12b719e3da5d772926981552872ccacc0e2bea5a2a2969faf1653471e9996ee",
+        "colorSamples": [
+          {
+            "x": 40,
+            "y": 45,
+            "expectedRgb": [
+              224,
+              32,
+              32
+            ],
+            "actualRgb": [
+              224,
+              32,
+              33
+            ]
+          },
+          {
+            "x": 120,
+            "y": 45,
+            "expectedRgb": [
+              32,
+              160,
+              64
+            ],
+            "actualRgb": [
+              32,
+              159,
+              64
+            ]
+          }
+        ]
+      },
+      {
+        "filename": "reimported-mp3.wav",
+        "audioCodec": "pcm_s16le",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "9f75b636f726f476de5ca567d6299670c1637a15fdb38d86582351a117496816",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10288573436861082,
+            "peak": 0.1455078125
+          },
+          {
+            "channel": 1,
+            "rms": 0.10288573436861082,
+            "peak": 0.1455078125
+          }
+        ]
+      },
+      {
+        "filename": "reimported-m4a.wav",
+        "audioCodec": "pcm_s16le",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2.005333,
+        "decodedAudioFrames": 96256,
+        "decodedAudioDurationSeconds": 2.005333333333333,
+        "codecPaddingFrames": 256,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "a02f768fa628bc3393c7f92a5c60198e383f91c0ffc2d07abbb513f92d5c6990",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10603357732303609,
+            "peak": 0.155029296875
+          },
+          {
+            "channel": 1,
+            "rms": 0.106033569197115,
+            "peak": 0.155029296875
+          }
+        ]
+      },
+      {
+        "filename": "reimported-flac.wav",
+        "audioCodec": "pcm_s16le",
+        "videoCodec": null,
+        "sampleRate": 48000,
+        "channels": 2,
+        "containerAudioDurationSeconds": 2,
+        "decodedAudioFrames": 96000,
+        "decodedAudioDurationSeconds": 2,
+        "codecPaddingFrames": 0,
+        "decodedPcmFormat": "f32le",
+        "decodedPcmSha256": "87068fa192bb8ec15f6e4cceeab02343c0e7e997a21312ff8ef463bbc0099d8f",
+        "channelChecks": [
+          {
+            "channel": 0,
+            "rms": 0.10606458290773717,
+            "peak": 0.149993896484375
+          },
+          {
+            "channel": 1,
+            "rms": 0.10606458290773717,
+            "peak": 0.149993896484375
+          }
+        ],
+        "decodedPcmEqualsSyntheticSource": true
+      }
+    ]
+  }
+}

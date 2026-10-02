@@ -1,0 +1,253 @@
+{
+  "status": "browser-output-accepted",
+  "sources": {
+    "ffmpegCommit": "499b5f5f92f73e5b0e6108242983695fcb6409e2",
+    "ffmpegArchiveSha256": "e5c84419677f2aa84d062515214ad3d893b26e467f54d3b347e522de8f6ba61d",
+    "mediabunnyBridgeCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+    "mediabunnyArchiveSha256": "3fb1c82b9cd8c337b7b1bf8393ad4d0d84b8d569bce97bddf18fc51d580c51bf",
+    "librariesReadOnly": true,
+    "libavcodecSha256": "ef37c323dd23b81e108e97674fa0167947accdedb36c26d27e79f2fcde6d5fc0",
+    "libavutilSha256": "802f710f79df3adb6bcdc2053d4322aa365f66fdf8ffb7cff790a66e7de7484e"
+  },
+  "constraints": {
+    "imageDigest": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+    "platform": "linux",
+    "networkMode": "none",
+    "nanoCpus": 1000000000,
+    "memoryBytes": 1073741824,
+    "mounts": [
+      {
+        "Destination": "/sources",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/new-sources",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/sources",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/built",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/aac-20261002",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/link-aac-classic.sh",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/jeremias/.codex/worktrees/codec-rebuild/AI Director Studio/director-studio/apps/extension/release/codec-rebuild/link-aac-classic.sh",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/out",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/aac-browser-20261002",
+        "Type": "bind"
+      }
+    ]
+  },
+  "compilerVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.3 (283e2d130132859fde6a4e4c87fd254b38127651)\nCopyright (C) 2026 the Emscripten authors (see AUTHORS.txt)\nThis is free and open source software under the MIT license.\nThere is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "linkFlags": [
+    "-sMODULARIZE=1",
+    "-sEXPORT_ES6=0",
+    "-sEXPORT_NAME=createAacModule",
+    "-sSINGLE_FILE=1",
+    "-sALLOW_MEMORY_GROWTH=1",
+    "-sENVIRONMENT=web,worker",
+    "-sFILESYSTEM=0",
+    "-sMALLOC=emmalloc",
+    "-sSUPPORT_LONGJMP=0",
+    "-sDYNAMIC_EXECUTION=0",
+    "-sEXPORTED_RUNTIME_METHODS=cwrap,HEAPU8",
+    "-sEXPORTED_FUNCTIONS=_malloc,_free",
+    "-msimd128",
+    "-flto",
+    "-Oz"
+  ],
+  "threadsEnabled": false,
+  "filesystemEnabled": false,
+  "dynamicExecutionEnabled": false,
+  "embeddedWasm": {
+    "filename": "aac-classic.wasm",
+    "bytes": 505574,
+    "sha256": "e6d2b9b24766e52a95ff9ed9b5ffe725eec6c7adf579b708b62b64facc637a28",
+    "extractedWithoutExecution": true,
+    "encoding": "Emscripten binaryDecode string literal"
+  },
+  "glueDynamicEvalPatterns": {
+    "evalCall": false,
+    "newFunction": false
+  },
+  "browserSummary": {
+    "passed": true,
+    "browserVersion": "154.0.8037.95",
+    "sampleRate": 48000,
+    "channels": 2,
+    "inputDurationSeconds": 2,
+    "decodedDurationSeconds": 2.026666666666667,
+    "ffprobeEstimatedDurationSeconds": 2.052063,
+    "ffprobeDurationIsAdtsEstimate": true,
+    "decodedFrames": 97280,
+    "measuredEncoderDelayFrames": 1024,
+    "trailingPaddingFrames": 256,
+    "qualityCriteria": {
+      "minimumSnrDb": 20,
+      "maximumAbsoluteErrorP99": 0.1,
+      "maximumDecodedPeak": 1
+    },
+    "quality": [
+      {
+        "channel": 0,
+        "snrDb": 27.609064610835436,
+        "rmsError": 0.016521082881116943,
+        "absoluteErrorP99": 0.056183576583862305,
+        "maxAbsoluteError": 0.46022729575634,
+        "maxAbsoluteErrorFrame": 553,
+        "maxAbsoluteErrorSeconds": 0.011520833333333333,
+        "decodedPeak": 0.7809156775474548
+      },
+      {
+        "channel": 1,
+        "snrDb": 30.761850434405993,
+        "rmsError": 0.008417105506273883,
+        "absoluteErrorP99": 0.02918863296508789,
+        "maxAbsoluteError": 0.07188969850540161,
+        "maxAbsoluteErrorFrame": 20438,
+        "maxAbsoluteErrorSeconds": 0.4257916666666667,
+        "decodedPeak": 0.5206548571586609
+      }
+    ],
+    "initialPeakGate": {
+      "maximumAbsoluteError": 0.2,
+      "passed": false,
+      "diagnosticPreserved": true
+    },
+    "cancelAfterActualEncodeChunks": 1,
+    "cancelAfterSentFrames": 2,
+    "recoveryWorkerGeneration": 2,
+    "recoveryEncodedChunks": 95,
+    "opaqueOrigin": "null",
+    "parentAccess": false,
+    "cspViolations": [],
+    "pageErrors": [],
+    "outputSha256": "599e62827a0f05676e2106bfe6e92c7d8ada78521b8c5dc5094c54154c3e655c",
+    "glueSha256": "9506620750147e0ada505f0364b3b5e12db1f543a987f8a6fe01cd453a6928de",
+    "qualityPeakCoversEntireDecodedStream": true,
+    "contiguousPacketPtsAndDurationPassed": true,
+    "csp": "default-src 'none'; script-src 'unsafe-inline' blob: 'wasm-unsafe-eval' http://127.0.0.1:53124; worker-src blob:; frame-src 'self'; connect-src http://127.0.0.1:53124; style-src 'unsafe-inline'"
+  },
+  "toolVersions": {
+    "ffprobe": "ffprobe version 8.1 Copyright (c) 2007-2026 the FFmpeg developers",
+    "ffmpeg": "ffmpeg version 8.1 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "sourceScripts": [
+    {
+      "filename": "link-aac-classic.sh",
+      "bytes": 2222,
+      "sha256": "fa79d93643b900847c75b76ca016bda040824a256c384182c7b5b9fcbe6df29e"
+    },
+    {
+      "filename": "aac.worker.js",
+      "bytes": 3106,
+      "sha256": "f1ed1d763e8c403d9a76575167a1000bba2c334c719e31d09f8367b5dcf8aa17"
+    },
+    {
+      "filename": "aac.child.js",
+      "bytes": 1880,
+      "sha256": "016c48d52a82d8212ec9d6aab0c5d28f7f259be04f774ce77cd9832e0da2fdbd"
+    },
+    {
+      "filename": "accept-aac.mjs",
+      "bytes": 8651,
+      "sha256": "f5bb30275bde5043a67522aeb5477a9beb267680a754105b47a4dbe875d889de"
+    }
+  ],
+  "receipts": [
+    {
+      "filename": "aac-classic.js",
+      "bytes": 585210,
+      "sha256": "9506620750147e0ada505f0364b3b5e12db1f543a987f8a6fe01cd453a6928de"
+    },
+    {
+      "filename": "classic.sha256",
+      "bytes": 257,
+      "sha256": "3dc3ec9310ae590caee090f1786ec30d8200945225a75bc98ad3e7024b4d5ff4"
+    },
+    {
+      "filename": "emcc-version.txt",
+      "bytes": 330,
+      "sha256": "0530ff58d00e4bdb8a881e93c386ac3422c1fd1ec22adbbdcb3de05ecc43c3cb"
+    },
+    {
+      "filename": "link-classic.log",
+      "bytes": 2672,
+      "sha256": "fd4210977695e70038eb57b141e469f6bbbf03ebe70540ee4400f64b0707a3b3"
+    },
+    {
+      "filename": "container-constraints.json",
+      "bytes": 1213,
+      "sha256": "bad22686b2a6248cc9e0bdf9625c6efa30037085d01c157235a693dfda24b880"
+    },
+    {
+      "filename": "browser-acceptance.json",
+      "bytes": 10579,
+      "sha256": "9f46458b642845298faf4b2c77163fc073b23599ed4eb034b7ff1b847db50360"
+    },
+    {
+      "filename": "ffprobe.json",
+      "bytes": 1948,
+      "sha256": "56deef6ba590ee60eb0f2d55d5bb9b4c6d864f13308ef95f758297df50af61b8"
+    },
+    {
+      "filename": "synthetic-stereo.aac",
+      "bytes": 48668,
+      "sha256": "599e62827a0f05676e2106bfe6e92c7d8ada78521b8c5dc5094c54154c3e655c"
+    },
+    {
+      "filename": "synthetic-input.f32le",
+      "bytes": 768000,
+      "sha256": "9df0a336a63dd642d9f593a53a1711edfcf1d65472d38216f1c1b364a56a73d5"
+    },
+    {
+      "filename": "synthetic-decoded.f32le",
+      "bytes": 778240,
+      "sha256": "9bfb13a267d96d2f5a7c54cf041879b016bafbb125cd19c72fd8719ac84c1f38"
+    },
+    {
+      "filename": "initial-peak-gate-run.log",
+      "bytes": 1231,
+      "sha256": "5e25a9598a1e01cf70fbc33319af0e8f5a98f30129cef37af5bd856bf6636e33"
+    },
+    {
+      "filename": "quality-diagnostic.json",
+      "bytes": 779,
+      "sha256": "4cd6968f5ce52a17b5d32361c1c6e8770f2d609fe32f5367af352ca8e5fa25d4"
+    },
+    {
+      "filename": "aac-classic.wasm",
+      "bytes": 505574,
+      "sha256": "e6d2b9b24766e52a95ff9ed9b5ffe725eec6c7adf579b708b62b64facc637a28"
+    },
+    {
+      "filename": "acceptance-run.log",
+      "bytes": 3402,
+      "sha256": "1563a58408108196b2e697b029abaa2713dd81d07ea9c0269ca6a76bbe9cf3ca"
+    }
+  ],
+  "replacedShippedRuntime": false,
+  "realNativeHostAcceptanceClaimed": false,
+  "containerArchitecture": "arm64",
+  "sameWasmAsEsmCandidate": true
+}

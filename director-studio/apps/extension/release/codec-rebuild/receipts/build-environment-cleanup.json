@@ -1,0 +1,9 @@
+{
+  "initialColimaState": "stopped",
+  "startedExistingProfileWithoutResourceConfigurationChanges": true,
+  "runningContainersBeforeStop": 0,
+  "stoppedAfterOwnedBuilds": true,
+  "imagesOrVolumesDeleted": false,
+  "globalSoftwareInstalled": false,
+  "shippedRuntimeChanged": false
+}

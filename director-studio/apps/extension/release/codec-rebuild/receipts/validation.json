@@ -1,0 +1,12 @@
+{
+  "shellSyntax": 8,
+  "javaScriptSyntax": 17,
+  "pythonSyntax": 1,
+  "focusedTestsPassed": 7,
+  "hashChecksPassed": 114,
+  "originalArchivesVerified": 26,
+  "fullCoreCompiled": false,
+  "siteRuntimeChanged": false,
+  "realNativeHostAcceptanceClaimed": false,
+  "phase": "Encoder acceptance complete; Core retry after observed HarfBuzz noinst Node optimizer crash"
+}

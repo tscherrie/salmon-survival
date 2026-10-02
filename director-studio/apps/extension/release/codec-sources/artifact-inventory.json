@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "inspectedAtUtc": "2026-10-02T04:09:21.020Z",
+  "inspectedAtUtc": "2026-10-02T11:59:18.994Z",
   "packageLockSha256": "430e61237c12f044deee32284e98f11d60bf65f77787f3fe7418a484b6bf6d46",
   "packageVersions": [
     {
@@ -70,14 +70,24 @@
       "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
     },
     {
+      "path": "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
+      "bytes": 32232419,
+      "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/worker.js",
+      "bytes": 5388,
+      "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/runtime-provenance.json",
+      "bytes": 2358,
+      "sha256": "f644d25862dca34889954e1dcd052355bd984eaabcbe8ebad42e0d0d2dcd270a"
+    },
+    {
       "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.js",
       "bytes": 111804,
       "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
-    },
-    {
-      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core-classic.js",
-      "bytes": 112059,
-      "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
     },
     {
       "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.json",
@@ -95,9 +105,14 @@
       "sha256": "80e8b2ae7994e92102e048249ab0a6673480ca626c359b1d321b24f105f02e65"
     },
     {
-      "path": "../dist/client/runtime/ffmpeg/worker.js",
-      "bytes": 5388,
-      "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef"
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core-classic.js",
+      "bytes": 112059,
+      "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core-classic.wasm.json",
+      "bytes": 369,
+      "sha256": "b746f1cbd79e205e26c5813cc39ea60c458dd40cf002f85a8717e860f21908ac"
     }
   ],
   "encoderWasm": [
@@ -332,16 +347,61 @@
   ],
   "method": "Read-only hashing and JavaScript AST literal decoding; no encoder JS or WASM executed",
   "ffmpeg": {
-    "runtimeEqualsNpmWasm": true,
-    "version": "5.1.4",
-    "emscripten": "3.1.40",
-    "emscriptenCommit": "5c27e79dd0a9c4e27ef2326841698cdd4f6b5784",
-    "lameVersionString": true,
-    "x264GitVersion": null,
-    "customSections": [
-      "target_features"
-    ],
-    "buildConfiguration": "--target-os=none --arch=x86_32 --enable-cross-compile --disable-asm --disable-stripping --disable-programs --disable-doc --disable-debug --disable-runtime-cpudetect --disable-autodetect --nm=emnm --ar=emar --ranlib=emranlib --cc=emcc --cxx=em++ --objcc=emcc --dep-cc=emcc --extra-cflags='-I/opt/include -O3 -msimd128' --extra-cxxflags='-I/opt/include -O3 -msimd128' --disable-pthreads --disable-w32threads --disable-os2threads --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libopus --enable-zlib --enable-libwebp --enable-libfreetype --enable-libfribidi --enable-libass --enable-libzimg"
+    "sourceKind": "owned-build",
+    "provenance": {
+      "manifestSha256": "540cc0063c3cdead7aef1575332ff9a91fceb62aa5064446f98f1821dc57152e",
+      "build": {
+        "recipeCommit": "346ca50d088d49aa398010a7817234a83fe52db7",
+        "sourceLock": {
+          "path": "SOURCE-LOCK.json",
+          "bytes": 75772,
+          "sha256": "76d5178322770fec57703bdde3a43155f885b553dbcb19b7484278a287c1243d"
+        },
+        "receipt": {
+          "path": "build-receipt.json",
+          "bytes": 2656,
+          "sha256": "a8e37ccf329758c858692a8574b8a873d18f1f8d7d74fc30c456ca1df99bf3c7"
+        },
+        "acceptance": {
+          "path": "browser-acceptance.json",
+          "bytes": 615,
+          "sha256": "5a8a17d4ab27c955a7016637f373c4541a60d0cf0be10452974a4e79b98dcb88"
+        }
+      }
+    },
+    "runtimeEqualsSelectedSource": true,
+    "runtimeEqualsNpmWasm": null,
+    "legacyNpmLayout": false,
+    "variants": {
+      "esm": {
+        "jsEqualsSelectedSource": true,
+        "wasmEqualsSelectedSource": true,
+        "wasmManifest": "ffmpeg-core.wasm.json",
+        "wasmBytes": 32232419,
+        "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+        "chunks": 2,
+        "lameVersionString": true,
+        "x264GitVersion": null,
+        "customSections": [
+          "target_features"
+        ],
+        "buildConfiguration": "--target-os=none --arch=x86_32 --enable-cross-compile --disable-asm --disable-stripping --disable-programs --disable-doc --disable-debug --disable-runtime-cpudetect --disable-autodetect --nm=emnm --ar=emar --ranlib=emranlib --cc=emcc --cxx=em++ --objcc=emcc --dep-cc=emcc --extra-cflags='-I/opt/include -O3 -msimd128' --extra-cxxflags='-I/opt/include -O3 -msimd128' --disable-pthreads --disable-w32threads --disable-os2threads --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libopus --enable-zlib --enable-libwebp --enable-libfreetype --enable-libfribidi --enable-libass --enable-libzimg"
+      },
+      "classic": {
+        "jsEqualsSelectedSource": true,
+        "wasmEqualsSelectedSource": true,
+        "wasmManifest": "ffmpeg-core-classic.wasm.json",
+        "wasmBytes": 32232419,
+        "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+        "chunks": 2,
+        "lameVersionString": true,
+        "x264GitVersion": null,
+        "customSections": [
+          "target_features"
+        ],
+        "buildConfiguration": "--target-os=none --arch=x86_32 --enable-cross-compile --disable-asm --disable-stripping --disable-programs --disable-doc --disable-debug --disable-runtime-cpudetect --disable-autodetect --nm=emnm --ar=emar --ranlib=emranlib --cc=emcc --cxx=em++ --objcc=emcc --dep-cc=emcc --extra-cflags='-I/opt/include -O3 -msimd128' --extra-cxxflags='-I/opt/include -O3 -msimd128' --disable-pthreads --disable-w32threads --disable-os2threads --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libopus --enable-zlib --enable-libwebp --enable-libfreetype --enable-libfribidi --enable-libass --enable-libzimg"
+      }
+    }
   },
   "mp3RelinkArchive": {
     "path": "extracted/mediabunny-encoders/packages/mp3-encoder/build/libmp3lame.a",

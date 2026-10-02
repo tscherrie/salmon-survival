@@ -1,0 +1,79 @@
+{
+  "status": "compiled",
+  "externalDirectory": "rebuild/aac-20261002",
+  "image": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+  "sourceDateEpoch": 1772582400,
+  "sources": [
+    "aacNewSource",
+    "mediabunny-encoders"
+  ],
+  "scripts": [
+    {
+      "filename": "build-aac.sh",
+      "bytes": 2142,
+      "sha256": "c0392b5288a62dde4319debaa12ce0b6cd917cbcbab307762f7ecc7694a9b47b"
+    }
+  ],
+  "outputs": [
+    {
+      "filename": "aac.js",
+      "bytes": 584913,
+      "sha256": "b0e4ad019a2e7dc927f65d8b75fcf37ab24214121b9b92a0e53425b1678c935d"
+    },
+    {
+      "filename": "aac.wasm",
+      "bytes": 505574,
+      "sha256": "e6d2b9b24766e52a95ff9ed9b5ffe725eec6c7adf579b708b62b64facc637a28"
+    },
+    {
+      "filename": "libavcodec.a",
+      "bytes": 1219966,
+      "sha256": "ef37c323dd23b81e108e97674fa0167947accdedb36c26d27e79f2fcde6d5fc0"
+    },
+    {
+      "filename": "libavutil.a",
+      "bytes": 1655774,
+      "sha256": "802f710f79df3adb6bcdc2053d4322aa365f66fdf8ffb7cff790a66e7de7484e"
+    }
+  ],
+  "librarySourcePatches": [],
+  "networkDuringBuild": "none",
+  "replacedShippedRuntime": false,
+  "realNativeHostAcceptanceClaimed": false,
+  "outputAcceptance": {
+    "status": "not-run"
+  },
+  "rawBuildEvidence": [
+    {
+      "filename": "build.log",
+      "bytes": 6570,
+      "sha256": "f9589cac94a8aef1e8bf61dd9739be9e4220615aeb5b419b888fb76fad797723"
+    },
+    {
+      "filename": "emcc-version.txt",
+      "bytes": 330,
+      "sha256": "0530ff58d00e4bdb8a881e93c386ac3422c1fd1ec22adbbdcb3de05ecc43c3cb"
+    },
+    {
+      "filename": "container-packages.lock",
+      "bytes": 7056,
+      "sha256": "d8b7885f00dbce5799f8da3d503ed21446c3fba6d8c556a86adb1dc66d0ce1c5"
+    },
+    {
+      "filename": "output.sha256",
+      "bytes": 245,
+      "sha256": "e2ff665d2eb796f6c2cdfe8c8eb8fdecb722dccda213bed37bf6670911e065e2"
+    },
+    {
+      "filename": "aac-config.mak",
+      "bytes": 88581,
+      "sha256": "f502300943a7ae8c7c8cfd5b70edfef5db487ace0081f1152223ca28e43c8490"
+    },
+    {
+      "filename": "aac-config.log",
+      "bytes": 539125,
+      "sha256": "e2cd721cf63edcdc790cbb681a9cdaef04f7030b433209e4c5b827f4b1222015"
+    }
+  ],
+  "trackedTextCopiesWhitespaceNormalized": true
+}

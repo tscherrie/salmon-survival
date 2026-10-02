@@ -1,0 +1,5 @@
+FROM --platform=linux/arm64 emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40
+# No apt installation: toolchain and every installed package are fixed by image digest.
+# Build mounts validated immutable source archives read-only; outputs are separate.
+COPY build-flac.sh /recipe/build-flac.sh
+ENTRYPOINT ["bash", "/recipe/build-flac.sh"]

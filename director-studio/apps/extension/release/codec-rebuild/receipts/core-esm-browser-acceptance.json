@@ -1,0 +1,210 @@
+{
+  "passed": true,
+  "diagnosticOnly": false,
+  "ownCore": true,
+  "fixtureValidationOnly": false,
+  "variant": "esm-module-blob-worker",
+  "realNativeHostAcceptanceClaimed": false,
+  "realMcpTransportClaimed": false,
+  "wasmBytes": 32232419,
+  "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+  "glueBytes": 111804,
+  "glueSha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3",
+  "exitCode": 0,
+  "moduleWorker": true,
+  "strictNoUnsafeEval": true,
+  "decodedPcmEqualsInput": true,
+  "decodedPcmFrames": 96000,
+  "decodedPcmSha256": "55387965f522438299381a0dd5fc2af8cff7752e1d5b432835ed6032f8b8a157",
+  "relayChunks": 124,
+  "relayChunkBytes": 262144,
+  "ordinaryRuntimeHttpRequests": [],
+  "pageErrors": [],
+  "files": [
+    {
+      "filename": "esm-source.wav",
+      "bytes": 384044,
+      "sha256": "e3f3ff9c5ed19467fc928650be071e1d5b74877802ae0676ab4aa06dc8ca4407"
+    },
+    {
+      "filename": "esm-roundtrip.flac",
+      "bytes": 61005,
+      "sha256": "730f0ff323c5c8e2031f4e30f26dc796c305a45ed69157768ff631dbe457f106",
+      "ffprobe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "flac",
+            "codec_long_name": "FLAC (Free Lossless Audio Codec)",
+            "codec_type": "audio",
+            "codec_tag_string": "[0][0][0][0]",
+            "codec_tag": "0x0000",
+            "mime_codec_string": "flac",
+            "sample_fmt": "s16",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 96000,
+            "duration": "2.000000",
+            "bits_per_raw_sample": "16",
+            "extradata_size": 34,
+            "disposition": {
+              "default": 0,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            }
+          }
+        ],
+        "format": {
+          "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002/esm-roundtrip.flac",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "flac",
+          "format_long_name": "raw FLAC",
+          "start_time": "0.000000",
+          "duration": "2.000000",
+          "size": "61005",
+          "bit_rate": "244020",
+          "probe_score": 100,
+          "tags": {
+            "encoder": "Lavf59.27.100"
+          }
+        }
+      }
+    }
+  ],
+  "logs": [
+    {
+      "type": "stderr",
+      "message": "ffmpeg version 5.1.4 Copyright (c) 2000-2023 the FFmpeg developers"
+    },
+    {
+      "type": "stderr",
+      "message": "  built with emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.40 (5c27e79dd0a9c4e27ef2326841698cdd4f6b5784)"
+    },
+    {
+      "type": "stderr",
+      "message": "  configuration: --target-os=none --arch=x86_32 --enable-cross-compile --disable-asm --disable-stripping --disable-programs --disable-doc --disable-debug --disable-runtime-cpudetect --disable-autodetect --nm=emnm --ar=emar --ranlib=emranlib --cc=emcc --cxx=em++ --objcc=emcc --dep-cc=emcc --extra-cflags='-I/opt/include -O3 -msimd128' --extra-cxxflags='-I/opt/include -O3 -msimd128' --disable-pthreads --disable-w32threads --disable-os2threads --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libopus --enable-zlib --enable-libwebp --enable-libfreetype --enable-libfribidi --enable-libass --enable-libzimg"
+    },
+    {
+      "type": "stderr",
+      "message": "  libavutil      57. 28.100 / 57. 28.100"
+    },
+    {
+      "type": "stderr",
+      "message": "  libavcodec     59. 37.100 / 59. 37.100"
+    },
+    {
+      "type": "stderr",
+      "message": "  libavformat    59. 27.100 / 59. 27.100"
+    },
+    {
+      "type": "stderr",
+      "message": "  libavdevice    59.  7.100 / 59.  7.100"
+    },
+    {
+      "type": "stderr",
+      "message": "  libavfilter     8. 44.100 /  8. 44.100"
+    },
+    {
+      "type": "stderr",
+      "message": "  libswscale      6.  7.100 /  6.  7.100"
+    },
+    {
+      "type": "stderr",
+      "message": "  libswresample   4.  7.100 /  4.  7.100"
+    },
+    {
+      "type": "stderr",
+      "message": "  libpostproc    56.  6.100 / 56.  6.100"
+    },
+    {
+      "type": "stderr",
+      "message": "Guessed Channel Layout for Input Stream #0.0 : stereo"
+    },
+    {
+      "type": "stderr",
+      "message": "Input #0, wav, from 'input.wav':"
+    },
+    {
+      "type": "stderr",
+      "message": "  Duration: 00:00:02.00, bitrate: 1536 kb/s"
+    },
+    {
+      "type": "stderr",
+      "message": "  Stream #0:0: Audio: pcm_s16le ([1][0][0][0] / 0x0001), 48000 Hz, stereo, s16, 1536 kb/s"
+    },
+    {
+      "type": "stderr",
+      "message": "Stream mapping:"
+    },
+    {
+      "type": "stderr",
+      "message": "  Stream #0:0 -> #0:0 (pcm_s16le (native) -> flac (native))"
+    },
+    {
+      "type": "stderr",
+      "message": "Output #0, flac, to 'output.flac':"
+    },
+    {
+      "type": "stderr",
+      "message": "  Metadata:"
+    },
+    {
+      "type": "stderr",
+      "message": "    encoder         : Lavf59.27.100"
+    },
+    {
+      "type": "stderr",
+      "message": "  Stream #0:0: Audio: flac, 48000 Hz, stereo, s16, 128 kb/s"
+    },
+    {
+      "type": "stderr",
+      "message": "    Metadata:"
+    },
+    {
+      "type": "stderr",
+      "message": "      encoder         : Lavc59.37.100 flac"
+    },
+    {
+      "type": "stderr",
+      "message": "size=       8kB time=00:00:00.00 bitrate=N/A speed=N/A    "
+    },
+    {
+      "type": "stderr",
+      "message": "size=      60kB time=00:00:02.00 bitrate= 244.0kbits/s speed= 149x    "
+    },
+    {
+      "type": "stderr",
+      "message": "video:0kB audio:51kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 15.721684%"
+    },
+    {
+      "type": "stderr",
+      "message": "Aborted()"
+    }
+  ]
+}

@@ -1,0 +1,409 @@
+{
+  "status": "own-source-built-and-browser-output-accepted",
+  "sourceDateEpoch": 1772582400,
+  "sources": {
+    "lameVersion": "3.100",
+    "lameArchive": "lame-3.100-official.tar.gz",
+    "lameArchiveSha256": "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e",
+    "mediabunnyBridgeCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+    "mediabunnyArchiveSha256": "3fb1c82b9cd8c337b7b1bf8393ad4d0d84b8d569bce97bddf18fc51d580c51bf"
+  },
+  "constraints": {
+    "imageDigest": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+    "platform": "linux",
+    "architecture": "arm64",
+    "networkMode": "none",
+    "nanoCpus": 500000000,
+    "memoryBytes": 536870912,
+    "mounts": [
+      {
+        "Destination": "/out",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/mp3-owned-20261002",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/sources",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/recipe/build-mp3.sh",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/jeremias/.codex/worktrees/codec-rebuild/AI Director Studio/director-studio/apps/extension/release/codec-rebuild/build-mp3.sh",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/link-mp3-classic.sh",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/Users/jeremias/.codex/worktrees/codec-rebuild/AI Director Studio/director-studio/apps/extension/release/codec-rebuild/link-mp3-classic.sh",
+        "Type": "bind"
+      }
+    ]
+  },
+  "compilerVersion": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.3 (283e2d130132859fde6a4e4c87fd254b38127651)\nCopyright (C) 2026 the Emscripten authors (see AUTHORS.txt)\nThis is free and open source software under the MIT license.\nThere is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "sourceCompileFlags": [
+    "-DNDEBUG",
+    "-DNO_STDIO",
+    "-O3",
+    "-msimd128"
+  ],
+  "configureFlags": [
+    "--disable-dependency-tracking",
+    "--disable-shared",
+    "--disable-gtktest",
+    "--disable-analyzer-hooks",
+    "--disable-decoder",
+    "--disable-frontend"
+  ],
+  "makeJobs": 1,
+  "preparedBuildRecipeChanged": false,
+  "executedRecipeDiff": {
+    "old": "emmake make -j2",
+    "new": "emmake make -j1",
+    "onlyChange": true
+  },
+  "esmLinkFlags": [
+    "-sDYNAMIC_EXECUTION=0",
+    "-sMODULARIZE=1",
+    "-sEXPORT_ES6=1",
+    "-sSINGLE_FILE=1",
+    "-sALLOW_MEMORY_GROWTH=1",
+    "-sENVIRONMENT=web,worker",
+    "-sEXPORTED_RUNTIME_METHODS=cwrap,HEAPU8",
+    "-sEXPORTED_FUNCTIONS=_malloc,_free",
+    "-msimd128",
+    "-O3"
+  ],
+  "classicLinkFlags": [
+    "-sDYNAMIC_EXECUTION=0",
+    "-sMODULARIZE=1",
+    "-sEXPORT_ES6=0",
+    "-sEXPORT_NAME=createMp3Module",
+    "-sSINGLE_FILE=1",
+    "-sALLOW_MEMORY_GROWTH=1",
+    "-sENVIRONMENT=web,worker",
+    "-sFILESYSTEM=0",
+    "-sMALLOC=emmalloc",
+    "-sSUPPORT_LONGJMP=0",
+    "-sEXPORTED_RUNTIME_METHODS=cwrap,HEAPU8",
+    "-sEXPORTED_FUNCTIONS=_malloc,_free",
+    "-msimd128",
+    "-O3"
+  ],
+  "classicFilesystemEnabled": false,
+  "threadsEnabled": false,
+  "dynamicExecutionEnabled": false,
+  "glueDynamicEvalPatterns": {
+    "evalCall": false,
+    "newFunction": false
+  },
+  "wasmOutputs": [
+    {
+      "filename": "lame.wasm",
+      "bytes": 225062,
+      "sha256": "90c886d684cd405094106d246b40cf96aa81ca3b9c3109b429d6410e56133489",
+      "extractedWithoutExecution": true
+    },
+    {
+      "filename": "lame-classic.wasm",
+      "bytes": 220016,
+      "sha256": "e4e57fc0405d4f67bc9e44020246432dc04b78b0c9a518ebb38f355feadd158d",
+      "extractedWithoutExecution": true
+    }
+  ],
+  "browserAcceptance": {
+    "passed": true,
+    "codec": "mp3",
+    "container": "raw MPEG-1 Layer III",
+    "compileIsIndependentFromShippedRuntime": true,
+    "inputFrames": 96000,
+    "inputDurationSeconds": 2,
+    "sampleRate": 48000,
+    "channels": 2,
+    "sourcePcmBits": 16,
+    "bitrate": 192000,
+    "frameSize": 1152,
+    "sentChunks": 24,
+    "decodedFrames": 97920,
+    "decodedDurationSeconds": 2.04,
+    "measuredCombinedEncoderDecoderDelayFrames": 1105,
+    "measuredCombinedEncoderDecoderDelaySeconds": 0.023020833333333334,
+    "rawMp3DoesNotCarryGaplessDelayMetadata": true,
+    "trailingPaddingFrames": 815,
+    "qualityCriteria": {
+      "minimumSnrDb": 20,
+      "maximumAbsoluteErrorP99": 0.1,
+      "maximumDecodedPeak": 1,
+      "maximumMeasuredCombinedDelayFrames": 2304,
+      "maximumTrailingPaddingFrames": 2304
+    },
+    "quality": [
+      {
+        "channel": 0,
+        "snrDb": 30.460598878469614,
+        "rmsError": 0.011897303947148885,
+        "absoluteErrorP99": 0.019831418991088867,
+        "maxAbsoluteError": 0.020361125469207764,
+        "maxAbsoluteErrorFrame": 24639,
+        "maxAbsoluteErrorSeconds": 0.5133125,
+        "decodedPeak": 0.6499123573303223
+      },
+      {
+        "channel": 1,
+        "snrDb": 30.462524364928658,
+        "rmsError": 0.008711958528614627,
+        "absoluteErrorP99": 0.014798223972320557,
+        "maxAbsoluteError": 0.01510736346244812,
+        "maxAbsoluteErrorFrame": 19491,
+        "maxAbsoluteErrorSeconds": 0.4060625,
+        "decodedPeak": 0.4850181043148041
+      }
+    ],
+    "consistentPackets": true,
+    "outputBytes": 48960,
+    "outputSha256": "3c93eec36a0ff5e501bb359411d099b8fbf3ca95a5cb6dd58cf155d60c22b33f",
+    "pcmSha256": "3f5b87fffde4b08444d2c3ab33f2e383fbcc5cb7680a75b2f10ad8500934a651",
+    "decodedPcmSha256": "bdfc06ecedc2c321b05b3a97b1dac7b63bb0b5ce01c222ef3f19c979594265a4",
+    "glueSha256": "e6175b8c041a7d837090f4fc9fd55f178890218c7e14c25575acf80a02be9a73",
+    "cancelAfterActualEncodeChunks": 1,
+    "cancelAfterSentChunks": 1,
+    "cancelledActualOutputBytes": 1612,
+    "cancelledWorkerGeneration": 1,
+    "recoveryWorkerGeneration": 2,
+    "recoveryEncodedChunks": 25,
+    "opaqueOrigin": "null",
+    "parentAccess": false,
+    "csp": "default-src 'none'; script-src 'unsafe-inline' blob: 'wasm-unsafe-eval' http://127.0.0.1:53866; worker-src blob:; frame-src 'self'; connect-src http://127.0.0.1:53866; style-src 'unsafe-inline'",
+    "noUnsafeEvalAllowed": true,
+    "classicBlobWorker": true,
+    "cspViolations": [],
+    "pageErrors": [],
+    "browserVersion": "154.0.8037.95",
+    "stream": {
+      "index": 0,
+      "codec_name": "mp3",
+      "codec_long_name": "MP3 (MPEG audio layer 3)",
+      "codec_type": "audio",
+      "codec_tag_string": "[0][0][0][0]",
+      "codec_tag": "0x0000",
+      "mime_codec_string": "mp4a.40.34",
+      "sample_fmt": "fltp",
+      "sample_rate": "48000",
+      "channels": 2,
+      "channel_layout": "stereo",
+      "bits_per_sample": 0,
+      "initial_padding": 0,
+      "r_frame_rate": "0/0",
+      "avg_frame_rate": "0/0",
+      "time_base": "1/14112000",
+      "start_pts": 0,
+      "start_time": "0.000000",
+      "duration_ts": 28788480,
+      "duration": "2.040000",
+      "bit_rate": "192000",
+      "nb_read_frames": "85",
+      "nb_read_packets": "85",
+      "disposition": {
+        "default": 0,
+        "dub": 0,
+        "original": 0,
+        "comment": 0,
+        "lyrics": 0,
+        "karaoke": 0,
+        "forced": 0,
+        "hearing_impaired": 0,
+        "visual_impaired": 0,
+        "clean_effects": 0,
+        "attached_pic": 0,
+        "timed_thumbnails": 0,
+        "non_diegetic": 0,
+        "captions": 0,
+        "descriptions": 0,
+        "metadata": 0,
+        "dependent": 0,
+        "still_image": 0,
+        "multilayer": 0
+      }
+    },
+    "packetCount": 85,
+    "encodedChunkBytes": [
+      1612,
+      1512,
+      2125,
+      2304,
+      1728,
+      2304,
+      1728,
+      2304,
+      1728,
+      2304,
+      1728,
+      2304,
+      2304,
+      1728,
+      2304,
+      1728,
+      2304,
+      1728,
+      2304,
+      1728,
+      2304,
+      2304,
+      1728,
+      1152,
+      1663
+    ],
+    "realNativeHostAcceptanceClaimed": false
+  },
+  "toolVersions": {
+    "ffprobe": "ffprobe version 8.1 Copyright (c) 2007-2026 the FFmpeg developers",
+    "ffmpeg": "ffmpeg version 8.1 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "sourceScripts": [
+    {
+      "filename": "build-mp3.sh",
+      "bytes": 1335,
+      "sha256": "f887b2c4728f6e44328605bac41a2f7c83406a23e60e562e61bd8cab97f8f440"
+    },
+    {
+      "filename": "link-mp3-classic.sh",
+      "bytes": 1251,
+      "sha256": "3676e339399482619667f35030ee6d20b38d4b11f8d21f213e79ff55a11eb0e2"
+    },
+    {
+      "filename": "mp3.worker.js",
+      "bytes": 2742,
+      "sha256": "b82adb7a6a5db6b1b13ab378346d064b67a7add4cbcfa54c1977739582651a4b"
+    },
+    {
+      "filename": "mp3.child.js",
+      "bytes": 1920,
+      "sha256": "66b8df6d12d410a743f3bc45c9b47005efcfc0d56500af25ee3686fdcdadda27"
+    },
+    {
+      "filename": "accept-mp3.mjs",
+      "bytes": 9219,
+      "sha256": "c1474a225c323313e6a27e321da816eff033e86930e070e342ad0948b1da1ff2"
+    }
+  ],
+  "outputs": [
+    {
+      "filename": "lame.js",
+      "bytes": 271693,
+      "sha256": "d644834b9f8dfecb37da461388ca1780b2ef0894f1fecba27249531c4310c397"
+    },
+    {
+      "filename": "lame-classic.js",
+      "bytes": 266533,
+      "sha256": "e6175b8c041a7d837090f4fc9fd55f178890218c7e14c25575acf80a02be9a73"
+    },
+    {
+      "filename": "libmp3lame.a",
+      "bytes": 343876,
+      "sha256": "3a63629a73be1167c3ae25e486ea96874c05d1e3f9884bdda48693effa8b1d7b"
+    },
+    {
+      "filename": "lame.wasm",
+      "bytes": 225062,
+      "sha256": "90c886d684cd405094106d246b40cf96aa81ca3b9c3109b429d6410e56133489"
+    },
+    {
+      "filename": "lame-classic.wasm",
+      "bytes": 220016,
+      "sha256": "e4e57fc0405d4f67bc9e44020246432dc04b78b0c9a518ebb38f355feadd158d"
+    },
+    {
+      "filename": "classic.sha256",
+      "bytes": 250,
+      "sha256": "8a614ab0f8c5038d83309837d388ab64ff3ef266542e3ac9f9b68af241fca45a"
+    },
+    {
+      "filename": "output.sha256",
+      "bytes": 163,
+      "sha256": "059ed4741f29d6ee7e2a013b0259b203fb733eb2eb9ef886fb9917d9499dd404"
+    },
+    {
+      "filename": "build-mp3-executed.sh",
+      "bytes": 1335,
+      "sha256": "0ef8d10a51507b9e0ff5963908fc618044f344e9e232e9a4a4ae91023e19073a"
+    },
+    {
+      "filename": "emcc-version.txt",
+      "bytes": 330,
+      "sha256": "0530ff58d00e4bdb8a881e93c386ac3422c1fd1ec22adbbdcb3de05ecc43c3cb"
+    },
+    {
+      "filename": "container-packages.lock",
+      "bytes": 7056,
+      "sha256": "d8b7885f00dbce5799f8da3d503ed21446c3fba6d8c556a86adb1dc66d0ce1c5"
+    },
+    {
+      "filename": "lame-config.log",
+      "bytes": 121471,
+      "sha256": "e19388ed0f7b37beb8f4fb6fa1e8119397129548c35c2dc60dfbb99f32ed8734"
+    },
+    {
+      "filename": "lame-config.h",
+      "bytes": 9617,
+      "sha256": "baf4bd524a987704630225364031c0a82c171b55c128a4511404c7f2b728ab14"
+    },
+    {
+      "filename": "build-and-link.log",
+      "bytes": 38696,
+      "sha256": "4aa751f84c671e546f190070635f69d418b5b03c7f6e9fc58e664f26abd240e0"
+    },
+    {
+      "filename": "container-constraints.json",
+      "bytes": 1087,
+      "sha256": "0776ff51390a8248588b4068ac8c2408f414a3cd4e013f2f11eb0011d167ae54"
+    },
+    {
+      "filename": "browser-acceptance.json",
+      "bytes": 3925,
+      "sha256": "f61be10b128838ab97963b3c15541a0498ae1ea3a73d0aadc6dc22b259be28df"
+    },
+    {
+      "filename": "ffprobe.json",
+      "bytes": 33589,
+      "sha256": "9fa30fd06565bd5cbd10150661b049833579c9b6f420f1e3568f00b4638bac88"
+    },
+    {
+      "filename": "acceptance-run.log",
+      "bytes": 3925,
+      "sha256": "f61be10b128838ab97963b3c15541a0498ae1ea3a73d0aadc6dc22b259be28df"
+    },
+    {
+      "filename": "synthetic-stereo.mp3",
+      "bytes": 48960,
+      "sha256": "3c93eec36a0ff5e501bb359411d099b8fbf3ca95a5cb6dd58cf155d60c22b33f"
+    },
+    {
+      "filename": "synthetic-input.f32le",
+      "bytes": 768000,
+      "sha256": "3f5b87fffde4b08444d2c3ab33f2e383fbcc5cb7680a75b2f10ad8500934a651"
+    },
+    {
+      "filename": "synthetic-input.s16le",
+      "bytes": 384000,
+      "sha256": "fb48a903c4a58b3c900b000d5e778ed990f6ff24c7c0942e793538cc584b6dfe"
+    },
+    {
+      "filename": "synthetic-decoded.f32le",
+      "bytes": 783360,
+      "sha256": "bdfc06ecedc2c321b05b3a97b1dac7b63bb0b5ce01c222ef3f19c979594265a4"
+    }
+  ],
+  "reusedPrebuiltArchive": false,
+  "replacedShippedRuntime": false,
+  "realNativeHostAcceptanceClaimed": false
+}
