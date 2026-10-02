@@ -74,5 +74,12 @@
     "sha256": "f54b6b009e4a49a2fdac5b5a22553931d299e3224f9bc44d29385b1dcad8d69b",
     "zipEntries": 18509,
     "readbackPassed": true
+  },
+  "extensionAudioDelivery": {
+    "unusedOriginalStandaloneEncodersShipped": false,
+    "audioExportsAndVideoMux": "own Core",
+    "remotionVideo": "muted; importer-scoped fallback binding",
+    "desktopBuildCovered": false,
+    "standaloneOwnCandidatesIntegrated": false
   }
 }

@@ -5,14 +5,18 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { loadCoreArtifacts, writeCoreRuntime } from './adopt-owned-core.mjs';
+import { createRemotionEsbuildBinding, assertNoLegacyEncoderInputs, auditRemotionAudioEmission, validateRemotionAudioContract } from './remotion-audio-binding.mjs';
 const here = fileURLToPath(new URL('..', import.meta.url));
 const studio = path.resolve(here, '../..');
 const root = path.resolve(studio, '..');
 const dist = path.join(root, 'dist');
 // Validate owned inputs before altering dist. A broken vendor scope cannot fall back to npm.
 const core = await loadCoreArtifacts(studio);
+const remotion = await validateRemotionAudioContract(studio);
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-await viteBuild({ configFile: path.join(here, 'vite.config.ts') });
+const viteResult = await viteBuild({ configFile: path.join(here, 'vite.config.ts') });
+const viteInputs = [...new Set((Array.isArray(viteResult) ? viteResult : [viteResult]).flatMap(result => result.output.filter(file => file.type === 'chunk').flatMap(file => Object.keys(file.modules))))];
+assertNoLegacyEncoderInputs(viteInputs);
 await mkdir(path.join(dist, 'server'), {recursive: true});
 await mkdir(path.join(dist, '.openai'), {recursive: true});
 const hosting = path.join(root, '.openai/hosting.json');
@@ -34,8 +38,11 @@ await writeFile(path.join(dist, 'server/wrangler.json'), JSON.stringify({name:'d
 // A native MCP resource cannot authenticate separate private Site asset requests.
 // Bundle every module and style into the resource; runtime bytes use the app-only bridge.
 const loaders = { '.woff2':'dataurl', '.woff':'dataurl', '.png':'dataurl', '.svg':'dataurl', '.jpg':'dataurl' };
+const nativeInputs = {};
 for (const [name, entry] of [['native',path.join(here,'ui/main.tsx')],['native-sandbox',path.join(studio,'packages/browser-media/src/sandbox-entry.tsx')]]) {
-  const bundled=await build({entryPoints:[entry],outfile:path.join(dist,`${name}.js`),bundle:true,write:false,platform:'browser',target:'es2022',format:'iife',minify:true,jsx:'automatic',loader:loaders,conditions:['browser'],define:{'process.env.NODE_ENV':'"production"'}});
+  const bundled=await build({entryPoints:[entry],outfile:path.join(dist,`${name}.js`),bundle:true,write:false,metafile:true,plugins:[createRemotionEsbuildBinding(studio)],platform:'browser',target:'es2022',format:'iife',minify:true,jsx:'automatic',loader:loaders,conditions:['browser'],define:{'process.env.NODE_ENV':'"production"'}});
+  nativeInputs[name] = Object.keys(bundled.metafile.inputs);
+  assertNoLegacyEncoderInputs(nativeInputs[name]);
   const js=bundled.outputFiles.find(file=>file.path.endsWith('.js'))?.text;
   if(!js)throw new Error('Self-contained native resource bundle missing.');
   let css=bundled.outputFiles.find(file=>file.path.endsWith('.css'))?.text ?? '';
@@ -45,6 +52,12 @@ for (const [name, entry] of [['native',path.join(here,'ui/main.tsx')],['native-s
   const html=`<!doctype html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>AI Director Studio</title><style>${css.replaceAll('</style','<\\/style')}</style></head><body><div id="root"></div><script>${js.replaceAll('</script','<\\/script')}</script></body></html>`;
   await writeFile(path.join(dist,'client',`${name}.html`),html);
 }
+const remotionAudioAudit = await auditRemotionAudioEmission(studio, path.join(dist, 'client'));
+remotionAudioAudit.remotion = remotion;
+remotionAudioAudit.inputCounts = { vite: viteInputs.length, ...Object.fromEntries(Object.entries(nativeInputs).map(([name, inputs]) => [name, inputs.length])) };
+remotionAudioAudit.buildInputsContainLegacyEncoders = false;
+await writeFile(path.join(dist, 'remotion-audio-build-audit.json'), JSON.stringify(remotionAudioAudit, null, 2) + '\n');
+console.log(`Remotion audio emission audit: ${remotionAudioAudit.files.length} JS/HTML files; no prebuilt encoder inputs or embedded WASM.`);
 // MCP hosts cache UI resources by URI. Generate the identity from the complete
 // native document, then build the Worker against that same content identity.
 const nativeUiBuildId = hash(await readFile(path.join(dist, 'client/native.html')));

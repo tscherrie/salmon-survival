@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'acorn';
 import { loadCoreArtifacts, auditCoreRuntime } from '../../scripts/adopt-owned-core.mjs';
+import { auditRemotionAudioEmission } from '../../scripts/remotion-audio-binding.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const studio = resolve(here, '../../../..');
@@ -44,11 +45,13 @@ for (const name of ['@ffmpeg/core', '@ffmpeg/ffmpeg', '@ffmpeg/types', 'mediabun
 }
 // Installed npm bytes remain explicitly identified reference material after owned adoption.
 for (const relative of ['node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.js', 'node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js', 'node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.wasm', 'node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.wasm', '../dist/client/runtime/ffmpeg/worker.js']) {
-  const bytes = await readFile(resolve(studio, relative)); report.publishedFiles.push({ path: relative, bytes: bytes.length, sha256: hash(bytes) });
+  const bytes = await readFile(resolve(studio, relative)); report.publishedFiles.push({ path: relative, bytes: bytes.length, sha256: hash(bytes), referenceOnly: relative.startsWith('node_modules/') });
 }
 const core = await loadCoreArtifacts(studio);
 const runtimeDir = resolve(studio, '../dist/client/runtime/ffmpeg');
 const runtimeAudit = await auditCoreRuntime(core, runtimeDir);
+report.remotionAudio = await auditRemotionAudioEmission(studio, resolve(studio, '../dist/client'));
+if (report.remotionAudio.passed !== true || report.remotionAudio.originalEncoderWasmShipped !== false || report.remotionAudio.encodedWasmInJsOrNativeHtml !== false) throw new Error('The Extension audio emission must exclude legacy encoder payloads.');
 report.publishedFiles.push(...runtimeAudit.publishedFiles.map(file => ({ ...file, path: `../dist/client/runtime/ffmpeg/${file.path}` })));
 report.ffmpeg = {
   sourceKind: core.sourceKind, provenance: runtimeAudit.provenance,
@@ -66,7 +69,7 @@ for (const codec of ['aac', 'mp3', 'flac']) {
   const name = `@mediabunny/${codec}-encoder`, file = codec === 'mp3' ? 'lame' : codec;
   const source = await readFile(join(studio, `node_modules/${name}/dist/modules/build/${file}.js`), 'utf8');
   const bytes = embeddedWasm(source);
-  const row = { package: name, version: '1.56.1', bytes: bytes.length, sha256: hash(bytes), customSections: customSections(bytes), sourceCommit: 'cee57d1cdfd1776d515c081057b50eb337291e32', embeddedIdentifier: codec === 'aac' ? 'Lavc62.23.103' : codec === 'flac' ? 'reference libFLAC git-3f1ecff8 20260304' : null };
+  const row = { package: name, version: '1.56.1', bytes: bytes.length, sha256: hash(bytes), customSections: customSections(bytes), sourceCommit: 'cee57d1cdfd1776d515c081057b50eb337291e32', embeddedIdentifier: codec === 'aac' ? 'Lavc62.23.103' : codec === 'flac' ? 'reference libFLAC git-3f1ecff8 20260304' : null, referenceOnly: true, shippedInExtension: false };
   if (row.embeddedIdentifier && !bytes.includes(Buffer.from(row.embeddedIdentifier))) throw new Error('Expected codec identifier missing');
   if (sourceDirectory) {
     const upstream = await readFile(join(sourceDirectory, `extracted/mediabunny-encoders/packages/${codec}-encoder/build/${file}.js`), 'utf8');

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "preparedAtUtc": "2026-10-02T03:46:25.987Z",
-  "binaryPolicy": "Owned FFmpeg Core UMD/ESM selected by strict vendor manifest; Mediabunny encoder binaries remain the pinned npm baseline. Historical source-gap entries below are retained and qualified by ownedCore.",
+  "binaryPolicy": "Owned FFmpeg Core UMD/ESM selected by strict vendor manifest. Unused standalone Mediabunny encoder payloads are excluded from this Extension by importer-scoped fail-closed Remotion bindings; installed npm reference packages and separate desktop builds retain separate provenance scope. Historical source-gap entries are retained for those references, not asserted as shipped Extension binaries.",
   "archives": [
     {
       "name": "x264",
@@ -340,5 +340,24 @@
       "x265": "Separate one-frame single-thread browser diagnostic times out at60s, also observed on the byte-identical published baseline. No codec is removed; offered H264 exports pass."
     },
     "legalComplianceAttestation": false
+  },
+  "sourceDownloads": {
+    "page": "https://ai-director-studio-info.yearemia.chatgpt.site/sources.html",
+    "artifacts": [
+      "ai-director-studio-source.zip",
+      "ai-director-studio-core-sources.zip"
+    ],
+    "transport": "bounded parts; per-part and complete ZIP SHA256",
+    "bothSourceZipsRequired": true,
+    "liveProofRecordedSeparately": true
+  },
+  "extensionAudioDelivery": {
+    "remotion": "always-muted video render, then own Core audio mux",
+    "audioExports": "own Core",
+    "legacyStandaloneEncoderWasmShipped": false,
+    "binding": "importer-scoped fail-closed Remotion fallback registration",
+    "buildAudit": "scripts/remotion-audio-binding.mjs",
+    "desktopBuildCovered": false,
+    "standaloneCandidatesAdopted": false
   }
 }

@@ -1,5 +1,8 @@
 ## 0.1.4 prepared source
 
+- Exclude unused original Remotion AAC/MP3/FLAC fallback payloads from Extension builds with importer-scoped fail-closed bindings. Eight affected outputs decode successfully, including native sandbox and Vite video, cancellation and recovery; all export formats remain. Separate desktop builds retain distinct provenance scope.
+- Deliver both source ZIPs through the existing public information Site using bounded parts, complete ZIP SHA256 and a generated exact-checkpoint download manifest.
+
 - Adopt the source-built, hash-verified FFmpeg Core UMD/ESM artifacts; retain explicit provenance and runtime limits. Embedded Mediabunny encoder modules remain the original baseline.
 - Add functional SRT export with timeline/trim/speed timing and clear missing-data errors.
 - Provide an isolated native project-file adapter and migration plan. The adapter is not wired into the current editor; cross-chat file continuity and backend TTL/deletion remain to be proven and implemented.

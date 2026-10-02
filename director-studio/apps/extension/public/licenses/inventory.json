@@ -1823,5 +1823,70 @@
     },
     "legalComplianceAttestation": false
   },
-  "sourceCompletenessQualification": "Owned Core inputs/build/candidate bytes are source-supported and accepted; this does not attest legal compliance or original compiler correspondence of embedded Mediabunny encoders."
+  "sourceCompletenessQualification": "Owned Core inputs/build/candidate bytes are source-supported and accepted; this does not attest legal compliance or original compiler correspondence of embedded Mediabunny encoders.",
+  "sourceDownloads": {
+    "page": "https://ai-director-studio-info.yearemia.chatgpt.site/sources.html",
+    "artifacts": [
+      "ai-director-studio-source.zip",
+      "ai-director-studio-core-sources.zip"
+    ],
+    "transport": "bounded parts; per-part and complete ZIP SHA256",
+    "bothSourceZipsRequired": true,
+    "liveProofRecordedSeparately": true
+  },
+  "extensionAudioDelivery": {
+    "remotion": "always-muted video render, then own Core audio mux",
+    "audioExports": "own Core",
+    "legacyStandaloneEncoderWasmShipped": false,
+    "binding": "importer-scoped fail-closed Remotion fallback registration",
+    "buildAudit": "scripts/remotion-audio-binding.mjs",
+    "desktopBuildCovered": false,
+    "standaloneCandidatesAdopted": false,
+    "runtimeInventory": "CODEC-ARTIFACT-INVENTORY.json",
+    "proof": "scripts/remotion-audio-binding.mjs",
+    "emissionAudit": {
+      "originalEncoderWasmShipped": false,
+      "encodedWasmInJsOrNativeHtml": false,
+      "passed": true,
+      "scope": "Extension emitted JS/HTML/binary assets; installed npm and desktop references separate"
+    }
+  },
+  "installedReferenceEncoders": [
+    {
+      "package": "@mediabunny/aac-encoder",
+      "version": "1.56.1",
+      "bytes": 509386,
+      "sha256": "8488acb0bc9f43055b83600cc4c2c07d20f07675aa65671f91ac1d75515845d9",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": "Lavc62.23.103",
+      "referenceOnly": true,
+      "shippedInExtension": false,
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    },
+    {
+      "package": "@mediabunny/mp3-encoder",
+      "version": "1.56.1",
+      "bytes": 223033,
+      "sha256": "d0b109db83c153b81ba0080fa2163664dff1e341b154edda6d40bc4b6fbc355e",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": null,
+      "referenceOnly": true,
+      "shippedInExtension": false,
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    },
+    {
+      "package": "@mediabunny/flac-encoder",
+      "version": "1.56.1",
+      "bytes": 166140,
+      "sha256": "ea25f2da12550128391e0d83465deb887c3bef96b7ee4a9b34ebb1d8202fffbe",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": "reference libFLAC git-3f1ecff8 20260304",
+      "referenceOnly": true,
+      "shippedInExtension": false,
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "inspectedAtUtc": "2026-10-02T11:59:18.994Z",
+  "inspectedAtUtc": "2026-10-02T12:52:08.092Z",
   "packageLockSha256": "430e61237c12f044deee32284e98f11d60bf65f77787f3fe7418a484b6bf6d46",
   "packageVersions": [
     {
@@ -57,27 +57,32 @@
     {
       "path": "node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.js",
       "bytes": 111804,
-      "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+      "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3",
+      "referenceOnly": true
     },
     {
       "path": "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.js",
       "bytes": 112059,
-      "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+      "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21",
+      "referenceOnly": true
     },
     {
       "path": "node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.wasm",
       "bytes": 32232419,
-      "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+      "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+      "referenceOnly": true
     },
     {
       "path": "node_modules/@ffmpeg/core/dist/umd/ffmpeg-core.wasm",
       "bytes": 32232419,
-      "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+      "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+      "referenceOnly": true
     },
     {
       "path": "../dist/client/runtime/ffmpeg/worker.js",
       "bytes": 5388,
-      "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef"
+      "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef",
+      "referenceOnly": false
     },
     {
       "path": "../dist/client/runtime/ffmpeg/runtime-provenance.json",
@@ -124,6 +129,8 @@
       "customSections": [],
       "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
       "embeddedIdentifier": "Lavc62.23.103",
+      "referenceOnly": true,
+      "shippedInExtension": false,
       "upstreamEmbeddedWasmEqualsInstalled": true
     },
     {
@@ -134,6 +141,8 @@
       "customSections": [],
       "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
       "embeddedIdentifier": null,
+      "referenceOnly": true,
+      "shippedInExtension": false,
       "upstreamEmbeddedWasmEqualsInstalled": true
     },
     {
@@ -144,6 +153,8 @@
       "customSections": [],
       "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
       "embeddedIdentifier": "reference libFLAC git-3f1ecff8 20260304",
+      "referenceOnly": true,
+      "shippedInExtension": false,
       "upstreamEmbeddedWasmEqualsInstalled": true
     }
   ],
@@ -346,6 +357,164 @@
     }
   ],
   "method": "Read-only hashing and JavaScript AST literal decoding; no encoder JS or WASM executed",
+  "remotionAudio": {
+    "schemaVersion": 1,
+    "inspectedAtUtc": "2026-10-02T12:52:09.774Z",
+    "method": "Installed-reference WASM hashes compared with standalone/transport binary assets; AST-decoded direct and nested inline-worker literals in every emitted JS and inline HTML script; build input guards",
+    "passed": true,
+    "referenceWasm": [
+      {
+        "package": "@mediabunny/aac-encoder",
+        "bytes": 509386,
+        "sha256": "8488acb0bc9f43055b83600cc4c2c07d20f07675aa65671f91ac1d75515845d9",
+        "shipped": false
+      },
+      {
+        "package": "@mediabunny/mp3-encoder",
+        "bytes": 223033,
+        "sha256": "d0b109db83c153b81ba0080fa2163664dff1e341b154edda6d40bc4b6fbc355e",
+        "shipped": false
+      },
+      {
+        "package": "@mediabunny/flac-encoder",
+        "bytes": 166140,
+        "sha256": "ea25f2da12550128391e0d83465deb887c3bef96b7ee4a9b34ebb1d8202fffbe",
+        "shipped": false
+      }
+    ],
+    "files": [
+      {
+        "path": "assets/browser-CMdNNzFN.js",
+        "bytes": 68946,
+        "sha256": "4bf64c6e4813aa6ff92880065a6d844c2a194c0ed3da75bb55631ed008602556",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "assets/editor-XpDC2dM6.js",
+        "bytes": 690875,
+        "sha256": "98f4ba20baf031d8026653ba4584f8f8daebbf0e1e806aea9c79f7209109797e",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "assets/esm-CT9MfG92.js",
+        "bytes": 2883969,
+        "sha256": "c47565d0872c29b129311400f87387e7c39826e523f654c392e02e4c6462d447",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "assets/remotion-audio-binding-BvJOEaBa.js",
+        "bytes": 343,
+        "sha256": "7c7c55b8021c57b2ae05e4773f921993ae1b9254f95f7bad42a83db41d08b474",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "assets/rolldown-runtime-Dd_uD5pT.js",
+        "bytes": 1106,
+        "sha256": "c5f0356f5d0918a3137e4e811fd18950efe8ac8f6bf84d1d4da7811c477a24d8",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "assets/sandbox-8aKjXAGI.js",
+        "bytes": 4521,
+        "sha256": "0a11235a7d80f8a2992f7e378a6482a73fc4b0faa263fdfbc5ab48e2a3f409ca",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "assets/worker-A4ZT02e5.js",
+        "bytes": 2526,
+        "sha256": "25641a3b7197cb1bd48e7a4f82499171e906845c5e447bde4f12e568b8c64472",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "index.html",
+        "bytes": 827,
+        "sha256": "d84b00c37ed2c3c199b34752bcd160bc0a1c0e73f0ca3b4f3b7230d46a941820",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "licenses/index.html",
+        "bytes": 1487,
+        "sha256": "4ec0852a472b80da0a6d120d30bb527e6a62253f633e100e503a13902ab31a78",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "media-sandbox.html",
+        "bytes": 451,
+        "sha256": "d5d9250c8a69c6ec6266d704ac40ac0cc73918b6078de024bf17c76e1de18f6b",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "native-sandbox.html",
+        "bytes": 3508794,
+        "sha256": "39e7589a1d36954f6ad7f90655196b32d9b4f15c4f903c2d11b6ca94dcaa52be",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "native.html",
+        "bytes": 4510332,
+        "sha256": "99801c0589124e63ba7a74d56b8af1e8a1f1de737aa3c979f3d7ef0689a299ff",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "privacy.html",
+        "bytes": 9704,
+        "sha256": "4e331e43c3df82ddfb117dce818533aa9b5b29e923b3968db77baeccf2e9b97e",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "runtime/ffmpeg/ffmpeg-core-classic.js",
+        "bytes": 112059,
+        "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "runtime/ffmpeg/ffmpeg-core.js",
+        "bytes": 111804,
+        "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "runtime/ffmpeg/worker.js",
+        "bytes": 5388,
+        "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "support.html",
+        "bytes": 7118,
+        "sha256": "f07b0b961ce8239691f7abb43c7db21914ff987e21955787c2d23e75d3e9ff32",
+        "embeddedWasmCount": 0
+      },
+      {
+        "path": "terms.html",
+        "bytes": 8542,
+        "sha256": "079ca38d11c7fe2a943a47994fc46916b813e868df30a23a163265dafa3c2dc9",
+        "embeddedWasmCount": 0
+      }
+    ],
+    "binaryFiles": [
+      {
+        "path": "runtime/esbuild.wasm",
+        "bytes": 13978850,
+        "sha256": "b1831a5c0f6cf688034fb94d0419812f165ea316a3380d3fc00a151e562d2eaf",
+        "matchesLegacyReference": false
+      },
+      {
+        "path": "runtime/ffmpeg/ffmpeg-core.wasm.part0",
+        "bytes": 16777216,
+        "sha256": "4ccba0c9cc7f019751a958ead3918cf51c9563ff2f8a76fb1f72ae492f66693b",
+        "matchesLegacyReference": false
+      },
+      {
+        "path": "runtime/ffmpeg/ffmpeg-core.wasm.part1",
+        "bytes": 15455203,
+        "sha256": "80e8b2ae7994e92102e048249ab0a6673480ca626c359b1d321b24f105f02e65",
+        "matchesLegacyReference": false
+      }
+    ],
+    "originalEncoderWasmShipped": false,
+    "encodedWasmInJsOrNativeHtml": false
+  },
   "ffmpeg": {
     "sourceKind": "owned-build",
     "provenance": {
