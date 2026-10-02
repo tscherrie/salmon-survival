@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-02T04:13:21.093Z",
+  "passed": true,
+  "scope": "Playback of the actual supporting SDK-browser recording, not a native walkthrough",
+  "recordingSha256": "74e6cf4e33e117a0d14114ce8936d43419b67a8459c279d1e9a7525512c4f0d4",
+  "bytes": 861545,
+  "chromePlayback": {
+    "currentTime": 1.518786,
+    "duration": 30.32,
+    "width": 1280,
+    "height": 960,
+    "error": null,
+    "readyState": 4
+  },
+  "fullFfmpegDecode": [
+    "sdk-review-demo.mp4",
+    "sdk-export.mp4"
+  ],
+  "readabilitySnapshots": [
+    "playback-10s.png",
+    "playback-22s.png"
+  ],
+  "humanOrModelDialogueRecorded": false
+}

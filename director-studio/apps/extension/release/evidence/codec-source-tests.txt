@@ -1,0 +1,10 @@
+✔ verified archive acquisition refuses changed cached source bytes before any remote request (113.688333ms)
+✔ acquisition manifest pins all repository archives and covers the linked source/recursive build closure (1.700166ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 247.16

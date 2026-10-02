@@ -1,1 +1,85 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Director Studio data practices — development draft</title><style>body{background:#141619;color:#eee;font:16px system-ui;max-width:780px;margin:4rem auto;padding:1rem}a{color:#e5b77d}</style><h1>Data practices — development draft</h1><p>AI Director Studio stores owner-scoped projects, documents, version history, asset metadata, approvals and job receipts in the Site's database. Uploaded media and generated exports are stored in its object storage. The server uses the Site-provided user ID to authorize project access. It does not collect your model provider API keys or read the host's entire conversation history or memory.</p><p>The selected project and selection references can be supplied to the native host as context. Media generation and transcription use the separately connected fal plugin and that service's account and terms. Studio records receipts supplied by the host; it does not retrieve fal account tokens.</p><p>Browser rendering uses your device and may require memory proportional to source media. Device preferences may be stored locally. Project records persist until an authorized deletion; deployment updates preserve them. There is no public retention promise or service guarantee in this development build.</p><p>Before public release the publisher must confirm the controller/contact, retention and deletion support, legal basis, regional scope and final policy. This draft is not an approved public privacy policy.</p><p><a href="/">Open editor</a></p></html>
+<!doctype html>
+<!-- Generated from release/privacy.md by scripts/sync-policy-drafts.mjs. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>AI Director Studio — privacy policy draft</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { background: #141619; color: #eee; font: 1rem/1.65 system-ui, sans-serif; max-width: 54rem; margin: 2rem auto; padding: 0 1.25rem 2rem; }
+    a { color: #e5b77d; overflow-wrap: anywhere; }
+    a:focus-visible { outline: 3px solid #e5b77d; outline-offset: 4px; }
+    h1, h2 { line-height: 1.25; }
+    h1 { font-size: 2rem; }
+    h2 { margin-top: 2rem; font-size: 1.4rem; }
+    li { margin: .65rem 0; }
+    code { font-size: .9em; overflow-wrap: anywhere; }
+    .draft { padding: 1rem; border: 1px solid #e5b77d; background: #242019; }
+    nav, footer { margin: 1.5rem 0; }
+    footer { border-top: 1px solid #51545a; padding-top: 1rem; }
+    .skip-link { position: absolute; top: -5rem; }
+    .skip-link:focus { position: static; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to draft text</a>
+  <header>
+    <p class="draft"><strong>Unpublished development draft.</strong> This private page is prepared for review and is not an approved public policy or public service terms. Fields marked [CONFIRM] remain unresolved.</p>
+    <nav aria-label="Editor and policy drafts"><a href="/">Open editor</a> · <a href="/privacy.html" aria-current="page">Privacy draft</a> · <a href="/support.html">Support draft</a> · <a href="/terms.html">Terms draft</a></nav>
+  </header>
+  <main id="content">
+<h1>AI Director Studio — privacy policy draft</h1>
+
+<p>Status: unpublished technical and policy draft, prepared 2 October 2026. The operator must complete the marked fields and approve the data practices before this becomes the public policy. Effective date: <strong>[CONFIRM after approval]</strong>.</p>
+
+<h2>Who operates the service</h2>
+
+<p>AI Director Studio is an independent project operated by <strong>Jeremias Grenzebach</strong>, as confirmed by the operator. No unverified street address or jurisdiction is inserted. Additional jurisdiction-specific identity details require a concrete applicable requirement; our template is not evidence of one. Contact for privacy questions or requests: <strong>[CONFIRM monitored contact and public support page]</strong>. The existing developer label uses the same name; the individual Verified identity is observed in a read-only Portal view, while the canonical Sites-app submission-project mapping remains unresolved. This draft makes no legal or Portal attestation.</p>
+
+<h2>Data used by Director Studio</h2>
+
+<p>The hosting platform supplies an authenticated user identifier and email address to authorize requests. Director uses the identifier to associate projects and settings with their owner. The current application database stores the owner identifier; application code does not automatically copy the supplied authentication email into its project or settings tables. Hosting-platform processing and logs are a separate matter.</p>
+
+<p>Stored project data can include project titles and briefs, questions and answers, decisions, approvals, document and website source, version history, checkpoints, asset metadata and lineage, transcript or analysis results, cost estimates and receipts, and processing-job status and errors. Uploaded or imported source files, thumbnails, derived media and exports are stored as file objects. Names and metadata can themselves contain personal information. Public-URL imports download the requested file into the project; the source server receives that download request.</p>
+
+<p>The editor processes the files and project data needed for its current view and operations on the user&#39;s device. It can keep display preferences and hints in browser storage and use in-memory caches and temporary URLs for media and runtime files. Browser exports and analysis run on the device while an editor executor is available, and their outputs and receipts may subsequently be saved to the project. Local rendering does not mean the whole service is local-only.</p>
+
+<h2>Why the data is used</h2>
+
+<p>Director uses this information to authenticate access, save and reopen projects, edit and restore documents, manage approved work, process material, generate previews and exports, and identify processing failures. <strong>[CONFIRM the operator&#39;s applicable legal basis for each purpose, and any required legitimate-interest description or consent process.]</strong> A feature description is not a legal-basis determination.</p>
+
+<h2>Native host, Fal and other network requests</h2>
+
+<p>Project information is exchanged with the native ChatGPT Work or Codex host through tool requests and results. Where supported, selection context supplies the project title, identifiers, version and selected references for a future chat turn. Copying the fallback into a conversation also discloses that text to the host. Director does not independently retrieve the user&#39;s whole chat history or hidden memory and does not operate a separate inference loop or collect a model-provider API key.</p>
+
+<p>AI media generation and transcription require a separately installed official Fal plugin and connected account. When the user approves that workflow, the host may send the chosen prompt, settings and input material to Fal and import the resulting media and receipt into Director. Fal and the native host have their own data practices and account terms. Director does not obtain their private API tokens. Deleting a Director record would not by itself delete a host conversation or a Fal-provider job.</p>
+
+<p>The deployment uses OpenAI Sites hosting with Cloudflare D1 project/settings storage and R2 file storage. Browser compilation may request allowed dependency modules from <code>esm.sh</code> without application credentials. Website or media source can contain external links or resources. Hosting and dependency providers can process request metadata and keep their own logs. <strong>[CONFIRM the final provider list, processing arrangements, hosting region, international-transfer safeguards and actual platform-log retention.]</strong></p>
+
+<p>Remotion Web Renderer also attempts a licensing/usage POST to <code>https://www.remotion.pro/api/track/register-usage-point</code> during its renders, independently of Fal and the native model host. The pinned dependency sends <code>event: &quot;web-render&quot;</code>, the browser&#39;s <code>window.location.origin</code> as <code>host</code>, and the <code>succeeded</code>, <code>isStill</code> and <code>isProduction</code> flags. In an opaque native frame the origin is the string <code>&quot;null&quot;</code>; an ordinary browser frame can report its origin. Director uses the confirmed free-license option, which sends <code>apiKey: null</code>. This event payload includes no clips, text, project IDs or Director owner credentials. The recipient nevertheless receives network information such as the request IP address and headers. Network failures can cause retries.</p>
+
+<p>The release configuration permits this exact Remotion recipient; the actual host&#39;s policy may still block the request. Earlier controlled evidence of blocked telemetry is not a promise that it will remain blocked. Director currently provides no switch that disables these dependency usage requests. The operator has confirmed an independent entity of at most three people, meeting Remotion&#39;s free-license size criterion; free licensing does not mean zero external telemetry. <strong>[CONFIRM the operator&#39;s policy/legal basis and recipient arrangements for this usage processing.]</strong></p>
+
+<h2>Access and security</h2>
+
+<p>Project and file endpoints require the hosting boundary&#39;s authenticated identity and check project ownership. Other users cannot retrieve a project by merely knowing its identifier. Authored website and component code runs in isolated browser frames; these frames receive the material required for rendering, without the owner&#39;s general authenticated project API capability. These implementation controls are not a claim of end-to-end encryption, immunity from security incidents or complete provider-level isolation.</p>
+
+<h2>Retention and deletion</h2>
+
+<p>The current release persists project history, files, settings and receipts across reopening and deployment changes. It has no user-facing complete project/account deletion workflow or general automatic project-retention schedule. Replacing a file, rejecting an asset, cancelling a job, clearing browser preferences or disconnecting the plugin is not a verified complete erasure operation.</p>
+
+<p>Chunked uploads have a 24-hour validity period. Successful upload completion attempts to remove temporary chunks; expiry alone is not implemented as guaranteed storage deletion. Older media objects, backups and platform logs need an executable retention/request plan. The concrete engineering proposal is in <a href="https://github.com/tscherrie/salmon-survival/blob/codex/director-native-extension/director-studio/apps/extension/release/retention-proposal.md">retention-proposal.md</a>; it makes no unverified deadline or automatic-erasure claim.</p>
+
+<p>The concrete proposal is to retain project history and files for reopening and provide an authenticated request route through the confirmed contact once an executable operator process has been verified. It introduces no arbitrary general storage period. The current release cannot promise complete project/account erasure. <a href="https://github.com/tscherrie/salmon-survival/blob/codex/director-native-extension/director-studio/apps/extension/release/retention-proposal.md">retention-proposal.md</a> specifies the D1/R2 inventory, old-object and upload cleanup, concurrency protection, recheck and failure handling to implement before promising that process. Provider backup/log handling remains unverified; no deletion deadline is promised by this draft. Users can download supported exports and retain their own source files; these exports are not described as a complete personal-data access report.</p>
+
+<h2>Requests and changes</h2>
+
+<p>For a request concerning access, correction, export or deletion, use <strong>[CONFIRM the privacy contact]</strong> and provide only the information needed to locate and verify the relevant account. Never send passwords, API keys or unrelated private media. <strong>[CONFIRM applicable rights, complaint route and the relevant authority for the selected operator/jurisdiction.]</strong> Publish material policy changes with an effective date and an appropriate notice method <strong>[CONFIRM]</strong>.</p>
+
+<p>Preparation notes and unresolved decisions are in <a href="https://github.com/tscherrie/salmon-survival/blob/codex/director-native-extension/director-studio/apps/extension/release/publisher-approval.md">publisher-approval.md</a>. This file is not a published policy or a legal attestation.</p>
+  </main>
+  <footer><p>Draft source: <a href="https://github.com/tscherrie/salmon-survival/blob/codex/director-native-extension/director-studio/apps/extension/release/privacy.md">release/privacy.md on GitHub</a>. Public availability and final approval are not asserted by this page.</p></footer>
+</body>
+</html>

@@ -1,0 +1,43 @@
+
+> director-studio@0.1.0 extension:build
+> npm run -w @studio/extension build
+
+
+> @studio/extension@0.1.0 build
+> node scripts/build.mjs
+
+vite v8.3.2 building client environment for production...
+transforming...
+
+/fonts/fonts.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+✓ 824 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../dist/client/media-sandbox.html                                 0.45 kB │ gzip:   0.28 kB
+../../../dist/client/index.html                                         0.82 kB │ gzip:   0.48 kB
+../../../dist/client/assets/worker-A4ZT02e5.js                          2.52 kB
+../../../dist/client/assets/IBMPlexMono-Regular-Du0PCiXT.woff2         49.24 kB
+../../../dist/client/assets/IBMPlexMono-Medium-CiYsa3y2.woff2          50.40 kB
+../../../dist/client/assets/IBMPlexMono-SemiBold-CT2p8cOJ.woff2        50.60 kB
+../../../dist/client/assets/InstrumentSans-Variable-tWV223Ma.woff2     88.78 kB
+../../../dist/client/assets/editor--NbgdXkf.css                       117.86 kB │ gzip:  22.61 kB
+../../../dist/client/assets/rolldown-runtime-Dd_uD5pT.js                1.10 kB │ gzip:   0.62 kB
+../../../dist/client/assets/sandbox-Dg9C7vAa.js                         4.52 kB │ gzip:   2.00 kB
+../../../dist/client/assets/browser-CMdNNzFN.js                        68.94 kB │ gzip:  19.23 kB
+../../../dist/client/assets/mediabunny-mp3-encoder-DSDyQ-Jw.js        311.11 kB │ gzip: 133.28 kB
+../../../dist/client/assets/mediabunny-flac-encoder-vtw-ZgsG.js       322.58 kB │ gzip:  84.30 kB
+../../../dist/client/assets/editor-ClLcpu7d.js                        690.45 kB │ gzip: 181.88 kB
+../../../dist/client/assets/mediabunny-aac-encoder-BHN8Xi47.js        992.07 kB │ gzip: 260.53 kB
+../../../dist/client/assets/esm-Dh3A6ga5.js                         2,881.61 kB │ gzip: 898.43 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 2200 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0m../../packages/browser-media/src/index.ts is dynamically imported by ui/BrowserStudioApi.ts but also statically imported by ../desktop/src/renderer/components/monitor/VideoMonitor.tsx, ui/nativeRuntime.ts, dynamic import will not move module into another chunk.
+
+[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0m../../packages/browser-media/src/sandbox-client.tsx is dynamically imported by ../../packages/browser-media/src/export.ts but also statically imported by ../../packages/browser-media/src/index.ts, ../../packages/browser-media/src/jobs.ts, dynamic import will not move module into another chunk.
+
+✓ built in 1.16s
+Native Extension UI and Worker built.

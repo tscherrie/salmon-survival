@@ -96,7 +96,7 @@ export async function handleMcp(request: Request, env: WorkerEnv): Promise<Respo
         // The base only resolves package paths; no boot asset is fetched from it.
         const html = (await response.text()).replace(/<head>/i, `<head><base href="${url.origin}/">`);
         console.info('director.ui.resource', {uri:args.uri,buildId:NATIVE_UI_BUILD_ID,bytes:new TextEncoder().encode(html).byteLength,delivery:'self-contained'});
-        result = { ...cacheHints, contents: [{ uri: args.uri, mimeType: 'text/html;profile=mcp-app', text: html, _meta: { 'openai/ui': OpenAIUiResourceMetadataSchema.parse({ availableDisplayModes: ['fullscreen'], preferredDisplayMode: 'fullscreen' }), ui: { csp: { connectDomains: ['https://esm.sh'], resourceDomains: ['https://esm.sh'], frameDomains: [url.origin], baseUriDomains:[url.origin] } } } }] }; break;
+        result = { ...cacheHints, contents: [{ uri: args.uri, mimeType: 'text/html;profile=mcp-app', text: html, _meta: { 'openai/ui': OpenAIUiResourceMetadataSchema.parse({ availableDisplayModes: ['fullscreen'], preferredDisplayMode: 'fullscreen' }), ui: { csp: { connectDomains: ['https://esm.sh', 'https://www.remotion.pro'], resourceDomains: ['https://esm.sh'], frameDomains: [url.origin], baseUriDomains:[url.origin] } } } }] }; break;
       }
       case 'tools/call': {
         const name = z.string().parse(args.name); const params = z.record(z.string(),z.unknown()).parse(args.arguments ?? {});

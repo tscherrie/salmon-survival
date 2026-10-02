@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-10-02T03:58:50.486Z",
+  "authentication": "none",
+  "results": [
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/",
+      "status": 401,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/support.html",
+      "status": 401,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/privacy.html",
+      "status": 401,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/terms.html",
+      "status": 401,
+      "contentType": "text/html; charset=utf-8"
+    }
+  ]
+}

@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "preparedAtUtc": "2026-10-02T03:46:25.987Z",
+  "binaryPolicy": "No runtime codec rebuilt/replaced. Archives identify preferred source/build materials; exact binary-source completeness remains subject to documented gaps.",
+  "archives": [
+    {
+      "name": "x264",
+      "repository": "https://github.com/ffmpegwasm/x264",
+      "recipeRef": "4-cores",
+      "refKind": "branch",
+      "commit": "33cac6b77d5b9259c552156013a817ab23119612",
+      "url": "https://codeload.github.com/ffmpegwasm/x264/tar.gz/33cac6b77d5b9259c552156013a817ab23119612",
+      "filename": "x264-33cac6b77d5b9259c552156013a817ab23119612.tar.gz",
+      "correspondence": "Recipe branch resolved on 2026-10-02; original npm binary's checkout unverified",
+      "bytes": 942903,
+      "sha256": "75434a5a1f2d7d4314821c6054dd300731d69e2fa73314ba4a5ec9df38d4ec80"
+    },
+    {
+      "name": "x265",
+      "repository": "https://github.com/ffmpegwasm/x265",
+      "recipeRef": "3.4",
+      "refKind": "tag",
+      "commit": "2bb5520e9596f361bf0ed81b3b8da0d7fd999069",
+      "url": "https://codeload.github.com/ffmpegwasm/x265/tar.gz/2bb5520e9596f361bf0ed81b3b8da0d7fd999069",
+      "filename": "x265-2bb5520e9596f361bf0ed81b3b8da0d7fd999069.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 1531931,
+      "sha256": "e5254828f5db7bc375d385e31247861d25facee87b43fa2d08ea3ab5569672ab"
+    },
+    {
+      "name": "ogg",
+      "repository": "https://github.com/ffmpegwasm/Ogg",
+      "recipeRef": "v1.3.4",
+      "refKind": "tag",
+      "commit": "bada45718453ac27b56773ae663f7e65112f6a6e",
+      "url": "https://codeload.github.com/ffmpegwasm/Ogg/tar.gz/bada45718453ac27b56773ae663f7e65112f6a6e",
+      "filename": "ogg-bada45718453ac27b56773ae663f7e65112f6a6e.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 256023,
+      "sha256": "4d61f8dfa248276c42bd5404b1a87ae9d8a0d58791f55e20018c7b39b38d8823"
+    },
+    {
+      "name": "lame",
+      "repository": "https://github.com/ffmpegwasm/lame",
+      "recipeRef": "master",
+      "refKind": "branch",
+      "commit": "2badea1974ae36cb8312afe99cff1e6b3b5decee",
+      "url": "https://codeload.github.com/ffmpegwasm/lame/tar.gz/2badea1974ae36cb8312afe99cff1e6b3b5decee",
+      "filename": "lame-2badea1974ae36cb8312afe99cff1e6b3b5decee.tar.gz",
+      "correspondence": "Recipe branch resolved on 2026-10-02; original npm binary's checkout unverified",
+      "bytes": 1525181,
+      "sha256": "0d97ba0776988f5730e0ce1fa936e7c5d6836c757993ba55073513fe89cf410a"
+    },
+    {
+      "name": "theora",
+      "repository": "https://github.com/ffmpegwasm/theora",
+      "recipeRef": "v1.1.1",
+      "refKind": "tag",
+      "commit": "7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+      "url": "https://codeload.github.com/ffmpegwasm/theora/tar.gz/7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+      "filename": "theora-7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 1134014,
+      "sha256": "c38e6a3fb19566a44dcb283323c48311dd484f1416f3f34676d3e7fd252dfbc5"
+    },
+    {
+      "name": "opus",
+      "repository": "https://github.com/ffmpegwasm/opus",
+      "recipeRef": "v1.3.1",
+      "refKind": "tag",
+      "commit": "e85ed7726db5d677c9c0677298ea0cb9c65bdd23",
+      "url": "https://codeload.github.com/ffmpegwasm/opus/tar.gz/e85ed7726db5d677c9c0677298ea0cb9c65bdd23",
+      "filename": "opus-e85ed7726db5d677c9c0677298ea0cb9c65bdd23.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 829306,
+      "sha256": "c6d574b17d70b8c289d997a8ac81314cf1fd8c52237c421b2ee34e69cea85bf8"
+    },
+    {
+      "name": "zlib",
+      "repository": "https://github.com/ffmpegwasm/zlib",
+      "recipeRef": "v1.2.11",
+      "refKind": "tag",
+      "commit": "cacf7f1d4e3d44d871b605da3b647f07d718623f",
+      "url": "https://codeload.github.com/ffmpegwasm/zlib/tar.gz/cacf7f1d4e3d44d871b605da3b647f07d718623f",
+      "filename": "zlib-cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 645528,
+      "sha256": "6d4d6640ca3121620995ee255945161821218752b551a1a180f4215f7d124d45"
+    },
+    {
+      "name": "vorbis",
+      "repository": "https://github.com/ffmpegwasm/vorbis",
+      "recipeRef": "v1.3.3",
+      "refKind": "tag",
+      "commit": "7798164043197d7e33f02de4353ce2aa5b248225",
+      "url": "https://codeload.github.com/ffmpegwasm/vorbis/tar.gz/7798164043197d7e33f02de4353ce2aa5b248225",
+      "filename": "vorbis-7798164043197d7e33f02de4353ce2aa5b248225.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 1324827,
+      "sha256": "69b87cafe2815d02609886a63b9d4c0b7461e1e2f6ecf3960ede04053da6e96a"
+    },
+    {
+      "name": "freetype2",
+      "repository": "https://github.com/ffmpegwasm/freetype2",
+      "recipeRef": "VER-2-10-4",
+      "refKind": "tag",
+      "commit": "6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+      "url": "https://codeload.github.com/ffmpegwasm/freetype2/tar.gz/6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+      "filename": "freetype2-6a2b3e4007e794bfc6c91030d0ed987f925164a8.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 2095678,
+      "sha256": "09acceb42508c65b7b744cc2ad01d7548868ca57babc39f7683ec3c0f7541e8c"
+    },
+    {
+      "name": "fribidi",
+      "repository": "https://github.com/fribidi/fribidi",
+      "recipeRef": "v1.0.9",
+      "refKind": "tag",
+      "commit": "f9e8e71a6fbf4a4619481284c9f484d10e559995",
+      "url": "https://codeload.github.com/fribidi/fribidi/tar.gz/f9e8e71a6fbf4a4619481284c9f484d10e559995",
+      "filename": "fribidi-f9e8e71a6fbf4a4619481284c9f484d10e559995.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 2088197,
+      "sha256": "65ff6fb1a478c4d90ae16825da8c97b8a63e2674f8a2d6dae8800f89089640ba"
+    },
+    {
+      "name": "libwebp",
+      "repository": "https://github.com/ffmpegwasm/libwebp",
+      "recipeRef": "v1.3.2",
+      "refKind": "tag",
+      "commit": "ca332209cb5567c9b249c86788cb2dbf8847e760",
+      "url": "https://codeload.github.com/ffmpegwasm/libwebp/tar.gz/ca332209cb5567c9b249c86788cb2dbf8847e760",
+      "filename": "libwebp-ca332209cb5567c9b249c86788cb2dbf8847e760.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 3685887,
+      "sha256": "1676107dc385f9bf6cb4c2b94d4a9359d1fd95ab6309cb587191a742df292fe2"
+    },
+    {
+      "name": "libvpx",
+      "repository": "https://github.com/ffmpegwasm/libvpx",
+      "recipeRef": "v1.13.1",
+      "refKind": "tag",
+      "commit": "10b9492dcf05b652e2e4b370e205bd605d421972",
+      "url": "https://codeload.github.com/ffmpegwasm/libvpx/tar.gz/10b9492dcf05b652e2e4b370e205bd605d421972",
+      "filename": "libvpx-10b9492dcf05b652e2e4b370e205bd605d421972.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 5520751,
+      "sha256": "12181ed27342415e8b01bf09abfbf1dfa27a6a32f302fb78b48bd70efe50f702"
+    },
+    {
+      "name": "libass",
+      "repository": "https://github.com/libass/libass",
+      "recipeRef": "0.15.0",
+      "refKind": "tag",
+      "commit": "d149636f502f5774ae1a8fb4c554b122674393b2",
+      "url": "https://codeload.github.com/libass/libass/tar.gz/d149636f502f5774ae1a8fb4c554b122674393b2",
+      "filename": "libass-d149636f502f5774ae1a8fb4c554b122674393b2.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 243399,
+      "sha256": "5cfe23562fa623a3b209d156ad469aeb2e31f69bf6b256ea737d87d9ed89301d"
+    },
+    {
+      "name": "emsdk",
+      "repository": "https://github.com/emscripten-core/emsdk",
+      "recipeRef": "3.1.40",
+      "refKind": "tag",
+      "commit": "ae245715ef50e036b68a2412a323129676bf8300",
+      "url": "https://codeload.github.com/emscripten-core/emsdk/tar.gz/ae245715ef50e036b68a2412a323129676bf8300",
+      "filename": "emsdk-ae245715ef50e036b68a2412a323129676bf8300.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 95812,
+      "sha256": "74ca62e60359fb946e297001913a1f10dbd77271ab86671f5e5c2bd1f5b89b3a"
+    },
+    {
+      "name": "zimg",
+      "repository": "https://github.com/sekrit-twc/zimg",
+      "recipeRef": "release-3.0.5",
+      "refKind": "tag",
+      "commit": "e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87",
+      "url": "https://codeload.github.com/sekrit-twc/zimg/tar.gz/e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87",
+      "filename": "zimg-e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 326769,
+      "sha256": "3ab062eff30067799997bc3e911c0108a5b8cbcd6e0ef14053f17ff0ecd0add8"
+    },
+    {
+      "name": "emscripten",
+      "repository": "https://github.com/emscripten-core/emscripten",
+      "recipeRef": "3.1.40",
+      "refKind": "tag",
+      "commit": "5c27e79dd0a9c4e27ef2326841698cdd4f6b5784",
+      "url": "https://codeload.github.com/emscripten-core/emscripten/tar.gz/5c27e79dd0a9c4e27ef2326841698cdd4f6b5784",
+      "filename": "emscripten-5c27e79dd0a9c4e27ef2326841698cdd4f6b5784.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 28785427,
+      "sha256": "3eb9ea2d69052a491296eb466dbcda5fbc1c0fed4e475c58545a83558fb47d10"
+    },
+    {
+      "name": "harfbuzz",
+      "repository": "https://github.com/harfbuzz/harfbuzz",
+      "recipeRef": "5.2.0",
+      "refKind": "tag",
+      "commit": "4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde",
+      "url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde",
+      "filename": "harfbuzz-4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde.tar.gz",
+      "correspondence": "Recipe tag resolved to commit; original npm binary correspondence not independently reproduced",
+      "bytes": 32968210,
+      "sha256": "69ba7c7a42643a3654781242016dd09245cab7353fc2a02cecb710e479c9a881"
+    },
+    {
+      "name": "mediabunny-encoders",
+      "repository": "https://github.com/Vanilagy/mediabunny",
+      "recipeRef": "1.56.1",
+      "refKind": "npm-gitHead",
+      "commit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "url": "https://codeload.github.com/Vanilagy/mediabunny/tar.gz/cee57d1cdfd1776d515c081057b50eb337291e32",
+      "filename": "mediabunny-encoders-cee57d1cdfd1776d515c081057b50eb337291e32.tar.gz",
+      "bytes": 64635572,
+      "sha256": "3fb1c82b9cd8c337b7b1bf8393ad4d0d84b8d569bce97bddf18fc51d580c51bf",
+      "correspondence": "Exact npm registry gitHead; encoder WASM independently byte-matched where applicable"
+    },
+    {
+      "name": "mediabunny-runtime",
+      "repository": "https://github.com/Vanilagy/mediabunny",
+      "recipeRef": "1.61.0",
+      "refKind": "npm-gitHead",
+      "commit": "0f91fe768e7ee42703f15e2b8845551b0f1028b3",
+      "url": "https://codeload.github.com/Vanilagy/mediabunny/tar.gz/0f91fe768e7ee42703f15e2b8845551b0f1028b3",
+      "filename": "mediabunny-runtime-0f91fe768e7ee42703f15e2b8845551b0f1028b3.tar.gz",
+      "bytes": 64658345,
+      "sha256": "067a648758718b06b3199cb841bd04396569897e35c410a046b836f01ece8fe6",
+      "correspondence": "Exact npm registry gitHead; encoder WASM independently byte-matched where applicable"
+    },
+    {
+      "name": "zimg-googletest",
+      "repository": "https://github.com/google/googletest",
+      "recipeRef": "Zimg recursive submodule test/extra/googletest",
+      "refKind": "identified-source",
+      "commit": "703bd9caab50b139428cea1aaff9974ebee5742e",
+      "url": "https://codeload.github.com/google/googletest/tar.gz/703bd9caab50b139428cea1aaff9974ebee5742e",
+      "filename": "zimg-googletest-703bd9caab50b139428cea1aaff9974ebee5742e.tar.gz",
+      "bytes": 905359,
+      "sha256": "d17b1b83a57b3933565a6d0616fe261107326d47de20288d0949ed038e1c342d",
+      "correspondence": "Zimg recursive submodule test/extra/googletest"
+    },
+    {
+      "name": "sdl2",
+      "repository": "https://github.com/libsdl-org/SDL",
+      "recipeRef": "Emscripten3.1.40 port release-2.24.2",
+      "refKind": "identified-source",
+      "commit": "55b03c7493a7abed33cf803d1380a40fa8af903f",
+      "url": "https://codeload.github.com/libsdl-org/SDL/tar.gz/55b03c7493a7abed33cf803d1380a40fa8af903f",
+      "filename": "sdl2-55b03c7493a7abed33cf803d1380a40fa8af903f.tar.gz",
+      "bytes": 7890806,
+      "sha256": "a726e31f8ad9443a2a9a649f12751442d8ca5ea78a84fde14f760c81706b4127",
+      "correspondence": "Emscripten3.1.40 port release-2.24.2"
+    },
+    {
+      "name": "flac",
+      "repository": "https://github.com/xiph/flac",
+      "recipeRef": "Exact embedded libFLAC git-3f1ecff8 source",
+      "refKind": "identified-source",
+      "commit": "3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c",
+      "url": "https://codeload.github.com/xiph/flac/tar.gz/3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c",
+      "filename": "flac-3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c.tar.gz",
+      "bytes": 979457,
+      "sha256": "4ace54db53e274f6c73999a644b0a11410f67e5c35c06e4aaa8e5457bbf59f9d",
+      "correspondence": "Exact embedded libFLAC git-3f1ecff8 source"
+    },
+    {
+      "name": "lame-official",
+      "repository": "https://sourceforge.net/projects/lame/",
+      "recipeRef": "3.100",
+      "refKind": "official-release",
+      "url": "https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz",
+      "filename": "lame-3.100-official.tar.gz",
+      "bytes": 1524133,
+      "sha256": "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e",
+      "correspondence": "Version-matched official release; original Mediabunny patchset not recorded"
+    },
+    {
+      "name": "ffmpeg",
+      "filename": "ffmpeg-4729204c17f756e186d622060088371d10b34f7e.tar.gz",
+      "bytes": 14428595,
+      "sha256": "0d7ad57d4dd851d577fc6c19e5cec5b6e5faaeb2dbd52ab76127e3c3763fec6d",
+      "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/4729204c17f756e186d622060088371d10b34f7e",
+      "commit": "4729204c17f756e186d622060088371d10b34f7e",
+      "correspondence": "Previously supplied source archive preserved; see source manifest for provenance limits"
+    },
+    {
+      "name": "ffmpegwasm-recipe",
+      "filename": "ffmpegwasm-71aa99d37c02a7b4c435275ca9ef50e612f6efa1.tar.gz",
+      "bytes": 1329368,
+      "sha256": "53c5842f160cece0e39345876f9483b56aa84b966637ff6f624353a0fa884219",
+      "url": "https://codeload.github.com/ffmpegwasm/ffmpeg.wasm/tar.gz/71aa99d37c02a7b4c435275ca9ef50e612f6efa1",
+      "commit": "71aa99d37c02a7b4c435275ca9ef50e612f6efa1",
+      "correspondence": "Previously supplied source archive preserved; see source manifest for provenance limits"
+    },
+    {
+      "name": "installed-mpl-sources",
+      "filename": "mediabunny-installed-mpl-sources.tar.gz",
+      "bytes": 914226,
+      "sha256": "65a6c41df5ac9f2cdcf880bf52f565e051e137d2629e4396f82b9bccc28f000b",
+      "correspondence": "Previously supplied source archive preserved; see source manifest for provenance limits",
+      "localSource": "../../public/licenses/sources/mediabunny-installed-mpl-sources.tar.gz"
+    }
+  ],
+  "sourceGaps": [
+    {
+      "component": "FFmpeg-WASM core0.12.10",
+      "gap": "Original core0.12.10 receipt tying historical x264/LAME checkouts, image/frontend digests and apt packages to shipped WASM absent. All identified recipe archives are procured; newly fixed branch snapshots are not attested historical pins."
+    },
+    {
+      "component": "Mediabunny AAC1.56.1",
+      "gap": "Exact FFmpeg checkout/patchset and compiler/build record absent. Lavc62.23.103 interval: introduced2026-01-27 at499b5f5f92f73e5b0e6108242983695fcb6409e2, bumped2026-02-28 at e245f4d5cf642faa6f43002654dfc84ba457b78c; does not select original commit."
+    },
+    {
+      "component": "Mediabunny MP3 1.56.1",
+      "gap": "LAME3.100 identified; official source and original static relink archive supplied. Original patchset/emsdk/compiler build provenance not complete."
+    },
+    {
+      "component": "Mediabunny FLAC1.56.1",
+      "gap": "Embedded libFLAC commit identified and source supplied; final WASM has no compiler metadata, controlled rebuild not executed."
+    }
+  ]
+}

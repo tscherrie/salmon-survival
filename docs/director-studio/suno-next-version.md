@@ -1,6 +1,6 @@
 # Suno music integration for the next version
 
-This work is isolated on `codex/suno-next-version`, starting at `cf761052228feedde11a590739cbf5d54767562e`. It is independent of the v1 publication branch and has not been deployed to the canonical Sites app. Fal stays the default media provider. The native host remains the Director; this change adds no model loop or composer.
+This work is isolated on `codex/suno-next-version`, starting at `cf761052228feedde11a590739cbf5d54767562e`. The isolated branch now also includes the finalized v1 basis `d83304a2178bd7381f934b7f9ff3ea9523d4431d`; its generated UI identity was rebuilt after the merge. It is independent of the v1 publication branch and has not been deployed to the canonical Sites app. Fal stays the default media provider. The native host remains the Director; this change adds no model loop or composer.
 
 ## Current official evidence
 
@@ -48,8 +48,8 @@ node director-studio/apps/extension/scripts/suno-acceptance.mjs /tmp/director-su
 
 The added tests cover native MCP prompt preparation, account/project isolation, persistence, no hidden network/generation/charge, rights acknowledgment and immutable provenance, exact audio MIME rejection, stale-head atomicity, synchronized stem tracks, same-byte chunked uploads, clipboard handoff and recoverable dialog errors.
 
-Validation completed: **67/67 extension tests**, extension typecheck and build passed. The [sanitized receipt](evidence/suno-next-version.json) includes source hashes and the native UI build identity. The supporting browser run also verifies a real two-second WAV export whose decoded samples contain both input tone frequencies, and a 420px layout without horizontal page overflow.
+Validation against the integrated final v1 basis completed: **67/67 extension tests**, **14/14 browser-media tests**, **2/2 codec source Node tests**, extension and workspace typechecks, build and all three policy synchronization checks passed. Of the 88 files changed by v1 since the initial base, 86 are retained byte for byte; the two intentional overlaps are the Suno MCP additions and generated UI build identity. The [sanitized receipt](evidence/suno-next-version.json) includes source hashes and the native UI build identity. The supporting browser run also verifies a real two-second WAV export whose decoded samples contain both input tone frequencies, and a 420px layout without horizontal page overflow.
 
 The supporting browser run uses the actual built editor/Worker and loopback D1/R2 emulators, a synthetic owner and two locally generated tones. It verifies real file upload, saved bytes, durations, synchronized tracks and reopening. These fixtures are explicitly labeled as local tones, not actual Suno outputs. This is supporting browser evidence, not proof of native ChatGPT display or a real Suno account generation.
 
-The separate [renderer research](v2-renderer-research.md) is planning only. It introduces no renderer dependency or runtime change in this Suno implementation. Integrate this next-version branch with the finalized v1 source only when starting v2; it is not part of the current release package or live Sites deployment.
+The separate [renderer research](v2-renderer-research.md) is planning only. It introduces no renderer dependency or runtime change in this Suno implementation. This next-version branch already includes the final v1 source as its basis. Merge its Suno changes into release work only for v2; it is not part of the current release package or live Sites deployment.

@@ -1,0 +1,33 @@
+# Canonical publication and reviewer access
+
+Checked 2026-10-02. The live owner-private Site and its installed app-backed plugin are the existing identities. Source publication and the portable preparation ZIP do not constitute directory publication.
+
+## What is confirmed
+
+Sites `get_site` confirms owner access, one allowed user, no groups or external visitors, and external-visitor invitations enabled. The connection points to the existing canonical plugin. A metadata-only Plugin Creator inspection returns `This is an app-backed plugin and cannot be edited with Plugin Creator`; no replacement plugin was created. Available Plugin Creator calls manage private eligible plugins, not public review or canonical Sites-app conversion. No exposed Sites tool submits a plugin for review or grants an automatic reviewer role.
+
+The [official submission workflow](https://developers.openai.com/plugins/deploy/submission) supports an existing plugin's package update, MCP setup/domain verification, scans, private Review details and separate submit/publish steps. The portable ZIP omits author-supplied app references and lifecycle hooks, which the current uploader rejects. This does not establish that a new ZIP upload will adopt this Sites-owned app. The existing App ownership must be preserved in the portal; a second App or private wrapper is not an acceptable substitute.
+
+A read-only browser inspection reported by the originating chat confirms that the portal's organization verification view shows Verified. At [the Plugins portal](https://platform.openai.com/plugins), its currently selected Default project shows an empty submission start page. The project menu showed Default project, Create project and Manage projects, with no All-projects/All-plugins view or Director/Sites project visible; no selection was changed. Opening the Upload plugin modal showed individual developer identity, ZIP selection and Upload, but no existing Sites App selection or reviewer fields at that entry point. Nothing was uploaded or changed. This proves only the inspected project view: it does not prove the App is absent from every project or that canonical promotion is impossible. The unresolved step is mapping the Sites-owned App into its correct supported publisher/project workflow, before asking for reviewer access or attempting an upload. This task does not repeat the blocked native UI attempt.
+
+## Reviewer access: no new password system
+
+The editor currently relies on Sites-managed ChatGPT OAuth and authorization-scoped D1/R2 data. There is no app username/password database. Do not ask the owner for their password, share their OAuth session, disable their MFA, or invent a reviewer bypass.
+
+The [submission requirements](https://developers.openai.com/plugins/deploy/submission) require a dedicated sample account when authentication is needed, immediately usable without owner-assisted MFA, codes, magic links or private-network access. Credentials and sign-in instructions belong in the secure portal fields, never the ZIP or public source. This general requirement does not prove that a Sites-managed OAuth app needs a developer-created password.
+
+The actual Sites API supports named existing workspace users or invited external visitors. For an external visitor it needs the exact approved account/email and may send an invitation. An invite authorizes that account to visit this Site; it does not copy the owner's projects or credentials. The reviewer must authenticate as their own identity and receive sample projects in that identity's storage. Emulated two-owner tests pass; a second real-account rehearsal still needs that account.
+
+An automatic Sites grant to OpenAI reviewers is not documented by the exposed API and is not yet verified in the portal. Do not treat that uncertainty as a demand that the user supply an arbitrary account. First inspect the canonical App's review-access setup. If it supplies an official reviewer account, the minimum input is that account identifier and explicit permission to grant access. If the portal instead requires a developer-provided dedicated account, its credentials/sign-in method must meet the review team's requirements and be entered securely. No invitation or audience change has been made by this preparation.
+
+## Final portal sequence once materials are complete
+
+1. Open the existing canonical App/plugin in the intended verified publisher account; confirm adoption/update preserves its identity and MCP endpoint before uploading.
+2. Import the preparation metadata into that existing draft, read back the imported listing and five positive/three negative cases, and resolve setup/scan findings.
+3. Complete the canonical review-access method and run the cases using the reviewer identity and sample assets. Keep the owner account separate.
+4. Supply four approved public HTTPS listing/policy URLs, a verified native walkthrough URL and chosen country targeting. A browser-SDK recording is supporting evidence, not a recording of the native host or its model.
+5. The authorized publisher completes the portal's current legal/policy declarations. Submission starts review; publication is a separate action after approval.
+
+Publisher Verified is both human-confirmed and reported visible in the read-only portal verification view. The independent operator with at most three people is human-confirmed. The App's correct publisher/project mapping, canonical adoption, reviewer access and review state remain separate checks. No upload, review submission, public audience change or legal attestation is claimed here.
+
+If the App remains absent after checking the correct publisher/project, the precise platform question is: “What supported public-review flow adopts an existing Sites-generated, app-backed plugin while preserving its canonical App identity and Sites-managed OAuth, and how does that flow grant OpenAI reviewers access without an owner password or MFA handoff?” This is a prepared question, not a sent support enquiry. No user credential is needed merely to investigate this platform mapping.

@@ -1,0 +1,189 @@
+[
+  {
+    "component": "x264",
+    "sourceCommit": "33cac6b77d5b9259c552156013a817ab23119612",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/x264/COPYING",
+    "sha256": "32b1062f7da84967e7019d01ab805935caa7ab7321a7ced0e30ebe75e5df1670"
+  },
+  {
+    "component": "x264",
+    "sourceCommit": "33cac6b77d5b9259c552156013a817ab23119612",
+    "sourceFile": "AUTHORS",
+    "noticeFile": "upstream/x264/AUTHORS",
+    "sha256": "783150c1bef404fc7140924f3006eff27c940ea73ef38b3bc76fcb9c173229a5"
+  },
+  {
+    "component": "x265",
+    "sourceCommit": "2bb5520e9596f361bf0ed81b3b8da0d7fd999069",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/x265/COPYING",
+    "sha256": "d8afb1bcc7a2cfc603683b168d6987ef0a48e59e0da3693bf55c5d33b67e2b49"
+  },
+  {
+    "component": "libvpx",
+    "sourceCommit": "10b9492dcf05b652e2e4b370e205bd605d421972",
+    "sourceFile": "LICENSE",
+    "noticeFile": "upstream/libvpx/LICENSE",
+    "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615"
+  },
+  {
+    "component": "libvpx",
+    "sourceCommit": "10b9492dcf05b652e2e4b370e205bd605d421972",
+    "sourceFile": "PATENTS",
+    "noticeFile": "upstream/libvpx/PATENTS",
+    "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+  },
+  {
+    "component": "lame",
+    "sourceCommit": "2badea1974ae36cb8312afe99cff1e6b3b5decee",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/lame/COPYING",
+    "sha256": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd"
+  },
+  {
+    "component": "ogg",
+    "sourceCommit": "bada45718453ac27b56773ae663f7e65112f6a6e",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/ogg/COPYING",
+    "sha256": "d2ab5758336489da61c12cc5bb757da5339c4ae9001f9bb0562b4370249af814"
+  },
+  {
+    "component": "theora",
+    "sourceCommit": "7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/theora/COPYING",
+    "sha256": "8417fad7da775735564e209484a2e011e0fa201e94f01fdbee6e4977e478e6fc"
+  },
+  {
+    "component": "theora",
+    "sourceCommit": "7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+    "sourceFile": "LICENSE",
+    "noticeFile": "upstream/theora/LICENSE",
+    "sha256": "654a0238f789f4435c4818f50005b141d013c5a09a31d861efc1d0d67ba975a4"
+  },
+  {
+    "component": "opus",
+    "sourceCommit": "e85ed7726db5d677c9c0677298ea0cb9c65bdd23",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/opus/COPYING",
+    "sha256": "8338ce8d922bb4416ce3dd1e5680173332435e3f0755007ac7801ccd674fe682"
+  },
+  {
+    "component": "vorbis",
+    "sourceCommit": "7798164043197d7e33f02de4353ce2aa5b248225",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/vorbis/COPYING",
+    "sha256": "414bfd5d8ee64395a9231d6386188461500052c10915bee08b18bfa9489dd0b3"
+  },
+  {
+    "component": "zlib",
+    "sourceCommit": "cacf7f1d4e3d44d871b605da3b647f07d718623f",
+    "sourceFile": "README",
+    "noticeFile": "upstream/zlib/README",
+    "sha256": "7960b6b1cc63e619abb77acaea5427159605afee8c8b362664f4effc7d7f7d15"
+  },
+  {
+    "component": "libwebp",
+    "sourceCommit": "ca332209cb5567c9b249c86788cb2dbf8847e760",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/libwebp/COPYING",
+    "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf"
+  },
+  {
+    "component": "libwebp",
+    "sourceCommit": "ca332209cb5567c9b249c86788cb2dbf8847e760",
+    "sourceFile": "PATENTS",
+    "noticeFile": "upstream/libwebp/PATENTS",
+    "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c"
+  },
+  {
+    "component": "freetype2",
+    "sourceCommit": "6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+    "sourceFile": "docs/FTL.TXT",
+    "noticeFile": "upstream/freetype2/docs-FTL.TXT",
+    "sha256": "08c135755dd589039470f1fdbb400daaabaaa50d0b366d19cebff4d22986baa1"
+  },
+  {
+    "component": "freetype2",
+    "sourceCommit": "6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+    "sourceFile": "docs/GPLv2.TXT",
+    "noticeFile": "upstream/freetype2/docs-GPLv2.TXT",
+    "sha256": "c4120c6752c910c299e3bd9cb3a46ff262c268303ca2069b61f92f10a5656c18"
+  },
+  {
+    "component": "fribidi",
+    "sourceCommit": "f9e8e71a6fbf4a4619481284c9f484d10e559995",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/fribidi/COPYING",
+    "sha256": "32434afcc8666ba060e111d715bfdb6c2d5dd8a35fa4d3ab8ad67d8f850d2f2b"
+  },
+  {
+    "component": "harfbuzz",
+    "sourceCommit": "4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/harfbuzz/COPYING",
+    "sha256": "4345e1735f8bc6d812fed5180cabb5a5e88a4109d332652f2a45c13cfa5ee692"
+  },
+  {
+    "component": "libass",
+    "sourceCommit": "d149636f502f5774ae1a8fb4c554b122674393b2",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/libass/COPYING",
+    "sha256": "f7e30699d02798351e7f839e3d3bfeb29ce65e44efa7735c225464c4fd7dfe9c"
+  },
+  {
+    "component": "zimg",
+    "sourceCommit": "e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87",
+    "sourceFile": "COPYING",
+    "noticeFile": "upstream/zimg/COPYING",
+    "sha256": "7637386b5f81e8a719ca336233149005e5fa28b5e6054ea7b67de49355b0ad40"
+  },
+  {
+    "component": "sdl2",
+    "sourceCommit": "55b03c7493a7abed33cf803d1380a40fa8af903f",
+    "sourceFile": "LICENSE.txt",
+    "noticeFile": "upstream/sdl2/LICENSE.txt",
+    "sha256": "fcb07e07ac6bc8b2fcf047b50431ef4ebe5b619d7ca7c82212018309a9067426"
+  },
+  {
+    "component": "flac",
+    "sourceCommit": "3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c",
+    "sourceFile": "COPYING.Xiph",
+    "noticeFile": "upstream/flac/COPYING.Xiph",
+    "sha256": "7866ee98760fc1f0156b4fe6bf530257e02be487ab3fd94e2b63799dd32d6b2c"
+  },
+  {
+    "component": "flac",
+    "sourceCommit": "3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c",
+    "sourceFile": "COPYING.GPL",
+    "noticeFile": "upstream/flac/COPYING.GPL",
+    "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+  },
+  {
+    "component": "emsdk",
+    "sourceCommit": "ae245715ef50e036b68a2412a323129676bf8300",
+    "sourceFile": "LICENSE",
+    "noticeFile": "upstream/emsdk/LICENSE",
+    "sha256": "99d9a9616fbde3f5ee22a71d8645799a8522d48526130c5ba6dc27ad15ce01f1"
+  },
+  {
+    "component": "emscripten",
+    "sourceCommit": "5c27e79dd0a9c4e27ef2326841698cdd4f6b5784",
+    "sourceFile": "LICENSE",
+    "noticeFile": "upstream/emscripten/LICENSE",
+    "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86"
+  },
+  {
+    "component": "lame-official",
+    "sourceVersion": "3.100",
+    "noticeFile": "upstream/lame-official/COPYING",
+    "sha256": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd"
+  },
+  {
+    "component": "AAC FFmpeg default LGPL notice",
+    "noticeFile": "upstream/aac-ffmpeg/COPYING.LGPLv2.1",
+    "sourceVersion": "FFmpeg LGPL license text; AAC exact source commit still unresolved",
+    "sha256": "b634ab5640e258563c536e658cad87080553df6f34f62269a21d554844e58bfe"
+  }
+]

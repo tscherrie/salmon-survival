@@ -1739,9 +1739,40 @@
       "bytes": 32232419
     }
   ],
-  "sourceCompleteness": "UNVERIFIED: ffmpegwasm build uses mutable x264 4-cores and LAME master refs; all linked dependency source revisions and npm binary correspondence remain unresolved.",
+  "sourceCompleteness": "Identified source archives procured/verified and exact encoder WASM equality proven. Historical core build pins and AAC exact FFmpeg checkout/toolchain unrecorded; no legal-completeness or rebuilt-byte assertion.",
   "unresolvedNoticeRecords": [
-    "@remotion/licensing@4.0.532",
-    "https@1.0.0"
+    "@remotion/licensing@4.0.532"
+  ],
+  "codecSourceManifest": "CODEC-SOURCE-MANIFEST.json",
+  "codecArtifactAudit": "CODEC-ARTIFACT-INVENTORY.json",
+  "upstreamNotices": "UPSTREAM-NOTICES.json",
+  "separateSourceCollection": {
+    "archives": 26,
+    "bytes": 241265704,
+    "storedSeparatelyFromStaticRuntime": true,
+    "publicDownloadOfLocalCollectionClaimed": false
+  },
+  "remotionLicenseEvidence": {
+    "version": "4.0.532",
+    "bytes": 2823,
+    "sha256": "bd65083b940f61904f6ef298aade918a7cad72a3e35bc406e36fab365844b673",
+    "userConfirmedIndependentOperatorAtMostThreePeople": true,
+    "confirmationSource": "Human user in parent conversation; not an inferred SkillMeNow affiliation",
+    "eligibilityCriterionMatchesInstalledLicense": true,
+    "legalAttestationProvided": false
+  },
+  "noticeExceptions": [
+    {
+      "package": "@remotion/licensing@4.0.532",
+      "declaredLicense": "MIT",
+      "upstreamCommit": "c320056a980972de109ef27a40bede9660a46931",
+      "reason": "Original MIT notice absent both in npm and upstream package; root Remotion license not substituted."
+    }
+  ],
+  "excludedMetadataOnlyPackages": [
+    {
+      "package": "https@1.0.0",
+      "reason": "package.json only; PptxGenJS uses browser-disabled node:https; no executable browser code."
+    }
   ]
 }
