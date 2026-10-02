@@ -1,0 +1,45 @@
+{
+  "scope": "actual built browser UI + actual Worker/D1/R2 emulator, synthetic owner and procedural audio; not native host or real Suno generation",
+  "checks": [
+    "Native MCP-prepared prompt is persisted and loaded into the Suno dialog",
+    "Actual clipboard prompt handoff; no Suno generation or account login",
+    "Two decoded 2-second WAV stems uploaded through the production dialog; exact stored bytes, common origin and separate audio tracks",
+    "Reload/reopen preserves timeline, provider declaration, original plan and stored stems",
+    "Actual 2-second WAV export completes and decoded PCM contains both original 220 Hz and 440 Hz stems",
+    "420px Suno dialog has no horizontal page overflow"
+  ],
+  "errors": [],
+  "export": {
+    "file": "suno-stem-mix.wav",
+    "duration": "2.000000",
+    "codec": "pcm_s16le",
+    "magnitudes": {
+      "220": 0.21842817293597444,
+      "440": 0.21843129006919101
+    }
+  },
+  "passed": true,
+  "sourceBaseCommit": "cf761052228feedde11a590739cbf5d54767562e",
+  "tests": {
+    "extensionPassed": 67,
+    "extensionFailed": 0,
+    "extensionTypecheck": "passed",
+    "extensionBuild": "passed"
+  },
+  "nativeHostAcceptance": "not-run; native SDK link protocol tested with real in-memory transport",
+  "sunoAccountGeneration": "not-run; procedural fixtures only",
+  "deployment": "none; next-version worktree only",
+  "nativeUiBuildId": "d062b6b65ebbb50a4655da7766396b4a4940ab1b8994c252da5ca172273de0e5",
+  "sourceSha256": {
+    "director-studio/apps/extension/shared/suno.ts": "03d09e3b72d1767daada0ad68080a3c7b282a648f60c9a2b1ee2bdfc71edf102",
+    "director-studio/apps/extension/server/suno.ts": "9af8da5690c568df37cb7087ce2a41dffd2b72a032191f0daf2b53201f44f3c0",
+    "director-studio/apps/extension/server/service.ts": "3903c2880a68b5b78047805d788b410b0d2144e97b0001e856c2ef7b81b10db7",
+    "director-studio/apps/extension/server/mcp.ts": "4e5f11ed4679e01549fa6b4a649f8132c4065847eeae216fccb61de94570cc0e",
+    "director-studio/apps/extension/server/transfers.ts": "c3b4577ba7a4ba8bd492e5a667ef3bae14c9f85509bd11cd2bf53776ba2396cc",
+    "director-studio/apps/extension/ui/BrowserStudioApi.ts": "46f445dad28f73acb09773d20a5fb8288dee50734578bc0b9fb3e4b2cde859e1",
+    "director-studio/apps/extension/ui/NativeEditor.tsx": "5ef59a1e0effdc99cbdda81a25625a80ffd846b1c88c2d71838082e8478e92a6",
+    "director-studio/apps/extension/ui/SunoMusicDialog.tsx": "117259e4e04e2aeec4d4c7a79b5f137db333dcb5e68a07185897bb6e8e60d4d1",
+    "director-studio/apps/extension/ui/hostBridge.ts": "83b1ca9392f7190ec7feaf4587723673a4ad2e0278618b5e2a0886b4d91dc993",
+    "director-studio/apps/extension/ui/native.css": "b8abaed9e629b0f238a2f9be9f6db0fcb8689d402f86e6bb52fa0df579d9fbef"
+  }
+}

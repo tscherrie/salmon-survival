@@ -1,4 +1,5 @@
 import type { PersistentUpload } from './transfers.ts';
+import type { SunoHandoff } from '../shared/suno.ts';
 import type { AppSettings, Asset, CheckpointDecision, DirectorQuestion, Generation, LedgerEntry, LineageEdge, ProjectManifest, StudioDocument, Version } from '@studio/core';
 
 /** Structural Worker interfaces: do not import Node libraries into the deployed Worker. */
@@ -36,6 +37,7 @@ export interface PendingApproval {
   amountUsd?: number; createdAt: string; generationId?: string;
 }
 export interface CloudProject {
+  musicHandoffs?: SunoHandoff[];
   uploads?: PersistentUpload[];
   manifest: ProjectManifest;
   versions: Version[];

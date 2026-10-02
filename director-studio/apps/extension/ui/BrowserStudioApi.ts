@@ -2,6 +2,7 @@ import type { AppSettings, AuthStatus, StudioApi, StudioEvent, ProjectSnapshot, 
 import { mimeFromExtension, assetKindFromMime, refSchema } from '@studio/core';
 import { DirectorHostBridge } from './hostBridge.ts';
 import { SITE_PICKER_SCRIPT } from './sitePicker.ts';
+import { sunoReceiptSchema, type SunoReceipt, type SunoRecordInput } from '../shared/suno.ts';
 
 export interface BrowserJob { id: string; kind: string; input: Record<string, unknown>; status: 'queued'|'running'|'completed'|'failed'|'canceled'; createdAt: string; updatedAt: string; error?: string; output?: Record<string,unknown>; executorId?:string; leaseUntil?:string }
 type CloudSnapshot = ProjectSnapshot & { cloudRevision?: number; siteFiles?: Record<string, string>; jobs?: BrowserJob[] };
@@ -9,6 +10,8 @@ export class BrowserStudioApi implements StudioApi {
   readonly isNative = true;
   private listeners = new Set<(event: StudioEvent) => void>();
   private files = new Map<string, File>();
+  private sunoPendingFiles = new WeakMap<File, Map<string, Asset>>();
+  private sunoPendingUrls = new Map<string, Asset>();
   private objectUrls = new Set<string>();
   private assetUrls = new Map<string, string>();
   private assetRecords = new Map<string,Asset>();
@@ -212,6 +215,34 @@ export class BrowserStudioApi implements StudioApi {
       imported.push(await this.uploadFile(projectId, file)); this.files.delete(token);
     }
     return imported;
+  }
+  async importSunoFiles(projectId: string, files: File[], receipt: SunoReceipt, kind: 'song' | 'stems', placement?: SunoRecordInput['placement']) {
+    sunoReceiptSchema.parse(receipt);
+    if (!files.length || files.length > 24 || kind === 'song' && files.length !== 1) throw new Error('Wähle einen Song oder höchstens 24 Stem-Dateien.');
+    if (files.some(file => assetKindFromMime(file.type || mimeFromExtension(file.name)) !== 'audio')) throw new Error('Suno-Import benötigt Audiodateien.');
+    const assets: Asset[] = [];
+    for (const file of files) {
+      const pending = this.sunoPendingFiles.get(file) ?? new Map<string, Asset>();
+      let asset = pending.get(projectId);
+      if (!asset) { asset = await this.uploadFile(projectId, file, { forceNewAssetRecord: true, subtype: kind === 'stems' ? 'stem' : 'music' }); pending.set(projectId, asset); this.sunoPendingFiles.set(file, pending); }
+      assets.push(asset);
+    }
+    const result = await this.action<{ assets: Asset[]; groupId: string }>(projectId, 'recordSunoImport', { assetIds: assets.map(a => a.id), receipt, kind, ...(placement ? { placement } : {}) });
+    for (const file of files) this.sunoPendingFiles.get(file)?.delete(projectId);
+    return result;
+  }
+  async importSunoAudioUrl(projectId: string, url: string, receipt: SunoReceipt, placement?: SunoRecordInput['placement']) {
+    sunoReceiptSchema.parse(receipt);
+    const key = `${projectId}:${url}`;
+    let imported = this.sunoPendingUrls.get(key);
+    if (!imported) { imported = await this.action<Asset>(projectId, 'importSunoUrl', { url, title: receipt.title }); this.sunoPendingUrls.set(key, imported); }
+    await this.getSnapshot(projectId);
+    const blob = await (await fetch(this.assetUrl(projectId, imported.id), { credentials: 'include' })).blob();
+    const { probeMedia } = await import('@studio/browser-media');
+    const probe = await probeMedia(blob);
+    if (probe.durationMs) await this.action(projectId, 'updateAsset', { assetId: imported.id, patch: { durationMs: probe.durationMs } });
+    const result = await this.action<{ assets: Asset[]; groupId: string }>(projectId, 'recordSunoImport', { assetIds: [imported.id], receipt, kind: 'song', ...(placement ? { placement } : {}) });
+    this.sunoPendingUrls.delete(key); return result;
   }
   async importLibraryFiles(projectId: string): Promise<Asset[]> {
     const files = await this.host.selectLibraryFiles();

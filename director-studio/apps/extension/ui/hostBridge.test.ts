@@ -16,6 +16,7 @@ describe('native host initialization', () => {
     const bridge = new DirectorHostBridge();
     const [appTransport, hostTransport] = InMemoryTransport.createLinkedPair();
     const requests: JSONRPCMessage[] = [];
+    let denyLink = false;
     hostTransport.onmessage = (message) => {
       requests.push(message);
       if (!('method' in message) || !('id' in message)) return;
@@ -26,6 +27,8 @@ describe('native host initialization', () => {
         } });
       } else if (message.method === 'tools/call') {
         void hostTransport.send({ jsonrpc: '2.0', id: message.id, result: { content: [], structuredContent: { result: [] } } });
+      } else if (message.method === 'ui/open-link') {
+        void hostTransport.send({ jsonrpc: '2.0', id: message.id, result: { isError: denyLink } });
       }
     };
     const sdkConnect = bridge.app.connect.bind(bridge.app);
@@ -40,6 +43,12 @@ describe('native host initialization', () => {
       expect(bridge.getStatus()).toMatchObject({ connected: true, displayMode: 'inline', error: null });
       await expect(bridge.request('/api/projects')).resolves.toEqual([]);
       expect(requests).toContainEqual(expect.objectContaining({ method: 'tools/call', params: expect.objectContaining({ name: 'director_ui_request', arguments: { path: '/api/projects', method: 'GET' } }) }));
+      const popup = vi.spyOn(window, 'open');
+      await bridge.openExternal('https://suno.com/create');
+      expect(requests).toContainEqual(expect.objectContaining({ method: 'ui/open-link', params: { url: 'https://suno.com/create' } }));
+      denyLink = true;
+      await expect(bridge.openExternal('https://suno.com/create')).rejects.toThrow('abgelehnt');
+      expect(popup).not.toHaveBeenCalled();
       if (display && 'id' in display && display.id !== undefined) await hostTransport.send({ jsonrpc: '2.0', id: display.id, result: { mode: 'fullscreen' } });
       await vi.waitFor(() => expect(bridge.getStatus().displayMode).toBe('fullscreen'));
     } finally {
