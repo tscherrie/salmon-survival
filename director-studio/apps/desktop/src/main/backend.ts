@@ -118,6 +118,9 @@ export interface OpenProject {
   runState: RunState;
   activities: ToolActivity[];
   site: { url: string; stop(): Promise<void> } | null;
+  /** Full thumbnail/peaks/proxy chains must finish before the project store closes. */
+  pendingMedia: Set<Promise<void>>;
+  closing: boolean;
   /** Bereits gezeigte Systemhinweise (Schlüssel siehe {@link noticeKey}), damit derselbe Hinweis nicht mehrfach erscheint. */
   notices: Set<string>;
 }
@@ -372,6 +375,8 @@ export class StudioBackend implements StudioApi {
       runState: 'idle',
       activities: [],
       site: null,
+      pendingMedia: new Set(),
+      closing: false,
       notices: new Set(),
     };
     this.projects.set(id, open);
@@ -696,12 +701,13 @@ export class StudioBackend implements StudioApi {
   }
 
   private deriveInBackground(open: OpenProject, asset: Asset): void {
-    if (asset.kind !== 'video' && asset.kind !== 'audio') return;
-    void (async () => {
+    if (open.closing || (asset.kind !== 'video' && asset.kind !== 'audio')) return;
+    const task = (async () => {
       await this.derived.thumbPath(open.store, asset);
       await this.derived.peaks(open.store, asset).catch(() => null);
       await this.derived.proxyPath(open.store, asset);
-    })().catch(() => undefined);
+    })().catch(() => undefined).finally(() => open.pendingMedia.delete(task));
+    open.pendingMedia.add(task);
   }
 
   // ───────────── Versionen ─────────────
@@ -858,6 +864,7 @@ export class StudioBackend implements StudioApi {
   async closeProject(projectId: string): Promise<void> {
     const open = this.projects.get(projectId);
     if (!open) return;
+    open.closing = true;
     this.projects.delete(projectId);
     // Jeder Schritt einzeln: ein Fehler (z. B. hängender Dev-Server) darf das Schließen nicht abbrechen.
     const errors: unknown[] = [];
@@ -869,6 +876,9 @@ export class StudioBackend implements StudioApi {
       }
     };
     await step(() => open.session?.close());
+    // Track the complete chain, not only currently running codec calls: peaks and
+    // proxy can start after the thumbnail finishes. No new chains start while closing.
+    await step(() => Promise.allSettled([...open.pendingMedia]));
     await step(() => open.site?.stop());
     await step(() => this.deps.preview?.close(projectId));
     // „Zuletzt geöffnet“ mit dem Stand beim Schließen (Checkpoint, Budget, Standbild), ohne die Reihenfolge zu ändern
@@ -939,4 +949,3 @@ async function hasFile(path: string): Promise<boolean> {
     return false;
   }
 }
-

@@ -1,0 +1,242 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Validator, type Schema } from '@cfworker/json-schema';
+import { createDocument } from '@studio/core';
+import { CloudStore } from '../storage.ts';
+import { DirectorService, safeRemoteUrl } from '../service.ts';
+import worker from '../worker.ts';
+import { beginUpload,uploadChunk,completeUpload } from '../transfers.ts';
+import { handleApi } from '../http.ts';
+import { EDITOR_RESOURCE, LEGACY_EDITOR_RESOURCE, handleMcp, MCP_TOOLS } from '../mcp.ts';
+import { NATIVE_UI_BUILD_ID } from '../generated/ui-build.ts';
+import cacheableResultSchemas from './fixtures/mcp-2026-07-28-cacheable-results.json';
+import { environment, request } from './emulator.ts';
+const owner = { id:'alice',email:'alice@example.test' };
+function service(env = environment(), who = owner) { return new DirectorService(new CloudStore(env.DB, who),env); }
+async function create(svc: DirectorService, category = 'video') { return svc.create({ title:'Test Film',category }); }
+async function rpc(env: ReturnType<typeof environment>, method: string, params: unknown = {}, who?: string) {
+ const req=request('/mcp','POST',{jsonrpc:'2.0',id:1,method,params},who);
+ const input=params as Record<string,any>;
+ const version=input?._meta?.['io.modelcontextprotocol/protocolVersion'];
+ if(version){req.headers.set('MCP-Protocol-Version',version);req.headers.set('Mcp-Method',method);if(method==='tools/call')req.headers.set('Mcp-Name',input.name);if(method==='resources/read')req.headers.set('Mcp-Name',input.uri);}
+ const response=await handleMcp(req,env);return{response,body:await response.json() as any};
+}
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+describe('OpenAI domain verification route', () => {
+ const challengePath = '/.well-known/openai-apps-challenge';
+ const syntheticChallenge = 'synthetic-domain-proof-Å-test';
+ function isolatedEnv() {
+  const env = environment();
+  env.DIRECTOR_OPENAI_APPS_CHALLENGE = syntheticChallenge;
+  const prepare = vi.spyOn(env.DB, 'prepare');
+  const batch = vi.spyOn(env.DB, 'batch');
+  const get = vi.spyOn(env.MEDIA, 'get');
+  const put = vi.spyOn(env.MEDIA, 'put');
+  const assets = vi.fn(async () => new Response('static fallback', { status: 404 }));
+  env.ASSETS = { fetch: assets };
+  return { env, assertNoStorageOrStatic() { for (const spy of [prepare, batch, get, put, assets]) expect(spy).not.toHaveBeenCalled(); } };
+ }
+ it('returns only the exact configured synthetic plaintext anonymously without touching storage', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  const response = await worker.fetch(request(challengePath), env);
+  expect(response.status).toBe(200);
+  expect(await response.text()).toBe(syntheticChallenge);
+  expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+  expect(response.headers.get('cache-control')).toBe('no-store');
+  expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+  expect(response.headers.get('content-length')).toBe(String(new TextEncoder().encode(syntheticChallenge).length));
+  expect(response.headers.get('set-cookie')).toBeNull();
+  assertNoStorageOrStatic();
+ });
+ it('returns the same proof headers for HEAD with no body or storage access', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  const get = await worker.fetch(request(challengePath), env);
+  const head = await worker.fetch(request(challengePath, 'HEAD'), env);
+  expect(head.status).toBe(200);
+  expect([...head.headers]).toEqual([...get.headers]);
+  expect(head.body).toBeNull();
+  expect(await head.text()).toBe('');
+  assertNoStorageOrStatic();
+ });
+ it('fails closed with 404 when the runtime key is absent or empty rather than serving the static fallback', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  for (const value of [undefined, '']) {
+   env.DIRECTOR_OPENAI_APPS_CHALLENGE = value;
+   for (const method of ['GET', 'HEAD']) {
+    const response = await worker.fetch(request(challengePath, method), env);
+    expect(response.status).toBe(404);
+    expect(response.body).toBeNull();
+    expect(response.headers.get('cache-control')).toBe('no-store');
+   }
+  }
+  assertNoStorageOrStatic();
+ });
+ it('rejects other methods with the exact allowed methods and no secret body', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
+   const response = await worker.fetch(request(challengePath, method), env);
+   expect(response.status).toBe(405);
+   expect(response.headers.get('allow')).toBe('GET, HEAD');
+   expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+   expect(response.body).toBeNull();
+  }
+  assertNoStorageOrStatic();
+ });
+ it('does not expose the proof on query-bearing URLs, including an empty query', async () => {
+  const { env, assertNoStorageOrStatic } = isolatedEnv();
+  for (const suffix of ['?', '?probe=1', '?token=synthetic', '#fragment']) {
+   for (const method of ['GET', 'HEAD']) {
+    const response = await worker.fetch(request(challengePath + suffix, method), env);
+    expect(response.status).toBe(404);
+    expect(response.body).toBeNull();
+   }
+  }
+  assertNoStorageOrStatic();
+ });
+ it('keeps nearby paths on the normal static route without exposing the configured proof', async () => {
+  const { env } = isolatedEnv();
+  for (const path of [challengePath + '/', challengePath + '.txt', '/.well-known/%6fpenai-apps-challenge', '/other/openai-apps-challenge']) {
+   const response = await worker.fetch(request(path), env);
+   expect(response.status).toBe(404);
+   expect(await response.text()).toBe('static fallback');
+  }
+  expect(env.ASSETS!.fetch).toHaveBeenCalledTimes(4);
+ });
+ it('keeps anonymous project APIs and an existing private asset unauthorized when the public proof is configured', async () => {
+  const env = environment(), svc = service(env), project = await create(svc);
+  const asset = await svc.upload(project.manifest.id, new Uint8Array([1, 2, 3]), 'private.wav', 'audio/wav');
+  env.DIRECTOR_OPENAI_APPS_CHALLENGE = syntheticChallenge;
+  const prepare = vi.spyOn(env.DB, 'prepare'), get = vi.spyOn(env.MEDIA, 'get');
+  const paths = ['/api/projects', '/api/settings', `/api/projects/${project.manifest.id}`, `/api/projects/${project.manifest.id}/assets/${asset.id}`];
+  for (const path of paths) {
+   const anonymous = request(path);
+   anonymous.headers.set('authorization', 'Bearer synthetic-untrusted-credential');
+   anonymous.headers.set('x-user-id', 'alice');
+   const response = await worker.fetch(anonymous, env);
+   expect(response.status).toBe(401);
+   expect(await response.json()).toMatchObject({ code: 'AUTH_REQUIRED' });
+  }
+  const partial = request(paths[3]!); partial.headers.set('oai-authenticated-user-id', 'alice');
+  expect((await worker.fetch(partial, env)).status).toBe(401);
+  expect(prepare).not.toHaveBeenCalled(); expect(get).not.toHaveBeenCalled();
+ });
+});
+describe('component source and cancellation history', () => {
+ it('retains distinct identical component records and owned derived lineage', async () => {
+  const env=environment(), svc=service(env), project=await create(svc), pid=project.manifest.id;
+  const code='export default () => "same";';
+  const first:any=await svc.action(pid,'writeComponent',{componentId:'first',code});
+  const second:any=await svc.action(pid,'writeComponent',{componentId:'second',code});
+  expect(second.id).not.toBe(first.id); expect(second.path).toBe(first.path);
+  expect(await svc.action(pid,'readComponent',{componentId:'second',assetId:second.id})).toMatchObject({code,assetId:second.id});
+  const source=await svc.upload(pid,new Uint8Array([1,2]),'source.wav','audio/wav');
+  const cut=await svc.upload(pid,new Uint8Array([3,4]),'cut.wav','audio/wav',{source:'derived',parents:[{assetId:source.id,relation:'derived'}],metadata:{fromSec:1,toSec:2,handlesSec:.25}});
+  expect(await svc.action(pid,'getLineage',{assetId:cut.id})).toMatchObject({parents:[{parentId:source.id,childId:cut.id,relation:'derived'}]});
+  expect(cut.metadata).toMatchObject({fromSec:1,toSec:2,handlesSec:.25});
+  const other=await create(svc), before=env.MEDIA.objects.size;
+  await expect(svc.upload(other.manifest.id,new Uint8Array([9]),'bad.wav','audio/wav',{parents:[{assetId:source.id,relation:'input'}]})).rejects.toMatchObject({code:'ASSET_NOT_FOUND'});
+  expect(env.MEDIA.objects.size).toBe(before);
+ });
+ it('returns rotoscope handoff immediately without persisting a job or approval',async()=>{
+  const env=environment(), svc=service(env), c=await create(svc), pid=c.manifest.id;
+  const source=await svc.upload(pid,new Uint8Array([1,2]),'clip.mp4','video/mp4');
+  const result=(await rpc(env,'tools/call',{name:'extract_rotoscope',arguments:{projectId:pid,input:{assetId:source.id,kind:'mask'}}},'alice')).body.result;
+  expect(result.isError).toBeUndefined();expect(result.structuredContent).toMatchObject({status:'handoff_required',sourceAsset:{id:source.id}});
+  const state=await svc.get(pid);expect(state.jobs).toEqual([]);expect(state.pendingApprovals).toEqual([]);expect(state.generations).toEqual([]);expect(state.assets).toHaveLength(1);
+  expect(MCP_TOOLS.find(t=>t.name==='extract_rotoscope')?.annotations).toMatchObject({readOnlyHint:true,idempotentHint:true});
+ });
+ it('reads exact historical component assets and defaults to latest source', async () => {
+  const env=environment(), svc=service(env), project=await create(svc), projectId=project.manifest.id;
+  const first:any=await svc.action(projectId,'writeComponent',{componentId:'title',code:'export default () => "old";'});
+  const second:any=await svc.action(projectId,'writeComponent',{componentId:'title',code:'export default () => "new";'});
+  expect(await svc.action(projectId,'readComponent',{componentId:'title',assetId:first.id})).toMatchObject({code:'export default () => "old";',assetId:first.id});
+  expect(await svc.action(projectId,'readComponent',{componentId:'title'})).toMatchObject({code:'export default () => "new";',assetId:second.id});
+  const other=await create(svc); await expect(svc.action(other.manifest.id,'readComponent',{componentId:'title',assetId:first.id})).rejects.toMatchObject({code:'COMPONENT_NOT_FOUND'});
+ });
+ it('preserves user cancellation across reopening and rejects a late executor success', async () => {
+  const env=environment(), svc=service(env), project=await create(svc), projectId=project.manifest.id;
+  const job:any=await svc.action(projectId,'createJob',{kind:'export_project',input:{format:'mp4'}});
+  await svc.action(projectId,'claimJob',{jobId:job.id,executorId:'editor-one'});
+  await svc.action(projectId,'cancelJob',{jobId:job.id});
+  expect((await service(env).get(projectId)).jobs?.[0]?.status).toBe('canceled');
+  await expect(svc.action(projectId,'updateJob',{jobId:job.id,executorId:'editor-one',patch:{status:'completed'}})).rejects.toMatchObject({code:'JOB_TERMINAL'});
+  expect(await svc.action(projectId,'claimJob',{jobId:job.id,executorId:'editor-two'})).toMatchObject({claimed:false,job:{status:'canceled'}});
+  await svc.action(projectId,'applyDocumentOps',{expectedHead:1,ops:[{op:'update_timeline',patch:{durationFrames:300}}]});
+  const retry:any=await svc.action(projectId,'retryJob',{jobId:job.id});
+  expect(retry).toMatchObject({projectVersion:1,status:'queued',input:{projectVersion:1,retryOf:job.id}});expect(retry.id).not.toBe(job.id);
+  await expect(svc.action(projectId,'retryJob',{jobId:retry.id})).rejects.toMatchObject({code:'JOB_NOT_RETRYABLE'});
+ });
+});
+describe('Sites owner authorization', () => {
+ it('fails closed on every API without both trusted identity fields',async()=>{const env=environment();for(const path of ['/api/projects','/api/settings','/api/models','/api/projects/unknown','/api/projects/unknown/assets/x'])expect((await handleApi(request(path),env)).status).toBe(401);const partial=request('/api/projects');partial.headers.set('oai-authenticated-user-id','alice');expect((await handleApi(partial,env)).status).toBe(401);});
+ it('isolates project reads, mutation, download and own UI RPC between users',async()=>{const env=environment();const a=service(env);const c=await create(a);const item=await a.upload(c.manifest.id,new Uint8Array([1,2,3]),'clip.mp4','video/mp4');for(const path of [`/api/projects/${c.manifest.id}`,`/api/projects/${c.manifest.id}/assets/${item.id}`])expect((await handleApi(request(path,'GET',undefined,'bob'),env)).status).toBe(404);expect(await service(env,{id:'bob',email:'bob@example.test'}).list()).toEqual([]);const {body}=await rpc(env,'tools/call',{name:'director_ui_request',arguments:{path:`/api/projects/${c.manifest.id}`,method:'GET'}},'bob');expect(body.result.isError).toBe(true);expect(body.result.structuredContent.code).toBe('PROJECT_NOT_FOUND');expect((await a.get(c.manifest.id)).assets).toHaveLength(1);});
+ it('allows private-data-free discovery and authenticates data calls',async()=>{const env=environment();expect((await rpc(env,'tools/list')).body.result.tools.length).toBeGreaterThan(40);expect((await rpc(env,'tools/call',{name:'list_projects'})).response.status).toBe(401);});
+});
+describe('atomic documents and immutable versions',()=>{
+ it('creates and reopens all five categories with native host Director',async()=>{const env=environment();for(const category of ['video','audio','slides','graphic','web']){const c=await create(service(env),category);const reopened=await service(env).get(c.manifest.id);expect(reopened.document).toEqual(c.document);expect(reopened.versions.map(v=>v.number)).toEqual([1]);expect(reopened.manifest.director.runtime).toBe('native-host');expect(reopened.manifest.pickers.director).toBeUndefined();}});
+ it('rejects invalid operation batch without committing valid first op',async()=>{const svc=service();const c=await create(svc);await expect(svc.action(c.manifest.id,'applyDocumentOps',{expectedHead:1,ops:[{op:'update_timeline',patch:{durationFrames:90}},{op:'insert_clip',trackId:'V1',clip:{id:'missing',assetId:'private',start:0,duration:30}}]})).rejects.toThrow(/existiert nicht/);const s=await svc.get(c.manifest.id);expect(s.versions).toHaveLength(1);expect(s.document).toEqual(c.document);});
+ it('stale D1 CAS cannot append a phantom document version',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const one=await svc.store.load(c.manifest.id);const two=await svc.store.load(c.manifest.id);for(const loaded of [one,two])loaded.state.versions.push({...loaded.state.versions[0]!,number:2,parentNumber:1,note:loaded===one?'winner':'stale',document:createDocument('video')});await svc.store.save(c.manifest.id,one.state,one.revision);await expect(svc.store.save(c.manifest.id,two.state,two.revision)).rejects.toMatchObject({status:409});expect((await svc.get(c.manifest.id)).versions.map(v=>v.note)).toEqual(['Project created','winner']);expect(env.DB.sqlite.prepare('SELECT count(*) AS n FROM director_versions').get()).toMatchObject({n:2});});
+ it('protects expectedHead and restores by creating a new version',async()=>{const svc=service();const c=await create(svc);const projectId=c.manifest.id;await svc.action(projectId,'applyDocumentOps',{expectedHead:1,ops:[{op:'update_timeline',patch:{durationFrames:120}}]});await expect(svc.action(projectId,'applyDocumentOps',{expectedHead:1,ops:[{op:'update_timeline',patch:{durationFrames:30}}]})).rejects.toMatchObject({code:'VERSION_CONFLICT'});await svc.action(projectId,'restoreVersion',{number:1});const s=await svc.get(projectId);expect(s.versions.map(v=>v.number)).toEqual([1,2,3]);expect(s.document).toEqual(c.document);expect(s.versions[2]?.restoredFrom).toBe(1);});
+ it('restores site source snapshots and rejects secrets and path traversal',async()=>{const svc=service();const c=await create(svc,'web');const pid=c.manifest.id;await svc.action(pid,'writeSiteFile',{path:'index.html',content:'<h1>One</h1>'});await svc.action(pid,'writeSiteFile',{path:'index.html',content:'<h1>Two</h1>'});await svc.action(pid,'restoreVersion',{number:2});expect(await svc.action(pid,'readSiteFile',{path:'index.html'})).toMatchObject({content:'<h1>One</h1>'});for(const path of ['../secret','.env','.env.local','node_modules/a.js'])await expect(svc.action(pid,'writeSiteFile',{path,content:'bad'})).rejects.toMatchObject({code:'UNSAFE_PATH'});});
+});
+describe('approval and Fal provenance',()=>{
+ it('persists questions, answers and checkpoint budget without model conversation copies',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const pid=c.manifest.id;const q:any=await svc.action(pid,'askUser',{questions:[{id:'tone',question:'Tone?',options:[{label:'Warm'}]}]});expect((await service(env).get(pid)).pendingQuestion?.questionId).toBe(q.questionId);await svc.action(pid,'answerQuestion',{questionId:q.questionId,answers:{tone:'Warm'}});await expect(svc.action(pid,'answerQuestion',{questionId:q.questionId,answers:{tone:'No'}})).rejects.toMatchObject({code:'QUESTION_STALE'});const cp=c.checkpoints[0]!;await svc.action(pid,'proposeCheckpoint',{checkpointId:cp.id,summary:'Warm film',budgetRequestedUsd:2});await svc.action(pid,'decideCheckpoint',{checkpointId:cp.id,decision:{decision:'approve'}});const s=await svc.get(pid);expect(s.budget.approvedUsd).toBe(2);expect(s.questionAnswers).toHaveLength(1);expect(s.messages).toEqual([]);});
+ it('requires this generation approval and keeps quoted and unknown actual cost separate',async()=>{const svc=service();const c=await create(svc);const pid=c.manifest.id;const prep:any=await svc.action(pid,'prepareGeneration',{endpointId:'minimax/h3-max/text-to-video',modality:'video',estimateUsd:0.125,purpose:'Test shapes',input:{prompt:'Shapes'}});await expect(svc.action(pid,'recordGeneration',{generationId:prep.generation.id,status:'running',requestId:'fal-1'})).rejects.toMatchObject({code:'GENERATION_UNAPPROVED'});await svc.action(pid,'decideApproval',{approvalId:prep.approval.id,approved:true});const item=await svc.upload(pid,new Uint8Array([0,1,2]),'fal.mp4','video/mp4');await svc.action(pid,'recordGeneration',{generationId:prep.generation.id,status:'completed',requestId:'fal-1',outputAssetIds:[item.id]});let s=await svc.get(pid);expect(s.budget.reservedUsd).toBe(0.125);expect(s.budget.spentUsd).toBe(0);expect(s.generations[0]?.costUsd).toBeUndefined();expect(s.assets[0]?.source).toBe('generated');expect(s.assets[0]?.metadata?.fal).toMatchObject({actualCostUsd:null,requestId:'fal-1'});await svc.action(pid,'recordGeneration',{generationId:prep.generation.id,status:'completed',requestId:'fal-1',actualCostUsd:0.12,outputAssetIds:[item.id]});s=await svc.get(pid);expect(s.budget.reservedUsd).toBe(0);expect(s.budget.spentUsd).toBe(0.12);await expect(svc.action(pid,'recordGeneration',{generationId:prep.generation.id,status:'completed',requestId:'other'})).rejects.toMatchObject({code:'RECEIPT_CONFLICT'});});
+ it('enforces model picker before creating generation or approval',async()=>{const svc=service();const c=await create(svc);await expect(svc.action(c.manifest.id,'prepareGeneration',{endpointId:'other/video',modality:'video',estimateUsd:0.5,purpose:'Bad picker',input:{}})).rejects.toMatchObject({code:'PICKER_LOCK'});expect((await svc.get(c.manifest.id)).generations).toEqual([]);});
+ it('imports existing paid Fal receipt idempotently without approving or charging again',async()=>{const fetch=vi.fn(async()=>new Response(new Uint8Array([1,2,3,4]),{headers:{'content-type':'video/mp4'}}));vi.stubGlobal('fetch',fetch);const svc=service();const c=await create(svc);const receipt={url:'https://v3b.fal.media/files/test.mp4',endpointId:'minimax/h3-max/text-to-video',requestId:'prior-paid-job',estimateUsd:0.125};const first:any=await svc.action(c.manifest.id,'importFalResult',receipt);const again:any=await svc.action(c.manifest.id,'importFalResult',receipt);expect(again.alreadyImported).toBe(true);expect(again.assets[0].id).toBe(first.assets[0].id);expect(fetch).toHaveBeenCalledTimes(1);const s=await svc.get(c.manifest.id);expect(s.generations).toHaveLength(1);expect(s.assets).toHaveLength(1);expect(s.pendingApprovals).toEqual([]);expect(s.budget.spentUsd).toBe(0);expect(s.budget.reservedUsd).toBe(0);expect(first.actualBillingKnown).toBe(false);});
+});
+describe('persistent jobs, binary storage and platform contract',()=>{
+ it('returns cacheable envelopes accepted by the upstream MCP 2026-07-28 result schemas',async()=>{
+  const env=environment();env.ASSETS={fetch:async()=>new Response('<html><head></head><body>Editor</body></html>')};
+  const cases=[['server/discover','DiscoverResult',{}],['tools/list','ListToolsResult',{}],['resources/list','ListResourcesResult',{}],['resources/read','ReadResourceResult',{uri:EDITOR_RESOURCE}]] as const;
+  for(const [method,definition,input] of cases){
+   const {body}=await rpc(env,method,{...input,_meta:{'io.modelcontextprotocol/protocolVersion':'2026-07-28','io.modelcontextprotocol/clientCapabilities':{}}});
+   const validator=new Validator({...cacheableResultSchemas,$ref:`#/$defs/${definition}`} as Schema,'2020-12');
+   expect(body.result,method).toMatchObject({resultType:'complete',ttlMs:0,cacheScope:'private'});
+   expect(validator.validate(body.result),method).toMatchObject({valid:true});
+   for(const missing of ['ttlMs','cacheScope','resultType']){
+    const incomplete={...body.result};delete incomplete[missing];
+    expect(validator.validate(incomplete).valid,`${method} missing ${missing}`).toBe(false);
+   }
+   expect(validator.validate({...body.result,ttlMs:-1}).valid,`${method} negative TTL`).toBe(false);
+   expect(validator.validate({...body.result,cacheScope:'shared'}).valid,`${method} invalid scope`).toBe(false);
+  }
+  const called=(await rpc(env,'tools/call',{name:'list_projects',_meta:{'io.modelcontextprotocol/protocolVersion':'2026-07-28','io.modelcontextprotocol/clientCapabilities':{}}},'alice')).body.result;
+  expect(called.resultType).toBe('complete');expect(called.ttlMs).toBeUndefined();expect(called.cacheScope).toBeUndefined();
+ });
+ it('uses the native HTML build hash consistently and preserves reads of the legacy UI URI',async()=>{
+  const env=environment();env.ASSETS={fetch:async()=>new Response('<html><head></head><body>Editor</body></html>')};
+  expect(NATIVE_UI_BUILD_ID).toMatch(/^[a-f0-9]{64}$/);
+  expect(EDITOR_RESOURCE).toBe(`ui://director-studio/editor-${NATIVE_UI_BUILD_ID}.html`);
+  const listed=(await rpc(env,'resources/list')).body.result.resources;
+  expect(listed).toHaveLength(1);expect(listed[0].uri).toBe(EDITOR_RESOURCE);
+  const opening=(await rpc(env,'tools/list')).body.result.tools.find((t: {name:string})=>t.name==='director_open');
+  expect(opening._meta.ui.resourceUri).toBe(EDITOR_RESOURCE);
+  const current=(await rpc(env,'resources/read',{uri:EDITOR_RESOURCE})).body.result;
+  const legacy=(await rpc(env,'resources/read',{uri:LEGACY_EDITOR_RESOURCE})).body.result;
+  expect(current.contents[0].uri).toBe(EDITOR_RESOURCE);expect(legacy.contents[0].uri).toBe(LEGACY_EDITOR_RESOURCE);
+  expect(legacy.contents[0].text).toBe(current.contents[0].text);
+  expect(legacy.resultType).toBeUndefined();expect(legacy.ttlMs).toBeUndefined();expect(legacy.cacheScope).toBeUndefined();
+  expect((await rpc(env,'resources/read',{uri:'ui://director-studio/unknown.html'})).body.error).toBeDefined();
+ });
+ it('leases persistent job to one editor and rejects other executor completion',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const pid=c.manifest.id;const job:any=await svc.action(pid,'createJob',{kind:'render_still',input:{frame:0}});expect(job.projectVersion).toBe(1);expect(await svc.action(pid,'claimJob',{jobId:job.id,executorId:'editor-one'})).toMatchObject({claimed:true});expect(await service(env).action(pid,'claimJob',{jobId:job.id,executorId:'editor-two'})).toMatchObject({claimed:false});await expect(svc.action(pid,'updateJob',{jobId:job.id,executorId:'editor-two',patch:{status:'completed'}})).rejects.toMatchObject({code:'JOB_LEASE_LOST'});await svc.action(pid,'updateJob',{jobId:job.id,executorId:'editor-one',patch:{status:'completed',output:{assetIds:['a']}}});expect((await service(env).get(pid)).jobs[0]?.status).toBe('completed');expect(await svc.action(pid,'claimJob',{jobId:job.id,executorId:'editor-two'})).toMatchObject({claimed:false});});
+ it('returns byte ranges and a repair error when binary is missing',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const a=await svc.upload(c.manifest.id,new Uint8Array([1,2,3,4,5]),'clip.mp4','video/mp4');const req=request(`/api/projects/${c.manifest.id}/assets/${a.id}`,'GET',undefined,'alice');req.headers.set('range','bytes=1-3');const range=await handleApi(req,env);expect(range.status).toBe(206);expect(range.headers.get('content-range')).toBe('bytes 1-3/5');expect([...new Uint8Array(await range.arrayBuffer())]).toEqual([2,3,4]);env.MEDIA.objects.clear();expect((await handleApi(request(`/api/projects/${c.manifest.id}/assets/${a.id}`,'GET',undefined,'alice'),env)).status).toBe(409);});
+ it('deduplicates content and isolates user R2 object paths',async()=>{const env=environment();const a=service(env);const c=await create(a);const one=await a.upload(c.manifest.id,new Uint8Array([7,8]),'same.wav','audio/wav');const two=await a.upload(c.manifest.id,new Uint8Array([7,8]),'same.wav','audio/wav');expect(two.id).toBe(one.id);expect((await a.get(c.manifest.id)).assets).toHaveLength(1);const b=service(env,{id:'bob',email:'bob@example.test'});const other=await create(b);const item=await b.upload(other.manifest.id,new Uint8Array([7,8]),'same.wav','audio/wav');expect(item.path).not.toBe(one.path);});
+ it('blocks credentials, IP/local SSRF and automatic redirect following',async()=>{for(const url of ['http://example.com/a','https://a:b@example.com/a','https://127.0.0.1/a','https://[::1]/a','https://localhost/a','https://foo.local/a','https://example.com:8443/a'])expect(()=>safeRemoteUrl(url)).toThrow();expect(safeRemoteUrl('https://v3b.fal.media/a').hostname).toBe('v3b.fal.media');vi.stubGlobal('fetch',vi.fn(async()=>new Response(null,{status:302,headers:{location:'https://127.0.0.1/'}})));const svc=service();const c=await create(svc);await expect(svc.action(c.manifest.id,'importUrl',{url:'https://example.com/a'})).rejects.toMatchObject({code:'IMPORT_HTTP_ERROR'});});
+ it('uses self-contained global/thread fullscreen resources and native settings envelopes',async()=>{const env=environment();const fetch=vi.fn(async(_request: Request)=>new Response('<html><head><style>body{color:white}</style></head><body><script>window.boot=true</script></body></html>'));env.ASSETS={fetch};expect(MCP_TOOLS.find(t=>t.name==='director_open')?._meta?.['openai/ui']).toMatchObject({entrypoints:[{type:'global'},{type:'thread'}]});const res=(await rpc(env,'resources/read',{uri:EDITOR_RESOURCE})).body.result.contents[0];expect(new URL(fetch.mock.calls[0]![0].url).pathname).toBe('/native.html');expect(res).toMatchObject({uri:EDITOR_RESOURCE,mimeType:'text/html;profile=mcp-app'});expect(res.text).toContain('window.boot=true');expect(res.text).toContain('<base href="https://director.example/">');expect(res._meta['openai/ui']).toEqual({availableDisplayModes:['fullscreen'],preferredDisplayMode:'fullscreen'});expect(res._meta.ui.csp.connectDomains).toEqual(['https://esm.sh','https://www.remotion.pro']);expect((await rpc(env,'tools/call',{name:'settings.update',arguments:{set:{language:'en'}}},'alice')).body.result.structuredContent.values.language).toBe('en');expect((await rpc(env,'tools/call',{name:'settings.read'},'alice')).body.result.structuredContent.values.language).toBe('en');});
+ it('does not register a hidden LLM, delegate or token setter',()=>{const names=MCP_TOOLS.map(t=>t.name);for(const name of ['sendMessage','delegate','set_secret'])expect(names).not.toContain(name);expect(names).toContain('prepare_generation');expect(names).toContain('import_fal_result');});
+});
+
+describe('bounded native host transfers and isolation',()=>{
+ it('transports static runtime through authenticated bounded app requests without leaking arbitrary paths',async()=>{const env=environment();const bytes=new Uint8Array([5,6,7,8]);const fetch=vi.fn(async()=>new Response(bytes,{headers:{'content-type':'application/wasm'}}));env.ASSETS={fetch};expect((await handleApi(request('/api/runtime-file?path=/runtime/esbuild.wasm'),env)).status).toBe(401);expect(fetch).not.toHaveBeenCalled();const response=await rpc(env,'tools/call',{name:'director_ui_request',arguments:{path:'/api/runtime-file?path=/runtime/esbuild.wasm&offset=1&length=2',method:'GET'}},'alice');expect(response.body.result.structuredContent).toEqual({base64:btoa(String.fromCharCode(6,7)),mime:'application/wasm',bytes:2,totalBytes:4,offset:1});expect(response.body.result.content).toEqual([]);for(const path of ['/api/projects','/runtime/../secret','/runtime/%2e%2e/secret','/runtime//secret'])expect((await handleApi(request('/api/runtime-file?path='+encodeURIComponent(path),'GET',undefined,'alice'),env)).status).toBe(400);expect((await handleApi(request('/api/runtime-file?path=/runtime/esbuild.wasm&length=262145','GET',undefined,'alice'),env)).status).toBe(400);expect((await handleApi(request('/api/runtime-file?path=/runtime/esbuild.wasm&offset=4','GET',undefined,'alice'),env)).status).toBe(416);});
+ it('uses static byte-range total and rejects oversized range responses',async()=>{const env=environment();env.ASSETS={fetch:async()=>new Response(new Uint8Array([2,3]),{status:206,headers:{'content-type':'application/wasm','content-range':'bytes 1-2/6'}})};expect(await (await handleApi(request('/api/runtime-file?path=/runtime/core.wasm&offset=1&length=2','GET',undefined,'alice'),env)).json()).toMatchObject({totalBytes:6,bytes:2,offset:1});env.ASSETS={fetch:async()=>new Response(new Uint8Array([1,2,3]),{status:206,headers:{'content-range':'bytes 1-3/6'}})};expect((await handleApi(request('/api/runtime-file?path=/runtime/core.wasm&offset=1&length=2','GET',undefined,'alice'),env)).status).toBe(502);});
+ it('transfers over multiple idempotent chunks and finalizes once',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const bytes=new Uint8Array(600000).map((_,i)=>i%251);const begin=await beginUpload(svc.store,env,c.manifest.id,{name:'large.mp4',mime:'video/mp4',bytes:bytes.length});for(let offset=0;offset<bytes.length;offset+=262144){const part=bytes.subarray(offset,offset+262144);let raw='';for(const b of part)raw+=String.fromCharCode(b);const input={offset,base64:btoa(raw)};const sent=await uploadChunk(svc.store,env,c.manifest.id,begin.uploadId,input);expect(await uploadChunk(svc.store,env,c.manifest.id,begin.uploadId,input)).toEqual(sent);}const a=await completeUpload(svc.store,env,c.manifest.id,begin.uploadId);expect(a.bytes).toBe(bytes.length);expect((await completeUpload(svc.store,env,c.manifest.id,begin.uploadId)).id).toBe(a.id);const actual=await handleApi(request(`/api/projects/${c.manifest.id}/assets/${a.id}?offset=262144&length=262144`,'GET',undefined,'alice'),env);expect([...new Uint8Array(await actual.arrayBuffer())]).toEqual([...bytes.subarray(262144,524288)]);expect((await svc.get(c.manifest.id)).assets).toHaveLength(1);});
+ it('rejects a missing upload chunk and another user finalization',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const u=await beginUpload(svc.store,env,c.manifest.id,{name:'x.wav',mime:'audio/wav',bytes:2});await expect(completeUpload(svc.store,env,c.manifest.id,u.uploadId)).rejects.toMatchObject({code:'UPLOAD_INCOMPLETE'});await expect(uploadChunk(svc.store,env,c.manifest.id,u.uploadId,{offset:1,base64:btoa('ab')})).rejects.toMatchObject({code:'CHUNK_OFFSET'});const bob=new CloudStore(env.DB,{id:'bob',email:'bob@example.test'});await expect(completeUpload(bob,env,c.manifest.id,u.uploadId)).rejects.toMatchObject({code:'PROJECT_NOT_FOUND'});});
+ it('validates runtime MCP schema and requires observed document head',async()=>{const env=environment();const c=await create(service(env));const response=await rpc(env,'tools/call',{name:'apply_document_ops',arguments:{projectId:c.manifest.id,ops:[{op:'update_timeline',patch:{durationFrames:30}}]}},'alice');expect(response.body.result.isError).toBe(true);expect(response.body.result.structuredContent.code).toBe('INVALID_INPUT');expect((await service(env).get(c.manifest.id)).versions).toHaveLength(1);});
+ it('isolates sandbox network from authenticated APIs and keeps static module CORS public',async()=>{const env=environment();const sandbox=await worker.fetch(request('/media-sandbox.html'),env);expect(sandbox.headers.get('content-security-policy')).toContain('connect-src https://director.example/runtime/ https://esm.sh https://www.remotion.pro');expect(sandbox.headers.get('content-security-policy')).toContain("frame-src 'self' blob: data:");expect(sandbox.headers.get('content-security-policy')).toContain("'unsafe-eval'");const main=await worker.fetch(request('/index.html'),env);expect(main.headers.get('content-security-policy')).not.toContain("'unsafe-eval'");expect((await worker.fetch(request('/assets/editor.js'),env)).headers.get('access-control-allow-origin')).toBe('*');expect((await worker.fetch(request('/api/projects'),env)).headers.get('access-control-allow-origin')).toBeNull();});
+});
+
+describe('immutable website job sources and owned variants',()=>{
+ it('returns the exact site files beside each historical version',async()=>{const svc=service();const c=await create(svc,'web');const pid=c.manifest.id;await svc.action(pid,'writeSiteFile',{path:'index.html',content:'<h1>Old export</h1>'});await svc.action(pid,'writeSiteFile',{path:'index.html',content:'<h1>Current export</h1>'});const old:any=await svc.action(pid,'getVersion',{number:2});const current:any=await svc.action(pid,'getVersion',{number:3});expect(old.siteFiles).toEqual({'index.html':'<h1>Old export</h1>'});expect(current.siteFiles).toEqual({'index.html':'<h1>Current export</h1>'});await svc.action(pid,'restoreVersion',{number:2});expect((await svc.action(pid,'getVersion',{number:3}) as any).siteFiles).toEqual(current.siteFiles);expect((await svc.action(pid,'getVersion',{number:4}) as any).siteFiles).toEqual(old.siteFiles);});
+ it('merges derived thumbnail metadata and preserves analysis/Fal provenance',async()=>{const env=environment();const svc=service(env);const c=await create(svc);const a=await svc.upload(c.manifest.id,new Uint8Array([1,2]),'clip.mp4','video/mp4',{metadata:{loudness:{integratedLufs:-14}}});const thumb=await svc.upload(c.manifest.id,new Uint8Array([3,4,5]),'thumb.png','image/png',{source:'derived'});await svc.action(c.manifest.id,'updateAsset',{assetId:a.id,patch:{metadata:{thumbPath:thumb.path}}});const stored:any=await svc.action(c.manifest.id,'getAsset',{assetId:a.id});expect(stored.metadata.loudness).toEqual({integratedLufs:-14});expect(stored.metadata.thumbPath).toBe(thumb.path);const response=await handleApi(request(`/api/projects/${c.manifest.id}/assets/${a.id}?variant=thumb`,'GET',undefined,'alice'),env);expect(response.headers.get('content-type')).toBe('image/png');expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([3,4,5]);await expect(svc.action(c.manifest.id,'updateAsset',{assetId:a.id,patch:{metadata:{fal:{actualCostUsd:999}}}})).rejects.toMatchObject({code:'PROTECTED_ASSET_FIELD'});});
+ it('rejects variant storage keys owned by another user or project',async()=>{const env=environment();const alice=service(env);const bob=service(env,{id:'bob',email:'bob@example.test'});const a=await create(alice);const b=await create(bob);const clip=await alice.upload(a.manifest.id,new Uint8Array([1]),'clip.mp4','video/mp4');const privateImage=await bob.upload(b.manifest.id,new Uint8Array([9]),'private.png','image/png');await alice.action(a.manifest.id,'updateAsset',{assetId:clip.id,patch:{metadata:{thumbPath:privateImage.path}}});const denied=await handleApi(request(`/api/projects/${a.manifest.id}/assets/${clip.id}?variant=thumb`,'GET',undefined,'alice'),env);expect(denied.status).toBe(404);expect((await denied.json() as any).code).toBe('VARIANT_NOT_FOUND');});
+});

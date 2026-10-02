@@ -39,7 +39,9 @@ function AssetWave({ asset }: { asset: Asset }) {
 export function AssetPreview({ asset, thumbUrl, proxyUrl }: { asset: Asset; thumbUrl: string; proxyUrl: string }) {
   const [scrub, setScrub] = useState<number | null>(null);
   const [videoOk, setVideoOk] = useState(true);
+  const [failedThumbnail,setFailedThumbnail]=useState<string|null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(()=>{setFailedThumbnail(null);setVideoOk(true);},[asset.sha256,asset.metadata?.thumbPath,thumbUrl,proxyUrl]);
   if (asset.kind === 'image') return <img className="asset-thumb" src={thumbUrl} alt="" loading="lazy" draggable={false} />;
   if (asset.kind === 'video') {
     const onMove = (e: React.MouseEvent) => {
@@ -51,7 +53,7 @@ export function AssetPreview({ asset, thumbUrl, proxyUrl }: { asset: Asset; thum
     };
     return (
       <span className="asset-scrub always-dark" onMouseMove={onMove} onMouseLeave={() => setScrub(null)}>
-        <img className="asset-thumb" src={thumbUrl} alt="" loading="lazy" draggable={false} />
+        {thumbUrl&&failedThumbnail!==thumbUrl?<img className="asset-thumb" src={thumbUrl} alt="" loading="lazy" draggable={false} onError={()=>setFailedThumbnail(thumbUrl)} />:<span className="asset-icon"><Icon name={ASSET_KIND_ICONS.video} size={22}/></span>}
         {scrub !== null && videoOk && proxyUrl && !proxyUrl.startsWith('data:image') && (
           <video ref={videoRef} className="asset-thumb asset-video" src={proxyUrl} muted preload="metadata" playsInline onError={() => setVideoOk(false)} />
         )}
@@ -158,7 +160,7 @@ export const AssetCard = memo(function AssetCard({
   useEffect(() => {
     if (flashing) cardRef.current?.scrollIntoView?.({ block: 'nearest' });
   }, [flashing]);
-  const missing = asset.source === 'linked' && asset.metadata?.missing === true;
+  const missing = asset.metadata?.missing === true;
   const duration = asset.durationMs !== undefined && (asset.kind === 'video' || asset.kind === 'audio') ? formatDurationMs(asset.durationMs) : null;
   const meta = assetMeta(asset, status, modelName, t);
   const classes = [

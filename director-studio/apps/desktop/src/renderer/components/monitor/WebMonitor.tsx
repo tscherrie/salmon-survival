@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { VIEWPORTS, type PreviewViewport, type Rect, type Ref, type Site } from '@studio/core';
 import { PICK_MODE_MESSAGE } from '../../lib/previewMessages.ts';
-import { useT } from '../../i18n.ts';
+import { useLanguage, useT } from '../../i18n.ts';
 import { useElementSize } from '../../lib/hooks.ts';
 import { isPageRef, refKey } from '../../lib/refNumbers.ts';
 import { useActions, useApi, useApiMode, useStudio, useStudioStore } from '../../state/context.tsx';
@@ -27,7 +27,7 @@ const isSitePick = (ref: Ref) => ref.kind === 'element' && ref.doc === 'site' &&
  * Element-Picks kommen in beiden Fällen als `preview_pick`-Ereignis und landen als Chip im Composer.
  */
 export function WebMonitor({ site }: { site: Site }) {
-  const t = useT();
+  const t = useT(); const language=useLanguage();
   const api = useApi();
   const mode = useApiMode();
   const actions = useActions();
@@ -55,7 +55,8 @@ export function WebMonitor({ site }: { site: Site }) {
   const vp = VIEWPORTS[viewport];
   const pickMode = pointMode === 'element';
   // Region ziehen braucht eine Ebene über der Vorschau; die native Ansicht in Electron liegt über dem DOM
-  const regionAvailable = mode === 'fake';
+  const regionAvailable = mode !== 'electron';
+  const sourceRevision = mode === 'native' ? JSON.stringify(site.files) : '';
 
   const modes = useMemo<ReadonlyArray<ModeOption<WebMode>>>(
     () => [
@@ -69,6 +70,7 @@ export function WebMonitor({ site }: { site: Site }) {
   // Vorschau öffnen (je Viewport)
   useEffect(() => {
     if (!projectId) return;
+    if(mode==='native' && !Object.keys(site.files).length){setUrl(null);return;}
     let alive = true;
     api
       .previewOpen(projectId, { viewport })
@@ -86,7 +88,7 @@ export function WebMonitor({ site }: { site: Site }) {
     return () => {
       alive = false;
     };
-  }, [api, projectId, viewport, openNonce, actions, t]);
+  }, [api, projectId, viewport, openNonce, actions, t, sourceRevision]);
 
   // Electron: Platzhalter-Position an die native Ansicht melden; bei offenen Dialogen ausblenden.
   useLayoutEffect(() => {
@@ -117,7 +119,7 @@ export function WebMonitor({ site }: { site: Site }) {
 
   // Electron: Seitenwahl (Seitenkarte der Bühne oder Auswahl im Monitor) navigiert die native Vorschau.
   useEffect(() => {
-    if (mode !== 'electron' || !projectId || openCount === 0) return;
+    if ((mode !== 'electron' && mode !== 'native') || !projectId || openCount === 0) return;
     const fresh = justOpened.current;
     justOpened.current = false;
     // Direkt nach dem Öffnen steht die Vorschau bereits auf der Startseite.
@@ -172,7 +174,9 @@ export function WebMonitor({ site }: { site: Site }) {
   };
 
   let body;
-  if (preview.status === 'error') {
+  if (mode==='native' && !Object.keys(site.files).length) {
+    body=<MonitorEmpty icon="web" title={language==='de'?'Noch keine Website':'No website yet'} text={language==='de'?'Beschreibe die Website im nativen Chat. Die Vorschau erscheint, sobald der Director die Quelldateien erstellt.':'Describe the website in the native chat. Preview appears once the director creates its source files.'}/>;
+  } else if (preview.status === 'error') {
     body = (
       <MonitorEmpty
         icon="warning"
@@ -198,7 +202,7 @@ export function WebMonitor({ site }: { site: Site }) {
           className="web-frame"
           title={t('monitor.label')}
           sandbox="allow-scripts"
-          src={src}
+          src={mode === 'native' ? undefined : src}
           width={vp.width}
           height={frameHeight}
           style={{ transform: `scale(${scale})` }}

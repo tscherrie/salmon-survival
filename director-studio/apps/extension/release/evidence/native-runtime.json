@@ -1,0 +1,48 @@
+{
+  "fixture": "Actual built Worker MCP tools/call and DirectorHostBridge.request; simulated parent host SDK call capability",
+  "controls": {
+    "unauthenticatedMcpStatus": 401,
+    "directPrivateGetStatus": 403,
+    "noWidgetDirectRuntimeGets": true
+  },
+  "result": {
+    "compiler": true,
+    "wav": {
+      "bytes": 4488,
+      "riff": "RIFF"
+    },
+    "abortRecovery": {
+      "cancelled": true,
+      "cancelElapsedMs": 42.39999997615814,
+      "recovered": {
+        "bytes": 4488,
+        "riff": "RIFF"
+      }
+    },
+    "component": {
+      "bytes": 48942,
+      "mime": "image/png",
+      "pixel": [
+        33,
+        168,
+        155,
+        255
+      ]
+    },
+    "isolation": {
+      "sandbox": "allow-scripts",
+      "srcdoc": true,
+      "parentAccessDenied": true
+    }
+  },
+  "counters": {
+    "authenticatedRuntimeRpc": 200,
+    "unauthenticatedRuntimeRpc": 1,
+    "directRuntimeGets": 1,
+    "requestedFileCount": 7
+  },
+  "browserErrors": [],
+  "limits": [
+    "Native host handshake is simulated in this fixture; production host iframe CSP and SDK negotiation need the real user widget recheck."
+  ]
+}

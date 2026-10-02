@@ -1,0 +1,28 @@
+{
+  "checks": [
+    "Nested HTTP sandbox executes local classic JS and inlines local CSS under real Worker CSP",
+    "Actual local website link navigates to another compiled HTML page",
+    "Nested opaque website picker relays a selected element to native context chips without sending a chat turn",
+    "Native website preview materializes owned project asset:// reference as standalone data image",
+    "Queued ZIP exports immutable earlier site files after rewrite and includes owned media bytes without API links"
+  ],
+  "errors": [],
+  "projectId": "prj_9968506e01044b7189b4c82e2c7ea327",
+  "pinnedVersion": 6,
+  "preview": {
+    "width": 1280,
+    "src": "data:image/png;base64,iVBORw0K"
+  },
+  "zip": {
+    "bytes": 152116,
+    "files": [
+      "style.css",
+      "app.js",
+      "about.html",
+      "index.html",
+      "director-project.json"
+    ],
+    "jobVersion": 6
+  },
+  "passed": true
+}

@@ -1,0 +1,37 @@
+{
+  "observedSourceCommit": "c623a851a390b277a94ff870b8c47996c7b7ad3e",
+  "surface": "actual Codex desktop application logs",
+  "failure": "Studio Editor konnte nicht angezeigt werden",
+  "failedBefore": "HTML delivery and MCP Apps UI initialization",
+  "matchingFailures": 41,
+  "first": {
+    "timestamp": "2026-10-02T01:07:44.409Z",
+    "rpcMethod": "resources/read",
+    "resourceUri": "ui://director-studio/editor.html",
+    "rpcErrorCode": -32603,
+    "type": "invalid_mcp_response",
+    "schema": "PerRequestReadResourceResult",
+    "missingFields": [
+      "ttlMs",
+      "cacheScope"
+    ]
+  },
+  "last": {
+    "timestamp": "2026-10-02T01:15:42.392Z",
+    "rpcMethod": "resources/read",
+    "resourceUri": "ui://director-studio/editor.html",
+    "rpcErrorCode": -32603,
+    "type": "invalid_mcp_response",
+    "schema": "PerRequestReadResourceResult",
+    "missingFields": [
+      "ttlMs",
+      "cacheScope"
+    ]
+  },
+  "workerObservations": {
+    "errorsOnlyEvents": 0,
+    "resourceReadHtmlSucceeded": true
+  },
+  "diagnosis": "The server advertises MCP 2026-07-28 but omits mandatory CacheableResult ttlMs and cacheScope. The host rejects resources/read before JavaScript runs.",
+  "redaction": "No conversation IDs, user IDs, request IDs, credentials, source log content or project data included."
+}

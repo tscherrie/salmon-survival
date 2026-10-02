@@ -1,0 +1,149 @@
+{
+  "passed": true,
+  "codec": "flac",
+  "variant": "actual own ESM glue and embedded WASM",
+  "sameOriginModuleBlobWorker": true,
+  "csp": "default-src 'none';script-src 'unsafe-inline' blob: 'wasm-unsafe-eval';worker-src blob:;connect-src blob: data:;style-src 'unsafe-inline'",
+  "noUnsafeEvalAllowed": true,
+  "sourceLockSnapshotSha256": "ab30613c3b1805e82420fe934243303d1614f80c3b7c313c3dcae75b64ed0b8c",
+  "realMcpTransportClaimed": false,
+  "realNativeHostAcceptanceClaimed": false,
+  "replacedShippedRuntime": false,
+  "files": [
+    {
+      "filename": "flac-esm-synthetic-stereo.flac",
+      "bytes": 193688,
+      "sha256": "5ee0c46787bd0e7301d0055f37b53ccafccdc863ffa70e9de464b9bf77aa8497"
+    },
+    {
+      "filename": "flac-esm-synthetic-input.s32le",
+      "bytes": 768000,
+      "sha256": "67d2468bb857bc4571d53e7c85f301e9dd44c86ffd402770cf8388562b5bef7b"
+    },
+    {
+      "filename": "flac-esm-synthetic-decoded.s32le",
+      "bytes": 768000,
+      "sha256": "67d2468bb857bc4571d53e7c85f301e9dd44c86ffd402770cf8388562b5bef7b"
+    },
+    {
+      "filename": "flac-esm-ffprobe.json",
+      "bytes": 1906,
+      "sha256": "0e12327e3daef13bbbd55d41ebc2aeb734fb048a2545dc26cc6eb650f134268b"
+    }
+  ],
+  "glue": {
+    "filename": "flac.js",
+    "bytes": 136681,
+    "sha256": "a5fb8e4c4d9f37c1eb4c585c8ee314a1bdbc557a1fe705c8e246a4db73414f47"
+  },
+  "embeddedWasm": {
+    "bytes": 110933,
+    "sha256": "da529aafa20610371e8c2206ce04e5734918d173e171048a0c6b35e3fbe4b549"
+  },
+  "sources": [
+    {
+      "key": "flac",
+      "archive": "flac-3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c.tar.gz",
+      "bytes": 979457,
+      "sha256": "4ace54db53e274f6c73999a644b0a11410f67e5c35c06e4aaa8e5457bbf59f9d",
+      "commit": "3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c",
+      "version": "Exact embedded libFLAC git-3f1ecff8 source"
+    },
+    {
+      "key": "mediabunny-encoders",
+      "archive": "mediabunny-encoders-cee57d1cdfd1776d515c081057b50eb337291e32.tar.gz",
+      "bytes": 64635572,
+      "sha256": "3fb1c82b9cd8c337b7b1bf8393ad4d0d84b8d569bce97bddf18fc51d580c51bf",
+      "commit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "version": "1.56.1"
+    }
+  ],
+  "fixtureWorker": {
+    "filename": "flac.worker.js",
+    "originalSha256": "a94ecb7eea5fc130275d171175227a8fc6dd895221bdaf72a5c747d472654ebe",
+    "executedSha256": "f9fb73e870fdf18aa88d6f54aeda690215016fcfb0bf7888f9b4bc390a36fde3",
+    "progressRequiresActualOutputBytes": true
+  },
+  "browserVersion": "154.0.8037.95",
+  "inputFrames": 96000,
+  "inputDurationSeconds": 2,
+  "sampleRate": 48000,
+  "channels": 2,
+  "decodedFrames": 96000,
+  "decodedDurationSeconds": 2,
+  "measuredDelayFrames": 0,
+  "delayMeaning": "lossless zero delay",
+  "trailingPaddingFrames": 0,
+  "decodedPcmEqualsInput": true,
+  "qualityCriteria": null,
+  "quality": null,
+  "outputBytes": 193688,
+  "outputSha256": "5ee0c46787bd0e7301d0055f37b53ccafccdc863ffa70e9de464b9bf77aa8497",
+  "stream": {
+    "index": 0,
+    "codec_name": "flac",
+    "codec_long_name": "FLAC (Free Lossless Audio Codec)",
+    "codec_type": "audio",
+    "codec_tag_string": "[0][0][0][0]",
+    "codec_tag": "0x0000",
+    "mime_codec_string": "flac",
+    "sample_fmt": "s32",
+    "sample_rate": "48000",
+    "channels": 2,
+    "channel_layout": "stereo",
+    "bits_per_sample": 0,
+    "initial_padding": 0,
+    "r_frame_rate": "0/0",
+    "avg_frame_rate": "0/0",
+    "time_base": "1/48000",
+    "start_pts": 0,
+    "start_time": "0.000000",
+    "bits_per_raw_sample": "24",
+    "nb_read_frames": "24",
+    "extradata_size": 34,
+    "disposition": {
+      "default": 0,
+      "dub": 0,
+      "original": 0,
+      "comment": 0,
+      "lyrics": 0,
+      "karaoke": 0,
+      "forced": 0,
+      "hearing_impaired": 0,
+      "visual_impaired": 0,
+      "clean_effects": 0,
+      "attached_pic": 0,
+      "timed_thumbnails": 0,
+      "non_diegetic": 0,
+      "captions": 0,
+      "descriptions": 0,
+      "metadata": 0,
+      "dependent": 0,
+      "still_image": 0,
+      "multilayer": 0
+    }
+  },
+  "cancellation": {
+    "afterActualChunks": 1,
+    "actualOutputBytes": 8106,
+    "sentFrames": null,
+    "sentChunks": 2,
+    "generation": 1
+  },
+  "recoveryGeneration": 2,
+  "recoveryEncodedChunks": 24,
+  "workerContexts": [
+    {
+      "generation": 1,
+      "origin": "http://127.0.0.1:52543"
+    },
+    {
+      "generation": 2,
+      "origin": "http://127.0.0.1:52543"
+    }
+  ],
+  "cspViolations": [],
+  "pageErrors": [],
+  "ordinaryRuntimeHttpRequests": [],
+  "runtimeBytesProvidedByControlledLocalArguments": true
+}

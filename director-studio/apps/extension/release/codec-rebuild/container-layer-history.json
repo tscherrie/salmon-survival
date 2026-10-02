@@ -1,0 +1,27 @@
+[
+  {
+    "command": "/bin/sh -c #(nop) ADD file:2fc6364d149eccc7f94ead482a0dcf24b0e44cc0d00ac6a2c1797776153e9608 in / ",
+    "layer": "sha256:dbf6a9befcdeecbb8813406afbd62ce81394e3869d84599f19f941aa5c74f3d1",
+    "bytes": 29534634
+  },
+  {
+    "command": "/bin/sh -c #(nop) COPY dir:5ebaee0ec3f16c042d6eeaf0f6dfa0384987972302c238a54d81dceba23707ff in /emsdk ",
+    "layer": "sha256:8b795d8f70cabbff9c390138dc5ec98b1d2cf5c8af157991ed028b2fce6292ba",
+    "bytes": 397301573
+  },
+  {
+    "command": "/bin/sh -c echo \"## Create emscripten user (1000:1000)\"     && groupadd --gid 1000 emscripten     && useradd --uid 1000 --gid emscripten --shell /bin/bash --create-home emscripten     && echo \"umask 0000\" >> /etc/bash.bashrc     && echo \". /emsdk/emsdk_env.sh\" >> /etc/bash.bashrc     && echo \"## Done\"",
+    "layer": "sha256:8f9029b6c8af3d22d907e67c558f21bd8cc43608d17941e95cff16e49baa76a6",
+    "bytes": 5116
+  },
+  {
+    "command": "/bin/sh -c echo \"## Update and install packages\"     && apt-get -qq -y update     && DEBIAN_FRONTEND=\"noninteractive\" TZ=\"America/San_Francisco\" apt-get -qq install -y --no-install-recommends         sudo         libxml2         ca-certificates         python3         python3-pip         wget         curl         zip         unzip         git         git-lfs         ssh-client         build-essential         make         ant         libidn12         cmake         openjdk-11-jre-headless     && apt-get -y clean     && apt-get -y autoclean     && apt-get -y autoremove     && rm -rf /var/lib/apt/lists/*     && rm -rf /var/cache/debconf/*-old     && rm -rf /usr/share/doc/*     && rm -rf /usr/share/man/??     && rm -rf /usr/share/man/??_*     && echo \"## Done\"",
+    "layer": "sha256:a128c619347831c893bb6823ab47c91deb0591459722f505047f74247949fc41",
+    "bytes": 225318107
+  },
+  {
+    "command": "/bin/sh -c #(nop) WORKDIR /src",
+    "layer": "sha256:8196144b519463d289890cfa132b6c3010c5902ec4600709b16c9420c646b23d",
+    "bytes": 92
+  }
+]

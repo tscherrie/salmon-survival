@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "variants": {
+    "esm": {
+      "jsSha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3",
+      "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+    },
+    "classic": {
+      "jsSha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21",
+      "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+    }
+  },
+  "checks": {
+    "opaqueClassic": true,
+    "esmRoundTrip": true,
+    "h264AacExport": true,
+    "cancelRecovery": true,
+    "corruptionRejected": true
+  }
+}

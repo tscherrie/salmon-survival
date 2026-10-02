@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "director-studio": {
+      "type": "streamable-http",
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/mcp"
+    }
+  }
+}

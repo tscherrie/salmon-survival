@@ -1,0 +1,428 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "observedAtUtc": "2026-10-02T11:28:08.665Z",
+  "auditScript": {
+    "filename": "audit-core-source.mjs",
+    "bytes": 18015,
+    "sha256": "6848ed4eb0a2c6d309f97243e820a64f8433ef731adbeba7a394e190ba2de5cf"
+  },
+  "nodeVersion": "v26.0.0",
+  "collection": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources",
+  "context": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-retry-context-20261002",
+  "build": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-codec-sources/rebuild/core-build-resume-20261002",
+  "originalStudio": "/Users/jeremias/.codex/worktrees/27c0/AI Director Studio/director-studio",
+  "receipt": {
+    "status": "compiled",
+    "exitCode": 0,
+    "startedAtUtc": "2026-10-02T08:08:45.636Z",
+    "finishedAtUtc": "2026-10-02T10:16:41.064Z",
+    "compilerImage": "emscripten/emsdk@sha256:c1e807a6e03ac5bd5b37bae2ace3c46c08579e2ddeb951037a3b8dac7067f2cc",
+    "buildkitImage": "moby/buildkit@sha256:0168606be2315b7c807a03b3d8aa79beefdb31c98740cebdffdfeebf31190c9f",
+    "bytes": 1924,
+    "sha256": "e84f44a3048bc67343a360c9af26608506c330fecd2e4817d91afc57e3706cda"
+  },
+  "frozenContext": {
+    "sourceLockSha256": "db6d7c2bbb72562266aab0ccce5fcc88b15c05c6101ca0efba27748fb1f4365f",
+    "dockerfileSha256": "f8b76986c28b3de03af6ae287f996f4c29f05b9f31c63c998f9486c4402cc0d5",
+    "matchesExecutedReceipt": true,
+    "matchesPriorSourceChainProof": true,
+    "sourceContextFileCount": 18340,
+    "sourceContextEntryCount": 18341,
+    "sourceContextWasmOrStaticArchiveSeeds": [],
+    "sourceContextDistFiles": [],
+    "sourceContextNodeModulesFiles": []
+  },
+  "sourceArchives": [
+    {
+      "name": "ffmpeg",
+      "archive": "ffmpeg-4729204c17f756e186d622060088371d10b34f7e.tar.gz",
+      "commit": "4729204c17f756e186d622060088371d10b34f7e",
+      "bytes": 14428595,
+      "sha256": "0d7ad57d4dd851d577fc6c19e5cec5b6e5faaeb2dbd52ab76127e3c3763fec6d",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 7814,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "x264",
+      "archive": "x264-33cac6b77d5b9259c552156013a817ab23119612.tar.gz",
+      "commit": "33cac6b77d5b9259c552156013a817ab23119612",
+      "bytes": 942903,
+      "sha256": "75434a5a1f2d7d4314821c6054dd300731d69e2fa73314ba4a5ec9df38d4ec80",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 242,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "x265",
+      "archive": "x265-2bb5520e9596f361bf0ed81b3b8da0d7fd999069.tar.gz",
+      "commit": "2bb5520e9596f361bf0ed81b3b8da0d7fd999069",
+      "bytes": 1531931,
+      "sha256": "e5254828f5db7bc375d385e31247861d25facee87b43fa2d08ea3ab5569672ab",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 313,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "libvpx",
+      "archive": "libvpx-10b9492dcf05b652e2e4b370e205bd605d421972.tar.gz",
+      "commit": "10b9492dcf05b652e2e4b370e205bd605d421972",
+      "bytes": 5520751,
+      "sha256": "12181ed27342415e8b01bf09abfbf1dfa27a6a32f302fb78b48bd70efe50f702",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 1203,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "lame",
+      "archive": "lame-2badea1974ae36cb8312afe99cff1e6b3b5decee.tar.gz",
+      "commit": "2badea1974ae36cb8312afe99cff1e6b3b5decee",
+      "bytes": 1525181,
+      "sha256": "0d97ba0776988f5730e0ce1fa936e7c5d6836c757993ba55073513fe89cf410a",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 326,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "ogg",
+      "archive": "ogg-bada45718453ac27b56773ae663f7e65112f6a6e.tar.gz",
+      "commit": "bada45718453ac27b56773ae663f7e65112f6a6e",
+      "bytes": 256023,
+      "sha256": "4d61f8dfa248276c42bd5404b1a87ae9d8a0d58791f55e20018c7b39b38d8823",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 128,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "theora",
+      "archive": "theora-7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf.tar.gz",
+      "commit": "7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+      "bytes": 1134014,
+      "sha256": "c38e6a3fb19566a44dcb283323c48311dd484f1416f3f34676d3e7fd252dfbc5",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 232,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "opus",
+      "archive": "opus-e85ed7726db5d677c9c0677298ea0cb9c65bdd23.tar.gz",
+      "commit": "e85ed7726db5d677c9c0677298ea0cb9c65bdd23",
+      "bytes": 829306,
+      "sha256": "c6d574b17d70b8c289d997a8ac81314cf1fd8c52237c421b2ee34e69cea85bf8",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 393,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "vorbis",
+      "archive": "vorbis-7798164043197d7e33f02de4353ce2aa5b248225.tar.gz",
+      "commit": "7798164043197d7e33f02de4353ce2aa5b248225",
+      "bytes": 1324827,
+      "sha256": "69b87cafe2815d02609886a63b9d4c0b7461e1e2f6ecf3960ede04053da6e96a",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 441,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "zlib",
+      "archive": "zlib-cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
+      "commit": "cacf7f1d4e3d44d871b605da3b647f07d718623f",
+      "bytes": 645528,
+      "sha256": "6d4d6640ca3121620995ee255945161821218752b551a1a180f4215f7d124d45",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 254,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "libwebp",
+      "archive": "libwebp-ca332209cb5567c9b249c86788cb2dbf8847e760.tar.gz",
+      "commit": "ca332209cb5567c9b249c86788cb2dbf8847e760",
+      "bytes": 3685887,
+      "sha256": "1676107dc385f9bf6cb4c2b94d4a9359d1fd95ab6309cb587191a742df292fe2",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 325,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "freetype2",
+      "archive": "freetype2-6a2b3e4007e794bfc6c91030d0ed987f925164a8.tar.gz",
+      "commit": "6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+      "bytes": 2095678,
+      "sha256": "09acceb42508c65b7b744cc2ad01d7548868ca57babc39f7683ec3c0f7541e8c",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 699,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "fribidi",
+      "archive": "fribidi-f9e8e71a6fbf4a4619481284c9f484d10e559995.tar.gz",
+      "commit": "f9e8e71a6fbf4a4619481284c9f484d10e559995",
+      "bytes": 2088197,
+      "sha256": "65ff6fb1a478c4d90ae16825da8c97b8a63e2674f8a2d6dae8800f89089640ba",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 130,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "harfbuzz",
+      "archive": "harfbuzz-4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde.tar.gz",
+      "commit": "4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde",
+      "bytes": 32968210,
+      "sha256": "69ba7c7a42643a3654781242016dd09245cab7353fc2a02cecb710e479c9a881",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 3243,
+      "symlinksCompared": 1,
+      "contextMismatches": []
+    },
+    {
+      "name": "libass",
+      "archive": "libass-d149636f502f5774ae1a8fb4c554b122674393b2.tar.gz",
+      "commit": "d149636f502f5774ae1a8fb4c554b122674393b2",
+      "bytes": 243399,
+      "sha256": "5cfe23562fa623a3b209d156ad469aeb2e31f69bf6b256ea737d87d9ed89301d",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 83,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    },
+    {
+      "name": "zimg",
+      "archive": "zimg-e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87.tar.gz",
+      "commit": "e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87",
+      "bytes": 326769,
+      "sha256": "3ab062eff30067799997bc3e911c0108a5b8cbcd6e0ef14053f17ff0ecd0add8",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 267,
+      "symlinksCompared": 7,
+      "contextMismatches": []
+    },
+    {
+      "name": "sdl2",
+      "archive": "sdl2-55b03c7493a7abed33cf803d1380a40fa8af903f.tar.gz",
+      "commit": "55b03c7493a7abed33cf803d1380a40fa8af903f",
+      "bytes": 7890806,
+      "sha256": "a726e31f8ad9443a2a9a649f12751442d8ca5ea78a84fde14f760c81706b4127",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 1664,
+      "symlinksCompared": 2,
+      "contextMismatches": []
+    },
+    {
+      "name": "zimg-googletest",
+      "archive": "zimg-googletest-703bd9caab50b139428cea1aaff9974ebee5742e.tar.gz",
+      "commit": "703bd9caab50b139428cea1aaff9974ebee5742e",
+      "bytes": 905359,
+      "sha256": "d17b1b83a57b3933565a6d0616fe261107326d47de20288d0949ed038e1c342d",
+      "archiveHashAndBytesMatchLock": true,
+      "regularFilesCompared": 263,
+      "symlinksCompared": 0,
+      "contextMismatches": []
+    }
+  ],
+  "recipeBindings": {
+    "name": "ffmpegwasm-recipe",
+    "archive": "ffmpegwasm-71aa99d37c02a7b4c435275ca9ef50e612f6efa1.tar.gz",
+    "commit": "71aa99d37c02a7b4c435275ca9ef50e612f6efa1",
+    "bytes": 1329368,
+    "sha256": "53c5842f160cece0e39345876f9483b56aa84b966637ff6f624353a0fa884219",
+    "archiveHashAndBytesMatchLock": true,
+    "regularFilesCompared": 18,
+    "symlinksCompared": 0,
+    "contextMismatches": []
+  },
+  "sourceTreeCount": 18,
+  "sourceRegularFilesCompared": 18020,
+  "sourceSymlinksCompared": 10,
+  "copiedRecipeRegularFilesCompared": 18,
+  "evidence": {
+    "priorSourceChainProof": {
+      "bytes": 5777,
+      "sha256": "2e7957e4c0adf4a3f764068d0fb13e21a0b5073d151c27b5f76721320514d80f"
+    },
+    "compilerBaseWorkspaceProof": {
+      "bytes": 247,
+      "sha256": "014536c7f63334f9db93e951e1f6b3bdf0c0a04118112fec523db7c3a9b629a9",
+      "capturedListingContainsOnlyDotDirectories": true,
+      "scope": "Captured /src workspace listing only; not a scan of the entire toolchain image"
+    },
+    "buildLog": {
+      "bytes": 376267,
+      "sha256": "ad9d0816f06d43e7bef1f4e2ae016f9ef52ab437c393c94d00136017ecfe6bdb",
+      "markers": [
+        {
+          "description": "FFmpeg compile stage",
+          "line": 224,
+          "text": "#73 [ffmpeg-builder 2/2] RUN bash -x /src/build.sh       --enable-gpl       --enable-libx264       --enable-libx265       --enable-libvpx       --enable-libmp3lame       --enable-libtheora       --enable-libvorbis       --enable-libopus       --enable-zlib       --enable-libwebp       --enable-libfreetype       --enable-libfribidi       --enable-libass       --enable-libzimg"
+        },
+        {
+          "description": "Actual FFmpeg compilation",
+          "line": 882,
+          "text": "#73 1316.8 + emmake make -j2"
+        },
+        {
+          "description": "Archive built: libavdevice",
+          "line": 4204,
+          "text": "#73 3887.2 AR\tlibavdevice/libavdevice.a"
+        },
+        {
+          "description": "Archive built: libavfilter",
+          "line": 4205,
+          "text": "#73 3888.1 AR\tlibavfilter/libavfilter.a"
+        },
+        {
+          "description": "Archive built: libavformat",
+          "line": 4206,
+          "text": "#73 3889.1 AR\tlibavformat/libavformat.a"
+        },
+        {
+          "description": "Archive built: libavcodec",
+          "line": 4207,
+          "text": "#73 3889.3 AR\tlibavcodec/libavcodec.a"
+        },
+        {
+          "description": "Archive built: libpostproc",
+          "line": 4208,
+          "text": "#73 3890.1 AR\tlibpostproc/libpostproc.a"
+        },
+        {
+          "description": "Archive built: libswresample",
+          "line": 4209,
+          "text": "#73 3890.4 AR\tlibswresample/libswresample.a"
+        },
+        {
+          "description": "Archive built: libswscale",
+          "line": 4210,
+          "text": "#73 3891.1 AR\tlibswscale/libswscale.a"
+        },
+        {
+          "description": "Archive built: libavutil",
+          "line": 4211,
+          "text": "#73 3891.3 AR\tlibavutil/libavutil.a"
+        },
+        {
+          "description": "FFmpeg compile completed",
+          "line": 4212,
+          "text": "#73 DONE 3892.3s"
+        },
+        {
+          "description": "Actual umd compilation/link",
+          "line": 4229,
+          "text": "#77 0.933 + emcc -I. -I./src/fftools -I/opt/include -L/opt/lib -Llibavcodec -Llibavdevice -Llibavfilter -Llibavformat -Llibavutil -Llibpostproc -Llibswresample -Llibswscale -lavcodec -lavdevice -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -Wno-deprecated-declarations -L/opt/lib -I/opt/include -O3 -msimd128 -sENVIRONMENT=worker -sWASM_BIGINT -sUSE_SDL=2 -sMODULARIZE -sINITIAL_MEMORY=32MB -sALLOW_MEMORY_GROWTH -sEXPORT_NAME=createFFmpegCore -sEXPORTED_FUNCTIONS=_ffmpeg,_abort,_malloc,_ffprobe -sEXPORTED_RUNTIME_METHODS=FS,setValue,getValue,UTF8ToString,lengthBytesUTF8,stringToUTF8 -lworkerfs.js --pre-js src/bind/ffmpeg/bind.js src/fftools/cmdutils.c src/fftools/ffmpeg.c src/fftools/ffmpeg_filter.c src/fftools/ffmpeg_hw.c src/fftools/ffmpeg_mux.c src/fftools/ffmpeg_opt.c src/fftools/opt_common.c src/fftools/ffprobe.c -lx264 -lx265 -lvpx -lmp3lame -logg -ltheora -lvorbis -lvorbisenc -lvorbisfile -lopus -lz -lwebpmux -lwebp -lsharpyuv -lfreetype -lfribidi -lharfbuzz -lass -lzimg -o dist/umd/ffmpeg-core.js"
+        },
+        {
+          "description": "umd compile/link completed",
+          "line": 4862,
+          "text": "#77 DONE 815.6s"
+        },
+        {
+          "description": "Actual esm compilation/link",
+          "line": 4870,
+          "text": "#78 0.921 + emcc -I. -I./src/fftools -I/opt/include -L/opt/lib -Llibavcodec -Llibavdevice -Llibavfilter -Llibavformat -Llibavutil -Llibpostproc -Llibswresample -Llibswscale -lavcodec -lavdevice -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -Wno-deprecated-declarations -L/opt/lib -I/opt/include -O3 -msimd128 -sENVIRONMENT=worker -sWASM_BIGINT -sUSE_SDL=2 -sMODULARIZE -sINITIAL_MEMORY=32MB -sALLOW_MEMORY_GROWTH -sEXPORT_NAME=createFFmpegCore -sEXPORTED_FUNCTIONS=_ffmpeg,_abort,_malloc,_ffprobe -sEXPORTED_RUNTIME_METHODS=FS,setValue,getValue,UTF8ToString,lengthBytesUTF8,stringToUTF8 -lworkerfs.js --pre-js src/bind/ffmpeg/bind.js src/fftools/cmdutils.c src/fftools/ffmpeg.c src/fftools/ffmpeg_filter.c src/fftools/ffmpeg_hw.c src/fftools/ffmpeg_mux.c src/fftools/ffmpeg_opt.c src/fftools/opt_common.c src/fftools/ffprobe.c -lx264 -lx265 -lvpx -lmp3lame -logg -ltheora -lvorbis -lvorbisenc -lvorbisfile -lopus -lz -lwebpmux -lwebp -lsharpyuv -lfreetype -lfribidi -lharfbuzz -lass -lzimg -sEXPORT_ES6 -o dist/esm/ffmpeg-core.js"
+        },
+        {
+          "description": "esm compile/link completed",
+          "line": 5503,
+          "text": "#78 DONE 2963.3s"
+        },
+        {
+          "description": "Compiler-stage output copied for export",
+          "line": 5505,
+          "text": "#79 [exportor 1/1] COPY --from=ffmpeg-wasm-builder /src/dist /dist"
+        },
+        {
+          "description": "Export stage completed",
+          "line": 5506,
+          "text": "#79 DONE 0.1s"
+        },
+        {
+          "description": "External local export started",
+          "line": 5508,
+          "text": "#80 exporting to client directory"
+        },
+        {
+          "description": "Exported bytes copied",
+          "line": 5510,
+          "text": "#80 copying files 64.70MB 0.4s done"
+        },
+        {
+          "description": "External local export completed",
+          "line": 5511,
+          "text": "#80 DONE 0.4s"
+        }
+      ]
+    },
+    "preBuildArtifactInventory": {
+      "bytes": 17160,
+      "sha256": "2705931d78af115f445c88803a18053703ebe2a6e6e39d9921b904d6b70c9e5f",
+      "inspectedAtUtc": "2026-10-02T04:09:21.020Z"
+    }
+  },
+  "outputs": [
+    {
+      "filename": "umd/ffmpeg-core.js",
+      "ownedBytes": 112059,
+      "ownedSha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21",
+      "originalBytes": 112059,
+      "originalSha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21",
+      "identicalToOriginalNpm": true,
+      "ordinarySeparateFiles": true,
+      "preBuildInventorySha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+    },
+    {
+      "filename": "umd/ffmpeg-core.wasm",
+      "ownedBytes": 32232419,
+      "ownedSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+      "originalBytes": 32232419,
+      "originalSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+      "identicalToOriginalNpm": true,
+      "ordinarySeparateFiles": true,
+      "preBuildInventorySha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+    },
+    {
+      "filename": "esm/ffmpeg-core.js",
+      "ownedBytes": 111804,
+      "ownedSha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3",
+      "originalBytes": 111804,
+      "originalSha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3",
+      "identicalToOriginalNpm": true,
+      "ordinarySeparateFiles": true,
+      "preBuildInventorySha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+    },
+    {
+      "filename": "esm/ffmpeg-core.wasm",
+      "ownedBytes": 32232419,
+      "ownedSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+      "originalBytes": 32232419,
+      "originalSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+      "identicalToOriginalNpm": true,
+      "ordinarySeparateFiles": true,
+      "preBuildInventorySha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+    }
+  ],
+  "originalNpmPackageVersion": "0.12.10",
+  "sourceBuildReproducesAllFourOriginalNpmFiles": true,
+  "boundary": {
+    "historicalPublisherCheckoutClaimed": false,
+    "historicalPublisherToolchainClaimed": false,
+    "secondColdBuildClaimed": false,
+    "dependencyCacheStagesObserved": 67,
+    "browserAcceptanceClaimedByThisAudit": false,
+    "realNativeHostAcceptanceClaimed": false,
+    "productionRuntimeModified": false,
+    "statement": "This observed pinned source/recipe/toolchain build reproduces all four installed npm Core files exactly. Its resumed dependency stages used build cache. It does not establish the upstream publisher's actual historical checkout or environment, a second cold rebuild, or browser/native-host acceptance."
+  }
+}

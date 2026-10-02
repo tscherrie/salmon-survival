@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "provenance": "owned-build",
+  "build": {
+    "recipeCommit": "346ca50d088d49aa398010a7817234a83fe52db7",
+    "sourceLock": {
+      "path": "SOURCE-LOCK.json",
+      "bytes": 75772,
+      "sha256": "76d5178322770fec57703bdde3a43155f885b553dbcb19b7484278a287c1243d"
+    },
+    "receipt": {
+      "path": "build-receipt.json",
+      "bytes": 2656,
+      "sha256": "a8e37ccf329758c858692a8574b8a873d18f1f8d7d74fc30c456ca1df99bf3c7"
+    },
+    "acceptance": {
+      "path": "browser-acceptance.json",
+      "bytes": 615,
+      "sha256": "5a8a17d4ab27c955a7016637f373c4541a60d0cf0be10452974a4e79b98dcb88"
+    }
+  },
+  "variants": {
+    "esm": {
+      "js": {
+        "path": "esm/ffmpeg-core.js",
+        "bytes": 111804,
+        "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+      },
+      "wasm": {
+        "path": "esm/ffmpeg-core.wasm",
+        "bytes": 32232419,
+        "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+      }
+    },
+    "classic": {
+      "js": {
+        "path": "classic/ffmpeg-core.js",
+        "bytes": 112059,
+        "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+      },
+      "wasm": {
+        "path": "classic/ffmpeg-core.wasm",
+        "bytes": 32232419,
+        "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+      }
+    }
+  }
+}

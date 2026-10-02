@@ -1,0 +1,1890 @@
+{
+  "schemaVersion": 1,
+  "baseCheckpoint": "cf761052228feedde11a590739cbf5d54767562e",
+  "purpose": "Deliberate new isolated codec builds; source association comes from own build records, never retroactively attests shipped npm binaries",
+  "sourceDateEpoch": 1772582400,
+  "sources": {
+    "x264": {
+      "commit": "33cac6b77d5b9259c552156013a817ab23119612",
+      "version": "4-cores",
+      "archive": "x264-33cac6b77d5b9259c552156013a817ab23119612.tar.gz",
+      "bytes": 942903,
+      "sha256": "75434a5a1f2d7d4314821c6054dd300731d69e2fa73314ba4a5ec9df38d4ec80",
+      "url": "https://codeload.github.com/ffmpegwasm/x264/tar.gz/33cac6b77d5b9259c552156013a817ab23119612",
+      "historicalReceiptClaimed": false
+    },
+    "x265": {
+      "commit": "2bb5520e9596f361bf0ed81b3b8da0d7fd999069",
+      "version": "3.4",
+      "archive": "x265-2bb5520e9596f361bf0ed81b3b8da0d7fd999069.tar.gz",
+      "bytes": 1531931,
+      "sha256": "e5254828f5db7bc375d385e31247861d25facee87b43fa2d08ea3ab5569672ab",
+      "url": "https://codeload.github.com/ffmpegwasm/x265/tar.gz/2bb5520e9596f361bf0ed81b3b8da0d7fd999069",
+      "historicalReceiptClaimed": false
+    },
+    "ogg": {
+      "commit": "bada45718453ac27b56773ae663f7e65112f6a6e",
+      "version": "v1.3.4",
+      "archive": "ogg-bada45718453ac27b56773ae663f7e65112f6a6e.tar.gz",
+      "bytes": 256023,
+      "sha256": "4d61f8dfa248276c42bd5404b1a87ae9d8a0d58791f55e20018c7b39b38d8823",
+      "url": "https://codeload.github.com/ffmpegwasm/Ogg/tar.gz/bada45718453ac27b56773ae663f7e65112f6a6e",
+      "historicalReceiptClaimed": false
+    },
+    "lame": {
+      "commit": "2badea1974ae36cb8312afe99cff1e6b3b5decee",
+      "version": "master",
+      "archive": "lame-2badea1974ae36cb8312afe99cff1e6b3b5decee.tar.gz",
+      "bytes": 1525181,
+      "sha256": "0d97ba0776988f5730e0ce1fa936e7c5d6836c757993ba55073513fe89cf410a",
+      "url": "https://codeload.github.com/ffmpegwasm/lame/tar.gz/2badea1974ae36cb8312afe99cff1e6b3b5decee",
+      "historicalReceiptClaimed": false
+    },
+    "theora": {
+      "commit": "7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+      "version": "v1.1.1",
+      "archive": "theora-7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf.tar.gz",
+      "bytes": 1134014,
+      "sha256": "c38e6a3fb19566a44dcb283323c48311dd484f1416f3f34676d3e7fd252dfbc5",
+      "url": "https://codeload.github.com/ffmpegwasm/theora/tar.gz/7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+      "historicalReceiptClaimed": false
+    },
+    "opus": {
+      "commit": "e85ed7726db5d677c9c0677298ea0cb9c65bdd23",
+      "version": "v1.3.1",
+      "archive": "opus-e85ed7726db5d677c9c0677298ea0cb9c65bdd23.tar.gz",
+      "bytes": 829306,
+      "sha256": "c6d574b17d70b8c289d997a8ac81314cf1fd8c52237c421b2ee34e69cea85bf8",
+      "url": "https://codeload.github.com/ffmpegwasm/opus/tar.gz/e85ed7726db5d677c9c0677298ea0cb9c65bdd23",
+      "historicalReceiptClaimed": false
+    },
+    "zlib": {
+      "commit": "cacf7f1d4e3d44d871b605da3b647f07d718623f",
+      "version": "v1.2.11",
+      "archive": "zlib-cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
+      "bytes": 645528,
+      "sha256": "6d4d6640ca3121620995ee255945161821218752b551a1a180f4215f7d124d45",
+      "url": "https://codeload.github.com/ffmpegwasm/zlib/tar.gz/cacf7f1d4e3d44d871b605da3b647f07d718623f",
+      "historicalReceiptClaimed": false
+    },
+    "vorbis": {
+      "commit": "7798164043197d7e33f02de4353ce2aa5b248225",
+      "version": "v1.3.3",
+      "archive": "vorbis-7798164043197d7e33f02de4353ce2aa5b248225.tar.gz",
+      "bytes": 1324827,
+      "sha256": "69b87cafe2815d02609886a63b9d4c0b7461e1e2f6ecf3960ede04053da6e96a",
+      "url": "https://codeload.github.com/ffmpegwasm/vorbis/tar.gz/7798164043197d7e33f02de4353ce2aa5b248225",
+      "historicalReceiptClaimed": false
+    },
+    "freetype2": {
+      "commit": "6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+      "version": "VER-2-10-4",
+      "archive": "freetype2-6a2b3e4007e794bfc6c91030d0ed987f925164a8.tar.gz",
+      "bytes": 2095678,
+      "sha256": "09acceb42508c65b7b744cc2ad01d7548868ca57babc39f7683ec3c0f7541e8c",
+      "url": "https://codeload.github.com/ffmpegwasm/freetype2/tar.gz/6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+      "historicalReceiptClaimed": false
+    },
+    "fribidi": {
+      "commit": "f9e8e71a6fbf4a4619481284c9f484d10e559995",
+      "version": "v1.0.9",
+      "archive": "fribidi-f9e8e71a6fbf4a4619481284c9f484d10e559995.tar.gz",
+      "bytes": 2088197,
+      "sha256": "65ff6fb1a478c4d90ae16825da8c97b8a63e2674f8a2d6dae8800f89089640ba",
+      "url": "https://codeload.github.com/fribidi/fribidi/tar.gz/f9e8e71a6fbf4a4619481284c9f484d10e559995",
+      "historicalReceiptClaimed": false
+    },
+    "libwebp": {
+      "commit": "ca332209cb5567c9b249c86788cb2dbf8847e760",
+      "version": "v1.3.2",
+      "archive": "libwebp-ca332209cb5567c9b249c86788cb2dbf8847e760.tar.gz",
+      "bytes": 3685887,
+      "sha256": "1676107dc385f9bf6cb4c2b94d4a9359d1fd95ab6309cb587191a742df292fe2",
+      "url": "https://codeload.github.com/ffmpegwasm/libwebp/tar.gz/ca332209cb5567c9b249c86788cb2dbf8847e760",
+      "historicalReceiptClaimed": false
+    },
+    "libvpx": {
+      "commit": "10b9492dcf05b652e2e4b370e205bd605d421972",
+      "version": "v1.13.1",
+      "archive": "libvpx-10b9492dcf05b652e2e4b370e205bd605d421972.tar.gz",
+      "bytes": 5520751,
+      "sha256": "12181ed27342415e8b01bf09abfbf1dfa27a6a32f302fb78b48bd70efe50f702",
+      "url": "https://codeload.github.com/ffmpegwasm/libvpx/tar.gz/10b9492dcf05b652e2e4b370e205bd605d421972",
+      "historicalReceiptClaimed": false
+    },
+    "libass": {
+      "commit": "d149636f502f5774ae1a8fb4c554b122674393b2",
+      "version": "0.15.0",
+      "archive": "libass-d149636f502f5774ae1a8fb4c554b122674393b2.tar.gz",
+      "bytes": 243399,
+      "sha256": "5cfe23562fa623a3b209d156ad469aeb2e31f69bf6b256ea737d87d9ed89301d",
+      "url": "https://codeload.github.com/libass/libass/tar.gz/d149636f502f5774ae1a8fb4c554b122674393b2",
+      "historicalReceiptClaimed": false
+    },
+    "emsdk": {
+      "commit": "ae245715ef50e036b68a2412a323129676bf8300",
+      "version": "3.1.40",
+      "archive": "emsdk-ae245715ef50e036b68a2412a323129676bf8300.tar.gz",
+      "bytes": 95812,
+      "sha256": "74ca62e60359fb946e297001913a1f10dbd77271ab86671f5e5c2bd1f5b89b3a",
+      "url": "https://codeload.github.com/emscripten-core/emsdk/tar.gz/ae245715ef50e036b68a2412a323129676bf8300",
+      "historicalReceiptClaimed": false
+    },
+    "zimg": {
+      "commit": "e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87",
+      "version": "release-3.0.5",
+      "archive": "zimg-e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87.tar.gz",
+      "bytes": 326769,
+      "sha256": "3ab062eff30067799997bc3e911c0108a5b8cbcd6e0ef14053f17ff0ecd0add8",
+      "url": "https://codeload.github.com/sekrit-twc/zimg/tar.gz/e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87",
+      "historicalReceiptClaimed": false
+    },
+    "emscripten": {
+      "commit": "5c27e79dd0a9c4e27ef2326841698cdd4f6b5784",
+      "version": "3.1.40",
+      "archive": "emscripten-5c27e79dd0a9c4e27ef2326841698cdd4f6b5784.tar.gz",
+      "bytes": 28785427,
+      "sha256": "3eb9ea2d69052a491296eb466dbcda5fbc1c0fed4e475c58545a83558fb47d10",
+      "url": "https://codeload.github.com/emscripten-core/emscripten/tar.gz/5c27e79dd0a9c4e27ef2326841698cdd4f6b5784",
+      "historicalReceiptClaimed": false
+    },
+    "harfbuzz": {
+      "commit": "4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde",
+      "version": "5.2.0",
+      "archive": "harfbuzz-4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde.tar.gz",
+      "bytes": 32968210,
+      "sha256": "69ba7c7a42643a3654781242016dd09245cab7353fc2a02cecb710e479c9a881",
+      "url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde",
+      "historicalReceiptClaimed": false
+    },
+    "mediabunny-encoders": {
+      "commit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "version": "1.56.1",
+      "archive": "mediabunny-encoders-cee57d1cdfd1776d515c081057b50eb337291e32.tar.gz",
+      "bytes": 64635572,
+      "sha256": "3fb1c82b9cd8c337b7b1bf8393ad4d0d84b8d569bce97bddf18fc51d580c51bf",
+      "url": "https://codeload.github.com/Vanilagy/mediabunny/tar.gz/cee57d1cdfd1776d515c081057b50eb337291e32",
+      "historicalReceiptClaimed": false
+    },
+    "mediabunny-runtime": {
+      "commit": "0f91fe768e7ee42703f15e2b8845551b0f1028b3",
+      "version": "1.61.0",
+      "archive": "mediabunny-runtime-0f91fe768e7ee42703f15e2b8845551b0f1028b3.tar.gz",
+      "bytes": 64658345,
+      "sha256": "067a648758718b06b3199cb841bd04396569897e35c410a046b836f01ece8fe6",
+      "url": "https://codeload.github.com/Vanilagy/mediabunny/tar.gz/0f91fe768e7ee42703f15e2b8845551b0f1028b3",
+      "historicalReceiptClaimed": false
+    },
+    "zimg-googletest": {
+      "commit": "703bd9caab50b139428cea1aaff9974ebee5742e",
+      "version": "Zimg recursive submodule test/extra/googletest",
+      "archive": "zimg-googletest-703bd9caab50b139428cea1aaff9974ebee5742e.tar.gz",
+      "bytes": 905359,
+      "sha256": "d17b1b83a57b3933565a6d0616fe261107326d47de20288d0949ed038e1c342d",
+      "url": "https://codeload.github.com/google/googletest/tar.gz/703bd9caab50b139428cea1aaff9974ebee5742e",
+      "historicalReceiptClaimed": false
+    },
+    "sdl2": {
+      "commit": "55b03c7493a7abed33cf803d1380a40fa8af903f",
+      "version": "Emscripten3.1.40 port release-2.24.2",
+      "archive": "sdl2-55b03c7493a7abed33cf803d1380a40fa8af903f.tar.gz",
+      "bytes": 7890806,
+      "sha256": "a726e31f8ad9443a2a9a649f12751442d8ca5ea78a84fde14f760c81706b4127",
+      "url": "https://codeload.github.com/libsdl-org/SDL/tar.gz/55b03c7493a7abed33cf803d1380a40fa8af903f",
+      "historicalReceiptClaimed": false
+    },
+    "flac": {
+      "commit": "3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c",
+      "version": "Exact embedded libFLAC git-3f1ecff8 source",
+      "archive": "flac-3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c.tar.gz",
+      "bytes": 979457,
+      "sha256": "4ace54db53e274f6c73999a644b0a11410f67e5c35c06e4aaa8e5457bbf59f9d",
+      "url": "https://codeload.github.com/xiph/flac/tar.gz/3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c",
+      "historicalReceiptClaimed": false
+    },
+    "lame-official": {
+      "commit": null,
+      "version": "3.100",
+      "archive": "lame-3.100-official.tar.gz",
+      "bytes": 1524133,
+      "sha256": "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e",
+      "url": "https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz",
+      "historicalReceiptClaimed": false
+    },
+    "ffmpeg": {
+      "commit": "4729204c17f756e186d622060088371d10b34f7e",
+      "version": null,
+      "archive": "ffmpeg-4729204c17f756e186d622060088371d10b34f7e.tar.gz",
+      "bytes": 14428595,
+      "sha256": "0d7ad57d4dd851d577fc6c19e5cec5b6e5faaeb2dbd52ab76127e3c3763fec6d",
+      "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/4729204c17f756e186d622060088371d10b34f7e",
+      "historicalReceiptClaimed": false
+    },
+    "ffmpegwasm-recipe": {
+      "commit": "71aa99d37c02a7b4c435275ca9ef50e612f6efa1",
+      "version": null,
+      "archive": "ffmpegwasm-71aa99d37c02a7b4c435275ca9ef50e612f6efa1.tar.gz",
+      "bytes": 1329368,
+      "sha256": "53c5842f160cece0e39345876f9483b56aa84b966637ff6f624353a0fa884219",
+      "url": "https://codeload.github.com/ffmpegwasm/ffmpeg.wasm/tar.gz/71aa99d37c02a7b4c435275ca9ef50e612f6efa1",
+      "historicalReceiptClaimed": false
+    }
+  },
+  "aacNewSource": {
+    "name": "aac-ffmpeg-new-build",
+    "chosenSourceCommit": "499b5f5f92f73e5b0e6108242983695fcb6409e2",
+    "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/499b5f5f92f73e5b0e6108242983695fcb6409e2",
+    "bytes": 16776144,
+    "sha256": "e5c84419677f2aa84d062515214ad3d893b26e467f54d3b347e522de8f6ba61d",
+    "originalBinarySourceClaimed": false,
+    "selection": "Deliberate new source pin at first Lavc62.23.103 revision; not claimed historical encoder checkout",
+    "patches": [],
+    "archive": "aac-ffmpeg-499b5f5f92f73e5b0e6108242983695fcb6409e2.tar.gz"
+  },
+  "patches": [],
+  "apt": {
+    "snapshot": "20250301T000000Z",
+    "basePackagesLock": "container-packages.lock",
+    "additionalCorePackagesLock": "core-build-package-requests.lock",
+    "fullCorePackagesLock": "core-build-container-packages.lock",
+    "downloadedDebs": [
+      {
+        "filename": "autoconf_2.71-2_all.deb",
+        "bytes": 337608,
+        "sha256": "96b528889794c4134015a63c75050f93d8aecdf5e3f2a20993c1433f4c61b80e"
+      },
+      {
+        "filename": "automake_1%3a1.16.5-1.3_all.deb",
+        "bytes": 557936,
+        "sha256": "59e3890fc8407bcf8ccc9f709d6513156346d5c942e8c624dc90435e58f6f978"
+      },
+      {
+        "filename": "autotools-dev_20220109.1_all.deb",
+        "bytes": 44886,
+        "sha256": "d909f0327b09d9a9136239caca975df89782fa28efd721c4eb4caea422d3fc5a"
+      },
+      {
+        "filename": "file_1%3a5.41-3ubuntu0.1_amd64.deb",
+        "bytes": 21524,
+        "sha256": "b63b48e8b32c6f0fce5ad37d5ec3269cbbdc8feed13170aae1f416a43ebe898b"
+      },
+      {
+        "filename": "libmagic-mgc_1%3a5.41-3ubuntu0.1_amd64.deb",
+        "bytes": 257310,
+        "sha256": "23fcefb8b9ee73eb74e127fc230330918a8f81e127fa54015f191cfd34726b3c"
+      },
+      {
+        "filename": "libmagic1_1%3a5.41-3ubuntu0.1_amd64.deb",
+        "bytes": 87242,
+        "sha256": "344d0cc65fea4175ca1ab222c20b5b95fb1357acafea6b016add9988760829d0"
+      },
+      {
+        "filename": "libsigsegv2_2.13-1ubuntu3_amd64.deb",
+        "bytes": 14612,
+        "sha256": "894fcb0804df54dca59edbd0860d6f3eeac25d1555aebd3fa99d80665969f891"
+      },
+      {
+        "filename": "libtool_2.4.6-15build2_all.deb",
+        "bytes": 163940,
+        "sha256": "fb994bc0152f4e77a791b51bc54fd5e38963aa6473e60c45369ef373b6119124"
+      },
+      {
+        "filename": "m4_1.4.18-5ubuntu2_amd64.deb",
+        "bytes": 198836,
+        "sha256": "572a544d2c18bf49d25c465720c570cd8e6e38731386ac9c0a7f29bed2486f3e"
+      },
+      {
+        "filename": "pkg-config_0.29.2-1ubuntu3_amd64.deb",
+        "bytes": 48218,
+        "sha256": "69da4190d948d0bf7444ead040791b7924bd1a08a10ec13cd7f0bb9baab09c53"
+      },
+      {
+        "filename": "ragel_6.10-1build1_amd64.deb",
+        "bytes": 1048364,
+        "sha256": "ca4f7fa278c031de4e03567ed2559bb6b2415d9759dd92c746489484c180df08"
+      }
+    ],
+    "standaloneEncoderBuildsUseAptInstall": false
+  },
+  "runtimeModified": false,
+  "toolchains": {
+    "core": {
+      "repository": "emscripten/emsdk",
+      "selectedTag": "3.1.40",
+      "immutableImage": "emscripten/emsdk@sha256:c1e807a6e03ac5bd5b37bae2ace3c46c08579e2ddeb951037a3b8dac7067f2cc",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "configDigest": "sha256:c1a168efe38b60659e72194a0ac0f70be920d7747d686f891d1d425e3bbc1f4b",
+      "observedAtUtc": "2026-10-02T04:14:59.942883+00:00",
+      "originalShippedImageDigestClaimed": false
+    },
+    "encoders": {
+      "selectedTag": "6.0.3-arm64",
+      "image": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+      "platform": "arm64",
+      "configDigest": "sha256:64785cf29d0d881b438aac8504d38fc055d50b2a51650ecddac11f4ba269fdb3",
+      "observedAtUtc": "2026-10-02T04:28:33.715851+00:00",
+      "historicalImageClaimed": false
+    }
+  },
+  "encoderToolchainSources": [
+    {
+      "name": "emsdk",
+      "version": "6.0.3",
+      "sourceCommit": "db04e88298d9916fc51fcd3743045ca3eb695127",
+      "url": "https://codeload.github.com/emscripten-core/emsdk/tar.gz/db04e88298d9916fc51fcd3743045ca3eb695127",
+      "archive": "emsdk-6.0.3-db04e88298d9916fc51fcd3743045ca3eb695127.tar.gz",
+      "bytes": 174219,
+      "sha256": "3b1dc1876b6afaf5ecb798e9841497fe7f9927ac3e1463021b27f1acd302a98f",
+      "originalRuntimeSourceClaimed": false
+    },
+    {
+      "name": "emscripten",
+      "version": "6.0.3",
+      "sourceCommit": "283e2d130132859fde6a4e4c87fd254b38127651",
+      "url": "https://codeload.github.com/emscripten-core/emscripten/tar.gz/283e2d130132859fde6a4e4c87fd254b38127651",
+      "archive": "emscripten-6.0.3-283e2d130132859fde6a4e4c87fd254b38127651.tar.gz",
+      "bytes": 32733470,
+      "sha256": "4cec9edb54235a70821309927053bac8b2f52eab75e3c9f5fec67339a355b1c2",
+      "originalRuntimeSourceClaimed": false
+    }
+  ],
+  "attempts": [
+    {
+      "toolchain": "core3.1.40amd64",
+      "target": "flac",
+      "status": "stopped",
+      "reason": "Bounded after expensive initial libc/LTO cache under amd64 emulation; no complete artifact or pass claimed"
+    },
+    {
+      "target": "core",
+      "status": "failed-before-Core-output",
+      "startedAtUtc": "2026-10-02T05:08:07.334Z",
+      "finishedAtUtc": "2026-10-02T06:56:13.168Z",
+      "externalDirectory": "rebuild/core-build-20261002",
+      "cause": "Pinned Node15 amd64 acorn-optimizer SIGSEGV while linking unshipped HarfBuzz noinst test-use-table; full library compile completed, make install failed",
+      "rawEvidence": [
+        {
+          "filename": "run-receipt.json",
+          "bytes": 2721,
+          "sha256": "58b8e40c4a33137ac031fde296b86d397cb632c135784a32f80bab0e5a3f817e"
+        },
+        {
+          "filename": "build.log",
+          "bytes": 441023,
+          "sha256": "107d2587732ae02289d35bdd454ec3e738619b1e6bc825178e956eb7de810727"
+        },
+        {
+          "filename": "resource-adjustment.json",
+          "bytes": 791,
+          "sha256": "c77814d89d5649899ca44c3e5cce5cc192308513f1d691c7739155e83bfa9c01"
+        }
+      ],
+      "runtimeChanged": false,
+      "receiptAnnotation": "Measured resourceAdjustments appended after runner exit; compile log unchanged"
+    },
+    {
+      "target": "core",
+      "status": "interrupted-before-Core-output",
+      "startedAtUtc": "2026-10-02T07:03:32.027Z",
+      "terminationEventAtUtc": "2026-10-02T07:50:38Z",
+      "externalDirectory": "rebuild/core-build-retry-20261002",
+      "cause": "Lima host agent received SIGTERM and shut down the existing Colima VM; sender unknown. No compiler failure observed in this attempt.",
+      "completedLibraryStagesRetained": true,
+      "lastStage": "FFmpeg configure",
+      "rawEvidence": [
+        {
+          "filename": "run-receipt.json",
+          "bytes": 2164,
+          "sha256": "e384215d852f372eca10f50cd2999fccf99b679d9d3a19ea85497612006da0e5"
+        },
+        {
+          "filename": "run-receipt-before-interruption-observation.json",
+          "bytes": 1856,
+          "sha256": "96e04588688a58dc820649beeda53fb1306b425dae82052feb7127499f5ae797"
+        },
+        {
+          "filename": "build.log",
+          "bytes": 168158,
+          "sha256": "51f24d23263acc44cbeff72f6d4f95b5b8f7be86b1151148b119cb77d6cb06de"
+        },
+        {
+          "filename": "interruption-observation.json",
+          "bytes": 1149,
+          "sha256": "9b0db78847a5207030235c8af612f9ceb7d25611537598bf2f763489ff3876d5"
+        },
+        {
+          "filename": "colima-interruption.log",
+          "bytes": 981,
+          "sha256": "1c1a31bdd3e5b1f79f2170386e9dd58b0629356018d80c3e1cfd7ee4413eb876"
+        }
+      ],
+      "runtimeChanged": false
+    },
+    {
+      "status": "failed-fixture-assertion-preserved",
+      "externalDirectory": "rebuild/core-build-resume-20261002/attempt-inventory-parser-20261002",
+      "rawEvidence": [
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 4776,
+          "sha256": "11533e41d3e98198aa16cfdab4667b51001bf18fde965a22826bff497a55ef9b"
+        },
+        {
+          "filename": "browser-acceptance-run.log",
+          "bytes": 4776,
+          "sha256": "11533e41d3e98198aa16cfdab4667b51001bf18fde965a22826bff497a55ef9b"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1738454,
+          "sha256": "12e242e2bba0cb32918c601d746f135be944441b1b65fca68b3e9626cb0fb5dd"
+        },
+        {
+          "filename": "failure-receipt.json",
+          "bytes": 1162,
+          "sha256": "ffcd3cbe4fbe3fd8212e14faeaab9c2f0c8f7d9c903babc077a7e297ab1e2654"
+        }
+      ]
+    },
+    {
+      "status": "failed-fixture-assertion-preserved",
+      "externalDirectory": "rebuild/core-build-resume-20261002/attempt-ffprobe-return-20261002",
+      "rawEvidence": [
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 5117,
+          "sha256": "dafc3e145273197505cef8214191c302065b88b54df72eb5043918f2d109f6c3"
+        },
+        {
+          "filename": "browser-acceptance-run.log",
+          "bytes": 5117,
+          "sha256": "dafc3e145273197505cef8214191c302065b88b54df72eb5043918f2d109f6c3"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1738460,
+          "sha256": "82e16e8053e9303b2ab3714f07c74056d86493b94d51397434da7426fb32f83b"
+        }
+      ]
+    },
+    {
+      "status": "failed-fixture-assertion-preserved",
+      "externalDirectory": "rebuild/core-build-resume-20261002/attempt-ffprobe-binding-20261002",
+      "rawEvidence": [
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 124723,
+          "sha256": "8a0ffa7cfbb8a494b535bc209f70b8499cd32950709e46457501d7839a6a808a"
+        },
+        {
+          "filename": "browser-acceptance-run.log",
+          "bytes": 124723,
+          "sha256": "8a0ffa7cfbb8a494b535bc209f70b8499cd32950709e46457501d7839a6a808a"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1738834,
+          "sha256": "a7fc2b01601dddc518ac4bd75f1647e87fb4e7409b7b0a92b5c0a901d98eb0f0"
+        },
+        {
+          "filename": "failure-receipt.json",
+          "bytes": 956,
+          "sha256": "c9fad16c945448dca641ed2f7b5afe1a03a2b328ff36b86087d867e236516b81"
+        },
+        {
+          "filename": "wasm-ffprobe-call.json",
+          "bytes": 35130,
+          "sha256": "9153d9ba78eb0a283b63d64fda6d433a266a5cd963c0fa93d9435dfd2b1cc32c"
+        }
+      ]
+    },
+    {
+      "status": "failed-fixture-assertion-preserved",
+      "externalDirectory": "rebuild/core-build-resume-20261002/attempt-webm-20261002",
+      "rawEvidence": [
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 5800,
+          "sha256": "dffc67894eacefd8414b6ef17bcbcbdfb6b3aa427d03f5cc903a73d6810fb031"
+        },
+        {
+          "filename": "browser-acceptance-run.log",
+          "bytes": 5800,
+          "sha256": "dffc67894eacefd8414b6ef17bcbcbdfb6b3aa427d03f5cc903a73d6810fb031"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1739073,
+          "sha256": "25a4de52b049ffb69d962ca72b0b3471ae9868dc509bcb989f99455b33f44a96"
+        }
+      ]
+    },
+    {
+      "status": "failed-fixture-assertion-preserved",
+      "externalDirectory": "rebuild/core-build-resume-20261002/attempt-vp9-default-20261002",
+      "rawEvidence": [
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 5956,
+          "sha256": "665ed88f082fdee7fdff5ef53193102d793f217a6afeedbbffb220c900290602"
+        },
+        {
+          "filename": "browser-acceptance-run.log",
+          "bytes": 5956,
+          "sha256": "665ed88f082fdee7fdff5ef53193102d793f217a6afeedbbffb220c900290602"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1739439,
+          "sha256": "2f7136946d8d2e9594349ac7d8b593c77aa55ba03e5aacf04f4f04a03d35d8b0"
+        },
+        {
+          "filename": "webm-failure.json",
+          "bytes": 4231,
+          "sha256": "60901136d9844b19f187a9bcdbdf916069678c1b392216a548cbb51c595f0622"
+        }
+      ]
+    },
+    {
+      "status": "failed-fixture-assertion-preserved",
+      "externalDirectory": "rebuild/core-build-resume-20261002/attempt-vp9-singlethread-20261002",
+      "rawEvidence": [
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 5956,
+          "sha256": "082d959bbb0276d29c90fd65753f49469a1ca3b6148ece22d65bc0acf8e6b80f"
+        },
+        {
+          "filename": "browser-acceptance-run.log",
+          "bytes": 5956,
+          "sha256": "082d959bbb0276d29c90fd65753f49469a1ca3b6148ece22d65bc0acf8e6b80f"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1739489,
+          "sha256": "a4457ca9a30d0c1090f88b6da676f61a3d7caf44d367755906bec0775da5f15f"
+        },
+        {
+          "filename": "webm-failure.json",
+          "bytes": 3157,
+          "sha256": "4744d92c6884a7a67a63dfc948645dd190a81ec5ad9e56d5c5f0948b0f1789ab"
+        }
+      ]
+    },
+    {
+      "status": "failed-fixture-assertion-preserved",
+      "externalDirectory": "rebuild/core-build-resume-20261002/attempt-vp9-good-20261002",
+      "rawEvidence": [
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 5956,
+          "sha256": "33c6a8fad1bce7623b062e18c731f0ea506a6aedf88e16602cf1b186e10a881b"
+        },
+        {
+          "filename": "browser-acceptance-run.log",
+          "bytes": 5956,
+          "sha256": "33c6a8fad1bce7623b062e18c731f0ea506a6aedf88e16602cf1b186e10a881b"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1739464,
+          "sha256": "5bea98a83d30be900e9f7eb202b02da155fea7a95e8ee6c2dc4967ca83aea93b"
+        },
+        {
+          "filename": "webm-failure.json",
+          "bytes": 4231,
+          "sha256": "d09aca5977ae25f9f1071847a69d62c6d6efaacb8229e2e34777253ac478c0c8"
+        }
+      ]
+    },
+    {
+      "status": "failed-fixture-assertion-preserved",
+      "externalDirectory": "rebuild/core-build-resume-20261002/attempt-webm-input-path-20261002",
+      "rawEvidence": [
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 5895,
+          "sha256": "730241d067e5c74223b0379a00349af10a03b7d86c1ffd81bf7d13ff4b270e1e"
+        },
+        {
+          "filename": "browser-acceptance-run.log",
+          "bytes": 5895,
+          "sha256": "730241d067e5c74223b0379a00349af10a03b7d86c1ffd81bf7d13ff4b270e1e"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1739284,
+          "sha256": "8ca87f2eb818ebe6d6af671c15b04ca62d6b9e7cda11bbf8028661d8d27e9e53"
+        },
+        {
+          "filename": "webm-failure.json",
+          "bytes": 106,
+          "sha256": "0aa38b9a4c5aed1af4b74d06be6aef1e8b00916b6a3cfe6e33548c390df637f5"
+        }
+      ]
+    }
+  ],
+  "encoderFlags": {
+    "dynamicExecution": false,
+    "wasmSIMD": true,
+    "threads": false,
+    "filesystem": "AAC/FLAC/classic MP3 disabled; prepared MP3 ESM uses default toolchain setting",
+    "optimization": "AAC/FLAC Oz+LTO; MP3 O3 per source recipes"
+  },
+  "completedBuilds": {
+    "flac": {
+      "status": "compiled",
+      "externalDirectory": "rebuild/flac-arm64-20261002",
+      "image": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+      "sourceDateEpoch": 1772582400,
+      "sources": [
+        "flac",
+        "mediabunny-encoders"
+      ],
+      "scripts": [
+        {
+          "filename": "build-flac.sh",
+          "bytes": 1946,
+          "sha256": "f097f0c3ef3192d0854958285dbbf31ed9acf99a8ed30530117670acd0d841f2"
+        },
+        {
+          "filename": "link-flac-classic.sh",
+          "bytes": 890,
+          "sha256": "fab22507bbd220bc68499132d9a92526da5f76a5958453e541503aae20287366"
+        },
+        {
+          "filename": "accept-encoder-esm.mjs",
+          "bytes": 13396,
+          "sha256": "2ff463178e9655822de7203ef90bccdb7f2a83154e5ac8cf662ca3f9fb2fd818"
+        }
+      ],
+      "outputs": [
+        {
+          "filename": "flac.js",
+          "bytes": 136681,
+          "sha256": "a5fb8e4c4d9f37c1eb4c585c8ee314a1bdbc557a1fe705c8e246a4db73414f47"
+        },
+        {
+          "filename": "flac-classic.js",
+          "bytes": 136942,
+          "sha256": "5f78bbb80f74574d3322bd97b46617da04eee3a83deed4a58edb47159915002d"
+        },
+        {
+          "filename": "flac.wasm",
+          "bytes": 110933,
+          "sha256": "da529aafa20610371e8c2206ce04e5734918d173e171048a0c6b35e3fbe4b549"
+        },
+        {
+          "filename": "flac-classic.wasm",
+          "bytes": 110933,
+          "sha256": "da529aafa20610371e8c2206ce04e5734918d173e171048a0c6b35e3fbe4b549"
+        },
+        {
+          "filename": "libFLAC.a",
+          "bytes": 544708,
+          "sha256": "de7e9001ba49714148d686287f116a444d375f96ec27f877072a77ac8e1016c0"
+        }
+      ],
+      "librarySourcePatches": [],
+      "networkDuringBuild": "none",
+      "replacedShippedRuntime": false,
+      "realNativeHostAcceptanceClaimed": false,
+      "outputAcceptance": {
+        "status": "passed",
+        "receipt": "receipts/flac-browser-acceptance.json",
+        "directEsmBrowserExecution": "passed",
+        "esmReceipt": "receipts/flac-esm-browser-acceptance.json",
+        "esmVariant": "same-origin-module-blob-worker",
+        "realNativeHostAcceptanceClaimed": false
+      },
+      "rawBuildEvidence": [
+        {
+          "filename": "build.log",
+          "bytes": 6802,
+          "sha256": "1270eac2593a8a82d196c8ded8d300b98b95c691181142643a1f1fbe51eee886"
+        },
+        {
+          "filename": "emcc-version.txt",
+          "bytes": 330,
+          "sha256": "0530ff58d00e4bdb8a881e93c386ac3422c1fd1ec22adbbdcb3de05ecc43c3cb"
+        },
+        {
+          "filename": "container-packages.lock",
+          "bytes": 7056,
+          "sha256": "d8b7885f00dbce5799f8da3d503ed21446c3fba6d8c556a86adb1dc66d0ce1c5"
+        },
+        {
+          "filename": "output.sha256",
+          "bytes": 160,
+          "sha256": "e0a026cdb0d45906de47f3c6d9c76d41020ffc5c70770976ee110e245cc734fa"
+        },
+        {
+          "filename": "classic-link.log",
+          "bytes": 3409,
+          "sha256": "0840ac726331b847a1d1f7f52824af7c08d5390ce4f78519a9c518d4a461b135"
+        },
+        {
+          "filename": "classic.sha256",
+          "bytes": 87,
+          "sha256": "520563d46cd89a986ec4a9dbe74a5218cc0188afbfc1ba4a7c814f828bc8189a"
+        },
+        {
+          "filename": "flac-CMakeCache.txt",
+          "bytes": 19661,
+          "sha256": "02fce2dd240ff4daa6a06e760f628a1792205dab7fa710629984143e2441fe8b"
+        },
+        {
+          "filename": "cmake-version.txt",
+          "bytes": 91,
+          "sha256": "d3d5b682f3f5ef5b24a79ed8cf4b8c5868fc950dad48cab1be0e3c060a77f8ee"
+        },
+        {
+          "filename": "flac-esm-browser-acceptance.json",
+          "bytes": 4548,
+          "sha256": "438d75756ee19eef6fafce8af255f199f311897b856b6d017195b275b5f77925"
+        },
+        {
+          "filename": "esm-source-lock-snapshot.json",
+          "bytes": 71022,
+          "sha256": "ab30613c3b1805e82420fe934243303d1614f80c3b7c313c3dcae75b64ed0b8c"
+        }
+      ],
+      "trackedTextCopiesWhitespaceNormalized": true,
+      "acceptedMedia": [
+        {
+          "filename": "flac-esm-synthetic-stereo.flac",
+          "bytes": 193688,
+          "sha256": "5ee0c46787bd0e7301d0055f37b53ccafccdc863ffa70e9de464b9bf77aa8497"
+        },
+        {
+          "filename": "flac-esm-synthetic-input.s32le",
+          "bytes": 768000,
+          "sha256": "67d2468bb857bc4571d53e7c85f301e9dd44c86ffd402770cf8388562b5bef7b"
+        },
+        {
+          "filename": "flac-esm-synthetic-decoded.s32le",
+          "bytes": 768000,
+          "sha256": "67d2468bb857bc4571d53e7c85f301e9dd44c86ffd402770cf8388562b5bef7b"
+        },
+        {
+          "filename": "flac-esm-ffprobe.json",
+          "bytes": 1906,
+          "sha256": "0e12327e3daef13bbbd55d41ebc2aeb734fb048a2545dc26cc6eb650f134268b"
+        }
+      ]
+    },
+    "aac": {
+      "status": "compiled",
+      "externalDirectory": "rebuild/aac-20261002",
+      "image": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+      "sourceDateEpoch": 1772582400,
+      "sources": [
+        "aacNewSource",
+        "mediabunny-encoders"
+      ],
+      "scripts": [
+        {
+          "filename": "build-aac.sh",
+          "bytes": 2142,
+          "sha256": "c0392b5288a62dde4319debaa12ce0b6cd917cbcbab307762f7ecc7694a9b47b"
+        },
+        {
+          "filename": "accept-encoder-esm.mjs",
+          "bytes": 13396,
+          "sha256": "2ff463178e9655822de7203ef90bccdb7f2a83154e5ac8cf662ca3f9fb2fd818"
+        }
+      ],
+      "outputs": [
+        {
+          "filename": "aac.js",
+          "bytes": 584913,
+          "sha256": "b0e4ad019a2e7dc927f65d8b75fcf37ab24214121b9b92a0e53425b1678c935d"
+        },
+        {
+          "filename": "aac.wasm",
+          "bytes": 505574,
+          "sha256": "e6d2b9b24766e52a95ff9ed9b5ffe725eec6c7adf579b708b62b64facc637a28"
+        },
+        {
+          "filename": "libavcodec.a",
+          "bytes": 1219966,
+          "sha256": "ef37c323dd23b81e108e97674fa0167947accdedb36c26d27e79f2fcde6d5fc0"
+        },
+        {
+          "filename": "libavutil.a",
+          "bytes": 1655774,
+          "sha256": "802f710f79df3adb6bcdc2053d4322aa365f66fdf8ffb7cff790a66e7de7484e"
+        }
+      ],
+      "librarySourcePatches": [],
+      "networkDuringBuild": "none",
+      "replacedShippedRuntime": false,
+      "realNativeHostAcceptanceClaimed": false,
+      "outputAcceptance": {
+        "status": "passed",
+        "receipt": "receipts/aac-classic-browser-build.json",
+        "directEsmBrowserExecution": "passed",
+        "esmReceipt": "receipts/aac-esm-browser-acceptance.json",
+        "esmVariant": "same-origin-module-blob-worker",
+        "realNativeHostAcceptanceClaimed": false
+      },
+      "rawBuildEvidence": [
+        {
+          "filename": "build.log",
+          "bytes": 6570,
+          "sha256": "f9589cac94a8aef1e8bf61dd9739be9e4220615aeb5b419b888fb76fad797723"
+        },
+        {
+          "filename": "emcc-version.txt",
+          "bytes": 330,
+          "sha256": "0530ff58d00e4bdb8a881e93c386ac3422c1fd1ec22adbbdcb3de05ecc43c3cb"
+        },
+        {
+          "filename": "container-packages.lock",
+          "bytes": 7056,
+          "sha256": "d8b7885f00dbce5799f8da3d503ed21446c3fba6d8c556a86adb1dc66d0ce1c5"
+        },
+        {
+          "filename": "output.sha256",
+          "bytes": 245,
+          "sha256": "e2ff665d2eb796f6c2cdfe8c8eb8fdecb722dccda213bed37bf6670911e065e2"
+        },
+        {
+          "filename": "aac-config.mak",
+          "bytes": 88581,
+          "sha256": "f502300943a7ae8c7c8cfd5b70edfef5db487ace0081f1152223ca28e43c8490"
+        },
+        {
+          "filename": "aac-config.log",
+          "bytes": 539125,
+          "sha256": "e2cd721cf63edcdc790cbb681a9cdaef04f7030b433209e4c5b827f4b1222015"
+        },
+        {
+          "filename": "aac-esm-browser-acceptance.json",
+          "bytes": 5283,
+          "sha256": "5fc60ecb31c8dc032912efbb724fb5668d746188e30c787d940d977c92361789"
+        },
+        {
+          "filename": "esm-source-lock-snapshot.json",
+          "bytes": 71022,
+          "sha256": "ab30613c3b1805e82420fe934243303d1614f80c3b7c313c3dcae75b64ed0b8c"
+        }
+      ],
+      "trackedTextCopiesWhitespaceNormalized": true,
+      "acceptedMedia": [
+        {
+          "filename": "aac-esm-synthetic-stereo.aac",
+          "bytes": 48668,
+          "sha256": "599e62827a0f05676e2106bfe6e92c7d8ada78521b8c5dc5094c54154c3e655c"
+        },
+        {
+          "filename": "aac-esm-synthetic-input.f32le",
+          "bytes": 768000,
+          "sha256": "9df0a336a63dd642d9f593a53a1711edfcf1d65472d38216f1c1b364a56a73d5"
+        },
+        {
+          "filename": "aac-esm-synthetic-decoded.f32le",
+          "bytes": 778240,
+          "sha256": "9bfb13a267d96d2f5a7c54cf041879b016bafbb125cd19c72fd8719ac84c1f38"
+        },
+        {
+          "filename": "aac-esm-ffprobe.json",
+          "bytes": 1948,
+          "sha256": "1646bcde03044c7544b29c9af88aaf867e9dff38de91face4ab5d413efa735f5"
+        }
+      ]
+    },
+    "aac-classic": {
+      "status": "compiled",
+      "externalDirectory": "rebuild/aac-browser-20261002",
+      "image": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+      "sourceDateEpoch": 1772582400,
+      "sources": [
+        "aacNewSource",
+        "mediabunny-encoders"
+      ],
+      "scripts": [
+        {
+          "filename": "link-aac-classic.sh",
+          "bytes": 2222,
+          "sha256": "fa79d93643b900847c75b76ca016bda040824a256c384182c7b5b9fcbe6df29e"
+        },
+        {
+          "filename": "aac.worker.js",
+          "bytes": 3106,
+          "sha256": "f1ed1d763e8c403d9a76575167a1000bba2c334c719e31d09f8367b5dcf8aa17"
+        },
+        {
+          "filename": "aac.child.js",
+          "bytes": 1880,
+          "sha256": "016c48d52a82d8212ec9d6aab0c5d28f7f259be04f774ce77cd9832e0da2fdbd"
+        },
+        {
+          "filename": "accept-aac.mjs",
+          "bytes": 8651,
+          "sha256": "f5bb30275bde5043a67522aeb5477a9beb267680a754105b47a4dbe875d889de"
+        }
+      ],
+      "outputs": [
+        {
+          "filename": "aac-classic.js",
+          "bytes": 585210,
+          "sha256": "9506620750147e0ada505f0364b3b5e12db1f543a987f8a6fe01cd453a6928de"
+        },
+        {
+          "filename": "aac-classic.wasm",
+          "bytes": 505574,
+          "sha256": "e6d2b9b24766e52a95ff9ed9b5ffe725eec6c7adf579b708b62b64facc637a28"
+        }
+      ],
+      "rawBuildEvidence": [
+        {
+          "filename": "classic.sha256",
+          "bytes": 257,
+          "sha256": "3dc3ec9310ae590caee090f1786ec30d8200945225a75bc98ad3e7024b4d5ff4"
+        },
+        {
+          "filename": "emcc-version.txt",
+          "bytes": 330,
+          "sha256": "0530ff58d00e4bdb8a881e93c386ac3422c1fd1ec22adbbdcb3de05ecc43c3cb"
+        },
+        {
+          "filename": "link-classic.log",
+          "bytes": 2672,
+          "sha256": "fd4210977695e70038eb57b141e469f6bbbf03ebe70540ee4400f64b0707a3b3"
+        },
+        {
+          "filename": "container-constraints.json",
+          "bytes": 1213,
+          "sha256": "bad22686b2a6248cc9e0bdf9625c6efa30037085d01c157235a693dfda24b880"
+        },
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 10579,
+          "sha256": "9f46458b642845298faf4b2c77163fc073b23599ed4eb034b7ff1b847db50360"
+        },
+        {
+          "filename": "ffprobe.json",
+          "bytes": 1948,
+          "sha256": "56deef6ba590ee60eb0f2d55d5bb9b4c6d864f13308ef95f758297df50af61b8"
+        },
+        {
+          "filename": "synthetic-stereo.aac",
+          "bytes": 48668,
+          "sha256": "599e62827a0f05676e2106bfe6e92c7d8ada78521b8c5dc5094c54154c3e655c"
+        },
+        {
+          "filename": "synthetic-input.f32le",
+          "bytes": 768000,
+          "sha256": "9df0a336a63dd642d9f593a53a1711edfcf1d65472d38216f1c1b364a56a73d5"
+        },
+        {
+          "filename": "synthetic-decoded.f32le",
+          "bytes": 778240,
+          "sha256": "9bfb13a267d96d2f5a7c54cf041879b016bafbb125cd19c72fd8719ac84c1f38"
+        },
+        {
+          "filename": "initial-peak-gate-run.log",
+          "bytes": 1231,
+          "sha256": "5e25a9598a1e01cf70fbc33319af0e8f5a98f30129cef37af5bd856bf6636e33"
+        },
+        {
+          "filename": "quality-diagnostic.json",
+          "bytes": 779,
+          "sha256": "4cd6968f5ce52a17b5d32361c1c6e8770f2d609fe32f5367af352ca8e5fa25d4"
+        },
+        {
+          "filename": "acceptance-run.log",
+          "bytes": 3402,
+          "sha256": "1563a58408108196b2e697b029abaa2713dd81d07ea9c0269ca6a76bbe9cf3ca"
+        }
+      ],
+      "librarySourcePatches": [],
+      "networkDuringBuild": "none",
+      "replacedShippedRuntime": false,
+      "realNativeHostAcceptanceClaimed": false,
+      "outputAcceptance": {
+        "status": "passed",
+        "receipt": "receipts/aac-classic-browser-build.json",
+        "acceptedVariant": "classicBlobWorker"
+      },
+      "trackedTextCopiesWhitespaceNormalized": false
+    },
+    "mp3": {
+      "status": "compiled",
+      "externalDirectory": "rebuild/mp3-owned-20261002",
+      "image": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+      "sourceDateEpoch": 1772582400,
+      "sources": [
+        "lame-official",
+        "mediabunny-encoders"
+      ],
+      "scripts": [
+        {
+          "filename": "build-mp3.sh",
+          "bytes": 1335,
+          "sha256": "f887b2c4728f6e44328605bac41a2f7c83406a23e60e562e61bd8cab97f8f440"
+        },
+        {
+          "filename": "link-mp3-classic.sh",
+          "bytes": 1251,
+          "sha256": "3676e339399482619667f35030ee6d20b38d4b11f8d21f213e79ff55a11eb0e2"
+        },
+        {
+          "filename": "mp3.worker.js",
+          "bytes": 2742,
+          "sha256": "b82adb7a6a5db6b1b13ab378346d064b67a7add4cbcfa54c1977739582651a4b"
+        },
+        {
+          "filename": "mp3.child.js",
+          "bytes": 1920,
+          "sha256": "66b8df6d12d410a743f3bc45c9b47005efcfc0d56500af25ee3686fdcdadda27"
+        },
+        {
+          "filename": "accept-mp3.mjs",
+          "bytes": 9219,
+          "sha256": "c1474a225c323313e6a27e321da816eff033e86930e070e342ad0948b1da1ff2"
+        },
+        {
+          "filename": "accept-encoder-esm.mjs",
+          "bytes": 13396,
+          "sha256": "2ff463178e9655822de7203ef90bccdb7f2a83154e5ac8cf662ca3f9fb2fd818"
+        }
+      ],
+      "outputs": [
+        {
+          "filename": "lame.js",
+          "bytes": 271693,
+          "sha256": "d644834b9f8dfecb37da461388ca1780b2ef0894f1fecba27249531c4310c397"
+        },
+        {
+          "filename": "lame-classic.js",
+          "bytes": 266533,
+          "sha256": "e6175b8c041a7d837090f4fc9fd55f178890218c7e14c25575acf80a02be9a73"
+        },
+        {
+          "filename": "libmp3lame.a",
+          "bytes": 343876,
+          "sha256": "3a63629a73be1167c3ae25e486ea96874c05d1e3f9884bdda48693effa8b1d7b"
+        },
+        {
+          "filename": "lame.wasm",
+          "bytes": 225062,
+          "sha256": "90c886d684cd405094106d246b40cf96aa81ca3b9c3109b429d6410e56133489"
+        },
+        {
+          "filename": "lame-classic.wasm",
+          "bytes": 220016,
+          "sha256": "e4e57fc0405d4f67bc9e44020246432dc04b78b0c9a518ebb38f355feadd158d"
+        }
+      ],
+      "rawBuildEvidence": [
+        {
+          "filename": "classic.sha256",
+          "bytes": 250,
+          "sha256": "8a614ab0f8c5038d83309837d388ab64ff3ef266542e3ac9f9b68af241fca45a"
+        },
+        {
+          "filename": "output.sha256",
+          "bytes": 163,
+          "sha256": "059ed4741f29d6ee7e2a013b0259b203fb733eb2eb9ef886fb9917d9499dd404"
+        },
+        {
+          "filename": "build-mp3-executed.sh",
+          "bytes": 1335,
+          "sha256": "0ef8d10a51507b9e0ff5963908fc618044f344e9e232e9a4a4ae91023e19073a"
+        },
+        {
+          "filename": "emcc-version.txt",
+          "bytes": 330,
+          "sha256": "0530ff58d00e4bdb8a881e93c386ac3422c1fd1ec22adbbdcb3de05ecc43c3cb"
+        },
+        {
+          "filename": "container-packages.lock",
+          "bytes": 7056,
+          "sha256": "d8b7885f00dbce5799f8da3d503ed21446c3fba6d8c556a86adb1dc66d0ce1c5"
+        },
+        {
+          "filename": "lame-config.log",
+          "bytes": 121471,
+          "sha256": "e19388ed0f7b37beb8f4fb6fa1e8119397129548c35c2dc60dfbb99f32ed8734"
+        },
+        {
+          "filename": "lame-config.h",
+          "bytes": 9617,
+          "sha256": "baf4bd524a987704630225364031c0a82c171b55c128a4511404c7f2b728ab14"
+        },
+        {
+          "filename": "build-and-link.log",
+          "bytes": 38696,
+          "sha256": "4aa751f84c671e546f190070635f69d418b5b03c7f6e9fc58e664f26abd240e0"
+        },
+        {
+          "filename": "container-constraints.json",
+          "bytes": 1087,
+          "sha256": "0776ff51390a8248588b4068ac8c2408f414a3cd4e013f2f11eb0011d167ae54"
+        },
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 3925,
+          "sha256": "f61be10b128838ab97963b3c15541a0498ae1ea3a73d0aadc6dc22b259be28df"
+        },
+        {
+          "filename": "ffprobe.json",
+          "bytes": 33589,
+          "sha256": "9fa30fd06565bd5cbd10150661b049833579c9b6f420f1e3568f00b4638bac88"
+        },
+        {
+          "filename": "acceptance-run.log",
+          "bytes": 3925,
+          "sha256": "f61be10b128838ab97963b3c15541a0498ae1ea3a73d0aadc6dc22b259be28df"
+        },
+        {
+          "filename": "synthetic-stereo.mp3",
+          "bytes": 48960,
+          "sha256": "3c93eec36a0ff5e501bb359411d099b8fbf3ca95a5cb6dd58cf155d60c22b33f"
+        },
+        {
+          "filename": "synthetic-input.f32le",
+          "bytes": 768000,
+          "sha256": "3f5b87fffde4b08444d2c3ab33f2e383fbcc5cb7680a75b2f10ad8500934a651"
+        },
+        {
+          "filename": "synthetic-input.s16le",
+          "bytes": 384000,
+          "sha256": "fb48a903c4a58b3c900b000d5e778ed990f6ff24c7c0942e793538cc584b6dfe"
+        },
+        {
+          "filename": "synthetic-decoded.f32le",
+          "bytes": 783360,
+          "sha256": "bdfc06ecedc2c321b05b3a97b1dac7b63bb0b5ce01c222ef3f19c979594265a4"
+        },
+        {
+          "filename": "mp3-esm-browser-acceptance.json",
+          "bytes": 5414,
+          "sha256": "a587c059389b7e6397f7ba8dbe0aaf984ce51ec8c4a27ed23051367f2e34fe35"
+        },
+        {
+          "filename": "esm-source-lock-snapshot.json",
+          "bytes": 71022,
+          "sha256": "ab30613c3b1805e82420fe934243303d1614f80c3b7c313c3dcae75b64ed0b8c"
+        }
+      ],
+      "librarySourcePatches": [],
+      "networkDuringBuild": "none",
+      "replacedShippedRuntime": false,
+      "realNativeHostAcceptanceClaimed": false,
+      "outputAcceptance": {
+        "status": "passed",
+        "receipt": "receipts/mp3-browser-build.json",
+        "acceptedVariant": "classicBlobWorker",
+        "directEsmBrowserExecution": "passed",
+        "esmReceipt": "receipts/mp3-esm-browser-acceptance.json",
+        "esmVariant": "same-origin-module-blob-worker",
+        "realNativeHostAcceptanceClaimed": false
+      },
+      "trackedTextCopiesWhitespaceNormalized": false,
+      "variantDifferences": {
+        "esm": "original prepared ESM flags: default filesystem/malloc/longjmp settings",
+        "classic": "FILESYSTEM=0, MALLOC=emmalloc, SUPPORT_LONGJMP=0, EXPORT_ES6=0 and custom EXPORT_NAME",
+        "wasmBytesEqualAcrossVariants": false,
+        "browserAcceptedVariant": "classic only"
+      },
+      "acceptedMedia": [
+        {
+          "filename": "mp3-esm-synthetic-stereo.mp3",
+          "bytes": 48960,
+          "sha256": "3c93eec36a0ff5e501bb359411d099b8fbf3ca95a5cb6dd58cf155d60c22b33f"
+        },
+        {
+          "filename": "mp3-esm-synthetic-input.f32le",
+          "bytes": 768000,
+          "sha256": "3f5b87fffde4b08444d2c3ab33f2e383fbcc5cb7680a75b2f10ad8500934a651"
+        },
+        {
+          "filename": "mp3-esm-synthetic-input.s16le",
+          "bytes": 384000,
+          "sha256": "fb48a903c4a58b3c900b000d5e778ed990f6ff24c7c0942e793538cc584b6dfe"
+        },
+        {
+          "filename": "mp3-esm-synthetic-decoded.f32le",
+          "bytes": 783360,
+          "sha256": "bdfc06ecedc2c321b05b3a97b1dac7b63bb0b5ce01c222ef3f19c979594265a4"
+        },
+        {
+          "filename": "mp3-esm-ffprobe.json",
+          "bytes": 2015,
+          "sha256": "8e6611fd59eb4035dc89dc4b511a162d2926cdee4c2f043b563970443bfc16e5"
+        }
+      ]
+    },
+    "core": {
+      "externalDirectory": "rebuild/core-build-resume-20261002",
+      "sources": {
+        "ffmpegwasm-recipe": {
+          "commit": "71aa99d37c02a7b4c435275ca9ef50e612f6efa1",
+          "version": null,
+          "archive": "ffmpegwasm-71aa99d37c02a7b4c435275ca9ef50e612f6efa1.tar.gz",
+          "bytes": 1329368,
+          "sha256": "53c5842f160cece0e39345876f9483b56aa84b966637ff6f624353a0fa884219",
+          "url": "https://codeload.github.com/ffmpegwasm/ffmpeg.wasm/tar.gz/71aa99d37c02a7b4c435275ca9ef50e612f6efa1",
+          "historicalReceiptClaimed": false
+        },
+        "ffmpeg": {
+          "commit": "4729204c17f756e186d622060088371d10b34f7e",
+          "version": null,
+          "archive": "ffmpeg-4729204c17f756e186d622060088371d10b34f7e.tar.gz",
+          "bytes": 14428595,
+          "sha256": "0d7ad57d4dd851d577fc6c19e5cec5b6e5faaeb2dbd52ab76127e3c3763fec6d",
+          "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/4729204c17f756e186d622060088371d10b34f7e",
+          "historicalReceiptClaimed": false
+        },
+        "x264": {
+          "commit": "33cac6b77d5b9259c552156013a817ab23119612",
+          "version": "4-cores",
+          "archive": "x264-33cac6b77d5b9259c552156013a817ab23119612.tar.gz",
+          "bytes": 942903,
+          "sha256": "75434a5a1f2d7d4314821c6054dd300731d69e2fa73314ba4a5ec9df38d4ec80",
+          "url": "https://codeload.github.com/ffmpegwasm/x264/tar.gz/33cac6b77d5b9259c552156013a817ab23119612",
+          "historicalReceiptClaimed": false
+        },
+        "x265": {
+          "commit": "2bb5520e9596f361bf0ed81b3b8da0d7fd999069",
+          "version": "3.4",
+          "archive": "x265-2bb5520e9596f361bf0ed81b3b8da0d7fd999069.tar.gz",
+          "bytes": 1531931,
+          "sha256": "e5254828f5db7bc375d385e31247861d25facee87b43fa2d08ea3ab5569672ab",
+          "url": "https://codeload.github.com/ffmpegwasm/x265/tar.gz/2bb5520e9596f361bf0ed81b3b8da0d7fd999069",
+          "historicalReceiptClaimed": false
+        },
+        "libvpx": {
+          "commit": "10b9492dcf05b652e2e4b370e205bd605d421972",
+          "version": "v1.13.1",
+          "archive": "libvpx-10b9492dcf05b652e2e4b370e205bd605d421972.tar.gz",
+          "bytes": 5520751,
+          "sha256": "12181ed27342415e8b01bf09abfbf1dfa27a6a32f302fb78b48bd70efe50f702",
+          "url": "https://codeload.github.com/ffmpegwasm/libvpx/tar.gz/10b9492dcf05b652e2e4b370e205bd605d421972",
+          "historicalReceiptClaimed": false
+        },
+        "lame": {
+          "commit": "2badea1974ae36cb8312afe99cff1e6b3b5decee",
+          "version": "master",
+          "archive": "lame-2badea1974ae36cb8312afe99cff1e6b3b5decee.tar.gz",
+          "bytes": 1525181,
+          "sha256": "0d97ba0776988f5730e0ce1fa936e7c5d6836c757993ba55073513fe89cf410a",
+          "url": "https://codeload.github.com/ffmpegwasm/lame/tar.gz/2badea1974ae36cb8312afe99cff1e6b3b5decee",
+          "historicalReceiptClaimed": false
+        },
+        "ogg": {
+          "commit": "bada45718453ac27b56773ae663f7e65112f6a6e",
+          "version": "v1.3.4",
+          "archive": "ogg-bada45718453ac27b56773ae663f7e65112f6a6e.tar.gz",
+          "bytes": 256023,
+          "sha256": "4d61f8dfa248276c42bd5404b1a87ae9d8a0d58791f55e20018c7b39b38d8823",
+          "url": "https://codeload.github.com/ffmpegwasm/Ogg/tar.gz/bada45718453ac27b56773ae663f7e65112f6a6e",
+          "historicalReceiptClaimed": false
+        },
+        "theora": {
+          "commit": "7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+          "version": "v1.1.1",
+          "archive": "theora-7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf.tar.gz",
+          "bytes": 1134014,
+          "sha256": "c38e6a3fb19566a44dcb283323c48311dd484f1416f3f34676d3e7fd252dfbc5",
+          "url": "https://codeload.github.com/ffmpegwasm/theora/tar.gz/7ffd8b2ecfc2d93ae5e16028e7528e609266bfbf",
+          "historicalReceiptClaimed": false
+        },
+        "opus": {
+          "commit": "e85ed7726db5d677c9c0677298ea0cb9c65bdd23",
+          "version": "v1.3.1",
+          "archive": "opus-e85ed7726db5d677c9c0677298ea0cb9c65bdd23.tar.gz",
+          "bytes": 829306,
+          "sha256": "c6d574b17d70b8c289d997a8ac81314cf1fd8c52237c421b2ee34e69cea85bf8",
+          "url": "https://codeload.github.com/ffmpegwasm/opus/tar.gz/e85ed7726db5d677c9c0677298ea0cb9c65bdd23",
+          "historicalReceiptClaimed": false
+        },
+        "vorbis": {
+          "commit": "7798164043197d7e33f02de4353ce2aa5b248225",
+          "version": "v1.3.3",
+          "archive": "vorbis-7798164043197d7e33f02de4353ce2aa5b248225.tar.gz",
+          "bytes": 1324827,
+          "sha256": "69b87cafe2815d02609886a63b9d4c0b7461e1e2f6ecf3960ede04053da6e96a",
+          "url": "https://codeload.github.com/ffmpegwasm/vorbis/tar.gz/7798164043197d7e33f02de4353ce2aa5b248225",
+          "historicalReceiptClaimed": false
+        },
+        "zlib": {
+          "commit": "cacf7f1d4e3d44d871b605da3b647f07d718623f",
+          "version": "v1.2.11",
+          "archive": "zlib-cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
+          "bytes": 645528,
+          "sha256": "6d4d6640ca3121620995ee255945161821218752b551a1a180f4215f7d124d45",
+          "url": "https://codeload.github.com/ffmpegwasm/zlib/tar.gz/cacf7f1d4e3d44d871b605da3b647f07d718623f",
+          "historicalReceiptClaimed": false
+        },
+        "libwebp": {
+          "commit": "ca332209cb5567c9b249c86788cb2dbf8847e760",
+          "version": "v1.3.2",
+          "archive": "libwebp-ca332209cb5567c9b249c86788cb2dbf8847e760.tar.gz",
+          "bytes": 3685887,
+          "sha256": "1676107dc385f9bf6cb4c2b94d4a9359d1fd95ab6309cb587191a742df292fe2",
+          "url": "https://codeload.github.com/ffmpegwasm/libwebp/tar.gz/ca332209cb5567c9b249c86788cb2dbf8847e760",
+          "historicalReceiptClaimed": false
+        },
+        "freetype2": {
+          "commit": "6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+          "version": "VER-2-10-4",
+          "archive": "freetype2-6a2b3e4007e794bfc6c91030d0ed987f925164a8.tar.gz",
+          "bytes": 2095678,
+          "sha256": "09acceb42508c65b7b744cc2ad01d7548868ca57babc39f7683ec3c0f7541e8c",
+          "url": "https://codeload.github.com/ffmpegwasm/freetype2/tar.gz/6a2b3e4007e794bfc6c91030d0ed987f925164a8",
+          "historicalReceiptClaimed": false
+        },
+        "fribidi": {
+          "commit": "f9e8e71a6fbf4a4619481284c9f484d10e559995",
+          "version": "v1.0.9",
+          "archive": "fribidi-f9e8e71a6fbf4a4619481284c9f484d10e559995.tar.gz",
+          "bytes": 2088197,
+          "sha256": "65ff6fb1a478c4d90ae16825da8c97b8a63e2674f8a2d6dae8800f89089640ba",
+          "url": "https://codeload.github.com/fribidi/fribidi/tar.gz/f9e8e71a6fbf4a4619481284c9f484d10e559995",
+          "historicalReceiptClaimed": false
+        },
+        "harfbuzz": {
+          "commit": "4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde",
+          "version": "5.2.0",
+          "archive": "harfbuzz-4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde.tar.gz",
+          "bytes": 32968210,
+          "sha256": "69ba7c7a42643a3654781242016dd09245cab7353fc2a02cecb710e479c9a881",
+          "url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/4a1d891c6317d2c83e5f3c2607ec5f5ccedffcde",
+          "historicalReceiptClaimed": false
+        },
+        "libass": {
+          "commit": "d149636f502f5774ae1a8fb4c554b122674393b2",
+          "version": "0.15.0",
+          "archive": "libass-d149636f502f5774ae1a8fb4c554b122674393b2.tar.gz",
+          "bytes": 243399,
+          "sha256": "5cfe23562fa623a3b209d156ad469aeb2e31f69bf6b256ea737d87d9ed89301d",
+          "url": "https://codeload.github.com/libass/libass/tar.gz/d149636f502f5774ae1a8fb4c554b122674393b2",
+          "historicalReceiptClaimed": false
+        },
+        "zimg": {
+          "commit": "e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87",
+          "version": "release-3.0.5",
+          "archive": "zimg-e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87.tar.gz",
+          "bytes": 326769,
+          "sha256": "3ab062eff30067799997bc3e911c0108a5b8cbcd6e0ef14053f17ff0ecd0add8",
+          "url": "https://codeload.github.com/sekrit-twc/zimg/tar.gz/e5b0de6bebbcbc66732ed5afaafef6b2c7dfef87",
+          "historicalReceiptClaimed": false
+        },
+        "zimg-googletest": {
+          "commit": "703bd9caab50b139428cea1aaff9974ebee5742e",
+          "version": "Zimg recursive submodule test/extra/googletest",
+          "archive": "zimg-googletest-703bd9caab50b139428cea1aaff9974ebee5742e.tar.gz",
+          "bytes": 905359,
+          "sha256": "d17b1b83a57b3933565a6d0616fe261107326d47de20288d0949ed038e1c342d",
+          "url": "https://codeload.github.com/google/googletest/tar.gz/703bd9caab50b139428cea1aaff9974ebee5742e",
+          "historicalReceiptClaimed": false
+        },
+        "sdl2": {
+          "commit": "55b03c7493a7abed33cf803d1380a40fa8af903f",
+          "version": "Emscripten3.1.40 port release-2.24.2",
+          "archive": "sdl2-55b03c7493a7abed33cf803d1380a40fa8af903f.tar.gz",
+          "bytes": 7890806,
+          "sha256": "a726e31f8ad9443a2a9a649f12751442d8ca5ea78a84fde14f760c81706b4127",
+          "url": "https://codeload.github.com/libsdl-org/SDL/tar.gz/55b03c7493a7abed33cf803d1380a40fa8af903f",
+          "historicalReceiptClaimed": false
+        }
+      },
+      "scripts": [
+        {
+          "filename": "prepare-core.py",
+          "bytes": 5240,
+          "sha256": "53122345b54cfa56671ce4f7c99c7293fbe42c8b6376eb9e04878fd9b8d8ce10"
+        },
+        {
+          "filename": "run-core.mjs",
+          "bytes": 3396,
+          "sha256": "aad3fa628a479437a1cbd1af9eca854f3660c859f81272a115c6f4b7c3593b85"
+        },
+        {
+          "filename": "buildkitd.toml",
+          "bytes": 35,
+          "sha256": "a06d96d0fb1154d6b460f53eecb2a9141366ef955e1bed931a0c27b673452d14"
+        },
+        {
+          "filename": "core.child.js",
+          "bytes": 14492,
+          "sha256": "8d0409c5dde636bbb0a78b924bb151f006fb23bf9f356941bfc77b0d7be959ef"
+        },
+        {
+          "filename": "accept-core.mjs",
+          "bytes": 16242,
+          "sha256": "9f25f5e46654472404bb5f402b6152eae37f7216ffbf46378ae6f1427c62d53b"
+        },
+        {
+          "filename": "accept-core-esm.mjs",
+          "bytes": 9757,
+          "sha256": "5c565de567e6f6e5f75a2cf30fc234153b362b895c221390e0641906452fcf4c"
+        },
+        {
+          "filename": "audit-core-source.mjs",
+          "bytes": 18015,
+          "sha256": "6848ed4eb0a2c6d309f97243e820a64f8433ef731adbeba7a394e190ba2de5cf"
+        },
+        {
+          "filename": "record-core.mjs",
+          "bytes": 11275,
+          "sha256": "8a69a976d50c1207211eca05cf7ad365e99f4d8b38d70dca250539382eb1ff57"
+        }
+      ],
+      "outputs": [
+        {
+          "filename": "artifacts/dist/umd/ffmpeg-core.js",
+          "bytes": 112059,
+          "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+        },
+        {
+          "filename": "artifacts/dist/umd/ffmpeg-core.wasm",
+          "bytes": 32232419,
+          "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+        },
+        {
+          "filename": "artifacts/dist/esm/ffmpeg-core.js",
+          "bytes": 111804,
+          "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+        },
+        {
+          "filename": "artifacts/dist/esm/ffmpeg-core.wasm",
+          "bytes": 32232419,
+          "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+        }
+      ],
+      "rawBuildEvidence": [
+        {
+          "filename": "build.log",
+          "bytes": 376267,
+          "sha256": "ad9d0816f06d43e7bef1f4e2ae016f9ef52ab437c393c94d00136017ecfe6bdb"
+        },
+        {
+          "filename": "build-metadata.json",
+          "bytes": 1478,
+          "sha256": "cf1f036a6583d3930bc337766693a3520982a19e0ebaf366f0533c34f8597639"
+        },
+        {
+          "filename": "run-receipt.json",
+          "bytes": 1924,
+          "sha256": "e84f44a3048bc67343a360c9af26608506c330fecd2e4817d91afc57e3706cda"
+        },
+        {
+          "filename": "browser-acceptance.json",
+          "bytes": 69002,
+          "sha256": "0cfede63fea139f8cc5884d962fee3a408e840258e6368dd8a394f5cb07c9eff"
+        },
+        {
+          "filename": "esm-browser-acceptance.json",
+          "bytes": 6673,
+          "sha256": "a0268dc988dc9e6efd9beb5fa9ad1c1555ae41d10e3ef7b4c1720a657a73bf6a"
+        },
+        {
+          "filename": "acceptance-fixture.js",
+          "bytes": 1739292,
+          "sha256": "d0bdbdd9a87603eda1159ff73d36559540dc537a765a48989402a007561e92c2"
+        },
+        {
+          "filename": "resource-adjustment.json",
+          "bytes": 791,
+          "sha256": "c77814d89d5649899ca44c3e5cce5cc192308513f1d691c7739155e83bfa9c01"
+        },
+        {
+          "filename": "recovery-receipt.json",
+          "bytes": 818,
+          "sha256": "3defe1460258b465270f2b206a67ef7a852d4d26e972d95377e7ee5866521d65"
+        },
+        {
+          "filename": "configure-proof.json",
+          "bytes": 811,
+          "sha256": "5ce6fb1231656d9d3d3e362a31ca6d1c8e0932d743fc928e6c332f79bac19d49"
+        },
+        {
+          "filename": "ffmpeg-configure.log",
+          "bytes": 603326,
+          "sha256": "913dcd715f6501ff40f75b636e73d2f9b999a587c2c8a54bce0462b221aebefb"
+        },
+        {
+          "filename": "ffmpeg-config.mak",
+          "bytes": 78765,
+          "sha256": "e233c9cf7bab62c31d46fd42260ef57355cac3c2bebf7542bff2c97d5420dc58"
+        },
+        {
+          "filename": "ffmpeg-config.h",
+          "bytes": 21373,
+          "sha256": "9e3e8e93b61dcbfa3c4778f5f87d00806fd3909503e9fb4ad2a2721740115684"
+        },
+        {
+          "filename": "ffmpeg-config-components.h",
+          "bytes": 68687,
+          "sha256": "12e18284c466c660c135e48d94359d13e3c4aa061c3970ba87ad587a3489f6c0"
+        },
+        {
+          "filename": "compiled-static-libraries.json",
+          "bytes": 5761,
+          "sha256": "20b7c569b1aa8ee9d42112d7d9ef2d9401f6e779e0b41d156c0ae53a91e89e15"
+        },
+        {
+          "filename": "esm-x265-browser-diagnostic.json",
+          "bytes": 2055,
+          "sha256": "82a2ebc648daf02b136209f6b8851db30383eca02625ae5445c1765fe30b8560"
+        },
+        {
+          "filename": "source-chain-proof.json",
+          "bytes": 5777,
+          "sha256": "2e7957e4c0adf4a3f764068d0fb13e21a0b5073d151c27b5f76721320514d80f"
+        },
+        {
+          "filename": "compiler-base-workspace-proof.txt",
+          "bytes": 247,
+          "sha256": "014536c7f63334f9db93e951e1f6b3bdf0c0a04118112fec523db7c3a9b629a9"
+        },
+        {
+          "filename": "final-exported-byte-comparison.json",
+          "bytes": 1676,
+          "sha256": "17a928a0719fa7543f498e0f2f154e5b0e88fdf07c88e120c89c3491bed70a56"
+        },
+        {
+          "filename": "independent-source-audit.json",
+          "bytes": 18721,
+          "sha256": "cd8833c386f4969731cdc8939b412aa16a765b8c5841d92314fbfcc10d9bbf75"
+        },
+        {
+          "filename": "vp9-browser-diagnostic.json",
+          "bytes": 410,
+          "sha256": "e14daf20a2e206744d850b0dc1b287b63b809f8cd5894d6f6a004047b2aec9fb"
+        },
+        {
+          "filename": "webm-source-fixture.json",
+          "bytes": 785,
+          "sha256": "b0218cfabb1a8bc1037fca357dc88b4b971161b21ae6d8e8c57a381bb7614d2c"
+        },
+        {
+          "filename": "core-version.txt",
+          "bytes": 1206,
+          "sha256": "d0c004447f4b97c4dcf385db0b8f38ad24e2613fdbe0835c9a0155e2fcd96f98"
+        },
+        {
+          "filename": "core-codecs.txt",
+          "bytes": 28898,
+          "sha256": "6a221187a7f5c773e89e2b14c72c186aea6e4a72460cedf5c4f03b90ed9cd697"
+        },
+        {
+          "filename": "core-encoders.txt",
+          "bytes": 11377,
+          "sha256": "150a3165261d4d6961e1c03143adcfa5920d48c393a00ab9d48c010e2952747f"
+        },
+        {
+          "filename": "core-decoders.txt",
+          "bytes": 27025,
+          "sha256": "c3ff8b1012c5cfcd610f77d38a92aa59c36cae7ecf424f8abeaf357211cbd331"
+        },
+        {
+          "filename": "core-formats.txt",
+          "bytes": 16280,
+          "sha256": "d0c125f3e16bb707e35742467587bf75010f94c6c4e19e7c92ef56d2af1ba436"
+        },
+        {
+          "filename": "core-filters.txt",
+          "bytes": 34547,
+          "sha256": "3abafa68bed14ff74d81c25710832d32b79639a301ad2de797400ac1710904cc"
+        },
+        {
+          "filename": "wasm-ffprobe-call.json",
+          "bytes": 35214,
+          "sha256": "e4e412b83be2e9a565dff503fb3e86ba9a02911b3b4788c43e77f71a0062cd75"
+        },
+        {
+          "filename": "wasm-ffprobe.json",
+          "bytes": 2928,
+          "sha256": "f7cfc2245bddcf781f4b1e9ff6829b961e4eb65bb12f621550042ae58ff9c141"
+        },
+        {
+          "filename": "core-inventory.json",
+          "bytes": 531146,
+          "sha256": "cd4cd6d8e80b3311d1e32e2c085feb5166d2b4a6b27d65fbffa67e09897a5359"
+        }
+      ],
+      "acceptedMedia": [
+        {
+          "filename": "synthetic-source.wav",
+          "bytes": 384044,
+          "sha256": "24a5171447b00422985455f502b636b8b369ba070589bf7a5cf76b01e34fc282"
+        },
+        {
+          "filename": "own-x264-aac.mp4",
+          "bytes": 121454,
+          "sha256": "9be74142f0e56f32bfe45ffdb9d70e920f47745307cb074bf02fe3be72f89b4f"
+        },
+        {
+          "filename": "input-vp9-opus.webm",
+          "bytes": 70262,
+          "sha256": "ac51f513adde3a913fe81724853742d0b77fad3d519b85aac9a503f45a428160"
+        },
+        {
+          "filename": "imported-webm-h264-aac.mp4",
+          "bytes": 128553,
+          "sha256": "be5c05fa3fed082a39cea8caaf45203c89ce739fa6062db82cb0bcfc02a83336"
+        },
+        {
+          "filename": "own-png-image2.mp4",
+          "bytes": 2337,
+          "sha256": "89e36b94b28623bd533b77dcbe7b50fbc4b0a572ebf76c57c2f9e9abec09364b"
+        },
+        {
+          "filename": "transcoded.mp3",
+          "bytes": 49581,
+          "sha256": "e1c45727f8fe2210070c1902e2b33cdefda5bcdcac5f80fa7a4f3c9796b91e5b"
+        },
+        {
+          "filename": "transcoded.m4a",
+          "bytes": 49844,
+          "sha256": "e264208831a32b6c01b82f1325171690bf9643c65f802873b8bfb4887d546dfd"
+        },
+        {
+          "filename": "transcoded.flac",
+          "bytes": 34196,
+          "sha256": "05d0202b8e048869120e0c5e197bc52ae809ed4b1afd763b1e449f46e18e5552"
+        },
+        {
+          "filename": "transcoded.mp4",
+          "bytes": 121521,
+          "sha256": "86121760d76ffb3a87ad62c91013df37fa27708e46887872605b189e3e11114c"
+        },
+        {
+          "filename": "transcoded.mov",
+          "bytes": 121572,
+          "sha256": "973efb3eaedbb488c87ecefb110d5a5d6bc7cc8599a1b9d2f6fed22190449f92"
+        },
+        {
+          "filename": "source-speed-fades-duck-normalized.wav",
+          "bytes": 384078,
+          "sha256": "b74b111fa52ab24327ec38a47fbd69d9e3957e4be5040f04d6314b660a3961ec"
+        },
+        {
+          "filename": "signal-duck.wav",
+          "bytes": 384078,
+          "sha256": "1551e9901a7d64cc06880dbdd06d3ea0716737e459d5c52659fd39667fdb843a"
+        },
+        {
+          "filename": "after-abort.flac",
+          "bytes": 34196,
+          "sha256": "05d0202b8e048869120e0c5e197bc52ae809ed4b1afd763b1e449f46e18e5552"
+        },
+        {
+          "filename": "reimported-mp3.wav",
+          "bytes": 384078,
+          "sha256": "6a8bfaaaaab459688456176e9c542a2cd1e8155f74e178534ac34288af027787"
+        },
+        {
+          "filename": "reimported-m4a.wav",
+          "bytes": 385102,
+          "sha256": "6fd9d86fef44647639acf264f2432cbbb87b517854152f8cbc6860d04d4cd3c3"
+        },
+        {
+          "filename": "reimported-flac.wav",
+          "bytes": 384078,
+          "sha256": "c24289bde2d8fe13370d28ae2245f45a3145690d8b8a3005a92531f60bc0e04f"
+        },
+        {
+          "filename": "esm-source.wav",
+          "bytes": 384044,
+          "sha256": "e3f3ff9c5ed19467fc928650be071e1d5b74877802ae0676ab4aa06dc8ca4407"
+        },
+        {
+          "filename": "esm-roundtrip.flac",
+          "bytes": 61005,
+          "sha256": "730f0ff323c5c8e2031f4e30f26dc796c305a45ed69157768ff631dbe457f106"
+        }
+      ],
+      "compilerImage": "emscripten/emsdk@sha256:c1e807a6e03ac5bd5b37bae2ace3c46c08579e2ddeb951037a3b8dac7067f2cc",
+      "buildkitImage": "moby/buildkit@sha256:0168606be2315b7c807a03b3d8aa79beefdb31c98740cebdffdfeebf31190c9f",
+      "executedContext": {
+        "externalDirectory": "rebuild/core-retry-context-20261002",
+        "sourceLockSha256": "db6d7c2bbb72562266aab0ccce5fcc88b15c05c6101ca0efba27748fb1f4365f",
+        "dockerfileSha256": "f8b76986c28b3de03af6ae287f996f4c29f05b9f31c63c998f9486c4402cc0d5",
+        "buildScripts": [
+          {
+            "filename": "build/x264.sh",
+            "bytes": 532,
+            "sha256": "32e71eb0e257e822b11ee8c7fdda8be74d1704648552672f1783db9b460b3ca4"
+          },
+          {
+            "filename": "build/x265.sh",
+            "bytes": 1145,
+            "sha256": "1574cc0cfaff97c83103d8dd39219ec7b487d01d54bff7629e3d0aebfaddc685"
+          },
+          {
+            "filename": "build/libvpx.sh",
+            "bytes": 1116,
+            "sha256": "9356464dcad4ddbd378cbacbe8bc89a50b77f0582593329289240c842c44c866"
+          },
+          {
+            "filename": "build/lame.sh",
+            "bytes": 653,
+            "sha256": "bdcb84a3609c19a8c45275d1322f0e7fbe5c7699eb70a3b617639ca0928f1f5b"
+          },
+          {
+            "filename": "build/ogg.sh",
+            "bytes": 515,
+            "sha256": "efe768840d07c2ec46c2cc2b8dbb9c0395c7beb3891d8f4bc77979e47b4fd174"
+          },
+          {
+            "filename": "build/theora.sh",
+            "bytes": 706,
+            "sha256": "fac1996f8d5a855600f6df43944e4acfd83e492b3981a347fb70e9e73fd6c3fd"
+          },
+          {
+            "filename": "build/opus.sh",
+            "bytes": 846,
+            "sha256": "5df5b4c8771e5cf99c4c292628dbc6cf90be087c6da9a282c5591c84ee204777"
+          },
+          {
+            "filename": "build/vorbis.sh",
+            "bytes": 690,
+            "sha256": "21c2badde03d39478d01512503730d5c4a8c31a43b8c0c36e0dd9983a853a22f"
+          },
+          {
+            "filename": "build/zlib.sh",
+            "bytes": 301,
+            "sha256": "e3554ff2ce73b752f752ca3b4aa86b8727a9d5a8c65e3e51cb78492b4ece6998"
+          },
+          {
+            "filename": "build/libwebp.sh",
+            "bytes": 599,
+            "sha256": "1f2b9aeab3f3bfe35e2876276050648ac0c7eb2b22ccc1c7bad7710025810c8f"
+          },
+          {
+            "filename": "build/freetype2.sh",
+            "bytes": 594,
+            "sha256": "d7306dff901142df35f8630bfb5dc86e4c91b24dbb4ce678b7c403d6d7c2dc72"
+          },
+          {
+            "filename": "build/fribidi.sh",
+            "bytes": 546,
+            "sha256": "18bfdf1f854ad75517e17e775dc446c8e645d073dc6de85d74a11d5fd4460387"
+          },
+          {
+            "filename": "build/harfbuzz.sh",
+            "bytes": 851,
+            "sha256": "a5ea801f8601ed69ae747bd2f7eab1fb9e27e6a1c405891f9bc74ae44a3cf18a"
+          },
+          {
+            "filename": "build/libass.sh",
+            "bytes": 499,
+            "sha256": "ac0cc55f61eb23d75f62294b52ce1e39fe3d403bc05cef2f64cdb23a4cc0813c"
+          },
+          {
+            "filename": "build/zimg.sh",
+            "bytes": 502,
+            "sha256": "4eb1d89c74204a36824455758673a5fc3a9b61b219dfffec966f1b5c6809e390"
+          },
+          {
+            "filename": "build/ffmpeg.sh",
+            "bytes": 1020,
+            "sha256": "b55b16c3b93c1072860a78908c8f260c9f303568fdf5e2f79307ff9ee38227fb"
+          },
+          {
+            "filename": "build/ffmpeg-wasm.sh",
+            "bytes": 1808,
+            "sha256": "ed4cf14aad203491345b3da7ab5711bb70df1a483afd13837bb174d9b8ac8658"
+          }
+        ]
+      },
+      "additionalLibrarySourcePatches": [],
+      "upstreamRecipeTransforms": [
+        "HarfBuzz configure.ac have_pthread=true -> false for FFMPEG_ST=yes",
+        "Vorbis configure.ac removes -mno-ieee-fp",
+        "libvpx copies generated vpx.pc to the install pkgconfig directory"
+      ],
+      "sourceDateEpochSet": false,
+      "outputAcceptance": {
+        "status": "passed",
+        "variants": [
+          "umd-classic-blob-worker",
+          "esm-module-blob-worker"
+        ],
+        "realNativeHostAcceptanceClaimed": false,
+        "realMcpTransportClaimed": false
+      },
+      "sourceCorrespondence": {
+        "publishedPackage": "@ffmpeg/core@0.12.10",
+        "allFourExportedFilesDirectByteEqual": true,
+        "frozenContextHasNoWasmOrStaticArchiveSeeds": true,
+        "compiledFfmpegArchives": true,
+        "umdAndEsmActuallyLinked": true,
+        "dependencyStagesCachedFromPreservedAttempts": true,
+        "secondColdRebuildClaimed": false,
+        "historicalPublisherCheckoutTimelineAttested": false
+      },
+      "knownRuntimeLimits": {
+        "ffprobeBinding": "The pinned wrapper discards the C return; validated ffprobe JSON is produced while Module.ret remains -1.",
+        "vp9Encoder": "Auxiliary VP9 encode crashes memory-out-of-bounds with default, single-thread realtime and good parameters. Offered WebM import/VP9 decoding passes on a known synthetic input; offered exports use H264.",
+        "x265": "Separate one-frame single-thread browser diagnostic times out at60s, also observed on the byte-identical published baseline. No codec is removed; offered H264 exports pass."
+      }
+    }
+  },
+  "unexecutedTargets": [
+    "mp3-original-static-archive-relink"
+  ],
+  "coreContextPreparation": {
+    "status": "passed",
+    "externalDirectory": "rebuild/core-offline-context-20261002",
+    "sourceTrees": 18,
+    "lockedDebs": 11,
+    "compileStarted": false
+  },
+  "remaining": [
+    "Adopt only the recorded own-built Core/AAC/MP3/FLAC candidates and run actual authenticated native SDK preview/export/cancellation/chunk acceptance before runtime replacement.",
+    "Published AAC historical checkout/patchset is still unproven; the new AAC candidate has its own direct source/output mapping. The selected full Core inputs now reproduce all four published Core files exactly, without attesting the publisher historical checkout timeline."
+  ],
+  "coreRecipeAdjustments": [
+    "Bound copied upstream make -j to -j2; MAKEFLAGS/CMAKE_BUILD_PARALLEL_LEVEL/EMCC_CORES=2",
+    "Compile an owned minimal main in base solely to prewarm shared Emscripten system cache; this executable is not a shipped output",
+    "HarfBuzz: unchanged configure/library source; use upstream src libs target then install all configured libraries, public/generated headers, pkgconfig and CMake metadata; skip unshipped noinst test utilities after observed Node optimizer SIGSEGV"
+  ],
+  "coreExecution": {
+    "status": "browser-output-accepted",
+    "requiredByUpdatedHumanInstruction": true,
+    "buildkitImage": "moby/buildkit@sha256:0168606be2315b7c807a03b3d8aa79beefdb31c98740cebdffdfeebf31190c9f",
+    "buildkitMaxParallelism": 1,
+    "containerMemoryBytes": 2684354560,
+    "containerCpuQuota": 200000,
+    "containerCpuPeriod": 100000,
+    "runtimeReplacementAuthorized": false,
+    "receiptExternal": "rebuild/core-build-resume-20261002/run-receipt.json",
+    "liveAdjustment": {
+      "cpuQuotaCores": 2,
+      "memoryBytes": 2684354560,
+      "resourceReceiptExternal": "rebuild/core-build-20261002/resource-adjustment.json",
+      "buildRestarted": false
+    },
+    "recoveryReceiptExternal": "rebuild/core-build-resume-20261002/recovery-receipt.json",
+    "resumedAtUtc": "2026-10-02T08:08:45.636Z",
+    "completedStepsFromCache": 67,
+    "finishedAtUtc": "2026-10-02T10:16:41.064Z",
+    "mainBranchAdoptionAuthorizedAfterOwnByteAcceptance": true,
+    "deploymentExecutor": "parent; no deployment performed by this branch"
+  },
+  "sourceDateEpochScope": "Standalone encoder builds only; the Core execution does not export SOURCE_DATE_EPOCH",
+  "coreRecipePatch": {
+    "filename": "harfbuzz-library-install.patch",
+    "bytes": 276,
+    "sha256": "8635c38e20c5656872c789a9ccde06f1eec01bef5d724d7189e80b2e1e03b127",
+    "librarySourceChanged": false,
+    "configureChanged": false,
+    "changes": "Full upstream libraries and install metadata targets replace noinst utility build"
+  },
+  "upstreamCoreRecipeTransforms": [
+    "HarfBuzz configure.ac disables pthread for FFMPEG_ST=yes",
+    "Vorbis configure.ac removes -mno-ieee-fp",
+    "libvpx generated vpx.pc copied into install pkgconfig directory"
+  ]
+}

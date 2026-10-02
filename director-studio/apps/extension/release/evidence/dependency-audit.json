@@ -1,0 +1,22 @@
+{
+  "lockfileSHA256": "430e61237c12f044deee32284e98f11d60bf65f77787f3fe7418a484b6bf6d46",
+  "auditMetadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 19,
+      "dev": 919,
+      "optional": 264,
+      "peer": 22,
+      "peerOptional": 0,
+      "total": 937
+    }
+  },
+  "scope": "Exact source workspace lockfile; security audit does not clear binary licenses or native host behavior."
+}

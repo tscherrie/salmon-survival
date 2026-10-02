@@ -1,0 +1,2 @@
+Command: ./node_modules/.bin/tsc -p apps/extension/tsconfig.json --noEmit
+Exit status: 0

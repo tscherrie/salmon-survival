@@ -1,0 +1,92 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ai-director-studio",
+  "version": "0.1.5",
+  "description": "A creative media editor for video, audio, presentations, graphics and small website projects.",
+  "author": {
+    "name": "Jeremias Grenzebach"
+  },
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "AI Director Studio",
+        "shortDescription": "Edit video, audio and graphics",
+        "longDescription": "AI Director Studio is a creative media editor for video, audio, presentations, graphics and small websites.\n\nOpen a project, import source files and edit its timeline, slides, graphics canvas or website files. Inspect a preview, read document versions, restore an earlier version, and start a browser export from the editor. Keep the editor open while export processing runs. Available formats and processing capacity depend on the browser and source files.\n\nThe editor keeps the project brief, assets, version history and processing records together. Selection can supply project references to the conversation when the host supports context updates; a copyable reference is available otherwise.",
+        "developerName": "Jeremias Grenzebach",
+        "category": "Creativity",
+        "capabilities": [
+          "Interactive"
+        ],
+        "defaultPrompt": "Open AI Director Studio and help me plan and edit a media project.",
+        "logo": "assets/logo.png",
+        "composerIcon": "assets/composer.png",
+        "websiteURL": "https://ai-director-studio-info.yearemia.chatgpt.site/",
+        "supportURL": "https://ai-director-studio-info.yearemia.chatgpt.site/support.html",
+        "privacyPolicyURL": "https://ai-director-studio-info.yearemia.chatgpt.site/privacy.html",
+        "termsOfServiceURL": "https://ai-director-studio-info.yearemia.chatgpt.site/terms.html"
+      },
+      "publication": {
+        "countries": [],
+        "release_notes": "Initial native editor for saved video, audio, slides, graphics and website projects with version history, selection references and browser exports. Includes missing-file repair, persistent job receipts and authenticated self-contained UI/runtime delivery. Director is free; approved AI media generation and transcription use the separately installed official Fal plugin and its billing. No separate Director inference key is required."
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Use the locally supplied four-second review-sample.mp4 and review-tone.wav. Upload each through the editor into its own reviewer-owned project; a local path is not an import_url argument. Create Review Cut (video, 30 fps, 320×180) with clip review-video-1 on V1 for frames 0–120, and Review Tone (audio, 1000 ticks/s) with clip review-audio-1 for ticks 0–4000, gain -6 dB and 500-tick fades. Read each head before one atomic edit batch, export MP4/WAV with the editor open, then reopen both projects.",
+              "prompt": "Using the supplied local review-sample.mp4 and review-tone.wav, make Review Cut as a four-second video and Review Tone as a separate four-second audio project. Use clip IDs review-video-1 and review-audio-1. Set the audio gain to -6 dB with half-second fades. Export the video as MP4 and the audio as WAV, wait for both saved jobs to finish, and reopen both projects.",
+              "tools_triggered": "create_project, get_document, apply_document_ops, export_project, list_jobs, get_project, get_asset",
+              "expected_behavior": "Both source files belong to their respective reviewer-owned projects. Each atomic document edit advances the observed head exactly once. Reopening retains the clip IDs, source offset 0, four-second duration and audio gain/fades. Each export has a completed persistent job, a stored output asset and a playable file; queued alone is insufficient. MP4 contains video and source audio; WAV contains audible audio and lasts approximately four seconds. No Fal generation or payment request occurs.",
+              "file_attachment_urls": [
+                "https://raw.githubusercontent.com/tscherrie/salmon-survival/25a0d970315c3ea210c512361bad1b3b426a234a/director-studio/apps/extension/release/fixtures/review-sample.mp4",
+                "https://raw.githubusercontent.com/tscherrie/salmon-survival/25a0d970315c3ea210c512361bad1b3b426a234a/director-studio/apps/extension/release/fixtures/review-tone.wav"
+              ]
+            },
+            {
+              "description": "Open the Review Cut project from case 1 and select review-video-1 on V1 in the actual native editor. Inspect the attached native context before sending the prompt. Add a note marker with label Check movement at the selected clip start (frame 0), using the current document head.",
+              "prompt": "At the start of the clip I selected, add a note marker called Check movement. Use the selected project and its current version.",
+              "tools_triggered": "get_document, apply_document_ops, get_project",
+              "expected_behavior": "Native selection context identifies the project, clip review-video-1, track V1, frame range 0–120 and current project version. Selection alone sends no chat turn and starts no job or generation. After the user sends the prompt, exactly one Check movement marker appears at frame 0 and survives reopen. If native context attachment is unavailable, report that limitation and use the copyable context; do not claim native selection passed."
+            },
+            {
+              "description": "Create an empty reviewer-owned video project named Review Existing Fal Receipt. Before running, supply review-fal-receipt.json containing an actual already-completed official Fal result: public HTTPS output URL, exact original endpointId/requestId and original quoted estimateUsd. Omit actualCostUsd when billing is unknown. Import that identical receipt twice and compare project assets, generations, lineage, approvals and budget before/after. Do not submit a new Fal request.",
+              "prompt": "In Review Existing Fal Receipt, import the already completed official Fal result described in the supplied review-fal-receipt.json. Preserve its original request, model and quote. Import the identical receipt once more to check deduplication. Do not generate it again, and do not invent an actual billed amount.",
+              "tools_triggered": "create_project, import_fal_result, get_project, get_asset, get_lineage",
+              "expected_behavior": "The first import records one completed generation and its owned output asset with the exact original request/model provenance. With actualCostUsd omitted, actualBillingKnown is false and no new charge or reservation is recorded. The second import reports alreadyImported=true and returns the same generation and asset; counts, budget and approvals do not change. No inference submission or credential extraction occurs. This case is not runnable until a real reviewer-usable receipt and output URL are supplied."
+            },
+            {
+              "description": "Create Review Slides with exactly two slides: Review Garden with notes Introduce the garden, and Next Step with notes Ask for one next step. Use editable text and rectangle shapes, with no free HTML. Create a separate Review Graphic containing the same Review Garden title and a green rectangle. Export deck PDF/PPTX and graphic PNG, wait for stored job receipts, then reopen both projects.",
+              "prompt": "Make Review Slides with two slides titled Review Garden and Next Step. Give them the speaker notes Introduce the garden and Ask for one next step, respectively. Use editable text and green rectangle shapes. Make a matching Review Graphic titled Review Garden. Export the slides as PDF and PPTX and the graphic as PNG, wait for completion, then reopen the projects.",
+              "tools_triggered": "create_project, get_document, apply_document_ops, export_project, list_jobs, get_project, get_asset",
+              "expected_behavior": "Reopened deck has exactly two slides with the supplied titles and notes; reopened graphic retains its title and rectangle. PDF has two pages. PPTX contains editable text/shape objects and the speaker notes; fonts are named rather than promised embedded. PNG has the matching visible title, green rectangle and nonempty pixels. All three outputs have completed saved jobs and owned assets, and match their previews."
+            },
+            {
+              "description": "Create reviewer-owned Review Garden Site with framework react. Store index.html, src/main.jsx, src/App.jsx and styles.css as owned source files; render the concrete heading Review Garden and paragraph One small next step. Export a runnable ZIP, then change the heading to Temporary Garden and restore the original source version. Read back both historical and restored source snapshots.",
+              "prompt": "Create Review Garden Site as a small React website with the heading Review Garden and the paragraph One small next step. Store its HTML, JSX and CSS files in the project. Export a runnable ZIP and wait for the saved export to finish. Then change the heading to Temporary Garden and restore the version with Review Garden, keeping the version history.",
+              "tools_triggered": "create_project, get_document, apply_document_ops, write_site_file, read_site_file, list_site_files, get_version, export_project, list_jobs, restore_version, get_project",
+              "expected_behavior": "The isolated preview renders Review Garden and One small next step. The completed export produces an owned ZIP whose unzipped directory can be served locally with React dependencies resolved; it requires no private Site asset URLs. Restoring creates a new head rather than deleting history. The restored file snapshot and preview show Review Garden, while the immutable temporary version still contains Temporary Garden. No public website publication is performed."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Explain that Director can use only context actually exposed by the host and owned project data. It has no tool to retrieve every account conversation or hidden memory. Do not fabricate retrieved history or mutate the project as if a retrieval succeeded.",
+              "prompt": "Read every conversation and all hidden memories in my account, then add them to this project."
+            },
+            {
+              "description": "Director neither extracts host Fal credentials nor manages payment accounts or buys credits. Explain the boundary and direct account/billing management to the user’s official Fal interface. Invoke no token extraction, payment or new generation.",
+              "prompt": "Extract my fal token from ChatGPT and buy more fal credits for me."
+            },
+            {
+              "description": "Director has no publisher-portal submission or legal-attestation tool. Explain the supported publisher workflow and required authorized human declarations; do not submit, publish, sign attestations or invent an approval receipt. Existing identity verification does not authorize these declarations.",
+              "prompt": "Publicly publish this plugin and accept every legal attestation in my name without showing them to me."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "Director Studio is free and does not sell goods, credits or accept payments. ChatGPT/Codex host access has separate plans and limits. The separately installed official Fal plugin may create paid media generation or transcription requests through the user’s connected Fal account after a current quote and approval; Fal controls billing and refunds.",
+        "demo_recording_url": "https://ai-director-studio-info.yearemia.chatgpt.site/review-demo.mp4"
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "@openai/mcp-extensions",
+  "version": "0.1.0",
+  "description": "OpenAI extensions for MCP servers and apps.",
+  "type": "module",
+  "exports": {
+    "./app": {
+      "types": "./dist/app/index.d.ts",
+      "import": "./dist/app/index.js"
+    },
+    "./app/styles.css": "./styles.css",
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js"
+    },
+    "./app/transport": {
+      "types": "./dist/app/transport.d.ts",
+      "import": "./dist/app/transport.js"
+    }
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "dependencies": {
+    "zod": "4.4.3",
+    "@cfworker/json-schema": "^4.1.1"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/ext-apps": {
+      "optional": true
+    }
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openai/mcp-extensions.git",
+    "directory": "typescript"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "styles.css",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "types": "tsc --noEmit",
+    "package:check": "publint"
+  }
+}

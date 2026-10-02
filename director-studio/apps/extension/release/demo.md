@@ -1,0 +1,25 @@
+# Supporting SDK demo and native review walkthrough
+
+Recorded and playback-checked 2026-10-02. The current [public supporting recording](https://ai-director-studio-info.yearemia.chatgpt.site/review-demo.mp4) is an actual **76.84-second**, 1280×960 H.264 screen recording with no audio track. The [ordinary public player](https://ai-director-studio-info.yearemia.chatgpt.site/review-demo.html) states its scope. The SDK-Browsertest banner remains visible throughout. This is the actual built Worker plus real MCP Client/AppBridge, using a synthetic identity confined to a loopback Node proxy and procedural sample media. It contains no native ChatGPT/Codex conversation, host-model response or paid generation.
+
+## Actual recorded coverage
+
+The stored procedural four-second video opens in the editor. Authored TSX appears in an isolated child; Play advances the preview clock and Pause stops it. Alt-click selects the imported clip and exposes the copyable-context fallback. A real get_project reads head v2; apply_document_ops adds the named marker and advances the open editor to v3. Replaying the same stale expectedHead receives the actual VERSION_CONFLICT result without another version or marker. A real MP4 export runs in the open opaque editor, finishes its stored job and produces a four-second H.264/AAC asset. Projects navigation reopens the same stored project; head v3, the marker, completed job and output remain visible.
+
+The recording presents the scripted SDK requests and real Worker/UI results as such. It does not simulate a model conversation. Clipboard write and native Composer attachment were not verified. Browser/private runtime delivery uses authenticated MCP; six deliberate private HTTP guard probes returned 401. There were zero page or SDK-host errors. Dependency and CSP diagnostics remain in local raw evidence; they are not described as absent.
+
+Recording SHA256: `77b912a99677164dd020c951117e938c136137aa19adb6f7eda58f2d14e4e3c1` (**1,828,656 bytes**). Both recording and actual exported MP4 fully decoded with FFmpeg exit 0. The export is four seconds with source audio and decoded overlay pixels. [Safe SDK receipt](evidence/review-demo-sdk.json) records exact coverage and limitations; [public playback receipt](evidence/review-demo-public.json) records anonymous HTTP 200, exact video bytes and actual Chrome playback. All fourteen caption/card phases were inspected for readable requests/results and procedural-only content. Raw tool receipts, storage databases and browser logs are not published on the information Site.
+
+The older 30.32-second supporting clip and its receipts remain historical evidence under evidence/sdk-review-demo.mp4, evidence/sdk-review-demo.json and evidence/playback-verification.json. Its SHA256 is `74e6cf4e33e117a0d14114ce8936d43419b67a8459c279d1e9a7525512c4f0d4`; it is not the current manifest recording.
+
+## Reproduce the supporting demo
+
+From director-studio after npm ci and npm run extension:build, start node apps/extension/scripts/acceptance-server.mjs on loopback port 5201 with a separate DIRECTOR_ACCEPTANCE_DIR. The recorder requires installed Chrome, system ffmpeg/ffprobe and Playwright's video helper (node node_modules/playwright/cli.js install ffmpeg). Run node apps/extension/scripts/record-review-demo.mjs /absolute/path/demo-output. It creates procedural sample material, issues actual SDK requests and exports through the real bridge. The output is supporting test evidence, not a review login.
+
+## Native walkthrough still required
+
+The user confirmed the native editor starts after cf761; that proves startup only. The required final recording must show the packaged version in the intended host under the reviewer identity. Run the five positive/three negative cases from [review-cases.json](review-cases.json). Show supplied prompts, tool results, native selection context before sending a turn, the resulting host-model edit, reopened state and actual playable saved outputs. Supply the original completed reviewer-usable Fal receipt, preserving its estimate and any known billing separately. Observe the actual permission/account refusals. No public promotion or legal attestation should be implied.
+
+Concrete remaining recording action: once the canonical reviewer OAuth/ownership path is resolved, record the intended host opening the packaged editor, select review-video-1, show the supplied P2 prompt and its actual marker result, and complete the other prepared cases with their saved outputs. This SDK clip cannot replace that capture. The previous native CUA access was blocked as being unsafe, and was not retried through another application path.
+
+Review access, a reviewer-owned completed Fal receipt and the intended-host recording remain pending. All eight reviewer cases remain Not run in [review-case-status.md](review-case-status.md). The ownership/domain and reviewer-OAuth questions have been sent and escalated to human OpenAI support. Resolve that canonical access path before requesting arbitrary reviewer credentials. The current supporting URL fills the Draft's video field; it does not make the release submission-ready.

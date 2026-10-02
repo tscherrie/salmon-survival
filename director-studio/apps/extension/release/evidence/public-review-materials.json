@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-02T04:16:54.572Z",
+  "sourceCommit": "25a0d970315c3ea210c512361bad1b3b426a234a",
+  "anonymous": true,
+  "passed": true,
+  "scope": "Public supporting SDK recording and procedural fixtures, not public policy pages or native walkthrough",
+  "results": [
+    {
+      "path": "fixtures/review-sample.mp4",
+      "url": "https://raw.githubusercontent.com/tscherrie/salmon-survival/25a0d970315c3ea210c512361bad1b3b426a234a/director-studio/apps/extension/release/fixtures/review-sample.mp4",
+      "status": 200,
+      "bytes": 273517,
+      "sha256": "1a298ded6b384d7db7cc18a35fc8ad05af2f4bca3310e52634b1ee37f5aeda21",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "fixtures/review-tone.wav",
+      "url": "https://raw.githubusercontent.com/tscherrie/salmon-survival/25a0d970315c3ea210c512361bad1b3b426a234a/director-studio/apps/extension/release/fixtures/review-tone.wav",
+      "status": 200,
+      "bytes": 768078,
+      "sha256": "ef5864b8a4dd47a66f28b70eea8865bea4556b8e07c9e079fbfcb5e5e93ba781",
+      "contentType": "audio/wav"
+    },
+    {
+      "path": "evidence/sdk-review-demo.mp4",
+      "url": "https://raw.githubusercontent.com/tscherrie/salmon-survival/25a0d970315c3ea210c512361bad1b3b426a234a/director-studio/apps/extension/release/evidence/sdk-review-demo.mp4",
+      "status": 200,
+      "bytes": 861545,
+      "sha256": "74e6cf4e33e117a0d14114ce8936d43419b67a8459c279d1e9a7525512c4f0d4",
+      "contentType": "application/octet-stream"
+    }
+  ]
+}

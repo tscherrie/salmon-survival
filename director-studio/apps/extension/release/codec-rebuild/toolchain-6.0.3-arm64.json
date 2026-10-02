@@ -1,0 +1,8 @@
+{
+  "selectedTag": "6.0.3-arm64",
+  "image": "emscripten/emsdk@sha256:ddfb30ef76e97bb9a231af1fb262f0a4f2f6aa726778572a028e215922afac40",
+  "platform": "arm64",
+  "configDigest": "sha256:64785cf29d0d881b438aac8504d38fc055d50b2a51650ecddac11f4ba269fdb3",
+  "observedAtUtc": "2026-10-02T04:28:33.715851+00:00",
+  "historicalImageClaimed": false
+}

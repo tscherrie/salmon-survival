@@ -1,0 +1,56 @@
+{
+  "out": "/var/folders/00/z9gl46452nq9mxpx32sl1gt00000gn/T/director-perception.cvSRnJ",
+  "checks": {
+    "crossOriginBaseRuntime": true,
+    "audio": {
+      "offsetMs": 239.723,
+      "confidence": 0.708,
+      "correlation": 0.708,
+      "method": "audio",
+      "note": "Audio↔Referenz-Kreuzkorrelation (200 Hz); positiv bedeutet, dass die Videotonspur später ist. Korrelation 0.71."
+    },
+    "motion": {
+      "offsetMs": 239.993,
+      "confidence": 0.763,
+      "correlation": 0.939,
+      "method": "motion",
+      "roi": {
+        "x": 0,
+        "y": 0,
+        "width": 0.5,
+        "height": 1
+      },
+      "note": "Bewegungsenergie in der Mundregion↔Referenz-Stimmhüllkurve (25 Hz), Auflösung etwa ein Frame. Kein semantischer Nachweis der Lippenbewegung."
+    },
+    "beatAnalysis": {
+      "bpm": 120,
+      "beats": 23,
+      "downbeats": 6,
+      "onsets": 24,
+      "confidence": 0.945,
+      "sections": []
+    },
+    "markers": {
+      "count": 23,
+      "retryDeduplicated": true,
+      "firstFrame": 15,
+      "persistentJobOps": 23,
+      "beatMapFile": true
+    },
+    "cut": {
+      "sourceAssetId": "reference",
+      "fromSec": 0.75,
+      "toSec": 2.25,
+      "handlesSec": 0.25,
+      "contentStartSec": 0.25,
+      "durationMs": 1500
+    },
+    "abort": {
+      "preAbort": true,
+      "activeAbort": true,
+      "afterAbortLufs": -15.86
+    }
+  },
+  "errors": [],
+  "passed": true
+}

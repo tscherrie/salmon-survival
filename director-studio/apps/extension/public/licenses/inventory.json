@@ -1,0 +1,1892 @@
+{
+  "generatedFor": "Director Studio Extension",
+  "inventoryScope": "conservative runtime dependency closure plus embedded codecs; not a legal determination",
+  "packages": [
+    {
+      "name": "@cfworker/json-schema",
+      "version": "4.1.1",
+      "license": "MIT",
+      "repository": "https://github.com/cfworker/cfworker",
+      "notices": [
+        "packages/cfworker-json-schema-4.1.1/LICENSE-upstream.txt",
+        "packages/cfworker-json-schema-4.1.1/PROVENANCE.txt"
+      ],
+      "installedPath": "node_modules/@cfworker/json-schema"
+    },
+    {
+      "name": "@ffmpeg/core",
+      "version": "0.12.10",
+      "license": "GPL-2.0-or-later",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ffmpegwasm/ffmpeg.wasm.git"
+      },
+      "notices": [
+        "packages/ffmpeg-core-0.12.10/COPYING.GPLv2"
+      ],
+      "installedPath": "node_modules/@ffmpeg/core"
+    },
+    {
+      "name": "@ffmpeg/ffmpeg",
+      "version": "0.12.15",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ffmpegwasm/ffmpeg.wasm.git"
+      },
+      "notices": [
+        "packages/ffmpeg-ffmpeg-0.12.15/LICENSE"
+      ],
+      "installedPath": "node_modules/@ffmpeg/ffmpeg"
+    },
+    {
+      "name": "@ffmpeg/types",
+      "version": "0.12.4",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ffmpegwasm/ffmpeg.wasm.git"
+      },
+      "notices": [
+        "packages/ffmpeg-types-0.12.4/LICENSE"
+      ],
+      "installedPath": "node_modules/@ffmpeg/types"
+    },
+    {
+      "name": "@hono/node-server",
+      "version": "2.1.3",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/honojs/node-server.git"
+      },
+      "notices": [
+        "packages/hono-node-server-2.1.3/LICENSE"
+      ],
+      "installedPath": "node_modules/@hono/node-server"
+    },
+    {
+      "name": "@mediabunny/aac-encoder",
+      "version": "1.56.1",
+      "license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Vanilagy/mediabunny.git",
+        "directory": "packages/aac-encoder"
+      },
+      "notices": [
+        "packages/mediabunny-aac-encoder-1.56.1/LICENSE"
+      ],
+      "installedPath": "node_modules/@mediabunny/aac-encoder"
+    },
+    {
+      "name": "@mediabunny/flac-encoder",
+      "version": "1.56.1",
+      "license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Vanilagy/mediabunny.git",
+        "directory": "packages/flac-encoder"
+      },
+      "notices": [
+        "packages/mediabunny-flac-encoder-1.56.1/LICENSE"
+      ],
+      "installedPath": "node_modules/@mediabunny/flac-encoder"
+    },
+    {
+      "name": "@mediabunny/mp3-encoder",
+      "version": "1.56.1",
+      "license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Vanilagy/mediabunny.git",
+        "directory": "packages/mp3-encoder"
+      },
+      "notices": [
+        "packages/mediabunny-mp3-encoder-1.56.1/LICENSE"
+      ],
+      "installedPath": "node_modules/@mediabunny/mp3-encoder"
+    },
+    {
+      "name": "@modelcontextprotocol/ext-apps",
+      "version": "1.7.5",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/modelcontextprotocol/ext-apps"
+      },
+      "notices": [
+        "packages/modelcontextprotocol-ext-apps-1.7.5/LICENSE"
+      ],
+      "installedPath": "node_modules/@modelcontextprotocol/ext-apps"
+    },
+    {
+      "name": "@modelcontextprotocol/sdk",
+      "version": "1.31.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/modelcontextprotocol/typescript-sdk.git"
+      },
+      "notices": [
+        "packages/modelcontextprotocol-sdk-1.31.0/LICENSE"
+      ],
+      "installedPath": "node_modules/@modelcontextprotocol/sdk"
+    },
+    {
+      "name": "@noble/hashes",
+      "version": "1.8.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/paulmillr/noble-hashes.git"
+      },
+      "notices": [
+        "packages/noble-hashes-1.8.0/LICENSE"
+      ],
+      "installedPath": "node_modules/@noble/hashes"
+    },
+    {
+      "name": "@openai/mcp-extensions",
+      "version": "0.1.0",
+      "license": "Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/openai/mcp-extensions.git",
+        "directory": "typescript"
+      },
+      "notices": [
+        "packages/openai-mcp-extensions-0.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/@openai/mcp-extensions"
+    },
+    {
+      "name": "@pdf-lib/standard-fonts",
+      "version": "1.0.0",
+      "license": "MIT",
+      "repository": "https://github.com/Hopding/standard-fonts.git",
+      "notices": [
+        "packages/pdf-lib-standard-fonts-1.0.0/LICENSE.md"
+      ],
+      "installedPath": "node_modules/@pdf-lib/standard-fonts"
+    },
+    {
+      "name": "@pdf-lib/upng",
+      "version": "1.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Hopding/upng"
+      },
+      "notices": [
+        "packages/pdf-lib-upng-1.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/@pdf-lib/upng"
+    },
+    {
+      "name": "@remotion/licensing",
+      "version": "4.0.532",
+      "license": "MIT",
+      "repository": {
+        "url": "https://github.com/remotion-dev/remotion/tree/main/packages/licensing"
+      },
+      "notices": [],
+      "installedPath": "node_modules/@remotion/licensing"
+    },
+    {
+      "name": "@remotion/player",
+      "version": "4.0.532",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "repository": {
+        "url": "https://github.com/remotion-dev/remotion/tree/main/packages/player"
+      },
+      "notices": [
+        "packages/remotion-player-4.0.532/LICENSE.md"
+      ],
+      "installedPath": "node_modules/@remotion/player"
+    },
+    {
+      "name": "@remotion/web-renderer",
+      "version": "4.0.532",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "repository": {
+        "url": "https://github.com/remotion-dev/remotion/tree/main/packages/web-renderer"
+      },
+      "notices": [
+        "packages/remotion-web-renderer-4.0.532/LICENSE.md"
+      ],
+      "installedPath": "node_modules/@remotion/web-renderer"
+    },
+    {
+      "name": "@standard-schema/spec",
+      "version": "1.1.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/standard-schema/standard-schema"
+      },
+      "notices": [
+        "packages/standard-schema-spec-1.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/@standard-schema/spec"
+    },
+    {
+      "name": "@types/dom-mediacapture-transform",
+      "version": "0.1.12",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/dom-mediacapture-transform"
+      },
+      "notices": [
+        "packages/types-dom-mediacapture-transform-0.1.12/LICENSE"
+      ],
+      "installedPath": "node_modules/@types/dom-mediacapture-transform"
+    },
+    {
+      "name": "@types/dom-webcodecs",
+      "version": "0.1.13",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/dom-webcodecs"
+      },
+      "notices": [
+        "packages/types-dom-webcodecs-0.1.13/LICENSE"
+      ],
+      "installedPath": "node_modules/@types/dom-webcodecs"
+    },
+    {
+      "name": "@types/node",
+      "version": "22.20.4",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/node"
+      },
+      "notices": [
+        "packages/types-node-22.20.4/LICENSE"
+      ],
+      "installedPath": "node_modules/@types/node"
+    },
+    {
+      "name": "accepts",
+      "version": "2.0.0",
+      "license": "MIT",
+      "repository": "jshttp/accepts",
+      "notices": [
+        "packages/accepts-2.0.0/LICENSE"
+      ],
+      "installedPath": "node_modules/accepts"
+    },
+    {
+      "name": "ajv",
+      "version": "8.20.0",
+      "license": "MIT",
+      "repository": "ajv-validator/ajv",
+      "notices": [
+        "packages/ajv-8.20.0/LICENSE"
+      ],
+      "installedPath": "node_modules/ajv"
+    },
+    {
+      "name": "ajv-formats",
+      "version": "3.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ajv-validator/ajv-formats.git"
+      },
+      "notices": [
+        "packages/ajv-formats-3.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/ajv-formats"
+    },
+    {
+      "name": "body-parser",
+      "version": "2.3.0",
+      "license": "MIT",
+      "repository": "expressjs/body-parser",
+      "notices": [
+        "packages/body-parser-2.3.0/LICENSE"
+      ],
+      "installedPath": "node_modules/body-parser"
+    },
+    {
+      "name": "bytes",
+      "version": "3.1.2",
+      "license": "MIT",
+      "repository": "visionmedia/bytes.js",
+      "notices": [
+        "packages/bytes-3.1.2/LICENSE"
+      ],
+      "installedPath": "node_modules/bytes"
+    },
+    {
+      "name": "call-bind-apply-helpers",
+      "version": "1.0.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/call-bind-apply-helpers.git"
+      },
+      "notices": [
+        "packages/call-bind-apply-helpers-1.0.2/LICENSE"
+      ],
+      "installedPath": "node_modules/call-bind-apply-helpers"
+    },
+    {
+      "name": "call-bound",
+      "version": "1.0.4",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/call-bound.git"
+      },
+      "notices": [
+        "packages/call-bound-1.0.4/LICENSE"
+      ],
+      "installedPath": "node_modules/call-bound"
+    },
+    {
+      "name": "content-disposition",
+      "version": "1.1.0",
+      "license": "MIT",
+      "repository": "jshttp/content-disposition",
+      "notices": [
+        "packages/content-disposition-1.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/content-disposition"
+    },
+    {
+      "name": "content-type",
+      "version": "1.0.5",
+      "license": "MIT",
+      "repository": "jshttp/content-type",
+      "notices": [
+        "packages/content-type-1.0.5/LICENSE"
+      ],
+      "installedPath": "node_modules/content-type"
+    },
+    {
+      "name": "content-type",
+      "version": "2.1.0",
+      "license": "MIT",
+      "repository": "jshttp/content-type",
+      "notices": [
+        "packages/content-type-2.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/body-parser/node_modules/content-type"
+    },
+    {
+      "name": "content-type",
+      "version": "2.1.0",
+      "license": "MIT",
+      "repository": "jshttp/content-type",
+      "notices": [
+        "packages/content-type-2.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/type-is/node_modules/content-type"
+    },
+    {
+      "name": "content-type",
+      "version": "2.1.0",
+      "license": "MIT",
+      "repository": "jshttp/content-type",
+      "notices": [
+        "packages/content-type-2.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/negotiator/node_modules/content-type"
+    },
+    {
+      "name": "cookie",
+      "version": "0.7.2",
+      "license": "MIT",
+      "repository": "jshttp/cookie",
+      "notices": [
+        "packages/cookie-0.7.2/LICENSE"
+      ],
+      "installedPath": "node_modules/cookie"
+    },
+    {
+      "name": "cookie-signature",
+      "version": "1.2.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/visionmedia/node-cookie-signature.git"
+      },
+      "notices": [
+        "packages/cookie-signature-1.2.2/LICENSE"
+      ],
+      "installedPath": "node_modules/cookie-signature"
+    },
+    {
+      "name": "core-util-is",
+      "version": "1.0.3",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/isaacs/core-util-is"
+      },
+      "notices": [
+        "packages/core-util-is-1.0.3/LICENSE"
+      ],
+      "installedPath": "node_modules/core-util-is"
+    },
+    {
+      "name": "cors",
+      "version": "2.8.6",
+      "license": "MIT",
+      "repository": "expressjs/cors",
+      "notices": [
+        "packages/cors-2.8.6/LICENSE"
+      ],
+      "installedPath": "node_modules/cors"
+    },
+    {
+      "name": "cross-spawn",
+      "version": "7.0.6",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git@github.com:moxystudio/node-cross-spawn.git"
+      },
+      "notices": [
+        "packages/cross-spawn-7.0.6/LICENSE"
+      ],
+      "installedPath": "node_modules/cross-spawn"
+    },
+    {
+      "name": "debug",
+      "version": "4.4.3",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/debug-js/debug.git"
+      },
+      "notices": [
+        "packages/debug-4.4.3/LICENSE"
+      ],
+      "installedPath": "node_modules/debug"
+    },
+    {
+      "name": "depd",
+      "version": "2.0.0",
+      "license": "MIT",
+      "repository": "dougwilson/nodejs-depd",
+      "notices": [
+        "packages/depd-2.0.0/LICENSE"
+      ],
+      "installedPath": "node_modules/depd"
+    },
+    {
+      "name": "dunder-proto",
+      "version": "1.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/es-shims/dunder-proto.git"
+      },
+      "notices": [
+        "packages/dunder-proto-1.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/dunder-proto"
+    },
+    {
+      "name": "ee-first",
+      "version": "1.1.1",
+      "license": "MIT",
+      "repository": "jonathanong/ee-first",
+      "notices": [
+        "packages/ee-first-1.1.1/LICENSE"
+      ],
+      "installedPath": "node_modules/ee-first"
+    },
+    {
+      "name": "encodeurl",
+      "version": "2.0.0",
+      "license": "MIT",
+      "repository": "pillarjs/encodeurl",
+      "notices": [
+        "packages/encodeurl-2.0.0/LICENSE"
+      ],
+      "installedPath": "node_modules/encodeurl"
+    },
+    {
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/es-define-property.git"
+      },
+      "notices": [
+        "packages/es-define-property-1.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/es-define-property"
+    },
+    {
+      "name": "es-errors",
+      "version": "1.3.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/es-errors.git"
+      },
+      "notices": [
+        "packages/es-errors-1.3.0/LICENSE"
+      ],
+      "installedPath": "node_modules/es-errors"
+    },
+    {
+      "name": "es-object-atoms",
+      "version": "1.1.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/es-object-atoms.git"
+      },
+      "notices": [
+        "packages/es-object-atoms-1.1.2/LICENSE"
+      ],
+      "installedPath": "node_modules/es-object-atoms"
+    },
+    {
+      "name": "esbuild-wasm",
+      "version": "0.28.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/evanw/esbuild.git"
+      },
+      "notices": [
+        "packages/esbuild-wasm-0.28.2/LICENSE.md"
+      ],
+      "installedPath": "node_modules/esbuild-wasm"
+    },
+    {
+      "name": "escape-html",
+      "version": "1.0.3",
+      "license": "MIT",
+      "repository": "component/escape-html",
+      "notices": [
+        "packages/escape-html-1.0.3/LICENSE"
+      ],
+      "installedPath": "node_modules/escape-html"
+    },
+    {
+      "name": "etag",
+      "version": "1.8.1",
+      "license": "MIT",
+      "repository": "jshttp/etag",
+      "notices": [
+        "packages/etag-1.8.1/LICENSE"
+      ],
+      "installedPath": "node_modules/etag"
+    },
+    {
+      "name": "eventsource",
+      "version": "3.0.7",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://git@github.com/EventSource/eventsource.git"
+      },
+      "notices": [
+        "packages/eventsource-3.0.7/LICENSE"
+      ],
+      "installedPath": "node_modules/eventsource"
+    },
+    {
+      "name": "eventsource-parser",
+      "version": "3.1.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/rexxars/eventsource-parser.git"
+      },
+      "notices": [
+        "packages/eventsource-parser-3.1.1/LICENSE"
+      ],
+      "installedPath": "node_modules/@modelcontextprotocol/sdk/node_modules/eventsource-parser"
+    },
+    {
+      "name": "eventsource-parser",
+      "version": "3.1.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/rexxars/eventsource-parser.git"
+      },
+      "notices": [
+        "packages/eventsource-parser-3.1.1/LICENSE"
+      ],
+      "installedPath": "node_modules/eventsource/node_modules/eventsource-parser"
+    },
+    {
+      "name": "express",
+      "version": "5.2.1",
+      "license": "MIT",
+      "repository": "expressjs/express",
+      "notices": [
+        "packages/express-5.2.1/LICENSE"
+      ],
+      "installedPath": "node_modules/express"
+    },
+    {
+      "name": "express-rate-limit",
+      "version": "8.7.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/express-rate-limit/express-rate-limit.git"
+      },
+      "notices": [
+        "packages/express-rate-limit-8.7.0/license"
+      ],
+      "installedPath": "node_modules/express-rate-limit"
+    },
+    {
+      "name": "fast-deep-equal",
+      "version": "3.1.3",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/epoberezkin/fast-deep-equal.git"
+      },
+      "notices": [
+        "packages/fast-deep-equal-3.1.3/LICENSE"
+      ],
+      "installedPath": "node_modules/fast-deep-equal"
+    },
+    {
+      "name": "fast-uri",
+      "version": "3.1.8",
+      "license": "BSD-3-Clause",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/fastify/fast-uri.git"
+      },
+      "notices": [
+        "packages/fast-uri-3.1.8/LICENSE"
+      ],
+      "installedPath": "node_modules/fast-uri"
+    },
+    {
+      "name": "fflate",
+      "version": "0.8.3",
+      "license": "MIT",
+      "repository": "https://github.com/101arrowz/fflate",
+      "notices": [
+        "packages/fflate-0.8.3/LICENSE"
+      ],
+      "installedPath": "node_modules/fflate"
+    },
+    {
+      "name": "finalhandler",
+      "version": "2.1.1",
+      "license": "MIT",
+      "repository": "pillarjs/finalhandler",
+      "notices": [
+        "packages/finalhandler-2.1.1/LICENSE"
+      ],
+      "installedPath": "node_modules/finalhandler"
+    },
+    {
+      "name": "forwarded",
+      "version": "0.2.0",
+      "license": "MIT",
+      "repository": "jshttp/forwarded",
+      "notices": [
+        "packages/forwarded-0.2.0/LICENSE"
+      ],
+      "installedPath": "node_modules/forwarded"
+    },
+    {
+      "name": "fresh",
+      "version": "2.0.0",
+      "license": "MIT",
+      "repository": "jshttp/fresh",
+      "notices": [
+        "packages/fresh-2.0.0/LICENSE"
+      ],
+      "installedPath": "node_modules/fresh"
+    },
+    {
+      "name": "function-bind",
+      "version": "1.1.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Raynos/function-bind.git"
+      },
+      "notices": [
+        "packages/function-bind-1.1.2/LICENSE"
+      ],
+      "installedPath": "node_modules/function-bind"
+    },
+    {
+      "name": "get-intrinsic",
+      "version": "1.3.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/get-intrinsic.git"
+      },
+      "notices": [
+        "packages/get-intrinsic-1.3.0/LICENSE"
+      ],
+      "installedPath": "node_modules/get-intrinsic"
+    },
+    {
+      "name": "get-proto",
+      "version": "1.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/get-proto.git"
+      },
+      "notices": [
+        "packages/get-proto-1.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/get-proto"
+    },
+    {
+      "name": "gopd",
+      "version": "1.2.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/gopd.git"
+      },
+      "notices": [
+        "packages/gopd-1.2.0/LICENSE"
+      ],
+      "installedPath": "node_modules/gopd"
+    },
+    {
+      "name": "has-symbols",
+      "version": "1.1.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/inspect-js/has-symbols.git"
+      },
+      "notices": [
+        "packages/has-symbols-1.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/has-symbols"
+    },
+    {
+      "name": "hasown",
+      "version": "2.0.4",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/inspect-js/hasOwn.git"
+      },
+      "notices": [
+        "packages/hasown-2.0.4/LICENSE"
+      ],
+      "installedPath": "node_modules/hasown"
+    },
+    {
+      "name": "hono",
+      "version": "4.13.12",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/honojs/hono.git"
+      },
+      "notices": [
+        "packages/hono-4.13.12/LICENSE"
+      ],
+      "installedPath": "node_modules/hono"
+    },
+    {
+      "name": "html-to-image",
+      "version": "1.11.13",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/bubkoo/html-to-image.git"
+      },
+      "notices": [
+        "packages/html-to-image-1.11.13/LICENSE"
+      ],
+      "installedPath": "node_modules/html-to-image"
+    },
+    {
+      "name": "http-errors",
+      "version": "2.0.1",
+      "license": "MIT",
+      "repository": "jshttp/http-errors",
+      "notices": [
+        "packages/http-errors-2.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/http-errors"
+    },
+    {
+      "name": "https",
+      "version": "1.0.0",
+      "license": "ISC",
+      "repository": null,
+      "notices": [],
+      "installedPath": "node_modules/https"
+    },
+    {
+      "name": "iconv-lite",
+      "version": "0.7.3",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/pillarjs/iconv-lite.git"
+      },
+      "notices": [
+        "packages/iconv-lite-0.7.3/LICENSE"
+      ],
+      "installedPath": "node_modules/iconv-lite"
+    },
+    {
+      "name": "image-size",
+      "version": "2.0.4",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://codeberg.org/image-size/image-size.git"
+      },
+      "notices": [
+        "packages/image-size-2.0.4/LICENSE"
+      ],
+      "installedPath": "node_modules/image-size"
+    },
+    {
+      "name": "immediate",
+      "version": "3.0.6",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/calvinmetcalf/immediate.git"
+      },
+      "notices": [
+        "packages/immediate-3.0.6/LICENSE.txt"
+      ],
+      "installedPath": "node_modules/immediate"
+    },
+    {
+      "name": "inherits",
+      "version": "2.0.4",
+      "license": "ISC",
+      "repository": "git://github.com/isaacs/inherits",
+      "notices": [
+        "packages/inherits-2.0.4/LICENSE"
+      ],
+      "installedPath": "node_modules/inherits"
+    },
+    {
+      "name": "ip-address",
+      "version": "10.7.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/beaugunderson/ip-address.git"
+      },
+      "notices": [
+        "packages/ip-address-10.7.2/LICENSE"
+      ],
+      "installedPath": "node_modules/ip-address"
+    },
+    {
+      "name": "ipaddr.js",
+      "version": "1.9.1",
+      "license": "MIT",
+      "repository": "git://github.com/whitequark/ipaddr.js",
+      "notices": [
+        "packages/ipaddr.js-1.9.1/LICENSE"
+      ],
+      "installedPath": "node_modules/ipaddr.js"
+    },
+    {
+      "name": "is-promise",
+      "version": "4.0.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/then/is-promise.git"
+      },
+      "notices": [
+        "packages/is-promise-4.0.0/LICENSE"
+      ],
+      "installedPath": "node_modules/is-promise"
+    },
+    {
+      "name": "isarray",
+      "version": "1.0.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/juliangruber/isarray.git"
+      },
+      "notices": [
+        "packages/isarray-1.0.0/README-original-with-license.md"
+      ],
+      "installedPath": "node_modules/isarray"
+    },
+    {
+      "name": "isexe",
+      "version": "2.0.0",
+      "license": "ISC",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/isaacs/isexe.git"
+      },
+      "notices": [
+        "packages/isexe-2.0.0/LICENSE"
+      ],
+      "installedPath": "node_modules/isexe"
+    },
+    {
+      "name": "jose",
+      "version": "6.2.12",
+      "license": "MIT",
+      "repository": "panva/jose",
+      "notices": [
+        "packages/jose-6.2.12/LICENSE.md"
+      ],
+      "installedPath": "node_modules/jose"
+    },
+    {
+      "name": "json-schema-traverse",
+      "version": "1.0.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/epoberezkin/json-schema-traverse.git"
+      },
+      "notices": [
+        "packages/json-schema-traverse-1.0.0/LICENSE"
+      ],
+      "installedPath": "node_modules/json-schema-traverse"
+    },
+    {
+      "name": "json-schema-typed",
+      "version": "8.0.2",
+      "license": "BSD-2-Clause",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/RemyRylan/json-schema-typed.git"
+      },
+      "notices": [
+        "packages/json-schema-typed-8.0.2/LICENSE.md"
+      ],
+      "installedPath": "node_modules/json-schema-typed"
+    },
+    {
+      "name": "jszip",
+      "version": "3.10.2",
+      "license": "(MIT OR GPL-3.0-or-later)",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Stuk/jszip.git"
+      },
+      "notices": [
+        "packages/jszip-3.10.2/LICENSE.markdown"
+      ],
+      "installedPath": "node_modules/jszip"
+    },
+    {
+      "name": "lie",
+      "version": "3.3.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/calvinmetcalf/lie.git"
+      },
+      "notices": [
+        "packages/lie-3.3.0/license.md"
+      ],
+      "installedPath": "node_modules/lie"
+    },
+    {
+      "name": "math-intrinsics",
+      "version": "1.1.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/es-shims/math-intrinsics.git"
+      },
+      "notices": [
+        "packages/math-intrinsics-1.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/math-intrinsics"
+    },
+    {
+      "name": "media-typer",
+      "version": "1.1.1",
+      "license": "MIT",
+      "repository": "jshttp/media-typer",
+      "notices": [
+        "packages/media-typer-1.1.1/LICENSE"
+      ],
+      "installedPath": "node_modules/media-typer"
+    },
+    {
+      "name": "mediabunny",
+      "version": "1.56.1",
+      "license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Vanilagy/mediabunny.git"
+      },
+      "notices": [
+        "packages/mediabunny-1.56.1/LICENSE"
+      ],
+      "installedPath": "node_modules/@remotion/web-renderer/node_modules/mediabunny"
+    },
+    {
+      "name": "mediabunny",
+      "version": "1.61.0",
+      "license": "MPL-2.0",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Vanilagy/mediabunny.git"
+      },
+      "notices": [
+        "packages/mediabunny-1.61.0/LICENSE"
+      ],
+      "installedPath": "node_modules/mediabunny"
+    },
+    {
+      "name": "merge-descriptors",
+      "version": "2.0.0",
+      "license": "MIT",
+      "repository": "sindresorhus/merge-descriptors",
+      "notices": [
+        "packages/merge-descriptors-2.0.0/license"
+      ],
+      "installedPath": "node_modules/merge-descriptors"
+    },
+    {
+      "name": "mime-db",
+      "version": "1.54.0",
+      "license": "MIT",
+      "repository": "jshttp/mime-db",
+      "notices": [
+        "packages/mime-db-1.54.0/LICENSE"
+      ],
+      "installedPath": "node_modules/mime-db"
+    },
+    {
+      "name": "mime-types",
+      "version": "3.0.2",
+      "license": "MIT",
+      "repository": "jshttp/mime-types",
+      "notices": [
+        "packages/mime-types-3.0.2/LICENSE"
+      ],
+      "installedPath": "node_modules/mime-types"
+    },
+    {
+      "name": "ms",
+      "version": "2.1.3",
+      "license": "MIT",
+      "repository": "vercel/ms",
+      "notices": [
+        "packages/ms-2.1.3/license.md"
+      ],
+      "installedPath": "node_modules/ms"
+    },
+    {
+      "name": "negotiator",
+      "version": "1.1.0",
+      "license": "MIT",
+      "repository": "jshttp/negotiator",
+      "notices": [
+        "packages/negotiator-1.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/negotiator"
+    },
+    {
+      "name": "object-assign",
+      "version": "4.1.1",
+      "license": "MIT",
+      "repository": "sindresorhus/object-assign",
+      "notices": [
+        "packages/object-assign-4.1.1/license"
+      ],
+      "installedPath": "node_modules/object-assign"
+    },
+    {
+      "name": "object-inspect",
+      "version": "1.13.4",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/inspect-js/object-inspect.git"
+      },
+      "notices": [
+        "packages/object-inspect-1.13.4/LICENSE"
+      ],
+      "installedPath": "node_modules/object-inspect"
+    },
+    {
+      "name": "on-finished",
+      "version": "2.4.1",
+      "license": "MIT",
+      "repository": "jshttp/on-finished",
+      "notices": [
+        "packages/on-finished-2.4.1/LICENSE"
+      ],
+      "installedPath": "node_modules/on-finished"
+    },
+    {
+      "name": "once",
+      "version": "1.4.0",
+      "license": "ISC",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/isaacs/once"
+      },
+      "notices": [
+        "packages/once-1.4.0/LICENSE"
+      ],
+      "installedPath": "node_modules/once"
+    },
+    {
+      "name": "pako",
+      "version": "1.0.11",
+      "license": "(MIT AND Zlib)",
+      "repository": "nodeca/pako",
+      "notices": [
+        "packages/pako-1.0.11/LICENSE"
+      ],
+      "installedPath": "node_modules/pako"
+    },
+    {
+      "name": "parseurl",
+      "version": "1.3.3",
+      "license": "MIT",
+      "repository": "pillarjs/parseurl",
+      "notices": [
+        "packages/parseurl-1.3.3/LICENSE"
+      ],
+      "installedPath": "node_modules/parseurl"
+    },
+    {
+      "name": "path-key",
+      "version": "3.1.1",
+      "license": "MIT",
+      "repository": "sindresorhus/path-key",
+      "notices": [
+        "packages/path-key-3.1.1/license"
+      ],
+      "installedPath": "node_modules/path-key"
+    },
+    {
+      "name": "path-to-regexp",
+      "version": "8.4.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/pillarjs/path-to-regexp.git"
+      },
+      "notices": [
+        "packages/path-to-regexp-8.4.2/LICENSE"
+      ],
+      "installedPath": "node_modules/path-to-regexp"
+    },
+    {
+      "name": "pdf-lib",
+      "version": "1.17.1",
+      "license": "MIT",
+      "repository": "git+https://github.com/Hopding/pdf-lib.git",
+      "notices": [
+        "packages/pdf-lib-1.17.1/LICENSE.md"
+      ],
+      "installedPath": "node_modules/pdf-lib"
+    },
+    {
+      "name": "pkce-challenge",
+      "version": "5.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/crouchcd/pkce-challenge.git"
+      },
+      "notices": [
+        "packages/pkce-challenge-5.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/pkce-challenge"
+    },
+    {
+      "name": "pptxgenjs",
+      "version": "4.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gitbrent/PptxGenJS.git"
+      },
+      "notices": [
+        "packages/pptxgenjs-4.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/pptxgenjs"
+    },
+    {
+      "name": "process-nextick-args",
+      "version": "2.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/calvinmetcalf/process-nextick-args.git"
+      },
+      "notices": [
+        "packages/process-nextick-args-2.0.1/license.md"
+      ],
+      "installedPath": "node_modules/process-nextick-args"
+    },
+    {
+      "name": "proxy-addr",
+      "version": "2.0.8",
+      "license": "MIT",
+      "repository": "jshttp/proxy-addr",
+      "notices": [
+        "packages/proxy-addr-2.0.8/LICENSE"
+      ],
+      "installedPath": "node_modules/proxy-addr"
+    },
+    {
+      "name": "qs",
+      "version": "6.16.0",
+      "license": "BSD-3-Clause",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ljharb/qs.git"
+      },
+      "notices": [
+        "packages/qs-6.16.0/LICENSE.md"
+      ],
+      "installedPath": "node_modules/qs"
+    },
+    {
+      "name": "range-parser",
+      "version": "1.3.0",
+      "license": "MIT",
+      "repository": "jshttp/range-parser",
+      "notices": [
+        "packages/range-parser-1.3.0/LICENSE"
+      ],
+      "installedPath": "node_modules/range-parser"
+    },
+    {
+      "name": "raw-body",
+      "version": "3.0.2",
+      "license": "MIT",
+      "repository": "stream-utils/raw-body",
+      "notices": [
+        "packages/raw-body-3.0.2/LICENSE"
+      ],
+      "installedPath": "node_modules/raw-body"
+    },
+    {
+      "name": "react",
+      "version": "19.3.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/react/react.git",
+        "directory": "packages/react"
+      },
+      "notices": [
+        "packages/react-19.3.0/LICENSE"
+      ],
+      "installedPath": "node_modules/react"
+    },
+    {
+      "name": "react-dom",
+      "version": "19.3.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/react/react.git",
+        "directory": "packages/react-dom"
+      },
+      "notices": [
+        "packages/react-dom-19.3.0/LICENSE"
+      ],
+      "installedPath": "node_modules/react-dom"
+    },
+    {
+      "name": "readable-stream",
+      "version": "2.3.8",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/nodejs/readable-stream"
+      },
+      "notices": [
+        "packages/readable-stream-2.3.8/LICENSE"
+      ],
+      "installedPath": "node_modules/readable-stream"
+    },
+    {
+      "name": "remotion",
+      "version": "4.0.532",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "repository": {
+        "url": "https://github.com/remotion-dev/remotion/tree/main/packages/core"
+      },
+      "notices": [
+        "packages/remotion-4.0.532/LICENSE.md"
+      ],
+      "installedPath": "node_modules/remotion"
+    },
+    {
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "license": "MIT",
+      "repository": "floatdrop/require-from-string",
+      "notices": [
+        "packages/require-from-string-2.0.2/license"
+      ],
+      "installedPath": "node_modules/require-from-string"
+    },
+    {
+      "name": "router",
+      "version": "2.2.0",
+      "license": "MIT",
+      "repository": "pillarjs/router",
+      "notices": [
+        "packages/router-2.2.0/LICENSE"
+      ],
+      "installedPath": "node_modules/router"
+    },
+    {
+      "name": "safe-buffer",
+      "version": "5.1.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/feross/safe-buffer.git"
+      },
+      "notices": [
+        "packages/safe-buffer-5.1.2/LICENSE"
+      ],
+      "installedPath": "node_modules/safe-buffer"
+    },
+    {
+      "name": "safer-buffer",
+      "version": "2.1.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ChALkeR/safer-buffer.git"
+      },
+      "notices": [
+        "packages/safer-buffer-2.1.2/LICENSE"
+      ],
+      "installedPath": "node_modules/safer-buffer"
+    },
+    {
+      "name": "scheduler",
+      "version": "0.28.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/react/react.git",
+        "directory": "packages/scheduler"
+      },
+      "notices": [
+        "packages/scheduler-0.28.0/LICENSE"
+      ],
+      "installedPath": "node_modules/scheduler"
+    },
+    {
+      "name": "send",
+      "version": "1.2.1",
+      "license": "MIT",
+      "repository": "pillarjs/send",
+      "notices": [
+        "packages/send-1.2.1/LICENSE"
+      ],
+      "installedPath": "node_modules/send"
+    },
+    {
+      "name": "serve-static",
+      "version": "2.2.1",
+      "license": "MIT",
+      "repository": "expressjs/serve-static",
+      "notices": [
+        "packages/serve-static-2.2.1/LICENSE"
+      ],
+      "installedPath": "node_modules/serve-static"
+    },
+    {
+      "name": "setimmediate",
+      "version": "1.0.5",
+      "license": "MIT",
+      "repository": "YuzuJS/setImmediate",
+      "notices": [
+        "packages/setimmediate-1.0.5/LICENSE.txt"
+      ],
+      "installedPath": "node_modules/setimmediate"
+    },
+    {
+      "name": "setprototypeof",
+      "version": "1.2.0",
+      "license": "ISC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/wesleytodd/setprototypeof.git"
+      },
+      "notices": [
+        "packages/setprototypeof-1.2.0/LICENSE"
+      ],
+      "installedPath": "node_modules/setprototypeof"
+    },
+    {
+      "name": "shebang-command",
+      "version": "2.0.0",
+      "license": "MIT",
+      "repository": "kevva/shebang-command",
+      "notices": [
+        "packages/shebang-command-2.0.0/license"
+      ],
+      "installedPath": "node_modules/shebang-command"
+    },
+    {
+      "name": "shebang-regex",
+      "version": "3.0.0",
+      "license": "MIT",
+      "repository": "sindresorhus/shebang-regex",
+      "notices": [
+        "packages/shebang-regex-3.0.0/license"
+      ],
+      "installedPath": "node_modules/shebang-regex"
+    },
+    {
+      "name": "side-channel",
+      "version": "1.1.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/side-channel.git"
+      },
+      "notices": [
+        "packages/side-channel-1.1.1/LICENSE"
+      ],
+      "installedPath": "node_modules/side-channel"
+    },
+    {
+      "name": "side-channel-list",
+      "version": "1.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/side-channel-list.git"
+      },
+      "notices": [
+        "packages/side-channel-list-1.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/side-channel-list"
+    },
+    {
+      "name": "side-channel-map",
+      "version": "1.0.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/side-channel-map.git"
+      },
+      "notices": [
+        "packages/side-channel-map-1.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/side-channel-map"
+    },
+    {
+      "name": "side-channel-weakmap",
+      "version": "1.0.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ljharb/side-channel-weakmap.git"
+      },
+      "notices": [
+        "packages/side-channel-weakmap-1.0.2/LICENSE"
+      ],
+      "installedPath": "node_modules/side-channel-weakmap"
+    },
+    {
+      "name": "statuses",
+      "version": "2.0.2",
+      "license": "MIT",
+      "repository": "jshttp/statuses",
+      "notices": [
+        "packages/statuses-2.0.2/LICENSE"
+      ],
+      "installedPath": "node_modules/statuses"
+    },
+    {
+      "name": "string_decoder",
+      "version": "1.1.1",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/nodejs/string_decoder.git"
+      },
+      "notices": [
+        "packages/string_decoder-1.1.1/LICENSE"
+      ],
+      "installedPath": "node_modules/string_decoder"
+    },
+    {
+      "name": "toidentifier",
+      "version": "1.0.1",
+      "license": "MIT",
+      "repository": "component/toidentifier",
+      "notices": [
+        "packages/toidentifier-1.0.1/LICENSE"
+      ],
+      "installedPath": "node_modules/toidentifier"
+    },
+    {
+      "name": "tslib",
+      "version": "1.14.1",
+      "license": "0BSD",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/tslib.git"
+      },
+      "notices": [
+        "packages/tslib-1.14.1/LICENSE.txt"
+      ],
+      "installedPath": "node_modules/pdf-lib/node_modules/tslib"
+    },
+    {
+      "name": "type-is",
+      "version": "2.1.0",
+      "license": "MIT",
+      "repository": "jshttp/type-is",
+      "notices": [
+        "packages/type-is-2.1.0/LICENSE"
+      ],
+      "installedPath": "node_modules/type-is"
+    },
+    {
+      "name": "undici-types",
+      "version": "6.21.0",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nodejs/undici.git"
+      },
+      "notices": [
+        "packages/undici-types-6.21.0/LICENSE"
+      ],
+      "installedPath": "node_modules/undici-types"
+    },
+    {
+      "name": "unpipe",
+      "version": "1.0.0",
+      "license": "MIT",
+      "repository": "stream-utils/unpipe",
+      "notices": [
+        "packages/unpipe-1.0.0/LICENSE"
+      ],
+      "installedPath": "node_modules/unpipe"
+    },
+    {
+      "name": "util-deprecate",
+      "version": "1.0.2",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/TooTallNate/util-deprecate.git"
+      },
+      "notices": [
+        "packages/util-deprecate-1.0.2/LICENSE"
+      ],
+      "installedPath": "node_modules/util-deprecate"
+    },
+    {
+      "name": "vary",
+      "version": "1.1.2",
+      "license": "MIT",
+      "repository": "jshttp/vary",
+      "notices": [
+        "packages/vary-1.1.2/LICENSE"
+      ],
+      "installedPath": "node_modules/vary"
+    },
+    {
+      "name": "which",
+      "version": "2.0.2",
+      "license": "ISC",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/isaacs/node-which.git"
+      },
+      "notices": [
+        "packages/which-2.0.2/LICENSE"
+      ],
+      "installedPath": "node_modules/which"
+    },
+    {
+      "name": "wrappy",
+      "version": "1.0.2",
+      "license": "ISC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/npm/wrappy"
+      },
+      "notices": [
+        "packages/wrappy-1.0.2/LICENSE"
+      ],
+      "installedPath": "node_modules/wrappy"
+    },
+    {
+      "name": "zod",
+      "version": "4.4.3",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/colinhacks/zod.git"
+      },
+      "notices": [
+        "packages/zod-4.4.3/LICENSE"
+      ],
+      "installedPath": "node_modules/@openai/mcp-extensions/node_modules/zod"
+    },
+    {
+      "name": "zod",
+      "version": "4.6.5",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/colinhacks/zod.git"
+      },
+      "notices": [
+        "packages/zod-4.6.5/LICENSE"
+      ],
+      "installedPath": "node_modules/zod"
+    },
+    {
+      "name": "zod-to-json-schema",
+      "version": "3.25.2",
+      "license": "ISC",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/StefanTerdell/zod-to-json-schema"
+      },
+      "notices": [
+        "packages/zod-to-json-schema-3.25.2/LICENSE"
+      ],
+      "installedPath": "node_modules/zod-to-json-schema"
+    },
+    {
+      "name": "zustand",
+      "version": "5.0.15",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pmndrs/zustand.git"
+      },
+      "notices": [
+        "packages/zustand-5.0.15/LICENSE"
+      ],
+      "installedPath": "node_modules/zustand"
+    }
+  ],
+  "sourceArchives": [
+    {
+      "url": "https://codeload.github.com/ffmpegwasm/ffmpeg.wasm/tar.gz/71aa99d37c02a7b4c435275ca9ef50e612f6efa1",
+      "filename": "ffmpegwasm-71aa99d37c02a7b4c435275ca9ef50e612f6efa1.tar.gz",
+      "bytes": 1329368,
+      "sha256": "53c5842f160cece0e39345876f9483b56aa84b966637ff6f624353a0fa884219"
+    },
+    {
+      "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/4729204c17f756e186d622060088371d10b34f7e",
+      "filename": "ffmpeg-4729204c17f756e186d622060088371d10b34f7e.tar.gz",
+      "bytes": 14428595,
+      "sha256": "0d7ad57d4dd851d577fc6c19e5cec5b6e5faaeb2dbd52ab76127e3c3763fec6d"
+    },
+    {
+      "filename": "mediabunny-installed-mpl-sources.tar.gz",
+      "bytes": 914226,
+      "sha256": "65a6c41df5ac9f2cdcf880bf52f565e051e137d2629e4396f82b9bccc28f000b",
+      "provenance": "Preferred source files copied unchanged from exact installed MPL package versions; underlying codec correspondence remains unverified."
+    }
+  ],
+  "mplSourceDirectories": [
+    "mediabunny-1.61.0",
+    "mediabunny-mp3-encoder-1.56.1",
+    "mediabunny-aac-encoder-1.56.1",
+    "mediabunny-flac-encoder-1.56.1",
+    "mediabunny-1.56.1"
+  ],
+  "ffmpegPublishedFiles": [
+    {
+      "path": "../dist/client/runtime/ffmpeg/worker.js",
+      "bytes": 5388,
+      "sha256": "7a42302806ac12faef60c5d74a93c0f3e8505dcc233ffb6598034279169c09ef"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/runtime-provenance.json",
+      "bytes": 2358,
+      "sha256": "f644d25862dca34889954e1dcd052355bd984eaabcbe8ebad42e0d0d2dcd270a"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.js",
+      "bytes": 111804,
+      "sha256": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.json",
+      "bytes": 369,
+      "sha256": "b746f1cbd79e205e26c5813cc39ea60c458dd40cf002f85a8717e860f21908ac"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.part0",
+      "bytes": 16777216,
+      "sha256": "4ccba0c9cc7f019751a958ead3918cf51c9563ff2f8a76fb1f72ae492f66693b"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core.wasm.part1",
+      "bytes": 15455203,
+      "sha256": "80e8b2ae7994e92102e048249ab0a6673480ca626c359b1d321b24f105f02e65"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core-classic.js",
+      "bytes": 112059,
+      "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+    },
+    {
+      "path": "../dist/client/runtime/ffmpeg/ffmpeg-core-classic.wasm.json",
+      "bytes": 369,
+      "sha256": "b746f1cbd79e205e26c5813cc39ea60c458dd40cf002f85a8717e860f21908ac"
+    }
+  ],
+  "sourceCompleteness": "Identified source archives procured/verified and exact encoder WASM equality proven. Historical core build pins and AAC exact FFmpeg checkout/toolchain unrecorded; no legal-completeness or rebuilt-byte assertion.",
+  "unresolvedNoticeRecords": [
+    "@remotion/licensing@4.0.532"
+  ],
+  "codecSourceManifest": "CODEC-SOURCE-MANIFEST.json",
+  "codecArtifactAudit": "CODEC-ARTIFACT-INVENTORY.json",
+  "upstreamNotices": "UPSTREAM-NOTICES.json",
+  "separateSourceCollection": {
+    "archives": 26,
+    "bytes": 241265704,
+    "storedSeparatelyFromStaticRuntime": true,
+    "publicDownloadOfLocalCollectionClaimed": false
+  },
+  "remotionLicenseEvidence": {
+    "version": "4.0.532",
+    "bytes": 2823,
+    "sha256": "bd65083b940f61904f6ef298aade918a7cad72a3e35bc406e36fab365844b673",
+    "userConfirmedIndependentOperatorAtMostThreePeople": true,
+    "confirmationSource": "Human user in parent conversation; not an inferred SkillMeNow affiliation",
+    "eligibilityCriterionMatchesInstalledLicense": true,
+    "legalAttestationProvided": false
+  },
+  "noticeExceptions": [
+    {
+      "package": "@remotion/licensing@4.0.532",
+      "declaredLicense": "MIT",
+      "upstreamCommit": "c320056a980972de109ef27a40bede9660a46931",
+      "reason": "Original MIT notice absent both in npm and upstream package; root Remotion license not substituted."
+    }
+  ],
+  "excludedMetadataOnlyPackages": [
+    {
+      "package": "https@1.0.0",
+      "reason": "package.json only; PptxGenJS uses browser-disabled node:https; no executable browser code."
+    }
+  ],
+  "ownedCore": {
+    "status": "source-built-and-browser-accepted",
+    "version": "0.12.10-reproduced",
+    "sourceLock": "../codec-rebuild/source-lock.json",
+    "provenanceManifest": "packages/browser-media/vendor/ffmpeg-core/manifest.json",
+    "recipeCommit": "346ca50d088d49aa398010a7817234a83fe52db7",
+    "wasmSha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7",
+    "allFourFilesEqualPublishedCore": true,
+    "secondColdRebuildClaimed": false,
+    "historicalPublisherCheckoutTimelineAttested": false,
+    "standaloneEncoderProductIntegration": false,
+    "knownRuntimeLimits": {
+      "ffprobeBinding": "The pinned wrapper discards the C return; validated ffprobe JSON is produced while Module.ret remains -1.",
+      "vp9Encoder": "Auxiliary VP9 encode crashes memory-out-of-bounds with default, single-thread realtime and good parameters. Offered WebM import/VP9 decoding passes on a known synthetic input; offered exports use H264.",
+      "x265": "Separate one-frame single-thread browser diagnostic times out at60s, also observed on the byte-identical published baseline. No codec is removed; offered H264 exports pass."
+    },
+    "legalComplianceAttestation": false
+  },
+  "sourceCompletenessQualification": "Owned Core inputs/build/candidate bytes are source-supported and accepted; this does not attest legal compliance or original compiler correspondence of embedded Mediabunny encoders.",
+  "sourceDownloads": {
+    "page": "https://ai-director-studio-info.yearemia.chatgpt.site/sources.html",
+    "artifacts": [
+      "ai-director-studio-source.zip",
+      "ai-director-studio-core-sources.zip"
+    ],
+    "transport": "bounded parts; per-part and complete ZIP SHA256",
+    "bothSourceZipsRequired": true,
+    "liveProofRecordedSeparately": true
+  },
+  "extensionAudioDelivery": {
+    "remotion": "always-muted video render, then own Core audio mux",
+    "audioExports": "own Core",
+    "legacyStandaloneEncoderWasmShipped": false,
+    "binding": "importer-scoped fail-closed Remotion fallback registration",
+    "buildAudit": "scripts/remotion-audio-binding.mjs",
+    "desktopBuildCovered": false,
+    "standaloneCandidatesAdopted": false,
+    "runtimeInventory": "CODEC-ARTIFACT-INVENTORY.json",
+    "proof": "scripts/remotion-audio-binding.mjs",
+    "emissionAudit": {
+      "originalEncoderWasmShipped": false,
+      "encodedWasmInJsOrNativeHtml": false,
+      "passed": true,
+      "scope": "Extension emitted JS/HTML/binary assets; installed npm and desktop references separate"
+    }
+  },
+  "installedReferenceEncoders": [
+    {
+      "package": "@mediabunny/aac-encoder",
+      "version": "1.56.1",
+      "bytes": 509386,
+      "sha256": "8488acb0bc9f43055b83600cc4c2c07d20f07675aa65671f91ac1d75515845d9",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": "Lavc62.23.103",
+      "referenceOnly": true,
+      "shippedInExtension": false,
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    },
+    {
+      "package": "@mediabunny/mp3-encoder",
+      "version": "1.56.1",
+      "bytes": 223033,
+      "sha256": "d0b109db83c153b81ba0080fa2163664dff1e341b154edda6d40bc4b6fbc355e",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": null,
+      "referenceOnly": true,
+      "shippedInExtension": false,
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    },
+    {
+      "package": "@mediabunny/flac-encoder",
+      "version": "1.56.1",
+      "bytes": 166140,
+      "sha256": "ea25f2da12550128391e0d83465deb887c3bef96b7ee4a9b34ebb1d8202fffbe",
+      "customSections": [],
+      "sourceCommit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "embeddedIdentifier": "reference libFLAC git-3f1ecff8 20260304",
+      "referenceOnly": true,
+      "shippedInExtension": false,
+      "upstreamEmbeddedWasmEqualsInstalled": true
+    }
+  ]
+}

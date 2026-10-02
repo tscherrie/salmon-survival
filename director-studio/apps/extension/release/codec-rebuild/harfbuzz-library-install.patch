@@ -1,0 +1,6 @@
+--- first-run/build/harfbuzz.sh
++++ retry/build/harfbuzz.sh
+@@ -22 +22,2 @@
+-emmake make install -j2
++emmake make -C src libs -j2
++emmake make -C src install-libLTLIBRARIES install-pkgconfigDATA install-pkgincludeHEADERS install-nodist_pkgincludeHEADERS install-cmakeDATA -j2

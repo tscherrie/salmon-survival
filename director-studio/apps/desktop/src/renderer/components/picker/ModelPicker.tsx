@@ -13,7 +13,7 @@ import {
 } from '@studio/core';
 import { modalityLabel, useT } from '../../i18n.ts';
 import { useElementSize } from '../../lib/hooks.ts';
-import { useActions, useStudio } from '../../state/context.tsx';
+import { useActions, useApiMode, useStudio } from '../../state/context.tsx';
 import { Icon, MODALITY_ICONS } from '../common/Icon.tsx';
 import { isMacPlatform } from '../common/Kbd.tsx';
 import { Popover } from '../common/Popover.tsx';
@@ -74,6 +74,7 @@ function useCatalog(): { entries: CatalogEntry[]; effort: DirectorEffort } {
   const t = useT();
   const actions = useActions();
   const models = useStudio((s) => s.models);
+  const mode = useApiMode();
   const pickers = useStudio((s) => s.manifest?.pickers);
   const effort = useStudio((s) => s.manifest?.director.effort ?? 'xhigh');
 
@@ -83,14 +84,14 @@ function useCatalog(): { entries: CatalogEntry[]; effort: DirectorEffort } {
 
   const entries = useMemo(
     () =>
-      MODALITIES.map((modality): CatalogEntry => {
+      MODALITIES.filter((modality) => mode !== 'native' || modality !== 'director').map((modality): CatalogEntry => {
         const list = (models ?? []).filter((m) => modelMatchesModality(m, modality));
         const selection = selectionFor(pickers ?? {}, modality);
         const current = selection.mode === 'model' ? list.find((m) => m.id === selection.modelId) : undefined;
         const name = selection.mode === 'auto' ? t('picker.auto') : (current?.displayName ?? selection.modelId);
         return { modality, selection, models: list, current, name, price: current?.price ? formatPrice(current.price) : '' };
       }),
-    [models, pickers, t],
+    [models, pickers, t, mode],
   );
   return { entries, effort };
 }

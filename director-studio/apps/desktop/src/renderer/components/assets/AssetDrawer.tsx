@@ -3,7 +3,7 @@ import { formatUsd, type Asset, type LineageEdge } from '@studio/core';
 import { formatDateTime, useT } from '../../i18n.ts';
 import { probeLinkedFile, type LinkedFileState } from '../../lib/assets.ts';
 import { formatBytes, formatDurationMs, useClickOutside } from '../../lib/hooks.ts';
-import { useActions, useApi, useAssetUrl, useStudio } from '../../state/context.tsx';
+import { useActions, useApi, useApiMode, useAssetUrl, useStudio } from '../../state/context.tsx';
 import { ASSET_KIND_ICONS, Icon } from '../common/Icon.tsx';
 import { isMacPlatform } from '../common/Kbd.tsx';
 import { Tooltip } from '../common/Tooltip.tsx';
@@ -42,18 +42,22 @@ function useLineage(assetId: string): LineageState {
 
 /** Erreichbarkeit der Datei eines verknüpften Assets (siehe `probeLinkedFile`). */
 function useLinkedFileState(asset: Asset): LinkedFileState {
+  const api=useApi() as ReturnType<typeof useApi> & {probeAssetFile?:(projectId:string,assetId:string)=>Promise<LinkedFileState>};
+  const native=useApiMode()==='native';
+  const projectId=useStudio((s)=>s.projectId);
   const assetUrl = useAssetUrl();
   const [state, setState] = useState<{ asset: Asset; value: LinkedFileState }>({ asset, value: 'unknown' });
   const url = asset.source === 'linked' ? assetUrl(asset.id, 'original') : '';
   useEffect(() => {
     let alive = true;
-    void probeLinkedFile(asset, url).then((value) => {
+    const probe=native&&projectId&&api.probeAssetFile?api.probeAssetFile(projectId,asset.id):probeLinkedFile(asset,url);
+    void probe.then((value) => {
       if (alive) setState({ asset, value });
     });
     return () => {
       alive = false;
     };
-  }, [asset, url]);
+  }, [api,native,projectId,asset,url]);
   if (asset.metadata?.missing === true) return 'missing';
   return state.asset === asset ? state.value : 'unknown';
 }

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Director Studio — source downloads</title>
+<style>:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#121417;color:#f3f4f6}body{max-width:62rem;margin:auto;padding:1.5rem;line-height:1.6}a{color:#f1bf80}h1{line-height:1.2}section{border:1px solid #555;border-radius:.5rem;margin:1.5rem 0;padding:1rem}button{font:inherit;padding:.65rem 1rem;cursor:pointer}button:disabled{cursor:wait}code{overflow-wrap:anywhere}pre{overflow:auto;padding:1rem;background:#20242a}li{margin:.45rem 0}.status{min-height:1.5em}.hash{font-size:.85rem}.ready{display:inline-block;margin:.7rem 0}.ready[hidden]{display:none}.error{color:#ffb2ad}small{color:#c5c8cd}</style>
+</head>
+<body>
+<p><a href="/">AI Director Studio</a></p>
+<h1>Download both source archives</h1>
+<p>The application source ZIP and the FFmpeg Core build source ZIP form this source delivery together. The application ZIP alone does not contain the complete Core build inputs.</p>
+<p>Each download verifies every part and the complete ZIP with SHA-256 before offering the file to save. The largest archive is bounded to 256 MiB. Large downloads may require several hundred MiB of browser memory; the manual method below downloads parts to disk.</p>
+<p id="release">Loading source manifest…</p>
+<main id="downloads"></main>
+<section aria-labelledby="manual-heading">
+<h2 id="manual-heading">Direct parts and manual download</h2>
+<p><a href="/downloads/source-manifest.json" download>Source manifest</a> · <a href="/downloads/SHA256SUMS" download>Complete ZIP checksums</a> · <a href="/downloads/PART-SHA256SUMS" download>Part checksums</a> · <a href="/downloads/download-sources.sh" download>Download and verification script</a></p>
+<p>On macOS or Linux, download the script, review it, then run:</p>
+<pre><code>sh download-sources.sh</code></pre>
+<p>The script downloads both archives without credentials, checks all parts, joins them in the stated order and checks each final ZIP. On another system, save the listed parts, concatenate their bytes in numeric order, and compare the resulting ZIP's SHA-256 with the manifest. Joining parts is byte concatenation; extracting each part separately will not work.</p>
+<noscript><p>JavaScript is disabled. Use the manifest and the download script above to obtain both verified archives.</p></noscript>
+</section>
+<script type="module">
+const MANIFEST_URL = '/downloads/source-manifest.json';
+const PART_LIMIT = 16 * 1024 * 1024;
+const ARCHIVE_LIMIT = 256 * 1024 * 1024;
+const allowed = new Map([['application-source', 'ai-director-studio-source.zip'], ['core-source', 'ai-director-studio-core-sources.zip']]);
+const hashPattern = /^[a-f0-9]{64}$/;
+const outputs = new Map();
+const buttons = [];
+let active = false;
+function element(tag, text) { const item = document.createElement(tag); if (text !== undefined) item.textContent = text; return item; }
+function bytesLabel(bytes) { return `${(bytes / 1048576).toFixed(1)} MiB (${bytes.toLocaleString('en-US')} bytes)`; }
+function validate(manifest) {
+  if (manifest?.schemaVersion !== 1 || !/^[a-f0-9]{40}$/.test(manifest.sourceCommit) || typeof manifest.releaseVersion !== 'string' || manifest.releaseVersion.length > 40 || manifest.partBytes !== PART_LIMIT || manifest.maxArchiveBytes !== ARCHIVE_LIMIT || !Array.isArray(manifest.files) || manifest.files.length !== 2) throw Error('Invalid bounded source manifest.');
+  const ids = new Set();
+  for (const file of manifest.files) {
+    if (ids.has(file.id) || allowed.get(file.id) !== file.filename || !hashPattern.test(file.sha256) || !Number.isSafeInteger(file.bytes) || file.bytes < 1 || file.bytes > ARCHIVE_LIMIT || typeof file.label !== 'string' || file.label.length > 100 || typeof file.description !== 'string' || file.description.length > 800 || !Array.isArray(file.parts) || file.parts.length !== Math.ceil(file.bytes / PART_LIMIT)) throw Error('Invalid source archive identity or size.');
+    ids.add(file.id);
+    let offset = 0;
+    for (const [index, part] of file.parts.entries()) {
+      const expectedPath = `${file.sha256}/${file.filename}.part${String(index + 1).padStart(4, '0')}`;
+      const expectedBytes = Math.min(PART_LIMIT, file.bytes - offset);
+      if (part.index !== index + 1 || part.offset !== offset || part.bytes !== expectedBytes || !hashPattern.test(part.sha256) || part.path !== expectedPath) throw Error('Invalid source archive part ordering or identity.');
+      offset += part.bytes;
+    }
+    if (offset !== file.bytes) throw Error('Incomplete source archive parts.');
+  }
+  return manifest;
+}
+async function digest(bytes) {
+  return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+async function boundedResponse(response, maximum) {
+  if (!response.ok || !response.body) throw Error(`Download returned HTTP ${response.status}.`);
+  const declared = response.headers.get('content-length');
+  if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > maximum)) throw Error('Download exceeded its declared size bound.');
+  const reader = response.body.getReader(), chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maximum) { await reader.cancel(); throw Error('Download exceeded its size bound.'); }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const result = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.byteLength; }
+  return result;
+}
+async function prepare(file, status, save) {
+  if (active) return;
+  active = true;
+  buttons.forEach(button => { button.disabled = true; });
+  status.classList.remove('error'); save.hidden = true;
+  const old = outputs.get(file.id);
+  if (old) { URL.revokeObjectURL(old); outputs.delete(file.id); }
+  try {
+    const chunks = [];
+    let total = 0;
+    for (const part of file.parts) {
+      status.textContent = `Downloading and checking part ${part.index} of ${file.parts.length}…`;
+      const response = await fetch(`/downloads/${part.path}`, { credentials: 'omit', redirect: 'error', cache: 'no-store' });
+      const bytes = await boundedResponse(response, part.bytes);
+      if (bytes.byteLength !== part.bytes || await digest(bytes) !== part.sha256) throw Error(`Integrity check failed for part ${part.index}.`);
+      chunks.push(bytes); total += bytes.byteLength;
+    }
+    if (total !== file.bytes) throw Error('The downloaded archive has an incorrect total size.');
+    status.textContent = 'Checking the complete ZIP…';
+    const blob = new Blob(chunks, { type: 'application/zip' });
+    chunks.length = 0;
+    if (blob.size !== file.bytes || await digest(await blob.arrayBuffer()) !== file.sha256) throw Error('Integrity check failed for the complete ZIP.');
+    const url = URL.createObjectURL(blob);
+    outputs.set(file.id, url); save.href = url; save.download = file.filename; save.hidden = false;
+    status.textContent = 'All parts and the complete ZIP passed SHA-256 verification. Save the verified file below.';
+  } catch (error) {
+    status.classList.add('error'); status.textContent = error.message;
+  } finally { active = false; buttons.forEach(button => { button.disabled = false; }); }
+}
+function render(file) {
+  const section = element('section'); section.id = file.id;
+  section.append(element('h2', file.label), element('p', file.description), element('p', `${file.filename} — ${bytesLabel(file.bytes)}`));
+  const hash = element('p'); hash.className = 'hash'; hash.append('SHA-256: ', element('code', file.sha256)); section.append(hash);
+  const button = element('button', 'Prepare verified ZIP'); button.type = 'button'; buttons.push(button);
+  const status = element('p'); status.className = 'status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+  const save = element('a', `Save ${file.filename}`); save.className = 'ready'; save.hidden = true;
+  button.addEventListener('click', () => prepare(file, status, save)); section.append(button, status, save);
+  const details = element('details'); details.append(element('summary', `Direct download: ${file.parts.length} ordered parts`));
+  const list = element('ol');
+  for (const part of file.parts) {
+    const entry = element('li'), link = element('a', `Part ${part.index} — ${bytesLabel(part.bytes)}`);
+    link.href = `/downloads/${part.path}`; link.download = part.path.split('/').at(-1);
+    entry.append(link, element('br'), element('code', part.sha256)); list.append(entry);
+  }
+  details.append(list); section.append(details); document.getElementById('downloads').append(section);
+}
+try {
+  if (!crypto.subtle) throw Error('Browser SHA-256 is unavailable. Use the manual verification script.');
+  const response = await fetch(MANIFEST_URL, { credentials: 'omit', redirect: 'error', cache: 'no-store' });
+  const bytes = await boundedResponse(response, 128 * 1024);
+  const manifest = validate(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)));
+  document.getElementById('release').textContent = `Release ${manifest.releaseVersion} · source commit ${manifest.sourceCommit}`;
+  manifest.files.forEach(render);
+} catch (error) { const status = document.getElementById('release'); status.className = 'error'; status.textContent = error.message; }
+addEventListener('pagehide', () => { for (const url of outputs.values()) URL.revokeObjectURL(url); });
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+
+ RUN  v5.0.3 /Users/jeremias/.codex/worktrees/27c0/AI Director Studio/director-studio/packages/browser-media
+
+
+ Test Files  5 passed (5)
+      Tests  14 passed (14)
+   Start at  07:09:21
+   Duration  1.38s (import 62%, transform 28%, tests 9%, worker 1%)
+

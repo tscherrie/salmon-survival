@@ -267,6 +267,48 @@ describe('StudioBackend – Medien, Vorschau, Export', () => {
     await backend.shutdown();
   });
 
+  it('waits for the full background media chain before closing and deleting project files', async () => {
+    const media = defaultMediaToolkit();
+    let notifyPeaks!: () => void;
+    let releasePeaks!: () => void;
+    const peaksEntered = new Promise<void>((resolve) => { notifyPeaks = resolve; });
+    const peaksGate = new Promise<void>((resolve) => { releasePeaks = resolve; });
+    let proxyFinished = false;
+    media.thumbnail = async (_source, out) => { await writeFile(out, 'thumbnail'); return out; };
+    media.peaks = async () => { notifyPeaks(); await peaksGate; return { peaks: [-0.5, 0.5], durationMs: 2000 }; };
+    media.proxy = async (_source, out) => { await writeFile(out, 'proxy'); proxyFinished = true; return out; };
+    const backend = makeBackend({ media });
+    const snapshot = await backend.createProject({ title: 'Closing media', category: 'video', directory: root });
+    const [video] = await backend.importFiles(snapshot.manifest.id, [videoFile], 'link');
+    await backend.resolveAssetFile(snapshot.manifest.id, video!.id, 'thumb');
+    await peaksEntered;
+    const open = (backend as unknown as { projects: Map<string, OpenProject> }).projects.get(snapshot.manifest.id)!;
+    const closeStore = open.store.close.bind(open.store);
+    let storeClosed = false;
+    open.store.close = async () => {
+      expect(proxyFinished).toBe(true);
+      await closeStore();
+      storeClosed = true;
+    };
+    let closed = false;
+    const closing = backend.closeProject(snapshot.manifest.id).then(() => { closed = true; });
+    try {
+      // Yield one event-loop turn without a timer/retry: the deliberately held
+      // codec cannot finish, and the project must still own its output files.
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      expect(closed).toBe(false);
+      expect(storeClosed).toBe(false);
+    } finally {
+      releasePeaks();
+      await closing;
+    }
+    expect(proxyFinished).toBe(true);
+    expect(storeClosed).toBe(true);
+    await rm(snapshot.path, { recursive: true, force: true });
+    expect(existsSync(snapshot.path)).toBe(false);
+    await backend.shutdown();
+  });
+
   it('exports an audio timeline as loudness-normalized WAV', async () => {
     const backend = makeBackend({ media: defaultMediaToolkit() });
     const snap = await backend.createProject({ title: 'Podcast', category: 'audio', directory: root });

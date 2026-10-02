@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "provenance": "owned-build",
+  "build": {
+    "recipeCommit": "REPLACE_WITH_40_LOWERCASE_HEX_GIT_SHA",
+    "sourceLock": { "path": "SOURCE-LOCK.json", "bytes": 1, "sha256": "REPLACE_WITH_64_LOWERCASE_HEX_SHA256" },
+    "receipt": { "path": "build-receipt.json", "bytes": 1, "sha256": "REPLACE_WITH_64_LOWERCASE_HEX_SHA256" },
+    "acceptance": { "path": "browser-acceptance.json", "bytes": 1, "sha256": "REPLACE_WITH_64_LOWERCASE_HEX_SHA256" }
+  },
+  "variants": {
+    "esm": {
+      "js": { "path": "esm/ffmpeg-core.js", "bytes": 1, "sha256": "REPLACE_WITH_64_LOWERCASE_HEX_SHA256" },
+      "wasm": { "path": "esm/ffmpeg-core.wasm", "bytes": 1, "sha256": "REPLACE_WITH_64_LOWERCASE_HEX_SHA256" }
+    },
+    "classic": {
+      "js": { "path": "classic/ffmpeg-core.js", "bytes": 1, "sha256": "REPLACE_WITH_64_LOWERCASE_HEX_SHA256" },
+      "wasm": { "path": "classic/ffmpeg-core.wasm", "bytes": 1, "sha256": "REPLACE_WITH_64_LOWERCASE_HEX_SHA256" }
+    }
+  }
+}

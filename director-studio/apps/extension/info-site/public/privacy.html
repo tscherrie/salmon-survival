@@ -1,0 +1,98 @@
+<!doctype html>
+<!-- Generated from release/privacy.md by scripts/sync-public-information.mjs. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Privacy information for AI Director Studio, operated by Jeremias Grenzebach.">
+  <title>AI Director Studio — privacy policy</title>
+  <link rel="canonical" href="https://ai-director-studio-info.yearemia.chatgpt.site/privacy.html">
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #121417; color: #f3f4f6; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-size: 1rem; line-height: 1.7; }
+    header, main, footer { max-width: 58rem; margin: auto; padding: 1.5rem; }
+    header { border-bottom: 1px solid #393e47; }
+    .brand { display: block; color: #f3f4f6; font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; text-decoration: none; }
+    nav { display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; }
+    nav a { padding: .3rem 0; }
+    nav a[aria-current] { color: #f3f4f6; font-weight: 700; text-decoration-thickness: 3px; }
+    a { color: #f1bf80; overflow-wrap: anywhere; text-underline-offset: .22em; }
+    a:focus-visible { outline: 3px solid #f1bf80; outline-offset: 5px; }
+    h1, h2 { line-height: 1.2; letter-spacing: -.015em; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 1rem 0 1.5rem; }
+    h2 { font-size: 1.45rem; margin-top: 2.2rem; }
+    p, li { max-width: 50rem; }
+    li { margin: .8rem 0; }
+    code { font-size: .95em; overflow-wrap: anywhere; }
+    footer { border-top: 1px solid #393e47; font-size: .9rem; color: #b7bcc5; }
+    .skip-link { position: absolute; top: -5rem; }
+    .skip-link:focus { position: static; display: block; padding: 1rem; }
+    @media (max-width: 36rem) { header, main, footer { padding: 1.2rem; } ul { padding-left: 1.3rem; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header>
+    <a class="brand" href="https://ai-director-studio-info.yearemia.chatgpt.site/">AI Director Studio</a>
+    <nav aria-label="Product and policies"><a href="https://ai-director-studio-info.yearemia.chatgpt.site/index.html">Product</a>
+<a href="https://ai-director-studio-info.yearemia.chatgpt.site/support.html">Support</a>
+<a href="https://ai-director-studio-info.yearemia.chatgpt.site/privacy.html" aria-current="page">Privacy</a>
+<a href="https://ai-director-studio-info.yearemia.chatgpt.site/terms.html">Terms</a></nav>
+  </header>
+  <main id="content">
+<h1>AI Director Studio — privacy policy</h1>
+
+<p>Last updated: 2 October 2026.</p>
+
+<h2>Operator and scope</h2>
+
+<p>AI Director Studio is an independent project operated by <strong>Jeremias Grenzebach</strong>. Contact for privacy questions or requests: <strong>l@lll.uno</strong>.</p>
+
+<p>This policy describes the current Director editor and this public information site. The information site has no application forms, file uploads or Director analytics scripts. Its hosting service can receive normal request information, including IP addresses and HTTP headers. Project processing takes place in the separately authenticated editor.</p>
+
+<h2>Data used by the editor</h2>
+
+<p>The hosting platform supplies an authenticated user identifier and email address to authorize requests. Director uses the identifier to associate projects and settings with their owner. The application database stores the owner identifier; application code does not automatically copy the supplied authentication email into project or settings tables. Hosting-platform processing and logs are separate.</p>
+
+<p>Stored project information can include titles and briefs, questions and answers, decisions, approvals, document and website source, version history, checkpoints, asset metadata and lineage, transcripts or analysis results, cost estimates and receipts, and job status and errors. Uploaded or imported files, thumbnails, derived media and exports are stored as file objects. Names and metadata can themselves contain personal information.</p>
+
+<p>Public-URL imports download the requested file into the project. The source server receives that download request. The editor can keep display preferences and hints in browser storage and use memory caches and temporary media URLs. Preview, analysis and export processing runs on the user&#39;s device while the editor is open; output files and receipts may then be saved to the project. Local rendering does not mean that the whole service is local-only.</p>
+
+<h2>Purposes</h2>
+
+<p>Director uses this information to authenticate access, save and reopen projects, edit and restore documents, manage user-approved work, process material, generate previews and exports, and identify processing failures. Avoid supplying personal information that is unnecessary for your project.</p>
+
+<h2>Native host and external services</h2>
+
+<p>Project information is exchanged with the ChatGPT Work or Codex host through tool requests and results. Where supported, selection context supplies the project title, identifiers, version and selected references for a future chat turn. Copying the fallback into a conversation also gives that text to the host. Director does not independently retrieve the user&#39;s whole chat history or hidden memory and does not operate a separate model inference loop or collect a model-provider API key.</p>
+
+<p>AI media generation and transcription require the separate official Fal plugin and the user&#39;s connected account. When the user approves that workflow, the host may send the selected prompt, settings and input material to Fal and import its media and receipt into Director. Fal and the native host have their own account terms and data practices. Director does not obtain their private API tokens. Deleting a Director record would not itself delete a host conversation or a Fal-provider job.</p>
+
+<p>The editor uses OpenAI Sites hosting with Cloudflare D1 for project/settings storage and R2 for file storage. Browser compilation may request allowed dependency modules from esm.sh without application credentials. Authored website or media source can reference external resources. Hosting, dependency and source providers can receive request metadata and maintain their own logs. The deployment configuration does not establish a particular hosting region or provider log/backup retention period; this policy makes no such promise.</p>
+
+<h2>Remotion rendering usage requests</h2>
+
+<p>Remotion Web Renderer attempts a licensing/usage POST to https://www.remotion.pro/api/track/register-usage-point during rendering, independently of Fal and the native host. The pinned code sends the event name web-render, the browser frame origin, and flags for success, still-image rendering and production mode. Director uses Remotion&#39;s free-license option, which sends a null API-key value. An opaque frame reports its origin as the string null.</p>
+
+<p>That event payload contains no clips, text, project IDs or Director owner credentials. The recipient nevertheless receives network information such as the request IP address and headers. Failures can cause retries. The application permits that exact recipient and currently offers no switch to disable the dependency&#39;s usage requests; the host&#39;s own policy may still block them. Free licensing does not mean zero external telemetry.</p>
+
+<h2>Access and security</h2>
+
+<p>Project and file requests require the hosting boundary&#39;s authenticated identity and check project ownership. Authored website and component code runs in isolated browser frames with the material needed for rendering, rather than the owner&#39;s general project API capability. These controls are not a promise of end-to-end encryption or immunity from incidents. Never send passwords, authentication tokens or API keys in project files or support messages.</p>
+
+<h2>Retention and deletion</h2>
+
+<p>The current release persists project history, files, settings and receipts across reopening and deployments. There is no general automatic project-retention schedule or complete user-facing project/account deletion workflow. Replacing a file, rejecting an asset, cancelling a job, clearing browser preferences or disconnecting the plugin is not a complete erasure operation.</p>
+
+<p>Incomplete uploads have a 24-hour validity period. Successful upload completion attempts to remove temporary chunks; expiry alone does not guarantee their deletion. Old file objects, temporary chunks and provider-managed logs/backups are not represented as erased by that expiry. No general storage period, deletion deadline or complete backup-erasure guarantee is promised.</p>
+
+<p>Users can download supported exports and keep independent copies of their source files. Exports are not described as a complete personal-data access report. Contact <strong>l@lll.uno</strong> for questions or requests concerning access, correction, export or deletion, providing only what is needed to locate and verify the relevant account. The contact route does not imply that a complete deletion process has been implemented. Applicable statutory rights are not changed by this description of the current technical limits.</p>
+
+<h2>Updates</h2>
+
+<p>Updates to this policy are published on this page with the last-updated date. For questions about the current practices, use <strong>l@lll.uno</strong>.</p>
+  </main>
+  <footer><p>Jeremias Grenzebach · <a href="mailto:l@lll.uno">l@lll.uno</a> · <a href="https://github.com/tscherrie/salmon-survival/blob/codex/director-native-extension/director-studio/apps/extension/release/privacy.md">Page source</a></p></footer>
+</body>
+</html>

@@ -1,0 +1,5 @@
+
+> director-studio@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+Exit status: 0

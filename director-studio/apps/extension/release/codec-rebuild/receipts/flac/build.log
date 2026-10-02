@@ -1,0 +1,119 @@
+/sources/flac-3f1ecff843dd1b8c07fbb5f59425a4ec71fe4f6c.tar.gz: OK
+/sources/mediabunny-encoders-cee57d1cdfd1776d515c081057b50eb337291e32.tar.gz: OK
+emcmake: cmake -S /build/flac -B /build/flac-wasm -DBUILD_PROGRAMS=OFF -DBUILD_CXXLIBS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DWITH_OGG=OFF -DBUILD_SHARED_LIBS=OFF -DENABLE_MULTITHREADING=OFF -DINSTALL_MANPAGES=OFF '-DCMAKE_C_FLAGS=-DNDEBUG -Oz -flto -msimd128' '-DCMAKE_C_FLAGS_RELEASE=-DNDEBUG -Oz -flto -msimd128' -DCMAKE_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_CROSSCOMPILING_EMULATOR=/emsdk/node/22.16.0_64bit/bin/node in directory /src
+-- Performing Test Iconv_IS_BUILT_IN
+-- Performing Test Iconv_IS_BUILT_IN - Success
+-- Found Iconv: built in to C library
+-- Performing Test HAVE_MBSTATE
+-- Performing Test HAVE_MBSTATE - Success
+-- Performing Test DODEFINE_EXTENSIONS
+-- Performing Test DODEFINE_EXTENSIONS - Success
+-- Looking for byteswap.h
+-- Looking for byteswap.h - found
+-- Looking for inttypes.h
+-- Looking for inttypes.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stdbool.h
+-- Looking for stdbool.h - found
+-- Looking for arm_neon.h
+-- Looking for arm_neon.h - found
+-- Looking for threads.h
+-- Looking for threads.h - found
+-- Looking for x86intrin.h
+-- Looking for x86intrin.h - not found
+-- Looking for fseeko
+-- Looking for fseeko - found
+-- Performing Test HAVE_BSWAP16
+-- Performing Test HAVE_BSWAP16 - Success
+-- Performing Test HAVE_BSWAP32
+-- Performing Test HAVE_BSWAP32 - Success
+-- Performing Test HAVE_LANGINFO_CODESET
+-- Performing Test HAVE_LANGINFO_CODESET - Success
+-- Performing Test HAVE_WERROR_FLAG
+-- Performing Test HAVE_WERROR_FLAG - Success
+-- Performing Test HAVE_DECL_AFTER_STMT_FLAG
+-- Performing Test HAVE_DECL_AFTER_STMT_FLAG - Success
+-- Performing Test HAVE_STACKREALIGN_FLAG
+-- Performing Test HAVE_STACKREALIGN_FLAG - Success
+-- Performing Test HAVE_WEFFCXX_FLAG
+-- Performing Test HAVE_WEFFCXX_FLAG - Success
+-- Looking for cpuid.h
+-- Looking for cpuid.h - not found
+-- Looking for sys/param.h
+-- Looking for sys/param.h - found
+-- Looking for lround
+-- Looking for lround - found
+-- Check CPU architecture is x64
+-- Check CPU architecture is x64 - no
+-- Check CPU architecture is x86
+-- Check CPU architecture is x86 - no
+-- Check CPU architecture is arm64
+-- Check CPU architecture is arm64 - no
+-- Performing Test HAVE_ASSOC_MATH
+-- Performing Test HAVE_ASSOC_MATH - Success
+-- Looking for string.h
+-- Looking for string.h - found
+-- Found Intl: built in to C library
+-- Could NOT find Doxygen (missing: DOXYGEN_EXECUTABLE)
+-- Configuring done (79.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /build/flac-wasm
+[  4%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/bitmath.c.o
+[  4%] Building C object src/share/replaygain_analysis/CMakeFiles/replaygain_analysis.dir/replaygain_analysis.c.o
+[  6%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/bitreader.c.o
+[  8%] Linking C static library libreplaygain_analysis.a
+[  8%] Built target replaygain_analysis
+[ 10%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/bitwriter.c.o
+[ 12%] Building C object src/share/replaygain_synthesis/CMakeFiles/replaygain_synthesis.dir/replaygain_synthesis.c.o
+[ 14%] Linking C static library libreplaygain_synthesis.a
+[ 16%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/cpu.c.o
+[ 16%] Built target replaygain_synthesis
+[ 18%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/crc.c.o
+[ 20%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/fixed.c.o
+[ 22%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/fixed_intrin_sse2.c.o
+[ 24%] Building C object src/share/getopt/CMakeFiles/getopt.dir/getopt.c.o
+[ 26%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/fixed_intrin_ssse3.c.o
+[ 28%] Building C object src/share/getopt/CMakeFiles/getopt.dir/getopt1.c.o
+[ 30%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/fixed_intrin_sse42.c.o
+[ 32%] Linking C static library libgetopt.a
+[ 34%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/fixed_intrin_avx2.c.o
+[ 34%] Built target getopt
+[ 36%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/float.c.o
+[ 38%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/format.c.o
+[ 40%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/lpc.c.o
+[ 42%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/lpc_intrin_neon.c.o
+[ 44%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/lpc_intrin_sse2.c.o
+[ 46%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/lpc_intrin_sse41.c.o
+[ 48%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/lpc_intrin_avx2.c.o
+[ 51%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/lpc_intrin_fma.c.o
+[ 53%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/md5.c.o
+[ 55%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/memory.c.o
+[ 57%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/metadata_iterators.c.o
+[ 59%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/metadata_object.c.o
+[ 61%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/stream_decoder.c.o
+[ 63%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/stream_encoder.c.o
+[ 65%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/stream_encoder_intrin_sse2.c.o
+[ 67%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/stream_encoder_intrin_ssse3.c.o
+[ 69%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/stream_encoder_intrin_avx2.c.o
+[ 71%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/stream_encoder_framing.c.o
+[ 73%] Building C object src/libFLAC/CMakeFiles/FLAC.dir/window.c.o
+[ 75%] Linking C static library libFLAC.a
+[ 75%] Built target FLAC
+[ 77%] Building C object src/share/grabbag/CMakeFiles/grabbag.dir/alloc.c.o
+[ 79%] Building C object src/share/grabbag/CMakeFiles/grabbag.dir/cuesheet.c.o
+[ 81%] Building C object src/share/grabbag/CMakeFiles/grabbag.dir/file.c.o
+[ 83%] Building C object src/share/grabbag/CMakeFiles/grabbag.dir/picture.c.o
+[ 85%] Building C object src/share/grabbag/CMakeFiles/grabbag.dir/replaygain.c.o
+[ 87%] Building C object src/share/grabbag/CMakeFiles/grabbag.dir/seektable.c.o
+[ 89%] Building C object src/share/grabbag/CMakeFiles/grabbag.dir/snprintf.c.o
+[ 91%] Linking C static library libgrabbag.a
+[ 91%] Built target grabbag
+[ 93%] Building C object src/share/utf8/CMakeFiles/utf8.dir/charset.c.o
+[ 95%] Building C object src/share/utf8/CMakeFiles/utf8.dir/iconvert.c.o
+[ 97%] Building C object src/share/utf8/CMakeFiles/utf8.dir/utf8.c.o
+[100%] Linking C static library libutf8.a
+[100%] Built target utf8
+cache:INFO: generating system library: sysroot/lib/wasm32-emscripten/lto/libemmalloc.a... (this will be cached in "/emsdk/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/lto/libemmalloc.a" for subsequent builds)
+system_libs:INFO: compiled 2 inputs in 0.20s
+cache:INFO:  - ok

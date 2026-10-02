@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { STANDARD_FORMATS, type ProjectCategory } from '@studio/core';
 import { useT } from '../../i18n.ts';
-import { useActions, useApi, useStudio } from '../../state/context.tsx';
+import { useActions, useApi, useApiMode, useStudio } from '../../state/context.tsx';
 import { Dialog } from '../common/Dialog.tsx';
 import { Icon } from '../common/Icon.tsx';
 
@@ -12,6 +12,7 @@ const FORMAT_IDS = ['16:9', '9:16', '1:1', '4:5'] as const;
 export function NewProjectDialog({ onClose, initialCategory = 'video' }: { onClose: () => void; initialCategory?: ProjectCategory }) {
   const t = useT();
   const api = useApi();
+  const native = useApiMode() === 'native';
   const actions = useActions();
   const settings = useStudio((s) => s.settings);
   const titleId = useId();
@@ -109,7 +110,7 @@ export function NewProjectDialog({ onClose, initialCategory = 'video' }: { onClo
             <p className="hint">{t('newProject.formatsHint')}</p>
           </fieldset>
         )}
-        <div className="folder-row">
+        {!native && <div className="folder-row">
           <span className="field-label">{t('newProject.folder')}</span>
           <code className="folder-path">{directory ?? settings?.projectsDir ?? t('newProject.defaultFolder')}</code>
           <button
@@ -122,7 +123,7 @@ export function NewProjectDialog({ onClose, initialCategory = 'video' }: { onClo
           >
             <Icon name="folder" size={13} /> {t('newProject.chooseFolder')}
           </button>
-        </div>
+        </div>}
       </form>
     </Dialog>
   );

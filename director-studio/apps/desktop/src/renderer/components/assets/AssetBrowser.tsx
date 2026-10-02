@@ -5,7 +5,7 @@ import { assetUiStatus, assetUsageMap, matchesStatusFilter, shortModelName, type
 import { hasDragType } from '../../lib/dnd.ts';
 import { useDebounced } from '../../lib/hooks.ts';
 import { useLayout } from '../../lib/layout.ts';
-import { useActions, useAssetUrl, useStudio } from '../../state/context.tsx';
+import { useActions, useApiMode, useAssetUrl, useStudio } from '../../state/context.tsx';
 import { ASSET_KIND_ICONS, Icon } from '../common/Icon.tsx';
 import { ariaKeyShortcuts, isMacPlatform } from '../common/Kbd.tsx';
 import { Popover } from '../common/Popover.tsx';
@@ -220,9 +220,12 @@ interface Group {
  */
 export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }) {
   const t = useT();
-  const lang = useLanguage();
+  const lang = useLanguage(); const native=useApiMode()==='native';
+  const dropFooter=native?(lang==='de'?'Dateien hierher ziehen – sie werden im Projekt gespeichert.':'Drag files here to store them in the project.'):t('assets.dropFooter');
+  const dropRelease=native?(lang==='de'?'Loslassen zum Importieren':'Release to import'):t('assets.dropRelease');
   const actions = useActions();
-  const assets = useStudio((s) => s.assets);
+  const allAssets = useStudio((s) => s.assets);
+  const assets=useMemo(()=>native?allAssets.filter((asset)=>!(asset.source==='derived' && asset.subtype==='thumbnail' && asset.metadata?.sourceAssetId)):allAssets,[allAssets,native]);
   const usedIds = useStudio((s) => s.usedAssetIds);
   const models = useStudio((s) => s.models);
   const composer = useStudio((s) => s.composer);
@@ -420,7 +423,7 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
   const onDragOver = (e: React.DragEvent) => {
     if (!hasDragType(e.dataTransfer, 'Files')) return;
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'link';
+    e.dataTransfer.dropEffect = native?'copy':'link';
     if (!dropOver) setDropOver(true);
   };
   const onDrop = (e: React.DragEvent) => {
@@ -740,15 +743,15 @@ export function AssetBrowser({ searchDelayMs = 200 }: { searchDelayMs?: number }
 
       <footer className="assets-foot">
         <Icon name="link" size={13} />
-        <Tooltip label={t('assets.dropFooter')}>
-          <span className="assets-foot-text">{t('assets.dropFooter')}</span>
+        <Tooltip label={dropFooter}>
+          <span className="assets-foot-text">{dropFooter}</span>
         </Tooltip>
       </footer>
 
       {fileDrag && (
         <div className={`assets-drop${dropOver ? ' is-over' : ''}`} aria-hidden="true">
           <Icon name="link" size={18} />
-          <span>{t('assets.dropRelease')}</span>
+          <span>{dropRelease}</span>
         </div>
       )}
 

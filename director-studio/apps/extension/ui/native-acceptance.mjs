@@ -1,0 +1,38 @@
+import { chromium } from 'playwright';
+import { mkdir, writeFile } from 'node:fs/promises';
+const title=`Native UI Persistence Acceptance ${Date.now()}`;
+const out='/tmp/director-native-ui-acceptance';await mkdir(out,{recursive:true});
+const headers={'oai-authenticated-user-id':'acceptance-owner','oai-authenticated-user-email':'acceptance@example.test'};
+const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+const context=await browser.newContext({viewport:{width:1280,height:900},extraHTTPHeaders:headers});const page=await context.newPage();
+const errors=[];page.on('pageerror',(error)=>errors.push(error.message));page.on('console',(msg)=>{if(msg.type()==='error')errors.push(msg.text());});
+const report={base:'http://127.0.0.1:5201',account:'synthetic acceptance owner',checks:[],errors};
+try{
+await page.goto(report.base);await page.getByRole('button',{name:'Neues Projekt',exact:true}).waitFor();
+await page.screenshot({path:`${out}/start-wide.png`});
+await page.getByRole('button',{name:'Neues Projekt',exact:true}).click();await page.getByRole('textbox',{name:'Titel',exact:true}).fill(title);
+await page.getByLabel('Grafik',{exact:true}).check();await page.getByRole('button',{name:'Projekt anlegen',exact:true}).click();
+await page.locator('.native-header h1').filter({hasText:title}).waitFor();
+report.checks.push('Created graphic project through production UI/real Worker');
+const response=await page.request.get(`${report.base}/api/projects`);const projects=await response.json();const project=projects.find((p)=>p.title===title);report.projectId=project.path;
+const snapshot=await (await page.request.get(`${report.base}/api/projects/${project.path}`)).json();
+const head=snapshot.versions.at(-1).number;
+const applied=await page.request.post(`${report.base}/api/projects/${project.path}/actions`,{data:{method:'applyDocumentOps',params:{expectedHead:head,note:'Host tool adds actual canvas text',ops:[{op:'add_layer',layer:{id:'host-layer',type:'text',name:'Host-created title',x:100,y:100,width:1300,height:300,text:'DIRECTOR / NATIVE HOST',style:{fontSize:90,color:'#503b1c'}}}]}}});
+if(!applied.ok())throw new Error(`Canvas op ${applied.status()} ${await applied.text()}`);
+await page.locator('.native-header').getByRole('button',{name:`v${head+1}`,exact:true}).waitFor({timeout:10000});
+report.checks.push('Already-open UI observes host document mutation via persisted revision');
+await page.screenshot({path:`${out}/graphic-host-edit.png`});
+await page.getByRole('button',{name:'Projektversionen',exact:true}).count();
+await page.locator('.native-header').getByRole('button',{name:`v${head+1}`,exact:true}).click();await page.getByRole('dialog',{name:'Projektversionen'}).waitFor();await page.getByRole('button',{name:'Ansehen',exact:true}).last().click();
+await page.locator('.version-banner button').waitFor();await page.locator('.version-banner button').click();report.checks.push('Version viewing and exit operates in reusable monitor');
+await page.locator('.native-header').getByRole('button',{name:'Projekte',exact:true}).click();await page.getByRole('button',{name:new RegExp(title)}).first().click();
+await page.locator('.native-header h1').waitFor();report.checks.push('Closed and reopened stored project');
+const question=await page.request.post(`${report.base}/api/projects/${project.path}/actions`,{data:{method:'askUser',params:{questions:[{id:'style',question:'Choose the final style',options:[{label:'Warm'},{label:'Neutral'}]}]}}});if(!question.ok())throw new Error(await question.text());
+await page.getByRole('button',{name:'Prüfen 1',exact:true}).waitFor({timeout:10000});await page.getByRole('button',{name:'Prüfen 1',exact:true}).click();await page.getByLabel('Warm',{exact:true}).check();await page.getByRole('button',{name:'Antworten',exact:true}).click();await page.getByText('Alle Entscheidungen sind gespeichert.').waitFor({timeout:10000});report.checks.push('Persistent question answered in preserved approval UI');
+await page.getByRole('button',{name:'Schließen',exact:true}).click();
+await page.setViewportSize({width:420,height:850});await page.screenshot({path:`${out}/graphic-narrow.png`});
+const geometry=await page.evaluate(()=>({viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,monitor:document.querySelector('.monitor')?.getBoundingClientRect().width,chatPanels:document.querySelectorAll('.director,.composer').length}));report.geometry=geometry;if(geometry.scrollWidth>geometry.viewport)throw new Error('Narrow viewport overflow');if(geometry.chatPanels)throw new Error('Duplicate composer/director rendered');report.checks.push('420px layout no horizontal page overflow and no own composer/chat');
+await page.reload();await page.getByRole('button',{name:new RegExp(title)}).first().waitFor();await page.getByRole('button',{name:new RegExp(title)}).first().click();await page.locator('.native-header h1').waitFor();report.checks.push('Page reload reopens persisted project');
+report.passed=true;
+}catch(error){report.passed=false;report.error=error.stack;await page.screenshot({path:`${out}/failure.png`});}
+await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();if(!report.passed)process.exitCode=1;

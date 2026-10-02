@@ -1,0 +1,21 @@
+
+> director-studio@0.1.0 extension:test
+> npm run -w @studio/extension test
+
+
+> @studio/extension@0.1.0 test
+> vitest run --config vitest.config.ts
+
+
+ RUN  v5.0.3 /Users/jeremias/.codex/worktrees/27c0/AI Director Studio/director-studio/apps/extension
+
+
+ Test Files  4 passed (4)
+      Tests  51 passed (51)
+   Start at  02:08:23
+   Duration  6.15s (tests 32%, transform 31%, environment 24%, import 13%)
+
+  Transform  |extension| transforming modules took 3.80s · 31% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

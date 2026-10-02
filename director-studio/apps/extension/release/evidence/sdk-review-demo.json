@@ -1,0 +1,3397 @@
+{
+  "scope": "Actual built Worker + actual MCP Apps SDK host bridge, synthetic loopback owner, opaque iframe; not native ChatGPT visual acceptance",
+  "passed": true,
+  "startedAt": "2026-10-02T04:09:33.203Z",
+  "checks": [
+    "Actual SDK App/Bridge initialize handshake and visible editor in an opaque srcdoc iframe.",
+    "Owned stored video loaded through authenticated MCP asset chunks, WebVideo canvas contains decoded nonblack pixels and isolated preview shows its exact TSX overlay.",
+    "Pointer play control advances the actual isolated preview timeline clock, then the pause control stops it before screenshot.",
+    "Stored video without thumbnail metadata shows the film icon, creates no MP4-backed img, and the asset browser contains zero broken images.",
+    "Real queued MP4 codec job executed by the open opaque editor, native sandbox/runtime fetched only through authenticated host MCP, output stored with persistent completion receipt and ffprobe-verified four-second video with source audio.",
+    "The decoded MP4 first frame contains the authored green overlay also visible in preview.",
+    "Ordinary widget HTTP was forbidden and none was initiated; six explicit private asset/runtime/sandbox guard probes returned 401. Host-side /mcp alone injected synthetic loopback owner identity."
+  ],
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+    },
+    {
+      "type": "error",
+      "text": "[WARNING]\nMediabunny was loaded twice. This will likely cause Mediabunny not to work correctly. Check if multiple dependencies are importing different versions of Mediabunny, or if something is being bundled incorrectly."
+    },
+    {
+      "type": "error",
+      "text": "[WARNING]\nMediabunny was loaded twice. This will likely cause Mediabunny not to work correctly. Check if multiple dependencies are importing different versions of Mediabunny, or if something is being bundled incorrectly."
+    },
+    {
+      "type": "warning",
+      "text": "DIRECTOR_CSP {\"blockedURI\":\"eval\",\"violatedDirective\":\"script-src\",\"effectiveDirective\":\"script-src\",\"originalPolicy\":\"default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'\"}"
+    },
+    {
+      "type": "warning",
+      "text": "DIRECTOR_CSP {\"blockedURI\":\"eval\",\"violatedDirective\":\"script-src\",\"effectiveDirective\":\"script-src\",\"originalPolicy\":\"default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'\"}"
+    },
+    {
+      "type": "error",
+      "text": "[WARNING]\nMediabunny was loaded twice. This will likely cause Mediabunny not to work correctly. Check if multiple dependencies are importing different versions of Mediabunny, or if something is being bundled incorrectly."
+    },
+    {
+      "type": "error",
+      "text": "[WARNING]\nMediabunny was loaded twice. This will likely cause Mediabunny not to work correctly. Check if multiple dependencies are importing different versions of Mediabunny, or if something is being bundled incorrectly."
+    },
+    {
+      "type": "warning",
+      "text": "DIRECTOR_CSP {\"blockedURI\":\"eval\",\"violatedDirective\":\"script-src\",\"effectiveDirective\":\"script-src\",\"originalPolicy\":\"default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'\"}"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "warning",
+      "text": "Note: Some companies are required to obtain a license to use Remotion. See: https://remotion.dev/license\nPass the `acknowledgeRemotionLicense` prop to `<Player />` function to make this message disappear."
+    },
+    {
+      "type": "warning",
+      "text": "Use the `objectFit` prop instead of the `style` prop."
+    },
+    {
+      "type": "warning",
+      "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+    },
+    {
+      "type": "error",
+      "text": "[WARNING]\nMediabunny was loaded twice. This will likely cause Mediabunny not to work correctly. Check if multiple dependencies are importing different versions of Mediabunny, or if something is being bundled incorrectly."
+    },
+    {
+      "type": "error",
+      "text": "[WARNING]\nMediabunny was loaded twice. This will likely cause Mediabunny not to work correctly. Check if multiple dependencies are importing different versions of Mediabunny, or if something is being bundled incorrectly."
+    },
+    {
+      "type": "warning",
+      "text": "DIRECTOR_CSP {\"blockedURI\":\"eval\",\"violatedDirective\":\"script-src\",\"effectiveDirective\":\"script-src\",\"originalPolicy\":\"default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'\"}"
+    },
+    {
+      "type": "warning",
+      "text": "Use the `objectFit` prop instead of the `style` prop."
+    },
+    {
+      "type": "error",
+      "text": "Connecting to 'https://www.remotion.pro/api/track/register-usage-point' violates the following Content Security Policy directive: \"connect-src blob: data: https://esm.sh\". The action has been blocked."
+    },
+    {
+      "type": "error",
+      "text": "Fetch API cannot load https://www.remotion.pro/api/track/register-usage-point. Refused to connect because it violates the document's Content Security Policy."
+    },
+    {
+      "type": "log",
+      "text": "Failed to send usage event (attempt 1/4), retrying in 1000ms... TypeError: Failed to fetch\n    at Object.K$e [as internalRegisterUsageEvent] (about:srcdoc:4849:4296)\n    at IE (about:srcdoc:4849:5382)\n    at eYe (about:srcdoc:4880:9623)\n    at async k8e (about:srcdoc:5579:4740)\n    at async tZ (about:srcdoc:5783:27744)\n    at async Wx.onmessage (about:srcdoc:5783:31514)"
+    },
+    {
+      "type": "warning",
+      "text": "DIRECTOR_CSP {\"blockedURI\":\"https://www.remotion.pro/api/track/register-usage-point\",\"violatedDirective\":\"connect-src\",\"effectiveDirective\":\"connect-src\",\"originalPolicy\":\"default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'\"}"
+    }
+  ],
+  "pageErrors": [],
+  "deniedRequests": [
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/assets/editor.js",
+      "method": "GET",
+      "origin": "http://127.0.0.1:49382/",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/assets/editor.js",
+      "method": "GET",
+      "origin": "http://127.0.0.1:49382/",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/fonts/Inter.woff2",
+      "method": "GET",
+      "origin": "http://127.0.0.1:49382/",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/runtime/esbuild.wasm",
+      "method": "GET",
+      "origin": "http://127.0.0.1:49382/",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/media-sandbox.html",
+      "method": "GET",
+      "origin": "http://127.0.0.1:49382/",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/native-sandbox.html",
+      "method": "GET",
+      "origin": "http://127.0.0.1:49382/",
+      "status": 401
+    }
+  ],
+  "runtimeCalls": [
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=0&length=262144",
+      "startedAt": 1790914179354,
+      "ms": 50,
+      "wireBytes": 349700,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=262144&length=262144",
+      "startedAt": 1790914179418,
+      "ms": 20,
+      "wireBytes": 349705,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=524288&length=262144",
+      "startedAt": 1790914179450,
+      "ms": 17,
+      "wireBytes": 349705,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=786432&length=262144",
+      "startedAt": 1790914179484,
+      "ms": 16,
+      "wireBytes": 349706,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=1048576&length=262144",
+      "startedAt": 1790914179512,
+      "ms": 16,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=1310720&length=262144",
+      "startedAt": 1790914179545,
+      "ms": 41,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=1572864&length=262144",
+      "startedAt": 1790914179623,
+      "ms": 30,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=1835008&length=262144",
+      "startedAt": 1790914179671,
+      "ms": 18,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=2097152&length=262144",
+      "startedAt": 1790914179699,
+      "ms": 16,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=2359296&length=262144",
+      "startedAt": 1790914179725,
+      "ms": 16,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=2621440&length=262144",
+      "startedAt": 1790914179750,
+      "ms": 17,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=2883584&length=262144",
+      "startedAt": 1790914179777,
+      "ms": 15,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=3145728&length=262144",
+      "startedAt": 1790914179802,
+      "ms": 16,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=3407872&length=262144",
+      "startedAt": 1790914179827,
+      "ms": 15,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=3670016&length=262144",
+      "startedAt": 1790914179854,
+      "ms": 19,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=3932160&length=262144",
+      "startedAt": 1790914179897,
+      "ms": 26,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=4194304&length=262144",
+      "startedAt": 1790914179958,
+      "ms": 33,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=4456448&length=262144",
+      "startedAt": 1790914180036,
+      "ms": 281,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=4718592&length=262144",
+      "startedAt": 1790914180355,
+      "ms": 43,
+      "wireBytes": 349707,
+      "bytes": 262144,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fnative-sandbox.html&offset=4980736&length=262144",
+      "startedAt": 1790914180428,
+      "ms": 36,
+      "wireBytes": 201163,
+      "bytes": 150736,
+      "totalBytes": 5131472,
+      "mime": "text/html"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.json&offset=0&length=262144",
+      "startedAt": 1790914181132,
+      "ms": 4,
+      "wireBytes": 673,
+      "bytes": 369,
+      "totalBytes": 369,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=0&length=262144",
+      "startedAt": 1790914181160,
+      "ms": 97,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=262144&length=262144",
+      "startedAt": 1790914181279,
+      "ms": 74,
+      "wireBytes": 349722,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=524288&length=262144",
+      "startedAt": 1790914181375,
+      "ms": 48,
+      "wireBytes": 349722,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=786432&length=262144",
+      "startedAt": 1790914181434,
+      "ms": 28,
+      "wireBytes": 349722,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=1048576&length=262144",
+      "startedAt": 1790914181481,
+      "ms": 27,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=1310720&length=262144",
+      "startedAt": 1790914181520,
+      "ms": 27,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=1572864&length=262144",
+      "startedAt": 1790914181562,
+      "ms": 24,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=1835008&length=262144",
+      "startedAt": 1790914181599,
+      "ms": 32,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=2097152&length=262144",
+      "startedAt": 1790914181651,
+      "ms": 21,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=2359296&length=262144",
+      "startedAt": 1790914181890,
+      "ms": 26,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=2621440&length=262144",
+      "startedAt": 1790914182256,
+      "ms": 23,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=2883584&length=262144",
+      "startedAt": 1790914182290,
+      "ms": 22,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=3145728&length=262144",
+      "startedAt": 1790914182508,
+      "ms": 18,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=3407872&length=262144",
+      "startedAt": 1790914182535,
+      "ms": 29,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=3670016&length=262144",
+      "startedAt": 1790914182732,
+      "ms": 31,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=3932160&length=262144",
+      "startedAt": 1790914182774,
+      "ms": 17,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=4194304&length=262144",
+      "startedAt": 1790914182801,
+      "ms": 20,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=4456448&length=262144",
+      "startedAt": 1790914182831,
+      "ms": 18,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=4718592&length=262144",
+      "startedAt": 1790914182858,
+      "ms": 17,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=4980736&length=262144",
+      "startedAt": 1790914182885,
+      "ms": 16,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=5242880&length=262144",
+      "startedAt": 1790914182910,
+      "ms": 16,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=5505024&length=262144",
+      "startedAt": 1790914182936,
+      "ms": 15,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=5767168&length=262144",
+      "startedAt": 1790914182961,
+      "ms": 15,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=6029312&length=262144",
+      "startedAt": 1790914182984,
+      "ms": 21,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=6291456&length=262144",
+      "startedAt": 1790914183013,
+      "ms": 16,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=6553600&length=262144",
+      "startedAt": 1790914183045,
+      "ms": 17,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=6815744&length=262144",
+      "startedAt": 1790914183071,
+      "ms": 17,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=7077888&length=262144",
+      "startedAt": 1790914183097,
+      "ms": 16,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=7340032&length=262144",
+      "startedAt": 1790914183121,
+      "ms": 16,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=7602176&length=262144",
+      "startedAt": 1790914183146,
+      "ms": 16,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=7864320&length=262144",
+      "startedAt": 1790914183171,
+      "ms": 16,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=8126464&length=262144",
+      "startedAt": 1790914183197,
+      "ms": 17,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=8388608&length=262144",
+      "startedAt": 1790914183222,
+      "ms": 21,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=8650752&length=262144",
+      "startedAt": 1790914183253,
+      "ms": 17,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=8912896&length=262144",
+      "startedAt": 1790914183279,
+      "ms": 19,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=9175040&length=262144",
+      "startedAt": 1790914183307,
+      "ms": 16,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=9437184&length=262144",
+      "startedAt": 1790914183331,
+      "ms": 17,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=9699328&length=262144",
+      "startedAt": 1790914183357,
+      "ms": 20,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=9961472&length=262144",
+      "startedAt": 1790914183387,
+      "ms": 18,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=10223616&length=262144",
+      "startedAt": 1790914183414,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=10485760&length=262144",
+      "startedAt": 1790914183440,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=10747904&length=262144",
+      "startedAt": 1790914183464,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=11010048&length=262144",
+      "startedAt": 1790914183491,
+      "ms": 18,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=11272192&length=262144",
+      "startedAt": 1790914183518,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=11534336&length=262144",
+      "startedAt": 1790914183544,
+      "ms": 23,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=11796480&length=262144",
+      "startedAt": 1790914183575,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=12058624&length=262144",
+      "startedAt": 1790914183602,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=12320768&length=262144",
+      "startedAt": 1790914183627,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=12582912&length=262144",
+      "startedAt": 1790914183652,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=12845056&length=262144",
+      "startedAt": 1790914183681,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=13107200&length=262144",
+      "startedAt": 1790914183706,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=13369344&length=262144",
+      "startedAt": 1790914183733,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=13631488&length=262144",
+      "startedAt": 1790914183759,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=13893632&length=262144",
+      "startedAt": 1790914183787,
+      "ms": 18,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=14155776&length=262144",
+      "startedAt": 1790914183814,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=14417920&length=262144",
+      "startedAt": 1790914183840,
+      "ms": 15,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=14680064&length=262144",
+      "startedAt": 1790914183865,
+      "ms": 20,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=14942208&length=262144",
+      "startedAt": 1790914183894,
+      "ms": 18,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=15204352&length=262144",
+      "startedAt": 1790914183921,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=15466496&length=262144",
+      "startedAt": 1790914183946,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=15728640&length=262144",
+      "startedAt": 1790914183971,
+      "ms": 15,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=15990784&length=262144",
+      "startedAt": 1790914183995,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=16252928&length=262144",
+      "startedAt": 1790914184153,
+      "ms": 30,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part0&offset=16515072&length=262144",
+      "startedAt": 1790914184193,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 16777216,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=0&length=262144",
+      "startedAt": 1790914184236,
+      "ms": 21,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=262144&length=262144",
+      "startedAt": 1790914184266,
+      "ms": 17,
+      "wireBytes": 349722,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=524288&length=262144",
+      "startedAt": 1790914184295,
+      "ms": 17,
+      "wireBytes": 349722,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=786432&length=262144",
+      "startedAt": 1790914184321,
+      "ms": 17,
+      "wireBytes": 349722,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=1048576&length=262144",
+      "startedAt": 1790914184349,
+      "ms": 18,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=1310720&length=262144",
+      "startedAt": 1790914184376,
+      "ms": 19,
+      "wireBytes": 349723,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=1572864&length=262144",
+      "startedAt": 1790914184407,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=1835008&length=262144",
+      "startedAt": 1790914184432,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=2097152&length=262144",
+      "startedAt": 1790914184458,
+      "ms": 21,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=2359296&length=262144",
+      "startedAt": 1790914184488,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=2621440&length=262144",
+      "startedAt": 1790914184515,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=2883584&length=262144",
+      "startedAt": 1790914184539,
+      "ms": 18,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=3145728&length=262144",
+      "startedAt": 1790914184568,
+      "ms": 20,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=3407872&length=262144",
+      "startedAt": 1790914184597,
+      "ms": 15,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=3670016&length=262144",
+      "startedAt": 1790914184623,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=3932160&length=262144",
+      "startedAt": 1790914184652,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=4194304&length=262144",
+      "startedAt": 1790914184678,
+      "ms": 149,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=4456448&length=262144",
+      "startedAt": 1790914184857,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=4718592&length=262144",
+      "startedAt": 1790914184887,
+      "ms": 21,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=4980736&length=262144",
+      "startedAt": 1790914184921,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=5242880&length=262144",
+      "startedAt": 1790914184958,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=5505024&length=262144",
+      "startedAt": 1790914184987,
+      "ms": 20,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=5767168&length=262144",
+      "startedAt": 1790914185018,
+      "ms": 27,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=6029312&length=262144",
+      "startedAt": 1790914185058,
+      "ms": 25,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=6291456&length=262144",
+      "startedAt": 1790914185093,
+      "ms": 23,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=6553600&length=262144",
+      "startedAt": 1790914185124,
+      "ms": 20,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=6815744&length=262144",
+      "startedAt": 1790914185157,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=7077888&length=262144",
+      "startedAt": 1790914185187,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=7340032&length=262144",
+      "startedAt": 1790914185216,
+      "ms": 19,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=7602176&length=262144",
+      "startedAt": 1790914185247,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=7864320&length=262144",
+      "startedAt": 1790914185274,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=8126464&length=262144",
+      "startedAt": 1790914185300,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=8388608&length=262144",
+      "startedAt": 1790914185325,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=8650752&length=262144",
+      "startedAt": 1790914185350,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=8912896&length=262144",
+      "startedAt": 1790914185375,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=9175040&length=262144",
+      "startedAt": 1790914185400,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=9437184&length=262144",
+      "startedAt": 1790914185425,
+      "ms": 17,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=9699328&length=262144",
+      "startedAt": 1790914185452,
+      "ms": 16,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=9961472&length=262144",
+      "startedAt": 1790914185479,
+      "ms": 15,
+      "wireBytes": 349724,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=10223616&length=262144",
+      "startedAt": 1790914185503,
+      "ms": 16,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=10485760&length=262144",
+      "startedAt": 1790914185527,
+      "ms": 16,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=10747904&length=262144",
+      "startedAt": 1790914185553,
+      "ms": 19,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=11010048&length=262144",
+      "startedAt": 1790914185583,
+      "ms": 15,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=11272192&length=262144",
+      "startedAt": 1790914185607,
+      "ms": 16,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=11534336&length=262144",
+      "startedAt": 1790914185632,
+      "ms": 16,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=11796480&length=262144",
+      "startedAt": 1790914185657,
+      "ms": 19,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=12058624&length=262144",
+      "startedAt": 1790914185690,
+      "ms": 17,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=12320768&length=262144",
+      "startedAt": 1790914185717,
+      "ms": 19,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=12582912&length=262144",
+      "startedAt": 1790914185746,
+      "ms": 21,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=12845056&length=262144",
+      "startedAt": 1790914185781,
+      "ms": 18,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=13107200&length=262144",
+      "startedAt": 1790914185809,
+      "ms": 17,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=13369344&length=262144",
+      "startedAt": 1790914185836,
+      "ms": 17,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=13631488&length=262144",
+      "startedAt": 1790914185863,
+      "ms": 17,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=13893632&length=262144",
+      "startedAt": 1790914185889,
+      "ms": 15,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=14155776&length=262144",
+      "startedAt": 1790914185913,
+      "ms": 15,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=14417920&length=262144",
+      "startedAt": 1790914185939,
+      "ms": 16,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=14680064&length=262144",
+      "startedAt": 1790914185963,
+      "ms": 15,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=14942208&length=262144",
+      "startedAt": 1790914185992,
+      "ms": 17,
+      "wireBytes": 349725,
+      "bytes": 262144,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core.wasm.part1&offset=15204352&length=262144",
+      "startedAt": 1790914186018,
+      "ms": 16,
+      "wireBytes": 334665,
+      "bytes": 250851,
+      "totalBytes": 15455203,
+      "mime": "application/octet-stream"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fworker.js&offset=0&length=262144",
+      "startedAt": 1790914186084,
+      "ms": 3,
+      "wireBytes": 7359,
+      "bytes": 5388,
+      "totalBytes": 5388,
+      "mime": "text/javascript"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fffmpeg%2Fffmpeg-core-classic.js&offset=0&length=262144",
+      "startedAt": 1790914186092,
+      "ms": 6,
+      "wireBytes": 149591,
+      "bytes": 112059,
+      "totalBytes": 112059,
+      "mime": "text/javascript"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=0&length=262144",
+      "startedAt": 1790914186715,
+      "ms": 21,
+      "wireBytes": 349710,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=262144&length=262144",
+      "startedAt": 1790914186745,
+      "ms": 17,
+      "wireBytes": 349715,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=524288&length=262144",
+      "startedAt": 1790914186772,
+      "ms": 14,
+      "wireBytes": 349715,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=786432&length=262144",
+      "startedAt": 1790914186796,
+      "ms": 17,
+      "wireBytes": 349715,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=1048576&length=262144",
+      "startedAt": 1790914186823,
+      "ms": 116,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=1310720&length=262144",
+      "startedAt": 1790914186953,
+      "ms": 16,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=1572864&length=262144",
+      "startedAt": 1790914186978,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=1835008&length=262144",
+      "startedAt": 1790914187003,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=2097152&length=262144",
+      "startedAt": 1790914187028,
+      "ms": 14,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=2359296&length=262144",
+      "startedAt": 1790914187051,
+      "ms": 16,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=2621440&length=262144",
+      "startedAt": 1790914187075,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=2883584&length=262144",
+      "startedAt": 1790914187099,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=3145728&length=262144",
+      "startedAt": 1790914187123,
+      "ms": 14,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=3407872&length=262144",
+      "startedAt": 1790914187146,
+      "ms": 16,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=3670016&length=262144",
+      "startedAt": 1790914187171,
+      "ms": 17,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=3932160&length=262144",
+      "startedAt": 1790914187197,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=4194304&length=262144",
+      "startedAt": 1790914187220,
+      "ms": 16,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=4456448&length=262144",
+      "startedAt": 1790914187244,
+      "ms": 17,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=4718592&length=262144",
+      "startedAt": 1790914187269,
+      "ms": 16,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=4980736&length=262144",
+      "startedAt": 1790914187294,
+      "ms": 17,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=5242880&length=262144",
+      "startedAt": 1790914187320,
+      "ms": 17,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=5505024&length=262144",
+      "startedAt": 1790914187353,
+      "ms": 109,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=5767168&length=262144",
+      "startedAt": 1790914187474,
+      "ms": 18,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=6029312&length=262144",
+      "startedAt": 1790914187500,
+      "ms": 16,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=6291456&length=262144",
+      "startedAt": 1790914187528,
+      "ms": 16,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=6553600&length=262144",
+      "startedAt": 1790914187554,
+      "ms": 23,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=6815744&length=262144",
+      "startedAt": 1790914187594,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=7077888&length=262144",
+      "startedAt": 1790914187619,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=7340032&length=262144",
+      "startedAt": 1790914187644,
+      "ms": 18,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=7602176&length=262144",
+      "startedAt": 1790914187671,
+      "ms": 17,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=7864320&length=262144",
+      "startedAt": 1790914187697,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=8126464&length=262144",
+      "startedAt": 1790914187720,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=8388608&length=262144",
+      "startedAt": 1790914187743,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=8650752&length=262144",
+      "startedAt": 1790914187766,
+      "ms": 18,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=8912896&length=262144",
+      "startedAt": 1790914187793,
+      "ms": 14,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=9175040&length=262144",
+      "startedAt": 1790914187817,
+      "ms": 14,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=9437184&length=262144",
+      "startedAt": 1790914187839,
+      "ms": 16,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=9699328&length=262144",
+      "startedAt": 1790914187864,
+      "ms": 18,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=9961472&length=262144",
+      "startedAt": 1790914187891,
+      "ms": 15,
+      "wireBytes": 349716,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=10223616&length=262144",
+      "startedAt": 1790914187916,
+      "ms": 15,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=10485760&length=262144",
+      "startedAt": 1790914187940,
+      "ms": 17,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=10747904&length=262144",
+      "startedAt": 1790914187965,
+      "ms": 17,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=11010048&length=262144",
+      "startedAt": 1790914187991,
+      "ms": 15,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=11272192&length=262144",
+      "startedAt": 1790914188016,
+      "ms": 17,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=11534336&length=262144",
+      "startedAt": 1790914188043,
+      "ms": 21,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=11796480&length=262144",
+      "startedAt": 1790914188076,
+      "ms": 33,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=12058624&length=262144",
+      "startedAt": 1790914188118,
+      "ms": 17,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=12320768&length=262144",
+      "startedAt": 1790914188144,
+      "ms": 20,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=12582912&length=262144",
+      "startedAt": 1790914188172,
+      "ms": 18,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=12845056&length=262144",
+      "startedAt": 1790914188199,
+      "ms": 18,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=13107200&length=262144",
+      "startedAt": 1790914188227,
+      "ms": 19,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=13369344&length=262144",
+      "startedAt": 1790914188256,
+      "ms": 17,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=13631488&length=262144",
+      "startedAt": 1790914188284,
+      "ms": 20,
+      "wireBytes": 349717,
+      "bytes": 262144,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    },
+    {
+      "path": "/api/runtime-file?path=%2Fruntime%2Fesbuild.wasm&offset=13893632&length=262144",
+      "startedAt": 1790914188315,
+      "ms": 14,
+      "wireBytes": 113812,
+      "bytes": 85218,
+      "totalBytes": 13978850,
+      "mime": "application/wasm"
+    }
+  ],
+  "hostMcpCalls": [
+    {
+      "method": "initialize"
+    },
+    {
+      "method": "notifications/initialized"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "export_project"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    },
+    {
+      "method": "tools/call",
+      "tool": "director_ui_request"
+    }
+  ],
+  "violations": [
+    {
+      "blockedURI": "eval",
+      "violatedDirective": "script-src",
+      "effectiveDirective": "script-src",
+      "originalPolicy": "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'"
+    },
+    {
+      "blockedURI": "eval",
+      "violatedDirective": "script-src",
+      "effectiveDirective": "script-src",
+      "originalPolicy": "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'"
+    },
+    {
+      "blockedURI": "eval",
+      "violatedDirective": "script-src",
+      "effectiveDirective": "script-src",
+      "originalPolicy": "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'"
+    },
+    {
+      "blockedURI": "eval",
+      "violatedDirective": "script-src",
+      "effectiveDirective": "script-src",
+      "originalPolicy": "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'"
+    },
+    {
+      "blockedURI": "https://www.remotion.pro/api/track/register-usage-point",
+      "violatedDirective": "connect-src",
+      "effectiveDirective": "connect-src",
+      "originalPolicy": "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'"
+    }
+  ],
+  "projectId": "prj_ed34da766cf64630a1c5900b34ee06d1",
+  "sourceAsset": {
+    "id": "ast_240250b97ff441f183a3569fc4d75b9d",
+    "bytes": 273517,
+    "mime": "video/mp4"
+  },
+  "resource": {
+    "uri": "ui://director-studio/editor-acb891da079ab7921d2a551de3928dda46d3d62e7b71d5f3a1828f69350ef2d3.html",
+    "mimeType": "text/html;profile=mcp-app",
+    "bytes": 6132472,
+    "metadata": {
+      "openai/ui": {
+        "availableDisplayModes": [
+          "fullscreen"
+        ],
+        "preferredDisplayMode": "fullscreen"
+      },
+      "ui": {
+        "csp": {
+          "connectDomains": [
+            "https://esm.sh",
+            "https://www.remotion.pro"
+          ],
+          "resourceDomains": [
+            "https://esm.sh"
+          ],
+          "frameDomains": [
+            "http://127.0.0.1:5201"
+          ],
+          "baseUriDomains": [
+            "http://127.0.0.1:5201"
+          ]
+        }
+      }
+    },
+    "externalBootScriptSources": [],
+    "externalStylesheets": [],
+    "inlineScriptCount": 1,
+    "fontDataUrls": 4
+  },
+  "hostPolicy": {
+    "iframeSandbox": "allow-scripts allow-downloads",
+    "iframeOrigin": "opaque (no allow-same-origin)",
+    "source": "Deliberately constrained test host policy without unsafe-eval, allowing only packaged inline/blob and Wasm evaluation plus declared esm.sh origin. This is not a claim about ChatGPT default CSP.",
+    "fixtureCsp": "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://esm.sh; style-src 'unsafe-inline'; font-src data: blob:; img-src data: blob:; media-src data: blob:; worker-src blob:; connect-src blob: data: https://esm.sh; frame-src http://127.0.0.1:5201 blob:; base-uri http://127.0.0.1:5201; form-action 'none'",
+    "resourceCsp": {
+      "connectDomains": [
+        "https://esm.sh",
+        "https://www.remotion.pro"
+      ],
+      "resourceDomains": [
+        "https://esm.sh"
+      ],
+      "frameDomains": [
+        "http://127.0.0.1:5201"
+      ],
+      "baseUriDomains": [
+        "http://127.0.0.1:5201"
+      ]
+    }
+  },
+  "handshake": {
+    "initialized": true,
+    "events": [
+      "ui/notifications/initialized",
+      "tool-input/result-sent"
+    ],
+    "errors": []
+  },
+  "frame": {
+    "href": "about:srcdoc",
+    "origin": "null",
+    "baseURI": "http://127.0.0.1:5201/",
+    "readyState": "complete",
+    "bodyText": "SDK Browser Demo\nVideo\nv2\n$0.00 / $0.00\nExportieren\nMaterial\n2\nImportieren\nURL\nMedienmodelle\nAssets\n2\nAlle\nVideo\nCode\nIN VERWENDUNG\n2\nSDK demo overlay\nSDK demo overlay\nDirector\nProcedural Review Sample.mp4\nimportiert\n · 640×360\nV1\nDateien hierher ziehen – sie werden im Projekt gespeichert.\n00:00:00:00\n/ 00:00:04:00\nProcedural Review Sample.mp4 · V1 · v2\nProxy\nAuswahl\nKontext kopieren und im Chat einfügen\nKopieren\nAuswahl sendet keine Nachricht.\nTimeline\nv2 · 30 fps\nMARKER\n0\n00:00:00:00\nZEIT\nV1\nVideo\nV2\nOverlay/Code\nT1\nText\nA1\nStimme/Gesang\nA2\nMusik\nA3\nSFX\nKlick hier setzt einen Marker · Enter setzt einen am Abspielkopf\n0:00:00\n0:00:15\n0:01:00\n0:01:15\n0:02:00\n0:02:15\n0:03:00\n0:03:15\n01Procedural Review Sample.mp4\nnative-opaque-overlay"
+  },
+  "fonts": {
+    "status": "loaded",
+    "faces": 4
+  },
+  "widgetHttpBeforeGuardProbes": 0,
+  "denialGuardProbes": [
+    {
+      "url": "http://127.0.0.1:49382/assets/editor.js",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/fonts/Inter.woff2",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/runtime/esbuild.wasm",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/media-sandbox.html",
+      "status": 401
+    },
+    {
+      "url": "http://127.0.0.1:49382/native-sandbox.html",
+      "status": 401
+    },
+    {
+      "url": "https://ai-director-studio.yearemia.chatgpt.site/assets/editor.js",
+      "status": 401
+    }
+  ],
+  "preview": {
+    "origin": "null",
+    "authoredContext": {
+      "hasEditor": false,
+      "origin": "null"
+    },
+    "overlayText": "SDK BROWSER DEMO",
+    "canvases": [
+      {
+        "width": 640,
+        "height": 360,
+        "nonBlackSamples": 4115,
+        "opaqueSamples": 4115
+      }
+    ]
+  },
+  "playback": {
+    "before": "00:00:00:00\n/ 00:00:04:00",
+    "after": "00:00:00:01\n/ 00:00:04:00",
+    "pausedAt": "00:00:02:00\n/ 00:00:04:00"
+  },
+  "assetBrowser": {
+    "brokenImages": [],
+    "sourceCardImageCount": 0,
+    "videoFallbackIcon": {
+      "width": "22",
+      "height": "22",
+      "path": "M4 4h16v16H4zM8 4v16M16 4v16M4 8h4M4 12h4M4 16h4M16 8h4M16 12h4M16 16h4"
+    }
+  },
+  "editorScreenshot": {
+    "path": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-release/sdk-review-demo/sdk-editor.png",
+    "scope": "Actual SDK authenticated opaque iframe regression host; not the native ChatGPT app"
+  },
+  "exportRequested": {
+    "kind": "export_project",
+    "input": {
+      "target": "mp4",
+      "format": "native-test",
+      "projectVersion": 2
+    },
+    "id": "job_96492571ab4e431f823bcf340534dde6",
+    "status": "queued",
+    "createdAt": "2026-10-02T04:09:59.344Z",
+    "updatedAt": "2026-10-02T04:09:59.344Z",
+    "projectVersion": 2
+  },
+  "exportJob": {
+    "kind": "export_project",
+    "input": {
+      "target": "mp4",
+      "format": "native-test",
+      "projectVersion": 2
+    },
+    "id": "job_96492571ab4e431f823bcf340534dde6",
+    "status": "completed",
+    "createdAt": "2026-10-02T04:09:59.344Z",
+    "updatedAt": "2026-10-02T04:10:05.060Z",
+    "projectVersion": 2,
+    "executorId": "0a9853c9-f3b7-4f40-8214-2d8997e7c96b",
+    "leaseUntil": "2026-10-02T04:11:01.352Z",
+    "output": {
+      "filename": "director-export.mp4",
+      "warnings": [],
+      "bytes": 156803,
+      "mime": "video/mp4",
+      "assetIds": [
+        "ast_da731a165a394933b3f14e90560966c6"
+      ]
+    }
+  },
+  "generatedIsolation": {
+    "preview": {
+      "hasEditor": false,
+      "origin": "null"
+    },
+    "outerAfterExport": null
+  },
+  "outputAsset": {
+    "id": "ast_da731a165a394933b3f14e90560966c6",
+    "mime": "video/mp4",
+    "bytes": 156803
+  },
+  "ffprobe": {
+    "streams": [
+      {
+        "index": 0,
+        "codec_name": "h264",
+        "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+        "profile": "High",
+        "codec_type": "video",
+        "codec_tag_string": "avc1",
+        "codec_tag": "0x31637661",
+        "mime_codec_string": "avc1.64000d",
+        "width": 320,
+        "height": 180,
+        "coded_width": 320,
+        "coded_height": 180,
+        "has_b_frames": 0,
+        "pix_fmt": "yuv420p",
+        "level": 13,
+        "color_range": "tv",
+        "color_space": "bt709",
+        "color_transfer": "iec61966-2-1",
+        "color_primaries": "bt709",
+        "chroma_location": "left",
+        "field_order": "progressive",
+        "is_avc": "true",
+        "nal_length_size": "4",
+        "id": "0x1",
+        "r_frame_rate": "30/1",
+        "avg_frame_rate": "30/1",
+        "time_base": "1/57600",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "duration_ts": 230400,
+        "duration": "4.000000",
+        "bit_rate": "110634",
+        "bits_per_raw_sample": "8",
+        "nb_frames": "120",
+        "extradata_size": 34,
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "language": "und",
+          "handler_name": "MediabunnyVideoHandler",
+          "encoder": "Mediabunny"
+        }
+      },
+      {
+        "index": 1,
+        "codec_name": "aac",
+        "codec_long_name": "AAC (Advanced Audio Coding)",
+        "profile": "LC",
+        "codec_type": "audio",
+        "codec_tag_string": "mp4a",
+        "codec_tag": "0x6134706d",
+        "mime_codec_string": "mp4a.40.2",
+        "sample_fmt": "fltp",
+        "sample_rate": "48000",
+        "channels": 2,
+        "channel_layout": "stereo",
+        "bits_per_sample": 0,
+        "initial_padding": 0,
+        "id": "0x2",
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "0/0",
+        "time_base": "1/48000",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "duration_ts": 192000,
+        "duration": "4.000000",
+        "bit_rate": "192085",
+        "nb_frames": "189",
+        "extradata_size": 5,
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "language": "und",
+          "handler_name": "SoundHandler"
+        }
+      }
+    ],
+    "format": {
+      "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-release/sdk-review-demo/sdk-export.mp4",
+      "nb_streams": 2,
+      "nb_programs": 0,
+      "nb_stream_groups": 0,
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "format_long_name": "QuickTime / MOV",
+      "start_time": "0.000000",
+      "duration": "4.000000",
+      "size": "156803",
+      "bit_rate": "313606",
+      "probe_score": 100,
+      "tags": {
+        "major_brand": "isom",
+        "minor_version": "512",
+        "compatible_brands": "isomiso2avc1mp41",
+        "encoder": "Lavf59.27.100",
+        "comment": "Made with Remotion 4.0.532"
+      }
+    }
+  },
+  "exportPixels": {
+    "decodedRgbBytes": 172800,
+    "nonBlackPixels": 57578,
+    "authoredGreenOverlayPixels": 3377
+  },
+  "runtimeSummary": [
+    {
+      "path": "/native-sandbox.html",
+      "chunks": 20,
+      "totalBytes": 5131472,
+      "bytesTransferred": 5131472,
+      "jsonWireBytes": 6845584,
+      "serverMs": 741
+    },
+    {
+      "path": "/runtime/ffmpeg/ffmpeg-core.wasm.json",
+      "chunks": 1,
+      "totalBytes": 369,
+      "bytesTransferred": 369,
+      "jsonWireBytes": 673,
+      "serverMs": 4
+    },
+    {
+      "path": "/runtime/ffmpeg/ffmpeg-core.wasm.part0",
+      "chunks": 64,
+      "totalBytes": 16777216,
+      "bytesTransferred": 16777216,
+      "jsonWireBytes": 22382288,
+      "serverMs": 1390
+    },
+    {
+      "path": "/runtime/ffmpeg/ffmpeg-core.wasm.part1",
+      "chunks": 59,
+      "totalBytes": 15455203,
+      "bytesTransferred": 15455203,
+      "jsonWireBytes": 20618661,
+      "serverMs": 1177
+    },
+    {
+      "path": "/runtime/ffmpeg/worker.js",
+      "chunks": 1,
+      "totalBytes": 5388,
+      "bytesTransferred": 5388,
+      "jsonWireBytes": 7359,
+      "serverMs": 3
+    },
+    {
+      "path": "/runtime/ffmpeg/ffmpeg-core-classic.js",
+      "chunks": 1,
+      "totalBytes": 112059,
+      "bytesTransferred": 112059,
+      "jsonWireBytes": 149591,
+      "serverMs": 6
+    },
+    {
+      "path": "/runtime/esbuild.wasm",
+      "chunks": 54,
+      "totalBytes": 13978850,
+      "bytesTransferred": 13978850,
+      "jsonWireBytes": 18648765,
+      "serverMs": 1101
+    }
+  ],
+  "finalFrameCount": 3,
+  "privateHttpDenialRule": {
+    "origin": "https://ai-director-studio.yearemia.chatgpt.site",
+    "allOrdinaryIframeHttp": "401",
+    "normalPaths": [
+      "/assets",
+      "/fonts",
+      "/runtime",
+      "/media-sandbox.html",
+      "/native-sandbox.html"
+    ]
+  },
+  "finalHostErrors": [],
+  "finishedAt": "2026-10-02T04:10:07.879Z",
+  "recording": {
+    "path": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-release/sdk-review-demo/sdk-review-demo.mp4",
+    "scope": "Actual recorded SDK-browser interactions with synthetic loopback owner; not native ChatGPT capture",
+    "probe": {
+      "streams": [
+        {
+          "index": 0,
+          "codec_name": "h264",
+          "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+          "profile": "High",
+          "codec_type": "video",
+          "codec_tag_string": "avc1",
+          "codec_tag": "0x31637661",
+          "mime_codec_string": "avc1.640020",
+          "width": 1280,
+          "height": 960,
+          "coded_width": 1280,
+          "coded_height": 960,
+          "has_b_frames": 2,
+          "sample_aspect_ratio": "1:1",
+          "display_aspect_ratio": "4:3",
+          "pix_fmt": "yuv420p",
+          "level": 32,
+          "color_range": "tv",
+          "color_space": "bt470bg",
+          "chroma_location": "center",
+          "field_order": "progressive",
+          "is_avc": "true",
+          "nal_length_size": "4",
+          "id": "0x1",
+          "r_frame_rate": "25/1",
+          "avg_frame_rate": "25/1",
+          "time_base": "1/12800",
+          "start_pts": 0,
+          "start_time": "0.000000",
+          "duration_ts": 388096,
+          "duration": "30.320000",
+          "bit_rate": "224715",
+          "bits_per_raw_sample": "8",
+          "nb_frames": "758",
+          "extradata_size": 50,
+          "disposition": {
+            "default": 1,
+            "dub": 0,
+            "original": 0,
+            "comment": 0,
+            "lyrics": 0,
+            "karaoke": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "visual_impaired": 0,
+            "clean_effects": 0,
+            "attached_pic": 0,
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
+          },
+          "tags": {
+            "language": "und",
+            "handler_name": "VideoHandler",
+            "encoder": "Lavc62.28.100 libx264"
+          }
+        }
+      ],
+      "format": {
+        "filename": "/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-release/sdk-review-demo/sdk-review-demo.mp4",
+        "nb_streams": 1,
+        "nb_programs": 0,
+        "nb_stream_groups": 0,
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "format_long_name": "QuickTime / MOV",
+        "start_time": "0.000000",
+        "duration": "30.320000",
+        "size": "861545",
+        "bit_rate": "227320",
+        "probe_score": 100,
+        "tags": {
+          "major_brand": "isom",
+          "minor_version": "512",
+          "compatible_brands": "isomiso2avc1mp41",
+          "encoder": "Lavf62.12.100"
+        }
+      }
+    }
+  }
+}

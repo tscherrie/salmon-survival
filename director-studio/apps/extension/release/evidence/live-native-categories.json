@@ -1,0 +1,359 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUtc": "2026-10-01T22:24:22.148Z",
+  "environment": "Authenticated production native AI Director Studio MCP connection",
+  "scope": {
+    "categories": [
+      "audio",
+      "slides",
+      "web"
+    ],
+    "demoProjectCount": 3,
+    "generatedMediaCount": 0,
+    "paidGenerationCalls": 0,
+    "codecJobsCreated": 0,
+    "codecCompletionAssertions": 0
+  },
+  "checks": {
+    "actualNativeToolsDiscovered": true,
+    "audio": {
+      "createdAndReopened": true,
+      "documentKind": "timeline",
+      "head": 2,
+      "durationTicks": 6000,
+      "ticksPerSecond": 1000,
+      "trackCount": 3,
+      "markerCount": 2,
+      "operationCount": 5,
+      "voiceGainDb": -3,
+      "musicGainDb": -6,
+      "signalDuckingDb": -12,
+      "authoredAssetCount": 2,
+      "textAssetBytes": 165,
+      "codeAssetBytes": 126,
+      "codeSourceExactR2Roundtrip": true,
+      "assetMetadataAndHashRoundtrip": true,
+      "staleHeadRejected": true,
+      "staleHeadErrorCode": "VERSION_CONFLICT",
+      "staleMutationAbsent": true,
+      "generationCount": 0,
+      "jobCount": 0
+    },
+    "slides": {
+      "createdAndReopened": true,
+      "documentKind": "deck",
+      "head": 2,
+      "operationCount": 3,
+      "slideCount": 2,
+      "elementCount": 5,
+      "textElementCount": 3,
+      "shapeElementCount": 1,
+      "chartElementCount": 1,
+      "markdownTextRetained": true,
+      "chartValuesRetained": true,
+      "speakerNotesCount": 2,
+      "themeRetained": true,
+      "invalidOperationBatchLeftDocumentUnchanged": true,
+      "generationCount": 0,
+      "jobCount": 0
+    },
+    "web": {
+      "createdAndReopened": true,
+      "documentKind": "site",
+      "framework": "html",
+      "pageCount": 2,
+      "fileCount": 4,
+      "sourceBytes": 922,
+      "exactSourceRoundtripCount": 4,
+      "fileHashSnapshotPresent": true,
+      "originalSnapshotVersion": 6,
+      "temporaryVersion": 7,
+      "restoredHead": 8,
+      "versionCount": 8,
+      "restoreCreatedNewVersion": true,
+      "restoredSourceExact": true,
+      "originalAndTemporaryHistoricalSourcesRetained": true,
+      "generationCount": 0,
+      "jobCount": 0
+    }
+  },
+  "storageEvidence": {
+    "documentAndWebsiteSource": "Production persistence observed through fresh native reads, including immutable version source and restore.",
+    "ownedCodeAsset": "Production R2 body read through read_component matched the authored source exactly.",
+    "textAsset": "Stored asset metadata, byte length and SHA-256 matched the fresh get_asset response."
+  },
+  "nativeCalls": {
+    "attempted": 43,
+    "validatedResultCalls": 33,
+    "attemptedByTool": {
+      "create_project": 3,
+      "apply_document_ops": 5,
+      "create_text_asset": 1,
+      "write_component": 1,
+      "read_component": 2,
+      "get_asset": 2,
+      "get_project": 6,
+      "get_document": 3,
+      "write_site_file": 5,
+      "read_site_file": 10,
+      "list_site_files": 2,
+      "get_version": 2,
+      "restore_version": 1
+    },
+    "validatedCalls": [
+      {
+        "category": "audio",
+        "tool": "create_project",
+        "success": true
+      },
+      {
+        "category": "audio",
+        "tool": "apply_document_ops",
+        "success": true,
+        "operationCount": 5
+      },
+      {
+        "category": "audio",
+        "tool": "create_text_asset",
+        "success": true,
+        "bytes": 165
+      },
+      {
+        "category": "audio",
+        "tool": "write_component",
+        "success": true,
+        "bytes": 126
+      },
+      {
+        "category": "audio",
+        "tool": "read_component",
+        "success": true
+      },
+      {
+        "category": "audio",
+        "tool": "get_asset",
+        "success": true
+      },
+      {
+        "category": "audio",
+        "tool": "get_project",
+        "success": true
+      },
+      {
+        "category": "audio",
+        "tool": "apply_document_ops",
+        "success": true,
+        "expectedRejection": "VERSION_CONFLICT"
+      },
+      {
+        "category": "audio",
+        "tool": "get_document",
+        "success": true,
+        "head": 2,
+        "markerCount": 2,
+        "staleMutationAbsent": true
+      },
+      {
+        "category": "slides",
+        "tool": "create_project",
+        "success": true,
+        "documentKind": "deck",
+        "head": 1,
+        "slideCount": 0
+      },
+      {
+        "category": "slides",
+        "tool": "get_document",
+        "success": true,
+        "head": 1,
+        "slideCount": 0,
+        "rejectedInvalidBatchUnchanged": true
+      },
+      {
+        "category": "slides",
+        "tool": "apply_document_ops",
+        "success": true,
+        "head": 2,
+        "operationCount": 3,
+        "slideCount": 2,
+        "elementCount": 5
+      },
+      {
+        "category": "slides",
+        "tool": "get_project",
+        "success": true,
+        "head": 2,
+        "slideCount": 2,
+        "elementCount": 5,
+        "themeAndSpeakerNotesRetained": true,
+        "generationCount": 0,
+        "jobCount": 0
+      },
+      {
+        "category": "web",
+        "tool": "create_project",
+        "success": true,
+        "head": 1,
+        "documentKind": "site",
+        "pageCount": 1
+      },
+      {
+        "category": "web",
+        "tool": "apply_document_ops",
+        "success": true,
+        "head": 2,
+        "operationCount": 3,
+        "pageCount": 2,
+        "framework": "html"
+      },
+      {
+        "category": "web",
+        "tool": "write_site_file",
+        "success": true,
+        "sourceFile": "index.html",
+        "characterCount": 418,
+        "hashPresent": true
+      },
+      {
+        "category": "web",
+        "tool": "write_site_file",
+        "success": true,
+        "sourceFile": "style.css",
+        "characterCount": 156,
+        "hashPresent": true
+      },
+      {
+        "category": "web",
+        "tool": "write_site_file",
+        "success": true,
+        "sourceFile": "about/index.html",
+        "characterCount": 286,
+        "hashPresent": true
+      },
+      {
+        "category": "web",
+        "tool": "write_site_file",
+        "success": true,
+        "sourceFile": "app.js",
+        "characterCount": 62,
+        "hashPresent": true
+      },
+      {
+        "category": "web",
+        "tool": "read_site_file",
+        "success": true,
+        "sourceFile": "index.html",
+        "exactContentMatch": true
+      },
+      {
+        "category": "web",
+        "tool": "read_site_file",
+        "success": true,
+        "sourceFile": "style.css",
+        "exactContentMatch": true
+      },
+      {
+        "category": "web",
+        "tool": "read_site_file",
+        "success": true,
+        "sourceFile": "about/index.html",
+        "exactContentMatch": true
+      },
+      {
+        "category": "web",
+        "tool": "read_site_file",
+        "success": true,
+        "sourceFile": "app.js",
+        "exactContentMatch": true
+      },
+      {
+        "category": "web",
+        "tool": "list_site_files",
+        "success": true,
+        "fileCount": 4,
+        "totalBytes": 922
+      },
+      {
+        "category": "web",
+        "tool": "get_project",
+        "success": true,
+        "head": 6,
+        "pageCount": 2,
+        "fileCount": 4,
+        "generationCount": 0,
+        "jobCount": 0
+      },
+      {
+        "category": "web",
+        "tool": "write_site_file",
+        "success": true,
+        "sourceFile": "index.html",
+        "temporaryRestoreFixture": true
+      },
+      {
+        "category": "web",
+        "tool": "get_version",
+        "success": true,
+        "head": 6,
+        "immutableOriginalSourceRetained": true,
+        "fileCount": 4
+      },
+      {
+        "category": "web",
+        "tool": "get_document",
+        "success": true,
+        "head": 7
+      },
+      {
+        "category": "web",
+        "tool": "read_site_file",
+        "success": true,
+        "sourceFile": "index.html",
+        "temporaryMutationObserved": true
+      },
+      {
+        "category": "web",
+        "tool": "restore_version",
+        "success": true,
+        "restoredVersion": 6,
+        "newHead": 8,
+        "historyRetained": true
+      },
+      {
+        "category": "web",
+        "tool": "get_project",
+        "success": true,
+        "head": 8,
+        "versionCount": 8,
+        "pageCount": 2,
+        "fileCount": 4,
+        "generationCount": 0,
+        "jobCount": 0
+      },
+      {
+        "category": "web",
+        "tool": "read_site_file",
+        "success": true,
+        "sourceFile": "index.html",
+        "restoredExactOriginalContent": true
+      },
+      {
+        "category": "web",
+        "tool": "get_version",
+        "success": true,
+        "head": 7,
+        "immutableTemporarySourceRetained": true
+      }
+    ],
+    "repeatedReadCallsAfterLocalFormattingIssues": 9,
+    "rejectedIncorrectOperationDiscriminatorBatch": 1
+  },
+  "limits": [
+    "Audio checks cover document edits and persisted authored assets; no playable audio clip, waveform measurement or codec output was asserted.",
+    "Slides checks cover persisted editable elements and notes; this live native sequence did not export or open a presentation.",
+    "Website checks cover exact source storage, page metadata, immutable history and restore; this live native sequence did not run preview or ZIP export.",
+    "Production backend storage was verified through the authenticated native tool responses, not by a direct D1 or R2 administrative query.",
+    "One initially authored slide batch used an incorrect operation discriminator and was rejected; a fresh read confirmed no state change before correction.",
+    "Nine reads were repeated after local result-formatting errors; those were not native service transport failures."
+  ]
+}

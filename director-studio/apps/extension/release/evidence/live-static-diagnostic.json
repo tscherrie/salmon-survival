@@ -1,0 +1,48 @@
+{
+  "origin": "https://ai-director-studio.yearemia.chatgpt.site",
+  "scope": "anonymous/static-access-diagnostic",
+  "checks": [
+    "Anonymous project API access is denied.",
+    "Anonymous health and static resources report either accessible content or a private access boundary."
+  ],
+  "passed": true,
+  "proof": {
+    "authenticatedMcp": false,
+    "d1": false,
+    "r2": false,
+    "nativeHostUi": false
+  },
+  "note": "Sites dispatch access does not establish an authenticated Director owner. Native OAuth MCP and storage evidence must be recorded separately.",
+  "anonymous": {
+    "/api/projects": {
+      "status": 401,
+      "mime": "text/html; charset=utf-8",
+      "access": "access-denied"
+    },
+    "/health": {
+      "status": 401,
+      "mime": "text/html; charset=utf-8",
+      "access": "access-denied"
+    },
+    "/media-sandbox.html": {
+      "status": 401,
+      "mime": "text/html; charset=utf-8",
+      "access": "access-denied"
+    },
+    "/runtime/ffmpeg/worker.js": {
+      "status": 401,
+      "mime": "text/html; charset=utf-8",
+      "access": "access-denied"
+    },
+    "/runtime/esbuild.wasm": {
+      "status": 401,
+      "mime": "text/html; charset=utf-8",
+      "access": "access-denied"
+    },
+    "/privacy.html": {
+      "status": 401,
+      "mime": "text/html; charset=utf-8",
+      "access": "access-denied"
+    }
+  }
+}

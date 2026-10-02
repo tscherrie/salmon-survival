@@ -1,0 +1,174 @@
+{
+  "passed": true,
+  "codec": "aac",
+  "variant": "actual own ESM glue and embedded WASM",
+  "sameOriginModuleBlobWorker": true,
+  "csp": "default-src 'none';script-src 'unsafe-inline' blob: 'wasm-unsafe-eval';worker-src blob:;connect-src blob: data:;style-src 'unsafe-inline'",
+  "noUnsafeEvalAllowed": true,
+  "sourceLockSnapshotSha256": "ab30613c3b1805e82420fe934243303d1614f80c3b7c313c3dcae75b64ed0b8c",
+  "realMcpTransportClaimed": false,
+  "realNativeHostAcceptanceClaimed": false,
+  "replacedShippedRuntime": false,
+  "files": [
+    {
+      "filename": "aac-esm-synthetic-stereo.aac",
+      "bytes": 48668,
+      "sha256": "599e62827a0f05676e2106bfe6e92c7d8ada78521b8c5dc5094c54154c3e655c"
+    },
+    {
+      "filename": "aac-esm-synthetic-input.f32le",
+      "bytes": 768000,
+      "sha256": "9df0a336a63dd642d9f593a53a1711edfcf1d65472d38216f1c1b364a56a73d5"
+    },
+    {
+      "filename": "aac-esm-synthetic-decoded.f32le",
+      "bytes": 778240,
+      "sha256": "9bfb13a267d96d2f5a7c54cf041879b016bafbb125cd19c72fd8719ac84c1f38"
+    },
+    {
+      "filename": "aac-esm-ffprobe.json",
+      "bytes": 1948,
+      "sha256": "1646bcde03044c7544b29c9af88aaf867e9dff38de91face4ab5d413efa735f5"
+    }
+  ],
+  "glue": {
+    "filename": "aac.js",
+    "bytes": 584913,
+    "sha256": "b0e4ad019a2e7dc927f65d8b75fcf37ab24214121b9b92a0e53425b1678c935d"
+  },
+  "embeddedWasm": {
+    "bytes": 505574,
+    "sha256": "e6d2b9b24766e52a95ff9ed9b5ffe725eec6c7adf579b708b62b64facc637a28"
+  },
+  "sources": [
+    {
+      "key": "aacNewSource",
+      "archive": "aac-ffmpeg-499b5f5f92f73e5b0e6108242983695fcb6409e2.tar.gz",
+      "bytes": 16776144,
+      "sha256": "e5c84419677f2aa84d062515214ad3d893b26e467f54d3b347e522de8f6ba61d",
+      "commit": "499b5f5f92f73e5b0e6108242983695fcb6409e2",
+      "version": null
+    },
+    {
+      "key": "mediabunny-encoders",
+      "archive": "mediabunny-encoders-cee57d1cdfd1776d515c081057b50eb337291e32.tar.gz",
+      "bytes": 64635572,
+      "sha256": "3fb1c82b9cd8c337b7b1bf8393ad4d0d84b8d569bce97bddf18fc51d580c51bf",
+      "commit": "cee57d1cdfd1776d515c081057b50eb337291e32",
+      "version": "1.56.1"
+    }
+  ],
+  "fixtureWorker": {
+    "filename": "aac.worker.js",
+    "originalSha256": "f1ed1d763e8c403d9a76575167a1000bba2c334c719e31d09f8367b5dcf8aa17",
+    "executedSha256": "6bee984f8244486cea1187726815436c670a6b3ecab25d36605776308aca99ab",
+    "progressRequiresActualOutputBytes": true
+  },
+  "browserVersion": "154.0.8037.95",
+  "inputFrames": 96000,
+  "inputDurationSeconds": 2,
+  "sampleRate": 48000,
+  "channels": 2,
+  "decodedFrames": 97280,
+  "decodedDurationSeconds": 2.026666666666667,
+  "measuredDelayFrames": 1024,
+  "delayMeaning": "encoder priming confirmed against first packet PTS",
+  "trailingPaddingFrames": 256,
+  "decodedPcmEqualsInput": false,
+  "qualityCriteria": {
+    "minimumSnrDb": 20,
+    "maximumAbsoluteErrorP99": 0.1,
+    "maximumDecodedPeak": 1,
+    "maximumDelayFrames": 2304,
+    "maximumTrailingPaddingFrames": 1024
+  },
+  "quality": [
+    {
+      "channel": 0,
+      "snrDb": 27.609064610835436,
+      "rmsError": 0.016521082881116943,
+      "absoluteErrorP99": 0.056183576583862305,
+      "maxAbsoluteError": 0.46022729575634,
+      "maxAbsoluteErrorFrame": 553,
+      "decodedPeak": 0.7809156775474548
+    },
+    {
+      "channel": 1,
+      "snrDb": 30.761850434405993,
+      "rmsError": 0.008417105506273883,
+      "absoluteErrorP99": 0.02918863296508789,
+      "maxAbsoluteError": 0.07188969850540161,
+      "maxAbsoluteErrorFrame": 20438,
+      "decodedPeak": 0.5206548571586609
+    }
+  ],
+  "outputBytes": 48668,
+  "outputSha256": "599e62827a0f05676e2106bfe6e92c7d8ada78521b8c5dc5094c54154c3e655c",
+  "stream": {
+    "index": 0,
+    "codec_name": "aac",
+    "codec_long_name": "AAC (Advanced Audio Coding)",
+    "profile": "LC",
+    "codec_type": "audio",
+    "codec_tag_string": "[0][0][0][0]",
+    "codec_tag": "0x0000",
+    "mime_codec_string": "mp4a.40.2",
+    "sample_fmt": "fltp",
+    "sample_rate": "48000",
+    "channels": 2,
+    "channel_layout": "stereo",
+    "bits_per_sample": 0,
+    "initial_padding": 0,
+    "r_frame_rate": "0/0",
+    "avg_frame_rate": "0/0",
+    "time_base": "1/28224000",
+    "duration_ts": 57917416,
+    "duration": "2.052063",
+    "bit_rate": "192110",
+    "nb_read_frames": "95",
+    "disposition": {
+      "default": 0,
+      "dub": 0,
+      "original": 0,
+      "comment": 0,
+      "lyrics": 0,
+      "karaoke": 0,
+      "forced": 0,
+      "hearing_impaired": 0,
+      "visual_impaired": 0,
+      "clean_effects": 0,
+      "attached_pic": 0,
+      "timed_thumbnails": 0,
+      "non_diegetic": 0,
+      "captions": 0,
+      "descriptions": 0,
+      "metadata": 0,
+      "dependent": 0,
+      "still_image": 0,
+      "multilayer": 0
+    }
+  },
+  "cancellation": {
+    "afterActualChunks": 1,
+    "actualOutputBytes": 461,
+    "sentFrames": 2,
+    "sentChunks": null,
+    "generation": 1
+  },
+  "recoveryGeneration": 2,
+  "recoveryEncodedChunks": 95,
+  "workerContexts": [
+    {
+      "generation": 1,
+      "origin": "http://127.0.0.1:52543"
+    },
+    {
+      "generation": 2,
+      "origin": "http://127.0.0.1:52543"
+    }
+  ],
+  "cspViolations": [],
+  "pageErrors": [],
+  "ordinaryRuntimeHttpRequests": [],
+  "runtimeBytesProvidedByControlledLocalArguments": true
+}

@@ -8,3 +8,5 @@ test-results/
 playwright-report/
 .tmp/
 release/
+!apps/extension/release/
+!apps/extension/release/**
