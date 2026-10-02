@@ -33,7 +33,7 @@ SHA256 of the prepared local release bytes:
 ef5864b8a4dd47a66f28b70eea8865bea4556b8e07c9e079fbfcb5e5e93ba781  fixtures/review-tone.wav
 ```
 
-The demo source path reported by root is `/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-release/sdk-review-demo/review-sample.mp4`. This is a local preparation path, not a reviewer URL. Reviewers upload the release files through the editor: `import_url` requires a real public HTTPS media URL and cannot consume a local path. If a public fixture URL is later published, verify those exact bytes before adding it; no such URL is claimed here.
+The demo source path reported by root is `/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-release/sdk-review-demo/review-sample.mp4`. This is a local preparation path, not a reviewer URL. Reviewers upload the release files through the editor: `import_url` requires a real public HTTPS media URL and cannot consume a local path. The two procedural fixture URLs are now included in P1 file_attachment_urls. An anonymous HTTP 200 fetch matched the exact released bytes and SHA256 for each (evidence/public-review-materials.json). The MP4 is served as application/octet-stream: download it with its .mp4 filename and use the editor file picker, rather than treating the generic HTTP content type as codec evidence.
 
 Root also reports a 30.32-second supporting SDK recording at `/Users/jeremias/Documents/Codex/2026-10-02/ai-director-studio-release/sdk-review-demo/sdk-review-demo.mp4`, with a completed four-second H.264/AAC export. Its own host CSP and synthetic Node-proxy owner distinguish it from actual native reviewer execution. It does not pass P1 or P2 by itself, and no host model response was recorded.
 

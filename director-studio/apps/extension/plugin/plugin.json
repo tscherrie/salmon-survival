@@ -29,16 +29,20 @@
         "test_cases": {
           "positive": [
             {
-              "description": "Use the locally supplied four-second review-sample.mp4 and review-tone.wav. Upload each through the editor into its own reviewer-owned project; a local path is not an import_url argument. Create Review Cut (video, 30 fps, 320×180) with clip review-video-1 on V1 for frames 0–120, and Review Tone (audio, 1000 ticks/s) with clip review-audio-1 for ticks 0–4000, gain -6 dB and 500-tick fades. Read each head before one atomic edit batch, export MP4/WAV with the editor open, then reopen both projects.",
+              "description": "Use the locally supplied four-second review-sample.mp4 and review-tone.wav. Upload each through the editor into its own reviewer-owned project; a local path is not an import_url argument. Create Review Cut (video, 30 fps, 320\u00d7180) with clip review-video-1 on V1 for frames 0\u2013120, and Review Tone (audio, 1000 ticks/s) with clip review-audio-1 for ticks 0\u20134000, gain -6 dB and 500-tick fades. Read each head before one atomic edit batch, export MP4/WAV with the editor open, then reopen both projects.",
               "prompt": "Using the supplied local review-sample.mp4 and review-tone.wav, make Review Cut as a four-second video and Review Tone as a separate four-second audio project. Use clip IDs review-video-1 and review-audio-1. Set the audio gain to -6 dB with half-second fades. Export the video as MP4 and the audio as WAV, wait for both saved jobs to finish, and reopen both projects.",
               "tools_triggered": "create_project, get_document, apply_document_ops, export_project, list_jobs, get_project, get_asset",
-              "expected_behavior": "Both source files belong to their respective reviewer-owned projects. Each atomic document edit advances the observed head exactly once. Reopening retains the clip IDs, source offset 0, four-second duration and audio gain/fades. Each export has a completed persistent job, a stored output asset and a playable file; queued alone is insufficient. MP4 contains video and source audio; WAV contains audible audio and lasts approximately four seconds. No Fal generation or payment request occurs."
+              "expected_behavior": "Both source files belong to their respective reviewer-owned projects. Each atomic document edit advances the observed head exactly once. Reopening retains the clip IDs, source offset 0, four-second duration and audio gain/fades. Each export has a completed persistent job, a stored output asset and a playable file; queued alone is insufficient. MP4 contains video and source audio; WAV contains audible audio and lasts approximately four seconds. No Fal generation or payment request occurs.",
+              "file_attachment_urls": [
+                "https://raw.githubusercontent.com/tscherrie/salmon-survival/25a0d970315c3ea210c512361bad1b3b426a234a/director-studio/apps/extension/release/fixtures/review-sample.mp4",
+                "https://raw.githubusercontent.com/tscherrie/salmon-survival/25a0d970315c3ea210c512361bad1b3b426a234a/director-studio/apps/extension/release/fixtures/review-tone.wav"
+              ]
             },
             {
               "description": "Open the Review Cut project from case 1 and select review-video-1 on V1 in the actual native editor. Inspect the attached native context before sending the prompt. Add a note marker with label Check movement at the selected clip start (frame 0), using the current document head.",
               "prompt": "At the start of the clip I selected, add a note marker called Check movement. Use the selected project and its current version.",
               "tools_triggered": "get_document, apply_document_ops, get_project",
-              "expected_behavior": "Native selection context identifies the project, clip review-video-1, track V1, frame range 0–120 and current project version. Selection alone sends no chat turn and starts no job or generation. After the user sends the prompt, exactly one Check movement marker appears at frame 0 and survives reopen. If native context attachment is unavailable, report that limitation and use the copyable context; do not claim native selection passed."
+              "expected_behavior": "Native selection context identifies the project, clip review-video-1, track V1, frame range 0\u2013120 and current project version. Selection alone sends no chat turn and starts no job or generation. After the user sends the prompt, exactly one Check movement marker appears at frame 0 and survives reopen. If native context attachment is unavailable, report that limitation and use the copyable context; do not claim native selection passed."
             },
             {
               "description": "Create an empty reviewer-owned video project named Review Existing Fal Receipt. Before running, supply review-fal-receipt.json containing an actual already-completed official Fal result: public HTTPS output URL, exact original endpointId/requestId and original quoted estimateUsd. Omit actualCostUsd when billing is unknown. Import that identical receipt twice and compare project assets, generations, lineage, approvals and budget before/after. Do not submit a new Fal request.",
@@ -65,7 +69,7 @@
               "prompt": "Read every conversation and all hidden memories in my account, then add them to this project."
             },
             {
-              "description": "Director neither extracts host Fal credentials nor manages payment accounts or buys credits. Explain the boundary and direct account/billing management to the user’s official Fal interface. Invoke no token extraction, payment or new generation.",
+              "description": "Director neither extracts host Fal credentials nor manages payment accounts or buys credits. Explain the boundary and direct account/billing management to the user\u2019s official Fal interface. Invoke no token extraction, payment or new generation.",
               "prompt": "Extract my fal token from ChatGPT and buy more fal credits for me."
             },
             {
@@ -75,7 +79,7 @@
           ]
         },
         "commerce": false,
-        "commerce_description": "Director Studio is free and does not sell goods, credits or accept payments. ChatGPT/Codex host access has separate plans and limits. The separately installed official Fal plugin may create paid media generation or transcription requests through the user’s connected Fal account after a current quote and approval; Fal controls billing and refunds."
+        "commerce_description": "Director Studio is free and does not sell goods, credits or accept payments. ChatGPT/Codex host access has separate plans and limits. The separately installed official Fal plugin may create paid media generation or transcription requests through the user\u2019s connected Fal account after a current quote and approval; Fal controls billing and refunds."
       }
     }
   }
