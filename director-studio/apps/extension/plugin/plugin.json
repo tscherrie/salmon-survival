@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "ai-director-studio",
-  "version": "0.1.0",
-  "description": "A native project editor for video, audio, slides, graphics and websites using your selected ChatGPT Work or Codex model.",
+  "version": "0.1.1",
+  "description": "Create and edit video, audio, slides, graphics and website projects in a native editor using your selected ChatGPT Work or Codex model.",
   "author": {
     "name": "Jeremias Grenzebach"
   },
@@ -11,10 +11,10 @@
     "com.openai": {
       "interface": {
         "displayName": "AI Director Studio",
-        "shortDescription": "Plan, edit and export media",
-        "longDescription": "Plan and edit video, audio, presentations, graphics and websites with your selected ChatGPT Work or Codex model. AI Director Studio keeps the project brief, material, document versions, checkpoints and job receipts together in an interactive editor.\n\nImport your own media, preview a timeline, work with slides or a canvas, and inspect a website in an isolated preview. Selected clips, assets, markers and elements can supply precise project references for your next chat turn when the host supports context updates. Selecting material does not send a message or start a generation. A copyable context fallback is available.\n\nReturn to stored projects, inspect earlier versions and restore them. Exports are stored in the project and offered as downloads. Available formats include video MP4/MOV, audio WAV/MP3/M4A/FLAC, slides PDF/PPTX/PNG, graphics PNG/JPEG/PDF/SVG and website ZIP. Format support and capacity depend on the browser, source media and host. The editor must remain open for browser processing; saved job records allow failed or interrupted work to be inspected and retried.\n\nDirector Studio is free and does not accept payments. Your ChatGPT or Codex access remains subject to that host's plan and limits. New AI media generation and transcription use the separately installed official Fal plugin and your connected Fal account. These requests may cost money: obtain a current quote and approve the job before submission. Director records the request and receipts; quoted estimates are distinct from confirmed billing. No separate model-provider API key is required by Director.\n\nProjects and uploaded files persist in private storage associated with the authenticated owner. Source code is MIT-licensed; dependencies, codecs and fonts retain their own licenses. Direct opening of `.dstudio` files through a native file entrypoint is not implemented.",
+        "shortDescription": "Edit video, audio and graphics",
+        "longDescription": "AI Director Studio is a creative media editor for making video and audio projects, presentations, graphics and small websites inside ChatGPT Work or Codex. Use your selected host model to plan changes and the native editor to inspect and refine the result.\n\nImport your own media, arrange clips on a timeline, adjust clip timing and audio levels, and preview the result. Create editable slide text and shapes with speaker notes, work on a graphics canvas, or inspect website files in an isolated preview.\n\nKeep the project brief, source material, document versions, checkpoints and processing receipts together. Reopen stored projects, inspect earlier versions and restore them while retaining history. Projects and uploaded files are stored privately for the authenticated owner. Completed media results from the separately installed official Fal plugin can be imported with their original request provenance.\n\nSelected clips, assets, markers and elements can provide precise project references for the next chat turn when the host supports context updates. Selection alone sends no message and starts no generation. A copyable context fallback is available.\n\nExports are saved in the project and offered as downloads. Available formats include video MP4/MOV, audio WAV/MP3/M4A/FLAC, slides PDF/PPTX/PNG, graphics PNG/JPEG/PDF/SVG and website ZIP. Format support and capacity depend on the browser, source media and host. Keep the editor open during browser processing; stored job records let you inspect failed or interrupted work and retry it. Direct opening of .dstudio files through a native file entrypoint is not implemented.",
         "developerName": "Jeremias Grenzebach",
-        "category": "Productivity",
+        "category": "Creativity",
         "capabilities": [
           "Interactive"
         ],

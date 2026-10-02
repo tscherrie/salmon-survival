@@ -1,29 +1,31 @@
 # AI Director Studio — listing draft
 
-Status: prepared for publisher review on 2 October 2026. This is unpublished copy, not a directory listing or approval. The private native editor starts successfully in the user's current host after source checkpoint `cf761052228feedde11a590739cbf5d54767562e`; this does not establish every host interaction or export format as production-tested.
+Status: listing revision 0.1.1 prepared on 2 October 2026 to address the existing Portal draft’s pricing-text and category findings. New scan outcome must be recorded separately. This is unpublished copy, not a directory listing or approval. The private native editor starts successfully in the user's current host after source checkpoint `cf761052228feedde11a590739cbf5d54767562e`; this does not establish every host interaction or export format as production-tested.
 
 ## English listing
 
 | Field | Prepared value |
 | --- | --- |
 | Display name | AI Director Studio |
-| Subtitle | Plan, edit and export media |
+| Subtitle | Edit video, audio and graphics |
 | Developer label | Jeremias Grenzebach, preserving existing metadata and the user-confirmed independent operator; verify the final Portal publisher label/assignment separately |
-| Category | Productivity, preserving the current package value; confirm the target Portal category on import |
+| Category | Creativity, supported by the current official submission error reference; read back after upload |
 | Logo | `assets/logo.png` |
 | Composer icon | `assets/composer.png` |
 
 ### Description
 
-Plan and edit video, audio, presentations, graphics and websites with your selected ChatGPT Work or Codex model. AI Director Studio keeps the project brief, material, document versions, checkpoints and job receipts together in an interactive editor.
+AI Director Studio is a creative media editor for making video and audio projects, presentations, graphics and small websites inside ChatGPT Work or Codex. Use your selected host model to plan changes and the native editor to inspect and refine the result.
 
-Import your own media, preview a timeline, work with slides or a canvas, and inspect a website in an isolated preview. Selected clips, assets, markers and elements can supply precise project references for your next chat turn when the host supports context updates. Selecting material does not send a message or start a generation. A copyable context fallback is available.
+Import your own media, arrange clips on a timeline, adjust clip timing and audio levels, and preview the result. Create editable slide text and shapes with speaker notes, work on a graphics canvas, or inspect website files in an isolated preview.
 
-Return to stored projects, inspect earlier versions and restore them. Exports are stored in the project and offered as downloads. Available formats include video MP4/MOV, audio WAV/MP3/M4A/FLAC, slides PDF/PPTX/PNG, graphics PNG/JPEG/PDF/SVG and website ZIP. Format support and capacity depend on the browser, source media and host. The editor must remain open for browser processing; saved job records allow failed or interrupted work to be inspected and retried.
+Keep the project brief, source material, document versions, checkpoints and processing receipts together. Reopen stored projects, inspect earlier versions and restore them while retaining history. Projects and uploaded files are stored privately for the authenticated owner. Completed media results from the separately installed official Fal plugin can be imported with their original request provenance.
 
-Director Studio is free and does not accept payments. Your ChatGPT or Codex access remains subject to that host's plan and limits. New AI media generation and transcription use the separately installed official Fal plugin and your connected Fal account. These requests may cost money: obtain a current quote and approve the job before submission. Director records the request and receipts; quoted estimates are distinct from confirmed billing. No separate model-provider API key is required by Director.
+Selected clips, assets, markers and elements can provide precise project references for the next chat turn when the host supports context updates. Selection alone sends no message and starts no generation. A copyable context fallback is available.
 
-Projects and uploaded files persist in private storage associated with the authenticated owner. Source code is MIT-licensed; dependencies, codecs and fonts retain their own licenses. Direct opening of `.dstudio` files through a native file entrypoint is not implemented.
+Exports are saved in the project and offered as downloads. Available formats include video MP4/MOV, audio WAV/MP3/M4A/FLAC, slides PDF/PPTX/PNG, graphics PNG/JPEG/PDF/SVG and website ZIP. Format support and capacity depend on the browser, source media and host. Keep the editor open during browser processing; stored job records let you inspect failed or interrupted work and retry it. Direct opening of .dstudio files through a native file entrypoint is not implemented.
+
+Commercial disclosures remain in [support.md](support.md), [terms.md](terms.md) and `extensions.com.openai.review.commerce_description`. This function-focused listing contains no pricing or subscription copy. The public information pages are unchanged.
 
 ### Starter prompts
 
@@ -31,11 +33,11 @@ The package preserves its existing first prompt. The other two are optional prep
 
 1. Open AI Director Studio and help me plan and edit a media project.
 2. Create two slides with speaker notes and a matching title graphic, then help me export them.
-3. Help me edit my imported video and explain any Fal cost before requesting new media.
+3. Import an existing Fal media result with its original request provenance.
 
 ## German listing translation draft
 
-Subtitle: **Medien planen und bearbeiten**
+Subtitle: **Video, Audio und Grafik ändern**
 
 Plane und bearbeite Video, Audio, Präsentationen, Grafiken und Websites mit deinem gewählten Modell in ChatGPT Work oder Codex. AI Director Studio speichert Briefing, Material, Dokumentversionen, Checkpoints und Auftragsbelege im Projekt.
 
@@ -43,7 +45,7 @@ Importiere eigene Medien, prüfe Timeline, Folien oder Grafik und öffne Website
 
 Öffne gespeicherte Projekte erneut, prüfe ältere Versionen und stelle sie wieder her. Exporte werden im Projekt gespeichert und zum Download angeboten. Formate und Kapazität hängen von Browser, Ausgangsmaterial und Host ab. Für Browserverarbeitung muss der Editor geöffnet bleiben; gespeicherte Auftragsbelege dokumentieren Status und Fehler.
 
-Director Studio ist kostenlos und nimmt keine Zahlungen entgegen. Für ChatGPT oder Codex gelten deren Tarife und Nutzungslimits. Neue KI-Medien und Transkriptionen laufen über das separat installierte offizielle Fal-Plugin und dein verbundenes Fal-Konto. Sie können kostenpflichtig sein; aktuelle Kostenschätzung und Freigabe gehören vor den Auftrag. Director benötigt keinen eigenen Modellanbieter-API-Key. Projekte und Dateien liegen in privatem, dem authentifizierten Eigentümer zugeordnetem Speicher. Der Quellcode steht unter MIT; Abhängigkeiten behalten ihre eigenen Lizenzen.
+AI Director Studio ist ein kreativer Medieneditor für Video, Audio, Folien, Grafiken und kleine Websites. Importiere abgeschlossene Ergebnisse des separat installierten offiziellen Fal-Plugins mit ihrer ursprünglichen Auftragsherkunft. Projekte und Dateien liegen in privatem Speicher des authentifizierten Eigentümers. Angaben zu Nutzung und externen Kosten stehen auf den veröffentlichten Support- und Nutzungsseiten.
 
 This translation is a draft for a possible `de-DE` publication entry. It is not yet written into publication metadata or represented as Portal-verified.
 
