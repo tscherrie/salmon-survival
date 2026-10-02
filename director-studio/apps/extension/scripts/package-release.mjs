@@ -27,6 +27,12 @@ for (const [field, file] of [['websiteURL', 'index.html'], ['supportURL', 'suppo
   const htmlHash = createHash('sha256').update(await readFile(resolve(extension, 'info-site/public', file))).digest('hex');
   if (htmlHash !== check.preparedHtmlSha256) throw new Error(`Public page changed after anonymous verification: ${field}`);
 }
+if (openai.review?.demo_recording_url) {
+  const demo = JSON.parse(await readFile(resolve(extension, 'release/evidence/review-demo-public.json'), 'utf8'));
+  const authoredVideoHash = createHash('sha256').update(await readFile(resolve(extension, 'info-site/public/review-demo.mp4'))).digest('hex');
+  if (demo.url !== openai.review.demo_recording_url || demo.status !== 200 || !demo.requestHadNoCookieOrAuthorization || !demo.videoBytesMatchExactly || !demo.browserPlaybackVerified || demo.sha256 !== authoredVideoHash) throw new Error('Reviewer recording URL or media bytes are not verified.');
+  if (new URL(demo.url).origin !== new URL(publicSite.url).origin) throw new Error('Reviewer video must use the existing ordinary public information Site.');
+}
 if (openai.interface.shortDescription.length > 30) throw new Error('Listing subtitle exceeds 30 characters.');
 if (Object.keys(mcp.mcpServers ?? {}).length !== 1) throw new Error('Expected one verified Director MCP server.');
 for (const server of Object.values(mcp.mcpServers)) if (server.type !== 'streamable-http' || new URL(server.url).protocol !== 'https:') throw new Error('A verified HTTPS MCP endpoint is required.');
@@ -52,7 +58,7 @@ const packages = JSON.parse(await readFile(resolve(studio, 'package-lock.json'),
 const inventory = Object.entries(packages).filter(([path]) => path.includes('node_modules/')).map(([path, value]) => ({ path, version: value.version, license: value.license ?? 'Inspect package license', resolved: value.resolved, integrity: value.integrity }));
 await writeFile(resolve(output, 'dependency-licenses.json'), JSON.stringify({ sourceCommit: head, scope: 'Exact entire source workspace lockfile; desktop-only packages are included and are not all shipped by the Extension.', packages: inventory }, null, 2));
 await writeFile(resolve(output, 'SOURCE-CHECKPOINT.txt'), `${head}\n`);
-await writeFile(resolve(output, 'README.txt'), `AI Director Studio 0.1.0 — review preparation
+await writeFile(resolve(output, 'README.txt'), `AI Director Studio ${manifest.version} — review preparation
 Source checkpoint: ${head}
 
 ai-director-studio-plugin.zip: portable metadata, native Director skill, verified HTTPS MCP endpoint, icons and preserved MIT notices. The endpoint is private. Sites owns the already installed canonical plugin; this ZIP is not a second private installation.

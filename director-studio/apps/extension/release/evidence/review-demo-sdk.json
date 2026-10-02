@@ -1,0 +1,94 @@
+{
+  "verifiedAt": "2026-10-02T08:19:57.964Z",
+  "scope": "Supporting recording of actual built Worker + actual MCP Apps SDK host bridge, synthetic loopback owner and procedural sample, opaque iframe; not native ChatGPT/Codex visual acceptance and not completion of all eight native review cases",
+  "recording": {
+    "durationSec": 76.84,
+    "bytes": 1828656,
+    "sha256": "77b912a99677164dd020c951117e938c136137aa19adb6f7eda58f2d14e4e3c1",
+    "codec": "h264",
+    "width": 1280,
+    "height": 960,
+    "audio": "silent screen recording",
+    "fullFfmpegDecodeExitCode": 0
+  },
+  "export": {
+    "durationSec": 4,
+    "bytes": 156803,
+    "sha256": "8f9e1e24a2c41e7e1bb605932a44422c9467e41f8293ed7d9f9277cd74dc56fb",
+    "videoCodec": "h264",
+    "audioCodec": "aac",
+    "fullFfmpegDecodeExitCode": 0,
+    "pixels": {
+      "decodedRgbBytes": 172800,
+      "nonBlackPixels": 57578,
+      "authoredGreenOverlayPixels": 3377
+    }
+  },
+  "checks": [
+    "Actual SDK App/Bridge initialize handshake and visible editor in an opaque srcdoc iframe.",
+    "Owned stored video loaded through authenticated MCP asset chunks, WebVideo canvas contains decoded nonblack pixels and isolated preview shows its exact TSX overlay.",
+    "Pointer play control advances the actual isolated preview timeline clock, then the pause control stops it before screenshot.",
+    "Stored video without thumbnail metadata shows the film icon, creates no MP4-backed img, and the asset browser contains zero broken images.",
+    "Actual Alt-click selects the imported timeline clip; UI offers its real copy-context fallback. Clipboard write and native Composer attachment are not claimed.",
+    "Real MCP apply_document_ops adds a named marker with the last observed expectedHead; already-open UI advances exactly one version and shows the actual marker.",
+    "Replay of the identical stale edit receives actual VERSION_CONFLICT from the Worker; no extra version or duplicate marker is created.",
+    "Actual Projects navigation reopens the same stored project; named marker, exact head version, completed MP4 job and stored output persist and are visible again.",
+    "Real queued MP4 codec job executed by the open opaque editor, native sandbox/runtime fetched only through authenticated host MCP, output stored with persistent completion receipt and ffprobe-verified four-second video with source audio.",
+    "The decoded MP4 first frame contains the authored green overlay also visible in preview.",
+    "Ordinary widget HTTP was forbidden and none was initiated; six explicit private asset/runtime/sandbox guard probes returned 401. Host-side /mcp alone injected synthetic loopback owner identity."
+  ],
+  "actualConflict": {
+    "error": "Expected v2, current v3.",
+    "code": "VERSION_CONFLICT"
+  },
+  "reopen": {
+    "head": 3,
+    "marker": {
+      "id": "sdk-review-marker",
+      "frame": 60,
+      "kind": "note",
+      "label": "SDK review marker"
+    },
+    "exportStatus": "completed",
+    "uiMarkerVisible": true,
+    "uiOutputCardVisible": true
+  },
+  "pageErrors": [],
+  "hostErrors": [],
+  "consoleCount": 30,
+  "cspViolationCount": 6,
+  "deniedRequests": 6,
+  "limits": [
+    "Supporting SDK-browser fixture only; no native ChatGPT or Codex capture.",
+    "Not completion of all eight native review cases; no production OAuth, native Composer attachment, model switching, Library delivery or paid Fal/Suno generation.",
+    "Copy-context button and selection fallback were visible; clipboard write was not verified.",
+    "Dependency/feature-probe/CSP console warnings and errors remain in the raw receipt; zero page errors and zero SDK host errors were observed."
+  ],
+  "compiledFilesUnchangedAfterCapture": {
+    "workerSha256": "daa79bfc3646d4a5b2d2e0739039ba1b0002d0b928f6ed9f179a3bb55a6888f0",
+    "nativeHtmlSha256": "acb891da079ab7921d2a551de3928dda46d3d62e7b71d5f3a1828f69350ef2d3",
+    "runtimeFiles": [
+      {
+        "path": "runtime/ffmpeg/ffmpeg-core.wasm.part0",
+        "sha256": "4ccba0c9cc7f019751a958ead3918cf51c9563ff2f8a76fb1f72ae492f66693b",
+        "unchanged": true
+      },
+      {
+        "path": "runtime/ffmpeg/ffmpeg-core.wasm.part1",
+        "sha256": "80e8b2ae7994e92102e048249ab0a6673480ca626c359b1d321b24f105f02e65",
+        "unchanged": true
+      }
+    ]
+  },
+  "recorderScriptSha256": "520d3d70933a23e885a9bad87f954b3a6d73b1cfa6079b58bbc49cf12b60fdd8",
+  "localPlayback": {
+    "passed": true,
+    "duration": 76.84,
+    "decodedFrames": 54,
+    "timeBefore": 0.005032,
+    "timeAfter": 2.009988,
+    "seekTime": 72,
+    "noCookieOrAuthorization": true
+  },
+  "privacyReadback": "All fourteen caption/card phases inspected; procedural sample and synthetic IDs only; no account, credentials or private project material."
+}

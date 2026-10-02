@@ -1,8 +1,8 @@
-# OpenAI publication questions — unsent enquiry
+# OpenAI publication questions — sent enquiry
 
-Unsent local draft. No support enquiry has been sent; this text contains no credentials, account identifiers or private project contents.
+Sent through authenticated OpenAI Help Center chat. The exact prepared 167-word text was verified in the sent conversation. Human escalation is confirmed; replies will also arrive by email. See evidence/openai-support-send.json. No credentials, account identifiers or private project contents were sent.
 
-## Suggested enquiry
+## Sent enquiry
 
 Hello,
 

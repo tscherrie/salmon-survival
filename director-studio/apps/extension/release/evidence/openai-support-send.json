@@ -1,0 +1,18 @@
+{
+  "verifiedAt": "2026-10-02T07:24:46.648Z",
+  "channel": "Authenticated OpenAI Help Center chat",
+  "channelUrl": "https://help.openai.com/en",
+  "officialContactInstructions": "https://help.openai.com/en/articles/6614161-how-can-i-contact-support",
+  "questionsSent": 2,
+  "approvedDraftWords": 167,
+  "approvedDraftBodySha256": "97f320e70957378739d2cd6dbe5a7eda61bb0c3717b66bf69d99277ebebbbda5",
+  "sentBodyMatchesApprovedDraft": true,
+  "followupSent": true,
+  "humanEscalationConfirmed": true,
+  "confirmation": "Escalated to a support specialist; You can expect a response in the coming days. Replies will also be sent via email. You can add additional comments to this conversation if needed.",
+  "caseNumberDisplayed": false,
+  "attachmentsSent": 0,
+  "credentialsOrChallengeTokensSent": false,
+  "publicationOrRuntimeAccessChanged": false,
+  "screenshotRetainedOutsidePortableSource": true
+}
